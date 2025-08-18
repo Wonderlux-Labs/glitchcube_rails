@@ -25,8 +25,8 @@ module Services
         # Try to get the unified context sensor (may not exist yet)
         context_sensor = nil
         begin
-          ha_client = Services::Core::HomeAssistantClient.new
-          context_sensor = ha_client.state('sensor.glitchcube_context')
+          ha_service = HomeAssistantService.new
+          context_sensor = ha_service.entity('sensor.glitchcube_context')
 
           # Check if sensor actually exists (HA returns specific structure for non-existent entities)
           if context_sensor.is_a?(Hash) && context_sensor['state'] == 'unavailable'
@@ -89,6 +89,19 @@ module Services
 
         # Ensure context_sensor is a Hash with proper structure
         if context_sensor.is_a?(Hash)
+          # BASIC TIME CONTEXT - Always include this first
+          time_of_day = context_sensor.dig('attributes', 'time_of_day')
+          day_of_week = context_sensor.dig('attributes', 'day_of_week')
+          location = context_sensor.dig('attributes', 'current_location')
+          
+          if time_of_day || day_of_week
+            time_parts = []
+            time_parts << "It is #{time_of_day}" if time_of_day
+            time_parts << "on #{day_of_week}" if day_of_week
+            time_parts << "at #{location}" if location
+            context_parts << time_parts.join(' ')
+          end
+          
           # Priority order - urgent needs first
           if (needs = context_sensor.dig('attributes', 'current_needs')) && needs.to_s.include?('URGENT')
             context_parts << "URGENT: #{needs}"

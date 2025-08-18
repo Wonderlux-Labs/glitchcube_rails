@@ -481,7 +481,7 @@ namespace :config do
 
     # Get file counts
     local_count = `find #{LOCAL_CONFIG_PATH} -name "*.yaml" -o -name "*.yml" 2>/dev/null | wc -l`.strip.to_i
-    remote_count = `ssh #{REMOTE_HOST} 'find #{REMOTE_CONFIG_PATH} -name "*.yaml" -o -name "*.yml" 2>/dev/null | wc -l' 2>/dev/null`.strip.to_i
+    remote_count = `ssh #{REMOTE_HOST} 'bash -c "ls #{REMOTE_CONFIG_PATH}/*.yaml #{REMOTE_CONFIG_PATH}/*.yml 2>/dev/null | wc -l"' 2>/dev/null`.strip.to_i
 
     puts_colored("📁 Local YAML files: #{local_count}", BLUE)
     puts_colored("🌐 Remote YAML files: #{remote_count}", BLUE)

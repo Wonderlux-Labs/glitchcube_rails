@@ -217,6 +217,43 @@ ALTER SEQUENCE public.conversations_id_seq OWNED BY public.conversations.id;
 
 
 --
+-- Name: events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.events (
+    id bigint NOT NULL,
+    title character varying NOT NULL,
+    description text NOT NULL,
+    event_time timestamp(6) without time zone NOT NULL,
+    location character varying,
+    importance integer NOT NULL,
+    extracted_from_session character varying NOT NULL,
+    metadata text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
+
+
+--
 -- Name: landmarks; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -774,6 +811,13 @@ ALTER TABLE ONLY public.conversations ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: events id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.events_id_seq'::regclass);
+
+
+--
 -- Name: landmarks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -916,6 +960,14 @@ ALTER TABLE ONLY public.conversation_memories
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: events events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_pkey PRIMARY KEY (id);
 
 
 --
@@ -1163,6 +1215,20 @@ CREATE UNIQUE INDEX index_conversations_on_session_id ON public.conversations US
 --
 
 CREATE INDEX index_conversations_on_started_at ON public.conversations USING btree (started_at);
+
+
+--
+-- Name: index_events_on_event_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_events_on_event_time ON public.events USING btree (event_time);
+
+
+--
+-- Name: index_events_on_importance; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_events_on_importance ON public.events USING btree (importance);
 
 
 --
@@ -1536,6 +1602,7 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 SET search_path TO "$user", public, topology;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250818034459'),
 ('20250818022021'),
 ('20250817212600'),
 ('20250817212500'),

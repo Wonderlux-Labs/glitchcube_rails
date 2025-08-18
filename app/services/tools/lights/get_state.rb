@@ -57,9 +57,7 @@ class Tools::Lights::GetState < Tools::BaseTool
       response_data = {
         entity_id: entity_id,
         state: state,
-        is_on: state == 'on',
-        last_updated: entity_data['last_updated'],
-        last_changed: entity_data['last_changed']
+        is_on: state == 'on'
       }
       
       # Add brightness if available

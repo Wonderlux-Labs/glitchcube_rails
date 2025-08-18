@@ -37,9 +37,9 @@ class ConversationOrchestrator
     response = call_openrouter_with_tools(prompt_data)
     
     # Categorize tool calls
-    tool_analysis = categorize_tool_calls(response.tool_calls || [])
+    tool_analysis = Tools::Registry.categorize_tool_calls(response.tool_calls || [])
     
-    Rails.logger.info "🔧 Tool analysis: #{tool_analysis[:sync_tools].length} sync, #{tool_analysis[:async_tools].length} async"
+    Rails.logger.info "🔧 Tool analysis: #{tool_analysis[:sync_tools].length} sync, #{tool_analysis[:async_tools].length} async, #{tool_analysis[:query_tools].length} query, #{tool_analysis[:action_tools].length} action"
     
     # Execute sync tools immediately
     sync_results = execute_sync_tools(tool_analysis[:sync_tools])
@@ -67,6 +67,13 @@ class ConversationOrchestrator
   def find_or_create_conversation
     # Check if existing conversation is stale (last message > 3 minutes old)
     existing_conversation = Conversation.find_by(session_id: @session_id)
+    
+    # LOG CONVERSATION TYPE for debugging
+    if existing_conversation&.conversation_logs&.any?
+      Rails.logger.info "🔄 **CONTINUING CONVERSATION** - Session: #{@session_id}, Messages: #{existing_conversation.conversation_logs.count}"
+    else
+      Rails.logger.info "🆕 **NEW CONVERSATION** - Session: #{@session_id}"
+    end
     
     if existing_conversation&.conversation_logs&.any?
       last_message_time = existing_conversation.conversation_logs.maximum(:created_at)
@@ -125,6 +132,12 @@ class ConversationOrchestrator
     # Add current user message
     messages << { role: 'user', content: @message }
     
+    # LOG FULL PROMPT for debugging
+    Rails.logger.info "🎯 FULL PROMPT TO LLM:"
+    Rails.logger.info "📝 System: #{messages.find { |m| m[:role] == 'system' }&.dig(:content)&.truncate(500)}"
+    Rails.logger.info "💬 Messages: #{messages.select { |m| m[:role] != 'system' }.map { |m| "#{m[:role]}: #{m[:content].truncate(100)}" }.join(' | ')}"
+    Rails.logger.info "🛠️ Tools: #{prompt_data[:tools]&.map(&:name)&.join(', ')}"
+    
     # Call LLM with tools using our unified service
     LlmService.call_with_tools(
       messages: messages,
@@ -147,26 +160,6 @@ class ConversationOrchestrator
     nil
   end
   
-  def categorize_tool_calls(tool_calls)
-    sync_tools = []
-    async_tools = []
-    
-    tool_calls.each do |call|
-      tool_name = call.respond_to?(:name) ? call.name : call['name']
-      tool_class = Tools::Registry.get_tool(tool_name)
-      
-      next unless tool_class
-      
-      case tool_class.tool_type
-      when :sync
-        sync_tools << call
-      when :async
-        async_tools << call
-      end
-    end
-    
-    { sync_tools: sync_tools, async_tools: async_tools }
-  end
   
   def execute_sync_tools(sync_tools)
     return {} if sync_tools.blank?
@@ -206,8 +199,11 @@ class ConversationOrchestrator
       Rails.logger.warn "⚠️ LLM returned empty content with tool calls - using fallback speech"
     end
     
-    # Phase 1: No sync result appending yet - we're not doing amendments
-    # TODO Phase 2: Implement speech amendment for query results
+    # SPEECH AMENDMENT: If we have query tool results, call LLM again to amend speech
+    query_results = filter_query_tool_results(sync_results, openrouter_response.tool_calls || [])
+    if query_results.any?
+      speech_text = amend_speech_with_query_results(speech_text, query_results, prompt_data)
+    end
     
     # Fallback for completely empty speech
     if speech_text.blank?
@@ -457,5 +453,56 @@ class ConversationOrchestrator
         domain: entity_id.split('.').first
       }
     end.compact
+  end
+  
+  def filter_query_tool_results(sync_results, tool_calls)
+    query_results = {}
+    
+    tool_calls.each do |call|
+      tool_name = call.respond_to?(:name) ? call.name : call['name']
+      
+      # Only include results from query tools
+      if Tools::Registry.tool_intent(tool_name) == :query && sync_results[tool_name]
+        query_results[tool_name] = sync_results[tool_name]
+      end
+    end
+    
+    query_results
+  end
+  
+  def amend_speech_with_query_results(original_speech, query_results, prompt_data)
+    # Build query results summary
+    results_summary = query_results.map do |tool_name, result|
+      if result[:success]
+        "#{tool_name}: #{result[:message] || result[:data] || 'completed'}"
+      else
+        "#{tool_name}: #{result[:error] || 'failed'}"
+      end
+    end.join(", ")
+    
+    # Call LLM to amend the speech naturally
+    amendment_messages = [
+      { role: 'system', content: prompt_data[:system_prompt] },
+      { 
+        role: 'user', 
+        content: "Please amend this response to naturally include the tool results: \"#{original_speech}\"\n\nTool results: #{results_summary}\n\nReturn only the amended speech, staying in character." 
+      }
+    ]
+    
+    begin
+      amendment_response = LlmService.call_with_tools(
+        messages: amendment_messages,
+        tools: [], # No tools for amendment call
+        model: determine_model_for_conversation
+      )
+      
+      amended_speech = amendment_response.content&.strip
+      return amended_speech if amended_speech.present?
+    rescue => e
+      Rails.logger.warn "Failed to amend speech: #{e.message}"
+    end
+    
+    # Fallback: return original speech if amendment fails
+    original_speech
   end
 end

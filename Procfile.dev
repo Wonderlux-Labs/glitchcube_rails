@@ -1,2 +1,2 @@
-web: bin/rails server -p 4567
+web: bundle exec puma -C config/puma.rb -b tcp://0.0.0.0:4567 config.ru
 jobs: bin/jobs

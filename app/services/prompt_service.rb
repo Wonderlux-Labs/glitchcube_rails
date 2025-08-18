@@ -260,17 +260,30 @@ class PromptService
   end
   
   def inject_glitchcube_context(base_context)
-    # Try to use the context injection service if it's available
-    if defined?(Services::Memory::ContextInjectionService)
-      begin
-        # Use the memories-only injection for now since HA may not be configured
-        Services::Memory::ContextInjectionService.inject_memories_only(base_context, @extra_context)
-      rescue => e
-        Rails.logger.warn "Failed to inject glitchcube context: #{e.message}"
-        base_context
+    # DISABLED: Memory injection is untested, don't use yet
+    # Just inject basic time context from Home Assistant sensor
+    begin
+      ha_service = HomeAssistantService.new
+      context_sensor = ha_service.entity('sensor.glitchcube_context')
+      
+      if context_sensor && context_sensor['state'] != 'unavailable'
+        time_of_day = context_sensor.dig('attributes', 'time_of_day')
+        day_of_week = context_sensor.dig('attributes', 'day_of_week') 
+        location = context_sensor.dig('attributes', 'current_location')
+        
+        if time_of_day
+          time_context = "Current time context: It is #{time_of_day}"
+          time_context += " on #{day_of_week}" if day_of_week
+          time_context += " at #{location}" if location
+          
+          Rails.logger.info "🕒 Injecting time context: #{time_context}"
+          return "#{base_context}\n#{time_context}"
+        end
       end
-    else
-      base_context
+    rescue => e
+      Rails.logger.warn "Failed to inject time context: #{e.message}"
     end
+    
+    base_context
   end
 end

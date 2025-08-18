@@ -88,12 +88,32 @@ class Tools::Registry
       end
     end
 
+    # Get tool intent type (query for information vs action for changes)
+    def tool_intent(tool_name)
+      tool_class = get_tool(tool_name)
+      return :unknown unless tool_class
+      
+      # Query tools: Get information, sync execution, return data for speech
+      # Action tools: Change state, usually async, minimal speech needed
+      case tool_name
+      when "get_light_state", "list_light_effects"
+        :query
+      when "turn_on_light", "turn_off_light", "set_light_color_and_brightness", "set_light_effect", "call_hass_service"
+        :action
+      else
+        # Default: sync tools are queries, async tools are actions
+        tool_class.tool_type == :sync ? :query : :action
+      end
+    end
+
     # Categorize tool calls by execution type for conversation orchestrator
     def categorize_tool_calls(tool_calls)
-      return { sync_tools: [], async_tools: [] } unless tool_calls&.any?
+      return { sync_tools: [], async_tools: [], query_tools: [], action_tools: [] } unless tool_calls&.any?
 
       sync_tools = []
       async_tools = []
+      query_tools = []
+      action_tools = []
 
       tool_calls.each do |call|
         tool_name = call.respond_to?(:name) ? call.name : call["name"]
@@ -101,15 +121,29 @@ class Tools::Registry
 
         next unless tool_class
 
+        # Categorize by execution type
         case tool_class.tool_type
         when :sync
           sync_tools << call
         when :async
           async_tools << call
         end
+        
+        # Categorize by intent
+        case tool_intent(tool_name)
+        when :query
+          query_tools << call
+        when :action
+          action_tools << call
+        end
       end
 
-      { sync_tools: sync_tools, async_tools: async_tools }
+      { 
+        sync_tools: sync_tools, 
+        async_tools: async_tools,
+        query_tools: query_tools,
+        action_tools: action_tools 
+      }
     end
 
     # Execute sync tools only (for conversation orchestrator)
