@@ -45,7 +45,7 @@ RSpec.describe ConversationOrchestrator, type: :service do
         end
 
         # Check response format for Home Assistant
-        expect(result[:continue_conversation]).to be_in([true, false])
+        expect(result[:continue_conversation]).to be_in([ true, false ])
         expect(result[:end_conversation]).to eq(!result[:continue_conversation])
       end
     end
@@ -79,9 +79,9 @@ RSpec.describe ConversationOrchestrator, type: :service do
         # Check that OLD pending tools were cleared and possibly NEW ones added
         conversation = Conversation.find_by(session_id: session_id)
         new_pending = conversation.flow_data_json&.dig('pending_tools') || []
-        
+
         # The old pending tool (light_turn_on for light.living_room) should be gone
-        old_tool_present = new_pending.any? { |tool| 
+        old_tool_present = new_pending.any? { |tool|
           tool['name'] == 'light_turn_on' && tool['arguments']['entity_id'] == 'light.living_room'
         }
         expect(old_tool_present).to be false
@@ -231,9 +231,9 @@ RSpec.describe ConversationOrchestrator, type: :service do
       end
 
       # Check Home Assistant response format
-      expect(result[:continue_conversation]).to be_in([true, false])
+      expect(result[:continue_conversation]).to be_in([ true, false ])
       expect(result[:end_conversation]).to eq(!result[:continue_conversation])
-      
+
       puts "✅ Phase 1 implementation test passed!"
       puts "   Response text: #{result[:response][:speech][:plain][:speech]}"
       puts "   Continue conversation: #{result[:continue_conversation]}"

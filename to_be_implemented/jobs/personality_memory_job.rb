@@ -141,7 +141,7 @@ module Jobs
                         lat: gps_sensor.dig('attributes', 'latitude'),
                         lng: gps_sensor.dig('attributes', 'longitude')
                       }
-                    end
+      end
 
       { display: location_name, coordinates: coordinates }
     rescue StandardError => e
@@ -202,11 +202,11 @@ module Jobs
       # Try to parse JSON from the response
       json_string = if response.respond_to?(:response_text)
                       response.response_text
-                    elsif response.is_a?(String)
+      elsif response.is_a?(String)
                       response
-                    else
+      else
                       response.to_s
-                    end
+      end
 
       # Try to extract JSON if it's wrapped in markdown or other text
       json_match = json_string.match(/```json\s*(.*?)\s*```/m) ||
@@ -220,15 +220,15 @@ module Jobs
       # Handle both array and object with memories key
       memories = if parsed.is_a?(Array)
                    parsed
-                 elsif parsed.is_a?(Hash) && parsed['memories']
+      elsif parsed.is_a?(Hash) && parsed['memories']
                    parsed['memories']
-                 elsif parsed.is_a?(Hash) && parsed['items']
+      elsif parsed.is_a?(Hash) && parsed['items']
                    parsed['items'] # In case LLM uses 'items' instead
-                 elsif parsed.is_a?(Hash)
-                   [parsed] # Single memory as hash
-                 else
+      elsif parsed.is_a?(Hash)
+                   [ parsed ] # Single memory as hash
+      else
                    []
-                 end
+      end
 
       # Ensure we have an array of memories
       Array(memories)
@@ -267,9 +267,9 @@ module Jobs
       # Try to parse the fixed response
       fixed_json = if response.respond_to?(:response_text)
                      response.response_text
-                   else
+      else
                      response.to_s
-                   end
+      end
 
       # Remove any markdown if present
       json_match = fixed_json.match(/```json?\s*(.*?)\s*```/m) ||
@@ -279,7 +279,7 @@ module Jobs
       parsed = JSON.parse(fixed_json)
 
       # Ensure it's an array
-      memories = parsed.is_a?(Array) ? parsed : [parsed].compact
+      memories = parsed.is_a?(Array) ? parsed : [ parsed ].compact
 
       logger.info "Successfully fixed JSON, recovered #{memories.size} memories"
       memories

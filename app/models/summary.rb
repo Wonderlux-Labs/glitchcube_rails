@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Summary < ApplicationRecord
-  SUMMARY_TYPES = %w[hourly daily session topic goal_completion].freeze
+  SUMMARY_TYPES = %w[hourly daily intermediate session topic goal_completion].freeze
 
   validates :summary_text, presence: true
   validates :summary_type, presence: true, inclusion: { in: SUMMARY_TYPES }
@@ -39,7 +39,7 @@ class Summary < ApplicationRecord
 
   # Convenience scope for goal completions
   def self.goal_completions
-    where(summary_type: 'goal_completion')
+    where(summary_type: "goal_completion")
   end
 
   # Get all completed goals with formatted data
@@ -47,13 +47,13 @@ class Summary < ApplicationRecord
     goal_completions.recent.map do |summary|
       metadata = summary.metadata_json
       {
-        goal_id: metadata['goal_id'],
-        goal_category: metadata['goal_category'],
+        goal_id: metadata["goal_id"],
+        goal_category: metadata["goal_category"],
         description: summary.summary_text,
         completed_at: summary.created_at,
-        duration: metadata['duration_seconds'],
-        completion_notes: metadata['completion_notes'],
-        expired: metadata['expired']
+        duration: metadata["duration_seconds"],
+        completion_notes: metadata["completion_notes"],
+        expired: metadata["expired"]
       }
     end
   end

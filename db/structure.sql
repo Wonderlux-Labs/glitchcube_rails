@@ -1602,6 +1602,7 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 SET search_path TO "$user", public, topology;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250818124806'),
 ('20250818034459'),
 ('20250818022021'),
 ('20250817212600'),

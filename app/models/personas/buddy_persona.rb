@@ -10,7 +10,7 @@ class Personas::BuddyPersona < CubePersona
   end
 
   def personality_traits
-    persona_config["traits"] || ["enthusiastic", "helpful", "naive", "optimistic"]
+    persona_config["traits"] || [ "enthusiastic", "helpful", "naive", "optimistic" ]
   end
 
   def knowledge_base
@@ -40,7 +40,7 @@ class Personas::BuddyPersona < CubePersona
     # Basic implementation - this would typically call the LLM service
     # with the persona's system prompt and available tools
     system_prompt = persona_config["system_prompt"]
-    
+
     # This is a placeholder - the actual implementation would use
     # the conversation orchestrator and prompt service
     {
@@ -68,13 +68,13 @@ class Personas::BuddyPersona < CubePersona
     {
       "name" => "Buddy",
       "system_prompt" => "You are Buddy, a helpful AI assistant.",
-      "available_tools" => ["LightingTool"],
-      "traits" => ["enthusiastic", "helpful"],
-      "fallback_responses" => ["I'm processing your request!"]
+      "available_tools" => [ "LightingTool" ],
+      "traits" => [ "enthusiastic", "helpful" ],
+      "fallback_responses" => [ "I'm processing your request!" ]
     }
   end
 
   def available_tools
-    persona_config["available_tools"] || ["LightingTool"]
+    persona_config["available_tools"] || [ "LightingTool" ]
   end
 end

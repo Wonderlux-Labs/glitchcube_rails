@@ -17,6 +17,6 @@ class CreateMessages < ActiveRecord::Migration[7.1]
 
     add_index :messages, :role
     add_index :messages, :created_at
-    add_index :messages, [:conversation_id, :created_at]
+    add_index :messages, [ :conversation_id, :created_at ]
   end
 end

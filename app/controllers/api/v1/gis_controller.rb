@@ -4,18 +4,18 @@ class Api::V1::GisController < Api::V1::BaseController
       def streets
         begin
           # For now, return empty GeoJSON - will need to implement GisCacheService
-          render json: { type: 'FeatureCollection', features: [], error: 'Streets data not yet implemented' }
+          render json: { type: "FeatureCollection", features: [], error: "Streets data not yet implemented" }
         rescue StandardError => e
-          render json: { type: 'FeatureCollection', features: [], error: 'Streets data unavailable' }
+          render json: { type: "FeatureCollection", features: [], error: "Streets data unavailable" }
         end
       end
 
       def blocks
         begin
           # For now, return empty GeoJSON - will need to implement GisCacheService
-          render json: { type: 'FeatureCollection', features: [], error: 'Blocks data not yet implemented' }
+          render json: { type: "FeatureCollection", features: [], error: "Blocks data not yet implemented" }
         rescue StandardError => e
-          render json: { type: 'FeatureCollection', features: [], error: 'Blocks data unavailable' }
+          render json: { type: "FeatureCollection", features: [], error: "Blocks data unavailable" }
         end
       end
 
@@ -30,46 +30,46 @@ class Api::V1::GisController < Api::V1::BaseController
             landmarks: context[:landmarks] || [],
             count: (context[:landmarks] || []).length,
             center: { lat: lat, lng: lng },
-            source: 'location_context'
+            source: "location_context"
           }
         else
-          render json: { error: 'Missing lat/lng parameters' }, status: :bad_request
+          render json: { error: "Missing lat/lng parameters" }, status: :bad_request
         end
       end
 
       def initial
         # Load trash fence and all landmarks except toilets
         fence = Boundary.trash_fence
-        all_landmarks = Landmark.active.where.not(landmark_type: 'toilet')
+        all_landmarks = Landmark.active.where.not(landmark_type: "toilet")
         features = []
-        
+
         # Add trash fence
         if fence
           features << {
-            type: 'Feature',
+            type: "Feature",
             geometry: {
-              type: 'Polygon',
+              type: "Polygon",
               coordinates: fence.coordinates
             },
             properties: {
               id: "boundary-#{fence.id}",
               name: fence.name,
-              feature_type: 'boundary'
+              feature_type: "boundary"
             }
           }
         end
-        
+
         # Add all landmarks (except toilets)
         all_landmarks.each do |landmark|
           feature_type = case landmark.landmark_type
-                         when 'center', 'sacred', 'gathering' then 'major_landmark'
-                         else 'landmark'
-                         end
+          when "center", "sacred", "gathering" then "major_landmark"
+          else "landmark"
+          end
           features << {
-            type: 'Feature',
+            type: "Feature",
             geometry: {
-              type: 'Point',
-              coordinates: [landmark.longitude.to_f, landmark.latitude.to_f]
+              type: "Point",
+              coordinates: [ landmark.longitude.to_f, landmark.latitude.to_f ]
             },
             properties: {
               id: "landmark-#{landmark.id}",
@@ -79,16 +79,16 @@ class Api::V1::GisController < Api::V1::BaseController
             }
           }
         end
-        
+
         render json: {
-          type: 'FeatureCollection',
+          type: "FeatureCollection",
           features: features,
           count: features.length,
-          source: 'initial_load'
+          source: "initial_load"
         }
       rescue StandardError => e
         render json: {
-          type: 'FeatureCollection',
+          type: "FeatureCollection",
           features: [],
           count: 0,
           error: e.message
@@ -98,9 +98,9 @@ class Api::V1::GisController < Api::V1::BaseController
       def trash_fence
         begin
           # For now, return empty GeoJSON - will need to implement GisCacheService
-          render json: { type: 'FeatureCollection', features: [], error: 'Trash fence data not yet implemented' }
+          render json: { type: "FeatureCollection", features: [], error: "Trash fence data not yet implemented" }
         rescue StandardError => e
-          render json: { type: 'FeatureCollection', features: [], error: 'Trash fence data unavailable' }
+          render json: { type: "FeatureCollection", features: [], error: "Trash fence data unavailable" }
         end
       end
 end

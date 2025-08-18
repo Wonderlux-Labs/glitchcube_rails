@@ -10,7 +10,7 @@ class Personas::ZorpPersona < CubePersona
   end
 
   def personality_traits
-    persona_config["traits"] || ["analytical", "curious", "detached", "observant"]
+    persona_config["traits"] || [ "analytical", "curious", "detached", "observant" ]
   end
 
   def knowledge_base
@@ -40,7 +40,7 @@ class Personas::ZorpPersona < CubePersona
 
   def process_message(message, context = {})
     system_prompt = persona_config["system_prompt"]
-    
+
     {
       system_prompt: system_prompt,
       available_tools: available_tools,
@@ -66,13 +66,13 @@ class Personas::ZorpPersona < CubePersona
     {
       "name" => "Zorp",
       "system_prompt" => "You are Zorp, an alien consciousness observing humans.",
-      "available_tools" => ["LightingTool"],
-      "traits" => ["analytical", "curious"],
-      "fallback_responses" => ["Fascinating. This requires analysis."]
+      "available_tools" => [ "LightingTool" ],
+      "traits" => [ "analytical", "curious" ],
+      "fallback_responses" => [ "Fascinating. This requires analysis." ]
     }
   end
 
   def available_tools
-    persona_config["available_tools"] || ["LightingTool"]
+    persona_config["available_tools"] || [ "LightingTool" ]
   end
 end

@@ -1,8 +1,8 @@
 # Home Assistant service for interacting with Home Assistant API
 # Provides simple methods to get/set entities and make service calls
 
-require 'net/http'
-require 'json'
+require "net/http"
+require "json"
 
 class HomeAssistantService
   class Error < StandardError; end
@@ -24,7 +24,7 @@ class HomeAssistantService
 
   # Get all entities
   def entities
-    get('/api/states')
+    get("/api/states")
   end
 
   # Get entity by entity_id
@@ -36,13 +36,13 @@ class HomeAssistantService
 
   # Get entities by domain (e.g., 'light', 'switch', 'sensor')
   def entities_by_domain(domain)
-    entities.select { |entity| entity['entity_id'].start_with?("#{domain}.") }
+    entities.select { |entity| entity["entity_id"].start_with?("#{domain}.") }
   end
 
   # Get entity state
   def entity_state(entity_id)
     entity_data = entity(entity_id)
-    entity_data&.dig('state')
+    entity_data&.dig("state")
   end
 
   # Set entity state (for writable entities)
@@ -62,38 +62,38 @@ class HomeAssistantService
   # Turn on entity (works for lights, switches, etc.)
   def turn_on(entity_id, **options)
     data = { entity_id: entity_id }.merge(options)
-    call_service(entity_domain(entity_id), 'turn_on', data)
+    call_service(entity_domain(entity_id), "turn_on", data)
   end
 
   # Turn off entity
   def turn_off(entity_id, **options)
     data = { entity_id: entity_id }.merge(options)
-    call_service(entity_domain(entity_id), 'turn_off', data)
+    call_service(entity_domain(entity_id), "turn_off", data)
   end
 
   # Toggle entity
   def toggle(entity_id, **options)
     data = { entity_id: entity_id }.merge(options)
-    call_service(entity_domain(entity_id), 'toggle', data)
+    call_service(entity_domain(entity_id), "toggle", data)
   end
 
   # Get all services
   def services
-    get('/api/services')
+    get("/api/services")
   end
 
   # Get services for a specific domain
   def domain_services(domain)
     services_data = services
     return nil unless services_data.is_a?(Array)
-    
-    domain_service = services_data.find { |service| service['domain'] == domain }
-    domain_service&.dig('services')
+
+    domain_service = services_data.find { |service| service["domain"] == domain }
+    domain_service&.dig("services")
   end
 
   # Check if Home Assistant is available
   def available?
-    get('/api/')
+    get("/api/")
     true
   rescue StandardError
     false
@@ -101,12 +101,12 @@ class HomeAssistantService
 
   # Get Home Assistant configuration
   def config
-    get('/api/config')
+    get("/api/config")
   end
 
   # Get events
   def events
-    get('/api/events')
+    get("/api/events")
   end
 
   # Fire an event
@@ -129,7 +129,7 @@ class HomeAssistantService
   private
 
   def entity_domain(entity_id)
-    entity_id.split('.').first
+    entity_id.split(".").first
   end
 
   def get(path)
@@ -146,17 +146,17 @@ class HomeAssistantService
   def build_request(klass, path)
     uri = URI("#{base_url}#{path}")
     request = klass.new(uri)
-    request['Authorization'] = "Bearer #{token}"
-    request['Content-Type'] = 'application/json'
+    request["Authorization"] = "Bearer #{token}"
+    request["Content-Type"] = "application/json"
     request
   end
 
   def make_request(request)
     uri = URI(request.uri)
-    
-    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', read_timeout: timeout) do |http|
+
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", read_timeout: timeout) do |http|
       response = http.request(request)
-      
+
       case response.code.to_i
       when 200..299
         response.body.empty? ? {} : JSON.parse(response.body)

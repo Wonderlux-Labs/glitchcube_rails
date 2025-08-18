@@ -39,7 +39,7 @@ RSpec.describe GlitchCube, type: :model do
 
       it 'sets location in cache' do
         result = GlitchCube.set_current_location(lat: 40.7864, lng: -119.2065)
-        
+
         expect(result[:lat]).to eq(40.7864)
         expect(result[:lng]).to eq(-119.2065)
         expect(result[:source]).to eq('spoofed')
@@ -60,7 +60,7 @@ RSpec.describe GlitchCube, type: :model do
 
       it 'returns nil and does not set cache' do
         result = GlitchCube.set_current_location(lat: 40.7864, lng: -119.2065)
-        
+
         expect(result).to be_nil
       end
     end

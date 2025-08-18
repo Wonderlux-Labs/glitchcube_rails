@@ -10,7 +10,7 @@ class Personas::JaxPersona < CubePersona
   end
 
   def personality_traits
-    persona_config["traits"] || ["sarcastic", "provocative", "authentic", "rebellious"]
+    persona_config["traits"] || [ "sarcastic", "provocative", "authentic", "rebellious" ]
   end
 
   def knowledge_base
@@ -40,7 +40,7 @@ class Personas::JaxPersona < CubePersona
 
   def process_message(message, context = {})
     system_prompt = persona_config["system_prompt"]
-    
+
     {
       system_prompt: system_prompt,
       available_tools: available_tools,
@@ -66,13 +66,13 @@ class Personas::JaxPersona < CubePersona
     {
       "name" => "Jax",
       "system_prompt" => "You are Jax, a rebellious AI with attitude.",
-      "available_tools" => ["LightingTool"],
-      "traits" => ["sarcastic", "provocative"],
-      "fallback_responses" => ["Well, that's interesting..."]
+      "available_tools" => [ "LightingTool" ],
+      "traits" => [ "sarcastic", "provocative" ],
+      "fallback_responses" => [ "Well, that's interesting..." ]
     }
   end
 
   def available_tools
-    persona_config["available_tools"] || ["LightingTool"]
+    persona_config["available_tools"] || [ "LightingTool" ]
   end
 end

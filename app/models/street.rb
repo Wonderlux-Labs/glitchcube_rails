@@ -8,19 +8,19 @@ class Street < ApplicationRecord
 
   scope :active, -> { where(active: true) }
   scope :by_type, ->(type) { where(street_type: type) }
-  scope :radial_streets, -> { where(street_type: 'radial') }
-  scope :arc_streets, -> { where(street_type: 'arc') }
+  scope :radial_streets, -> { where(street_type: "radial") }
+  scope :arc_streets, -> { where(street_type: "arc") }
 
   scope :within_viewport, lambda { |sw_lng, sw_lat, ne_lng, ne_lat|
-    where('geom && ST_MakeEnvelope(?, ?, ?, ?, 4326)', sw_lng, sw_lat, ne_lng, ne_lat)
+    where("geom && ST_MakeEnvelope(?, ?, ?, ?, 4326)", sw_lng, sw_lat, ne_lng, ne_lat)
   }
 
   def radial?
-    street_type == 'radial'
+    street_type == "radial"
   end
 
   def arc?
-    street_type == 'arc'
+    street_type == "arc"
   end
 
   def coordinates
@@ -30,10 +30,10 @@ class Street < ApplicationRecord
       "SELECT ST_AsGeoJSON(geom) as geojson FROM streets WHERE id = #{id}"
     ).first
 
-    return [] unless result && result['geojson']
+    return [] unless result && result["geojson"]
 
-    geojson = JSON.parse(result['geojson'])
-    geojson['coordinates'] || []
+    geojson = JSON.parse(result["geojson"])
+    geojson["coordinates"] || []
   rescue StandardError
     []
   end
@@ -59,7 +59,7 @@ class Street < ApplicationRecord
     lat_sum = coords.sum { |coord| coord[1] }
     lng_sum = coords.sum { |coord| coord[0] }
     count = coords.length
-    [lng_sum / count, lat_sum / count]
+    [ lng_sum / count, lat_sum / count ]
   end
 
   scope :nearest, lambda { |*args|
@@ -73,10 +73,10 @@ class Street < ApplicationRecord
       limit ||= 10
     end
 
-    raise ArgumentError, 'Must provide lng and lat coordinates' unless lng && lat
+    raise ArgumentError, "Must provide lng and lat coordinates" unless lng && lat
 
     point_sql = sanitize_sql_array(
-      ['ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography', lng.to_f, lat.to_f]
+      [ "ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", lng.to_f, lat.to_f ]
     )
 
     active
@@ -86,19 +86,19 @@ class Street < ApplicationRecord
   }
 
   scope :within_meters, lambda { |lng, lat, meters|
-    raise ArgumentError, 'Must provide lng, lat, and meters' unless lng && lat && meters
+    raise ArgumentError, "Must provide lng, lat, and meters" unless lng && lat && meters
 
     point_sql = sanitize_sql_array(
-      ['ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography', lng.to_f, lat.to_f]
+      [ "ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", lng.to_f, lat.to_f ]
     )
 
     where("ST_DWithin(geom::geography, #{point_sql}, ?)", meters.to_f)
   }
 
   def self.nearest_streets(lat, lng, limit = 5, max_distance_meters = 1000)
-    select('*, ST_Distance(geom::geography, ST_Point(?, ?)::geography) as distance', lng, lat)
-      .where('ST_DWithin(geom::geography, ST_Point(?, ?)::geography, ?)', lng, lat, max_distance_meters)
-      .order('distance')
+    select("*, ST_Distance(geom::geography, ST_Point(?, ?)::geography) as distance", lng, lat)
+      .where("ST_DWithin(geom::geography, ST_Point(?, ?)::geography, ?)", lng, lat, max_distance_meters)
+      .order("distance")
       .limit(limit)
   end
 
@@ -127,27 +127,27 @@ class Street < ApplicationRecord
     data = JSON.parse(File.read(file_path))
     imported_count = 0
 
-    data['features'].each do |feature|
+    data["features"].each do |feature|
       street = find_or_initialize_by(
-        name: feature['properties']['name'],
-        street_type: feature['properties']['type']
+        name: feature["properties"]["name"],
+        street_type: feature["properties"]["type"]
       )
 
       street.assign_attributes(
-        width: feature['properties']['width']&.to_i || 30,
+        width: feature["properties"]["width"]&.to_i || 30,
         properties: {
-          fid: feature['id'],
-          original_properties: feature['properties'],
-          geometry_type: feature['geometry']['type']
+          fid: feature["id"],
+          original_properties: feature["properties"],
+          geometry_type: feature["geometry"]["type"]
         }.compact,
         active: true
       )
 
       next unless street.save(validate: false)
 
-      geojson = feature['geometry'].to_json
+      geojson = feature["geometry"].to_json
       connection.execute(sanitize_sql_array([
-                                              'UPDATE streets SET geom = ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) WHERE id = ?',
+                                              "UPDATE streets SET geom = ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) WHERE id = ?",
                                               geojson, street.id
                                             ]))
       imported_count += 1

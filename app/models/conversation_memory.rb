@@ -2,7 +2,7 @@
 
 class ConversationMemory < ApplicationRecord
   belongs_to :conversation, foreign_key: :session_id, primary_key: :session_id
-  
+
   MEMORY_TYPES = %w[preference fact instruction context event].freeze
   IMPORTANCE_RANGE = (1..10).freeze
 

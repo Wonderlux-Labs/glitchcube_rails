@@ -27,10 +27,10 @@ class GlitchCube
         lat: lat.to_f,
         lng: lng.to_f,
         timestamp: Time.now.iso8601,
-        source: 'spoofed'
+        source: "spoofed"
       }
 
-      Rails.cache.write('current_cube_location', location_data.to_json, expires_in: 1.hour)
+      Rails.cache.write("current_cube_location", location_data.to_json, expires_in: 1.hour)
       location_data
     end
 
@@ -38,7 +38,7 @@ class GlitchCube
     def current_spoofed_location
       return nil unless gps_spoofing_allowed?
 
-      cached_data = Rails.cache.read('current_cube_location')
+      cached_data = Rails.cache.read("current_cube_location")
       return nil unless cached_data
 
       JSON.parse(cached_data, symbolize_names: true)
@@ -48,7 +48,7 @@ class GlitchCube
 
     # Clear spoofed location
     def clear_current_location
-      Rails.cache.delete('current_cube_location')
+      Rails.cache.delete("current_cube_location")
     end
 
     # Check if location is spoofed

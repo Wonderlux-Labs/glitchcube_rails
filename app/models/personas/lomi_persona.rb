@@ -10,7 +10,7 @@ class Personas::LomiPersona < CubePersona
   end
 
   def personality_traits
-    persona_config["traits"] || ["wise", "spiritual", "gentle", "insightful"]
+    persona_config["traits"] || [ "wise", "spiritual", "gentle", "insightful" ]
   end
 
   def knowledge_base
@@ -40,7 +40,7 @@ class Personas::LomiPersona < CubePersona
 
   def process_message(message, context = {})
     system_prompt = persona_config["system_prompt"]
-    
+
     {
       system_prompt: system_prompt,
       available_tools: available_tools,
@@ -66,13 +66,13 @@ class Personas::LomiPersona < CubePersona
     {
       "name" => "Lomi",
       "system_prompt" => "You are Lomi, a wise spiritual guide.",
-      "available_tools" => ["LightingTool"],
-      "traits" => ["wise", "spiritual"],
-      "fallback_responses" => ["Let me reflect on this wisdom..."]
+      "available_tools" => [ "LightingTool" ],
+      "traits" => [ "wise", "spiritual" ],
+      "fallback_responses" => [ "Let me reflect on this wisdom..." ]
     }
   end
 
   def available_tools
-    persona_config["available_tools"] || ["LightingTool"]
+    persona_config["available_tools"] || [ "LightingTool" ]
   end
 end

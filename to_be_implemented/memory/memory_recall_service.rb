@@ -107,7 +107,7 @@ module Services
           # Find who else appears in stories with this person
           people_set = Set.new
           memories.each do |memory|
-            people_set.merge(memory.people - [person_name])
+            people_set.merge(memory.people - [ person_name ])
 
             # Include brief story snippets
             connections[:stories] << {
@@ -134,15 +134,15 @@ module Services
         def memory_introduction(memory)
           # Simple intros based on what we have
           if memory.upcoming_event?
-            ['Oh! Did you hear about', "Don't miss", "There's something happening"].sample
+            [ 'Oh! Did you hear about', "Don't miss", "There's something happening" ].sample
           elsif memory.location.present?
-            ["Last time at #{memory.location},", "When I was at #{memory.location},", "At #{memory.location},"].sample
+            [ "Last time at #{memory.location},", "When I was at #{memory.location},", "At #{memory.location}," ].sample
           elsif memory.tags.include?('gossip') || memory.tags.include?('drama')
-            ['I heard that', 'Someone told me', 'Did you know'].sample
+            [ 'I heard that', 'Someone told me', 'Did you know' ].sample
           elsif memory.tags.include?('wild') || memory.tags.include?('crazy')
-            ["You won't believe this -", 'Something wild happened:', 'Get this -'].sample
+            [ "You won't believe this -", 'Something wild happened:', 'Get this -' ].sample
           else
-            ['That reminds me,', 'Oh!', 'By the way,'].sample
+            [ 'That reminds me,', 'Oh!', 'By the way,' ].sample
           end
         end
       end

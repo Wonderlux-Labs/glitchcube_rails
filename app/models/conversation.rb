@@ -79,8 +79,8 @@ class Conversation < ApplicationRecord
   end
 
   def update_totals!
-    total_tokens = messages.sum('COALESCE(prompt_tokens, 0) + COALESCE(completion_tokens, 0)')
-    total_cost = messages.sum('COALESCE(cost, 0)')
+    total_tokens = messages.sum("COALESCE(prompt_tokens, 0) + COALESCE(completion_tokens, 0)")
+    total_cost = messages.sum("COALESCE(cost, 0)")
 
     update!(
       total_tokens: total_tokens,

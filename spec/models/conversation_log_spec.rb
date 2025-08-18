@@ -40,7 +40,7 @@ RSpec.describe ConversationLog, type: :model do
       before { log.tool_results = '{"success": true, "data": [1,2,3]}' }
 
       it 'parses JSON correctly' do
-        expect(log.tool_results_json).to eq({ 'success' => true, 'data' => [1, 2, 3] })
+        expect(log.tool_results_json).to eq({ 'success' => true, 'data' => [ 1, 2, 3 ] })
       end
     end
 
@@ -85,7 +85,7 @@ RSpec.describe ConversationLog, type: :model do
     let(:log) { build(:conversation_log) }
 
     it 'converts hash to JSON string' do
-      log.tool_results_json = { success: true, data: [1, 2, 3] }
+      log.tool_results_json = { success: true, data: [ 1, 2, 3 ] }
       expect(log.tool_results).to eq('{"success":true,"data":[1,2,3]}')
     end
   end

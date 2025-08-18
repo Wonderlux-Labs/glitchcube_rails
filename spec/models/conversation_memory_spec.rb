@@ -78,7 +78,7 @@ RSpec.describe ConversationMemory, type: :model do
 
       it 'parses JSON correctly' do
         expect(memory.metadata_json).to eq({
-          'tags' => ['important'],
+          'tags' => [ 'important' ],
           'source' => 'user'
         })
       end
@@ -97,7 +97,7 @@ RSpec.describe ConversationMemory, type: :model do
     let(:memory) { build(:conversation_memory) }
 
     it 'converts hash to JSON string' do
-      memory.metadata_json = { tags: ['important'], source: 'user' }
+      memory.metadata_json = { tags: [ 'important' ], source: 'user' }
       expect(memory.metadata).to eq('{"tags":["important"],"source":"user"}')
     end
   end

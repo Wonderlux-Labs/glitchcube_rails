@@ -3,40 +3,40 @@ class Tools::Effects::ControlEffects < Tools::BaseTool
   def self.description
     "Control brief environmental effects like fan, strobe, blacklight, and siren with auto-toggle"
   end
-  
+
   def self.narrative_desc
     "control effects - manage environmental effects and lighting"
   end
-  
+
   def self.prompt_schema
     "control_effects(effect: 'fan', action: 'on') - Control environmental effects"
   end
-  
+
   def self.tool_type
     :async # Effect control happens after response
   end
-  
+
   def self.definition
     @definition ||= OpenRouter::Tool.define do
       name "control_effects"
       description "Control brief environmental effects like fan, strobe lighting, blacklight, and siren (all auto-toggle off)"
-      
+
       parameters do
         string :effect, required: true,
                description: "Effect to control",
                enum: -> { Tools::Effects::ControlEffects.available_effects }
-        
+
         string :action, required: true,
                description: "Action to perform (on/off/toggle)",
-               enum: ["on", "off", "toggle"]
+               enum: [ "on", "off", "toggle" ]
       end
     end
   end
-  
+
   def self.available_effects
-    ["fan", "strobe", "blacklight", "siren"]
+    [ "fan", "strobe", "blacklight", "siren" ]
   end
-  
+
   def call(effect:, action:)
     # Check fan cooldown before allowing fan operation
     if effect == "fan" && action == "on"
@@ -52,15 +52,15 @@ class Tools::Effects::ControlEffects < Tools::BaseTool
         Rails.logger.warn "Could not check fan cooldown: #{e.message}"
       end
     end
-    
+
     # Map effects to their corresponding entities (power switches preferred)
     effect_entities = {
       "fan" => "switch.fan_switch",         # Direct power switch
-      "strobe" => "switch.strobe_switch",   # Direct power switch  
+      "strobe" => "switch.strobe_switch",   # Direct power switch
       "blacklight" => "switch.blacklight_switch", # Direct power switch
       "siren" => "siren.small_siren"       # Direct siren entity
     }
-    
+
     entity_id = effect_entities[effect]
     unless entity_id
       return error_response(
@@ -68,14 +68,14 @@ class Tools::Effects::ControlEffects < Tools::BaseTool
         available_effects: available_effects
       )
     end
-    
+
     # Map actions to Home Assistant services
     service_map = {
       "on" => "turn_on",
-      "off" => "turn_off", 
+      "off" => "turn_off",
       "toggle" => "toggle"
     }
-    
+
     service = service_map[action]
     unless service
       return error_response(
@@ -83,16 +83,16 @@ class Tools::Effects::ControlEffects < Tools::BaseTool
         available_actions: service_map.keys
       )
     end
-    
+
     # Call Home Assistant service (determine domain from entity_id)
     begin
-      domain = entity_id.split('.').first
+      domain = entity_id.split(".").first
       result = HomeAssistantService.call_service(
-        domain, 
-        service, 
+        domain,
+        service,
         { entity_id: entity_id }
       )
-      
+
       success_response(
         "#{action.capitalize}ed #{effect} effect",
         effect: effect,

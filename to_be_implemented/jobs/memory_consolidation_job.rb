@@ -9,7 +9,7 @@ module Jobs
       unless summary
         Services::Logging::SimpleLogger.info(
           'No summary provided - consolidating recent memories from database',
-          tagged: [:memory_consolidation]
+          tagged: [ :memory_consolidation ]
         )
         # TODO: Implement periodic memory consolidation from recent conversations
         # This should:
@@ -23,7 +23,7 @@ module Jobs
 
       Services::Logging::SimpleLogger.info(
         'Consolidating memories from conversation...',
-        tagged: [:memory_consolidation]
+        tagged: [ :memory_consolidation ]
       )
 
       # Extract memorable insights

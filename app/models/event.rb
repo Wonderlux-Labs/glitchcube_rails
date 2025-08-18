@@ -9,8 +9,8 @@ class Event < ApplicationRecord
   validates :importance, presence: true, inclusion: { in: IMPORTANCE_RANGE }
   validates :extracted_from_session, presence: true
 
-  scope :upcoming, -> { where('event_time > ?', Time.current) }
-  scope :past, -> { where('event_time <= ?', Time.current) }
+  scope :upcoming, -> { where("event_time > ?", Time.current) }
+  scope :past, -> { where("event_time <= ?", Time.current) }
   scope :within_hours, ->(hours) { where(event_time: Time.current..(Time.current + hours.hours)) }
   scope :by_location, ->(location) { where(location: location) }
   scope :high_importance, -> { where(importance: 7..10) }
@@ -48,6 +48,6 @@ class Event < ApplicationRecord
   end
 
   def formatted_time
-    event_time.strftime('%m/%d at %I:%M %p')
+    event_time.strftime("%m/%d at %I:%M %p")
   end
 end

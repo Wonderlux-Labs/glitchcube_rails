@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -e
+
+# Production stop script
+# Gracefully stops all application processes
+
+echo "🛑 Stopping production application..."
+
+# Function to log with timestamp
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Ensure we're in the Rails root directory
+if [ ! -f "config/application.rb" ]; then
+  echo "❌ Error: Must run from Rails application root directory"
+  exit 1
+fi
+
+# Stop SolidQueue gracefully first
+log "🔄 Stopping SolidQueue workers..."
+if [ -f "tmp/pids/solid_queue.pid" ]; then
+  SOLIDQUEUE_PID=$(cat tmp/pids/solid_queue.pid)
+  if kill -TERM $SOLIDQUEUE_PID 2>/dev/null; then
+    log "Sent SIGTERM to SolidQueue (PID: $SOLIDQUEUE_PID)"
+    # Wait up to 30 seconds for graceful shutdown
+    for i in {1..30}; do
+      if ! kill -0 $SOLIDQUEUE_PID 2>/dev/null; then
+        log "SolidQueue stopped gracefully"
+        break
+      fi
+      sleep 1
+    done
+    
+    # Force kill if still running
+    if kill -0 $SOLIDQUEUE_PID 2>/dev/null; then
+      log "Force killing SolidQueue..."
+      kill -KILL $SOLIDQUEUE_PID 2>/dev/null || true
+    fi
+  fi
+  rm -f tmp/pids/solid_queue.pid
+fi
+
+# Stop Puma gracefully
+log "🔄 Stopping Puma server..."
+if [ -f "tmp/pids/server.pid" ]; then
+  PUMA_PID=$(cat tmp/pids/server.pid)
+  if kill -TERM $PUMA_PID 2>/dev/null; then
+    log "Sent SIGTERM to Puma (PID: $PUMA_PID)"
+    # Wait up to 30 seconds for graceful shutdown
+    for i in {1..30}; do
+      if ! kill -0 $PUMA_PID 2>/dev/null; then
+        log "Puma stopped gracefully"
+        break
+      fi
+      sleep 1
+    done
+    
+    # Force kill if still running
+    if kill -0 $PUMA_PID 2>/dev/null; then
+      log "Force killing Puma..."
+      kill -KILL $PUMA_PID 2>/dev/null || true
+    fi
+  fi
+fi
+
+# Use rake tasks as backup
+log "🔄 Running process cleanup..."
+bundle exec rake processes:kill_all 2>/dev/null || true
+bundle exec rake processes:cleanup_pids
+
+# Wait for processes to fully terminate
+sleep 2
+
+# Final status check
+log "📊 Final status check..."
+if pgrep -f puma > /dev/null; then
+  log "⚠️ Warning: Some Puma processes may still be running"
+else
+  log "✅ No Puma processes detected"
+fi
+
+if pgrep -f solid-queue > /dev/null; then
+  log "⚠️ Warning: Some SolidQueue processes may still be running"  
+else
+  log "✅ No SolidQueue processes detected"
+fi
+
+log "🎉 Application stopped successfully!"

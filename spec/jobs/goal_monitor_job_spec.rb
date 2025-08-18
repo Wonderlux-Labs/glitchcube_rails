@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe GoalMonitorJob, type: :job do
   let(:job) { described_class.new }
-  
+
   before do
     Rails.cache.clear
     allow(GoalService).to receive(:safety_mode_active?).and_return(false)
@@ -12,22 +12,38 @@ RSpec.describe GoalMonitorJob, type: :job do
   end
 
   describe '#perform' do
-    it 'completes successfully in test environment' do
-      expect(Rails.logger).to receive(:info).with('🎯 GoalMonitorJob starting')
-      expect(Rails.logger).to receive(:info).with('✅ GoalMonitorJob completed successfully')
-      
-      expect { job.perform }.not_to raise_error
+    context 'in test environment' do
+      it 'returns early without executing' do
+        expect(Rails.logger).not_to receive(:info)
+        expect { job.perform }.not_to raise_error
+      end
     end
 
-    context 'when an error occurs' do
+    context 'in production environment' do
       before do
+        allow(Rails.env).to receive(:production?).and_return(true)
+        allow(Rails.env).to receive(:development?).and_return(false)
+      end
+
+      it 'completes successfully' do
+        expect(Rails.logger).to receive(:info).with('🎯 GoalMonitorJob starting')
+        expect(Rails.logger).to receive(:info).with('✅ GoalMonitorJob completed successfully')
+
+        expect { job.perform }.not_to raise_error
+      end
+    end
+
+    context 'when an error occurs in production' do
+      before do
+        allow(Rails.env).to receive(:production?).and_return(true)
+        allow(Rails.env).to receive(:development?).and_return(false)
         allow(job).to receive(:check_safety_conditions).and_raise(StandardError, 'Test error')
       end
 
       it 'logs the error' do
         expect(Rails.logger).to receive(:error).with('❌ GoalMonitorJob failed: Test error')
         expect(Rails.logger).to receive(:error).with(kind_of(String)) # backtrace
-        
+
         expect { job.perform }.not_to raise_error
       end
     end
@@ -51,7 +67,7 @@ RSpec.describe GoalMonitorJob, type: :job do
       it 'switches to safety goal' do
         expect(Rails.logger).to receive(:info).with('⚠️ Safety mode active - switching to safety goal')
         expect(GoalService).to receive(:request_new_goal).with(reason: 'safety_mode_activated')
-        
+
         job.send(:check_safety_conditions)
       end
     end
@@ -73,7 +89,7 @@ RSpec.describe GoalMonitorJob, type: :job do
       it 'switches to regular goal' do
         expect(Rails.logger).to receive(:info).with('✅ Safety mode deactivated - switching to regular goal')
         expect(GoalService).to receive(:request_new_goal).with(reason: 'safety_mode_deactivated')
-        
+
         job.send(:check_safety_conditions)
       end
     end
@@ -100,7 +116,7 @@ RSpec.describe GoalMonitorJob, type: :job do
         expect(Rails.logger).to receive(:info).with('⏰ Goal expired - completing and selecting new goal')
         expect(GoalService).to receive(:complete_goal).with(completion_notes: 'Goal expired after time limit')
         expect(GoalService).to receive(:select_goal)
-        
+
         job.send(:check_goal_expiration)
       end
     end
@@ -113,7 +129,7 @@ RSpec.describe GoalMonitorJob, type: :job do
       it 'does nothing' do
         expect(GoalService).not_to receive(:complete_goal)
         expect(GoalService).not_to receive(:select_goal)
-        
+
         job.send(:check_goal_expiration)
       end
     end
@@ -127,7 +143,7 @@ RSpec.describe GoalMonitorJob, type: :job do
         created_at: 5.minutes.ago
       )
     end
-    
+
     let!(:normal_log) do
       create(
         :conversation_log,
@@ -148,17 +164,17 @@ RSpec.describe GoalMonitorJob, type: :job do
       expect(Rails.logger).to receive(:info).with('🎉 Detected goal completion in conversation - completing goal')
       expect(GoalService).to receive(:complete_goal).with(completion_notes: 'Persona indicated goal completion')
       expect(GoalService).to receive(:select_goal)
-      
+
       job.send(:check_for_goal_completion)
     end
 
     it 'ignores old completion messages' do
       # Remove the recent completion log
       completion_log.destroy
-      
+
       expect(GoalService).not_to receive(:complete_goal)
       expect(GoalService).not_to receive(:select_goal)
-      
+
       job.send(:check_for_goal_completion)
     end
 
@@ -177,12 +193,12 @@ RSpec.describe GoalMonitorJob, type: :job do
       it 'detects various completion patterns' do
         completion_phrases.each do |phrase|
           log = create(:conversation_log, ai_response: phrase, created_at: 2.minutes.ago)
-          
+
           expect(GoalService).to receive(:complete_goal).once
           expect(GoalService).to receive(:select_goal).once
-          
+
           job.send(:check_for_goal_completion)
-          
+
           log.destroy
         end
       end
@@ -196,7 +212,7 @@ RSpec.describe GoalMonitorJob, type: :job do
       it 'does nothing' do
         expect(GoalService).not_to receive(:complete_goal)
         expect(GoalService).not_to receive(:select_goal)
-        
+
         job.send(:check_for_goal_completion)
       end
     end

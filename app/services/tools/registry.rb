@@ -11,19 +11,19 @@ class Tools::Registry
         "set_light_effect" => Tools::Lights::SetEffect,
         "list_light_effects" => Tools::Lights::ListEffects,
         "get_light_state" => Tools::Lights::GetState,
-        
+
         # Music tools
         "play_music" => Tools::Music::PlayMusic,
-        
+
         # Display tools
         "display_notification" => Tools::Display::Notification,
-        
+
         # Effects tools
         "control_effects" => Tools::Effects::ControlEffects,
-        
+
         # Mode control tools
         "mode_control" => Tools::Modes::ModeControl,
-        
+
         # Communication tools
         "make_announcement" => Tools::Communication::Announcement
       }
@@ -104,14 +104,14 @@ class Tools::Registry
     def tool_intent(tool_name)
       tool_class = get_tool(tool_name)
       return :unknown unless tool_class
-      
+
       # Query tools: Get information, sync execution, return data for speech
       # Action tools: Change state, usually async, minimal speech needed
       case tool_name
       when "get_light_state", "list_light_effects"
         :query
-      when "turn_on_light", "turn_off_light", "set_light_color_and_brightness", "set_light_effect", 
-           "play_music", "display_notification", "control_effects", 
+      when "turn_on_light", "turn_off_light", "set_light_color_and_brightness", "set_light_effect",
+           "play_music", "display_notification", "control_effects",
            "mode_control", "make_announcement"
         :action
       else
@@ -142,7 +142,7 @@ class Tools::Registry
         when :async
           async_tools << call
         end
-        
+
         # Categorize by intent
         case tool_intent(tool_name)
         when :query
@@ -152,11 +152,11 @@ class Tools::Registry
         end
       end
 
-      { 
-        sync_tools: sync_tools, 
+      {
+        sync_tools: sync_tools,
         async_tools: async_tools,
         query_tools: query_tools,
-        action_tools: action_tools 
+        action_tools: action_tools
       }
     end
 
@@ -194,36 +194,36 @@ class Tools::Registry
         Tools::Lights::SetEffect,
         Tools::Lights::ListEffects,
         Tools::Lights::GetState,
-        
+
         # Display
         Tools::Display::Notification,
-        
+
         # Music
         Tools::Music::PlayMusic,
-        
+
         # Effects
         Tools::Effects::ControlEffects,
-        
+
         # Communication
         Tools::Communication::Announcement
       ]
-      
+
       case persona&.to_s&.downcase
       when "buddy"
         # Buddy gets all tools - enthusiastic and friendly
-        base_tool_classes + [Tools::Modes::ModeControl]
+        base_tool_classes + [ Tools::Modes::ModeControl ]
       when "jax"
         # Jax gets all tools - dramatic and expressive
-        base_tool_classes + [Tools::Modes::ModeControl]
+        base_tool_classes + [ Tools::Modes::ModeControl ]
       when "zorp"
         # Zorp gets all tools - analytical and experimental
-        base_tool_classes + [Tools::Modes::ModeControl]
+        base_tool_classes + [ Tools::Modes::ModeControl ]
       when "lomi"
         # Lomi gets all tools - healing and nurturing
-        base_tool_classes + [Tools::Modes::ModeControl]
+        base_tool_classes + [ Tools::Modes::ModeControl ]
       else
         # Default persona gets all tools
-        base_tool_classes + [Tools::Modes::ModeControl]
+        base_tool_classes + [ Tools::Modes::ModeControl ]
       end
     end
 

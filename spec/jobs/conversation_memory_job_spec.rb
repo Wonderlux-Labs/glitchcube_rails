@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe ConversationMemoryJob, type: :job do
   let!(:conversation) { create(:conversation, session_id: 'test-session', persona: 'buddy') }
-  let!(:log1) { 
+  let!(:log1) {
     ConversationLog.create!(
       conversation: conversation,
       session_id: conversation.session_id,
@@ -12,7 +12,7 @@ RSpec.describe ConversationMemoryJob, type: :job do
       ai_response: 'That sounds amazing! Fire performances are always spectacular.'
     )
   }
-  let!(:log2) { 
+  let!(:log2) {
     ConversationLog.create!(
       conversation: conversation,
       session_id: conversation.session_id,
@@ -20,7 +20,7 @@ RSpec.describe ConversationMemoryJob, type: :job do
       ai_response: 'Absolutely! The Temple is always so moving and beautiful.'
     )
   }
-  let!(:log3) { 
+  let!(:log3) {
     ConversationLog.create!(
       conversation: conversation,
       session_id: conversation.session_id,
@@ -35,27 +35,27 @@ RSpec.describe ConversationMemoryJob, type: :job do
     it 'extracts Burning Man locations from conversation text' do
       text = "Let's meet at Center Camp, then head to the Temple and maybe check out the Trash Fence"
       context = { location: 'Black Rock City' }
-      
+
       locations = subject.send(:extract_locations, text, context)
-      
+
       expect(locations).to include('Center Camp', 'Temple', 'Trash Fence')
     end
 
     it 'extracts street addresses' do
       text = "I'll be at 6:00 and Esplanade, then moving to 3:30 and A"
       context = { location: 'Black Rock City' }
-      
+
       locations = subject.send(:extract_locations, text, context)
-      
+
       expect(locations).to include('6:00 and Esplanade')
     end
 
     it 'extracts camp names' do
       text = "Great show at Fractal Camp and nice party near Robot Heart"
       context = { location: 'Black Rock City' }
-      
+
       locations = subject.send(:extract_locations, text, context)
-      
+
       expect(locations.any? { |loc| loc.include?('Fractal Camp') }).to be true
     end
   end
@@ -65,9 +65,9 @@ RSpec.describe ConversationMemoryJob, type: :job do
       text = "There's a fire performance at Center Camp tomorrow at 8pm"
       session_id = 'test-session'
       context = { location: 'Black Rock City' }
-      
+
       events = subject.send(:extract_events, text, session_id, context)
-      
+
       expect(events).not_to be_empty
       event = events.first
       expect(event[:title]).to include('fire performance')
@@ -77,11 +77,11 @@ RSpec.describe ConversationMemoryJob, type: :job do
 
     it 'handles "happening at" pattern' do
       text = "Art installation happening at 7pm today"
-      session_id = 'test-session'  
+      session_id = 'test-session'
       context = { location: 'Black Rock City' }
-      
+
       events = subject.send(:extract_events, text, session_id, context)
-      
+
       expect(events).not_to be_empty
       expect(events.first[:title]).to include('Art installation')
     end
@@ -90,26 +90,26 @@ RSpec.describe ConversationMemoryJob, type: :job do
   describe '#parse_event_time' do
     it 'parses PM times correctly' do
       context = { location: 'Black Rock City' }
-      
+
       time = subject.send(:parse_event_time, '8pm', context)
-      
+
       expect(time.hour).to eq(20)
     end
 
     it 'parses AM times correctly' do
       context = { location: 'Black Rock City' }
-      
+
       time = subject.send(:parse_event_time, '9am', context)
-      
+
       expect(time.hour).to eq(9)
     end
 
     it 'adds day if time has passed today' do
       context = { location: 'Black Rock City' }
       past_time = (Time.current - 2.hours).strftime('%l%p').strip.downcase
-      
+
       time = subject.send(:parse_event_time, past_time, context)
-      
+
       expect(time).to be > Time.current
     end
   end
@@ -123,10 +123,10 @@ RSpec.describe ConversationMemoryJob, type: :job do
       expect {
         subject.perform(conversation.session_id)
       }.to change(ConversationMemory, :count).by(1)
-      
+
       memory = ConversationMemory.last
       metadata = memory.metadata_json
-      
+
       expect(metadata['locations']).to include('Center Camp', 'Temple')
       expect(metadata['events_mentioned']).to be > 0
     end
@@ -135,7 +135,7 @@ RSpec.describe ConversationMemoryJob, type: :job do
       expect {
         subject.perform(conversation.session_id)
       }.to change(Event, :count).by_at_least(1)
-      
+
       event = Event.last
       expect(event.title).to include('fire performance')
       expect(event.extracted_from_session).to eq(conversation.session_id)
@@ -146,9 +146,9 @@ RSpec.describe ConversationMemoryJob, type: :job do
       # Run twice
       subject.perform(conversation.session_id)
       initial_count = Event.count
-      
+
       subject.perform(conversation.session_id)
-      
+
       expect(Event.count).to eq(initial_count)
     end
 
@@ -160,7 +160,7 @@ RSpec.describe ConversationMemoryJob, type: :job do
         user_message: 'Hi',
         ai_response: 'Hello'
       )
-      
+
       expect {
         subject.perform(short_conversation.session_id)
       }.not_to change(ConversationMemory, :count)

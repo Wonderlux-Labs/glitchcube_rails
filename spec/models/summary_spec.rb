@@ -53,7 +53,7 @@ RSpec.describe Summary, type: :model do
       it 'parses JSON correctly' do
         expect(summary.metadata_json).to eq({
           'conversations' => 5,
-          'participants' => ['user1', 'user2']
+          'participants' => [ 'user1', 'user2' ]
         })
       end
     end
@@ -71,7 +71,7 @@ RSpec.describe Summary, type: :model do
     let(:summary) { build(:summary) }
 
     it 'converts hash to JSON string' do
-      summary.metadata_json = { conversations: 5, participants: ['user1', 'user2'] }
+      summary.metadata_json = { conversations: 5, participants: [ 'user1', 'user2' ] }
       expect(summary.metadata).to eq('{"conversations":5,"participants":["user1","user2"]}')
     end
   end
@@ -134,9 +134,9 @@ RSpec.describe Summary, type: :model do
     describe '.completed_goals' do
       it 'returns formatted goal completion data' do
         completed = Summary.completed_goals
-        
+
         expect(completed.length).to eq(2)
-        
+
         first_goal = completed.find { |g| g[:goal_id] == 'make_friends' }
         expect(first_goal[:goal_category]).to eq('social_goals')
         expect(first_goal[:description]).to eq('Completed goal: Make friends')

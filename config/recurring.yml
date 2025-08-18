@@ -1,76 +1,67 @@
-# examples:
-#   periodic_cleanup:
-#     class: CleanSoftDeletedRecordsJob
-#     queue: background
-#     args: [ 1000, { batch_size: 500 } ]
-#     schedule: every hour
-#   periodic_cleanup_with_command:
-#     command: "SoftDeletedRecord.due.delete_all"
-#     priority: 2
-#     schedule: at 5am every day
+default: &default
+  conversation_timeout_monitor:
+    class: ConversationTimeoutMonitorJob
+    schedule: every minute
+    queue: default
+
+  conversation_memory_extraction:
+    class: ConversationMemoryExtractionJob  
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    queue: default
+
+  weather_forecast_update:
+    class: WeatherForecastSummarizerJob
+    schedule: "0 * * * *"     # Every hour at the top of the hour
+    queue: default
+
+  conversation_summarizer:
+    class: ConversationSummarizerJob
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    queue: default
+
+  goal_monitor:
+    class: GoalMonitorJob
+    schedule: "*/5 * * * *"   # Every 5 minutes
+    queue: default
+
+  intermediate_summarizer:
+    class: IntermediateSummarizerJob
+    schedule: "0 */3 * * *"   # Every 3 hours at the top of the hour
+    queue: default
+
+  daily_summarizer:
+    class: DailySummarizerJob
+    schedule: "0 3 * * *"     # Daily at 3 AM
+    queue: default
 
 production:
+  <<: *default
+  
+  # Production-specific jobs
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
 
-  conversation_timeout_monitor:
-    class: ConversationTimeoutMonitorJob
-    schedule: every minute
-    queue: default
-
-  conversation_memory_extraction:
-    class: ConversationMemoryExtractionJob  
-    schedule: "*/30 * * * *"  # Every 30 minutes
-    queue: default
-
   gps_sensor_update:
     class: GpsSensorUpdateJob
     schedule: "*/5 * * * *"   # Every 5 minutes
     queue: default
 
-  weather_forecast_update:
-    class: WeatherForecastSummarizerJob
-    schedule: "0 * * * *"     # Every hour at the top of the hour
-    queue: default
-
-  conversation_summarizer:
-    class: ConversationSummarizerJob
-    schedule: "*/30 * * * *"  # Every 30 minutes
-    queue: default
-
-  goal_monitor:
-    class: GoalMonitorJob
+  host_registration:
+    class: HostRegistrationJob
     schedule: "*/5 * * * *"   # Every 5 minutes
     queue: default
 
 development:
-  conversation_timeout_monitor:
-    class: ConversationTimeoutMonitorJob
-    schedule: every minute
-    queue: default
-
-  conversation_memory_extraction:
-    class: ConversationMemoryExtractionJob  
-    schedule: "*/30 * * * *"  # Every 30 minutes
-    queue: default
-
+  <<: *default
+  
+  # Development-specific overrides (faster intervals for testing)
   gps_sensor_update:
     class: GpsSensorUpdateJob
-    schedule: "*/5 * * * *"   # Every 5 minutes
+    schedule: "*/3 * * * *"   # Every 3 minutes in dev (faster)
     queue: default
 
-  weather_forecast_update:
-    class: WeatherForecastSummarizerJob
-    schedule: "0 * * * *"     # Every hour at the top of the hour
-    queue: default
-
-  conversation_summarizer:
-    class: ConversationSummarizerJob
-    schedule: "*/30 * * * *"  # Every 30 minutes
-    queue: default
-
-  goal_monitor:
-    class: GoalMonitorJob
-    schedule: "*/5 * * * *"   # Every 5 minutes
+  host_registration:
+    class: HostRegistrationJob
+    schedule: "*/1 * * * *"   # Every 1 minute in dev (faster)
     queue: default

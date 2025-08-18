@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-module Services
-  module Memory
-    class MemoryRecallService
-      class << self
-        # Get relevant memories for injection into conversation
-        def get_relevant_memories(location: nil, context: {}, limit: 3)
+module Memory
+  class MemoryRecallService
+    class << self
+      # Get relevant memories for injection into conversation
+      def get_relevant_memories(location: nil, context: {}, limit: 3)
           selected_memories = []
 
           # 1. Get location-related memories if we have location
@@ -13,9 +12,9 @@ module Services
             location_memories = ConversationMemory.high_importance
                                                   .recent
                                                   .limit(2)
-                                                  .select { |memory| 
-                                                    metadata = JSON.parse(memory.metadata || '{}')
-                                                    locations = metadata['locations'] || []
+                                                  .select { |memory|
+                                                    metadata = JSON.parse(memory.metadata || "{}")
+                                                    locations = metadata["locations"] || []
                                                     locations.any? { |loc| loc.downcase.include?(location.downcase) }
                                                   }
             selected_memories.concat(location_memories)
@@ -48,9 +47,9 @@ module Services
           ConversationMemory.high_importance
                             .recent
                             .limit(limit * 2) # Get more to filter
-                            .select { |memory| 
-                              metadata = JSON.parse(memory.metadata || '{}')
-                              locations = metadata['locations'] || []
+                            .select { |memory|
+                              metadata = JSON.parse(memory.metadata || "{}")
+                              locations = metadata["locations"] || []
                               locations.any? { |loc| loc.downcase.include?(location.downcase) }
                             }
                             .take(limit)
@@ -58,7 +57,7 @@ module Services
 
         # Format memories for conversation injection
         def format_for_context(memories)
-          return '' if memories.empty?
+          return "" if memories.empty?
 
           formatted = memories.map do |memory|
             # Add variety to how memories are introduced
@@ -80,8 +79,8 @@ module Services
         def get_topic_memories(keywords, limit: 3)
           return [] if keywords.blank?
 
-          keyword_array = keywords.is_a?(Array) ? keywords : [keywords]
-          
+          keyword_array = keywords.is_a?(Array) ? keywords : [ keywords ]
+
           ConversationMemory.recent
                             .limit(limit * 3) # Get more to filter
                             .select { |memory|
@@ -104,19 +103,18 @@ module Services
         def memory_introduction(memory)
           # Simple intros based on memory type and content
           case memory.memory_type
-          when 'event'
-            ['That reminds me,', 'Oh!', 'By the way,', 'Speaking of which,'].sample
-          when 'preference'
-            ['I remember you mentioned', 'You said before that', 'I recall'].sample
-          when 'fact'
-            ['You know,', 'I learned that', 'Remember,'].sample
-          when 'instruction'
-            ['You told me to', 'You wanted me to', 'You asked me to'].sample
+          when "event"
+            [ "That reminds me,", "Oh!", "By the way,", "Speaking of which," ].sample
+          when "preference"
+            [ "I remember you mentioned", "You said before that", "I recall" ].sample
+          when "fact"
+            [ "You know,", "I learned that", "Remember," ].sample
+          when "instruction"
+            [ "You told me to", "You wanted me to", "You asked me to" ].sample
           else
-            ['That reminds me,', 'Oh!', 'By the way,'].sample
+            [ "That reminds me,", "Oh!", "By the way," ].sample
           end
         end
-      end
     end
   end
 end

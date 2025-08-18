@@ -3,7 +3,7 @@ class Tools::BaseTool
   # Cube light entities (single source of truth)
   CUBE_LIGHT_ENTITIES = %w[
     light.cube_voice_ring
-    light.cube_light_top",
+    light.cube_light_top
     light.cube_inner
   ].freeze
   class << self

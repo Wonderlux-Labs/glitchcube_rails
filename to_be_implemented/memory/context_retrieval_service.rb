@@ -77,9 +77,9 @@ module Services
 
           metadata = if File.exist?(meta_file)
                        JSON.parse(File.read(meta_file), symbolize_names: true)
-                     else
+          else
                        {}
-                     end
+          end
 
           {
             source: file,

@@ -49,7 +49,7 @@ module Services
       end
 
       def near_the_man?(radius_meters = 757)
-        the_man = Landmark.find_by(name: 'The Man')
+        the_man = Landmark.find_by(name: "The Man")
         return false unless the_man
 
         nearby = Landmark.nearest(lat: lat, lng: lng, limit: 1, max_distance_meters: radius_meters)
@@ -74,7 +74,7 @@ module Services
 
         {
           name: block.name,
-          id: block.properties['fid']
+          id: block.properties["fid"]
         }
       end
 
@@ -97,13 +97,13 @@ module Services
       end
 
       def nearest_porto
-        nearest_landmark_of_type('toilet')&.first
+        nearest_landmark_of_type("toilet")&.first
       end
 
       # Distance calculations - now using clean PostGIS helpers
       def distance_from_man
         the_man = Landmark.the_man
-        return 'Unknown' unless the_man
+        return "Unknown" unless the_man
 
         distance_meters = the_man.distance_from(lat, lng)
         format_distance(distance_meters)
@@ -116,7 +116,7 @@ module Services
 
       def distance_to_landmark(landmark_name)
         landmark = Landmark.find_by(name: landmark_name)
-        return 'Unknown' unless landmark
+        return "Unknown" unless landmark
 
         distance_meters = landmark.distance_from(lat, lng)
         format_distance(distance_meters)

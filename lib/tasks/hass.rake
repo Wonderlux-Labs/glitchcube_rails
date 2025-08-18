@@ -4,22 +4,22 @@ namespace :hass do
   def get_arg(args, key, env_key = nil)
     # Try task args first (bracket syntax)
     value = args[key] if args.respond_to?(:[])
-    
+
     # Try ENV flags (--flag syntax)
     env_key ||= key.to_s.upcase
     value ||= ENV[env_key.to_s]
-    
+
     value
   end
-  
+
   # Helper method to parse entity argument
   def parse_entity_arg(args)
-    get_arg(args, :entity_id, 'ENTITY') || get_arg(args, :entity_id, 'ENTITY_ID')
+    get_arg(args, :entity_id, "ENTITY") || get_arg(args, :entity_id, "ENTITY_ID")
   end
-  
-  # Helper method to parse domain argument  
+
+  # Helper method to parse domain argument
   def parse_domain_arg(args)
-    get_arg(args, :domain, 'DOMAIN')
+    get_arg(args, :domain, "DOMAIN")
   end
   desc "Test connection to Home Assistant"
   task test: :environment do
@@ -42,10 +42,10 @@ namespace :hass do
   end
 
   desc "List all entities or filter by domain: rails hass:entities[light] OR rails hass:entities --domain=light"
-  task :entities, [:domain] => :environment do |_t, args|
+  task :entities, [ :domain ] => :environment do |_t, args|
     begin
       domain = parse_domain_arg(args)
-      
+
       if domain
         # Call exact same service method as tools
         result = HomeAssistantService.entities_by_domain(domain)
@@ -63,9 +63,9 @@ namespace :hass do
   end
 
   desc "Get entity state and attributes: rails hass:entity[light.living_room] OR rails hass:entity --entity=light.living_room"
-  task :entity, [:entity_id] => :environment do |_t, args|
+  task :entity, [ :entity_id ] => :environment do |_t, args|
     entity_id = parse_entity_arg(args)
-    
+
     if entity_id.nil?
       puts colorize("❌ Please provide an entity_id: rails hass:entity[light.living_room] OR rails hass:entity --entity=light.living_room", :red)
       next
@@ -74,7 +74,7 @@ namespace :hass do
     begin
       # Call exact same service method as tools
       result = HomeAssistantService.entity(entity_id)
-      
+
       if result.nil?
         puts colorize("❌ Entity '#{entity_id}' not found", :red)
       else
@@ -87,9 +87,9 @@ namespace :hass do
   end
 
   desc "Get entity state: rails hass:get[sensor.temperature] OR rails hass:get --entity=sensor.temperature"
-  task :get, [:entity_id] => :environment do |_t, args|
+  task :get, [ :entity_id ] => :environment do |_t, args|
     entity_id = parse_entity_arg(args)
-    
+
     if entity_id.nil?
       puts colorize("❌ Please provide an entity_id: rails hass:get --entity=sensor.temperature", :red)
       next
@@ -97,7 +97,7 @@ namespace :hass do
 
     begin
       entity = HomeAssistantService.entity(entity_id)
-      
+
       if entity.nil?
         puts colorize("❌ Entity '#{entity_id}' not found", :red)
       else
@@ -110,10 +110,10 @@ namespace :hass do
   end
 
   desc "Set entity state: rails hass:set[input_text.test,hello] OR ENTITY=input_text.test STATE=hello rails hass:set"
-  task :set, [:entity_id, :state] => :environment do |_t, args|
+  task :set, [ :entity_id, :state ] => :environment do |_t, args|
     entity_id = parse_entity_arg(args)
-    state = get_arg(args, :state, 'STATE')
-    
+    state = get_arg(args, :state, "STATE")
+
     if entity_id.nil? || state.nil?
       puts colorize("❌ Please provide entity_id and state: ENTITY=input_text.test STATE=hello rails hass:set", :red)
       next
@@ -130,9 +130,9 @@ namespace :hass do
   end
 
   desc "Turn on entity: rails hass:turn_on[light.living_room] OR rails hass:turn_on --entity=light.living_room"
-  task :turn_on, [:entity_id] => :environment do |_t, args|
+  task :turn_on, [ :entity_id ] => :environment do |_t, args|
     entity_id = parse_entity_arg(args)
-    
+
     if entity_id.nil?
       puts colorize("❌ Please provide an entity_id: rails hass:turn_on --entity=light.living_room", :red)
       next
@@ -149,9 +149,9 @@ namespace :hass do
   end
 
   desc "Turn off entity: rails hass:turn_off[light.living_room] OR rails hass:turn_off --entity=light.living_room"
-  task :turn_off, [:entity_id] => :environment do |_t, args|
+  task :turn_off, [ :entity_id ] => :environment do |_t, args|
     entity_id = parse_entity_arg(args)
-    
+
     if entity_id.nil?
       puts colorize("❌ Please provide an entity_id: rails hass:turn_off --entity=light.living_room", :red)
       next
@@ -168,9 +168,9 @@ namespace :hass do
   end
 
   desc "Toggle entity: rails hass:toggle[light.living_room]"
-  task :toggle, [:entity_id] => :environment do |_t, args|
+  task :toggle, [ :entity_id ] => :environment do |_t, args|
     entity_id = args[:entity_id]
-    
+
     if entity_id.nil?
       puts colorize("❌ Please provide an entity_id: rails hass:toggle[light.living_room]", :red)
       next
@@ -187,10 +187,10 @@ namespace :hass do
   end
 
   desc "List all available services or for specific domain: rails hass:services[light] OR DOMAIN=light rails hass:services"
-  task :services, [:domain] => :environment do |_t, args|
+  task :services, [ :domain ] => :environment do |_t, args|
     begin
       domain = parse_domain_arg(args)
-      
+
       if domain
         # Call exact same service method as tools
         result = HomeAssistantService.domain_services(domain)
@@ -208,11 +208,11 @@ namespace :hass do
   end
 
   desc "Call a service: rails hass:service[light,turn_on,light.living_room] OR DOMAIN=light SERVICE=turn_on ENTITY=light.living_room rails hass:service"
-  task :service, [:domain, :service, :entity_id] => :environment do |_t, args|
+  task :service, [ :domain, :service, :entity_id ] => :environment do |_t, args|
     domain = parse_domain_arg(args)
-    service = get_arg(args, :service, 'SERVICE')
+    service = get_arg(args, :service, "SERVICE")
     entity_id = parse_entity_arg(args)
-    
+
     if domain.nil? || service.nil?
       puts colorize("❌ Please provide domain and service: DOMAIN=light SERVICE=turn_on rails hass:service", :red)
       next
@@ -233,9 +233,9 @@ namespace :hass do
   end
 
   desc "Watch entity state changes: rails hass:watch[sensor.temperature]"
-  task :watch, [:entity_id] => :environment do |_t, args|
+  task :watch, [ :entity_id ] => :environment do |_t, args|
     entity_id = args[:entity_id]
-    
+
     if entity_id.nil?
       puts colorize("❌ Please provide an entity_id: rails hass:watch[sensor.temperature]", :red)
       next
@@ -250,14 +250,14 @@ namespace :hass do
     begin
       loop do
         entity = HomeAssistantService.entity(entity_id)
-        
+
         if entity.nil?
           puts colorize("❌ Entity '#{entity_id}' not found", :red)
           break
         end
 
-        current_state = entity['state']
-        current_attributes = entity['attributes']
+        current_state = entity["state"]
+        current_attributes = entity["attributes"]
 
         if current_state != last_state
           timestamp = Time.current.strftime("%H:%M:%S")
@@ -306,11 +306,11 @@ namespace :hass do
 
   def state_color(state)
     case state.to_s.downcase
-    when 'on', 'open', 'home', 'active', 'armed'
+    when "on", "open", "home", "active", "armed"
       :green
-    when 'off', 'closed', 'away', 'inactive', 'disarmed'
+    when "off", "closed", "away", "inactive", "disarmed"
       :red
-    when 'unavailable', 'unknown', 'error'
+    when "unavailable", "unknown", "error"
       :yellow
     else
       :white

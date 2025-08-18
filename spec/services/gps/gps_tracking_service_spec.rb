@@ -57,10 +57,10 @@ RSpec.describe Services::Gps::GPSTrackingService, type: :service do
     context 'when no GPS data is available' do
       before do
         allow(mock_ha_service).to receive(:entity).and_return(nil)
-        
+
         # Mock Landmark for fallback
         landmark = instance_double(Landmark, latitude: 40.7864, longitude: -119.2065)
-        allow(Landmark).to receive_message_chain(:active, :order).and_return([landmark])
+        allow(Landmark).to receive_message_chain(:active, :order).and_return([ landmark ])
       end
 
       it 'returns fallback location with context' do
@@ -77,7 +77,7 @@ RSpec.describe Services::Gps::GPSTrackingService, type: :service do
     it 'always returns location data with context merged' do
       allow(mock_ha_service).to receive(:entity).and_return(nil)
       landmark = instance_double(Landmark, latitude: 40.7864, longitude: -119.2065)
-      allow(Landmark).to receive_message_chain(:active, :order).and_return([landmark])
+      allow(Landmark).to receive_message_chain(:active, :order).and_return([ landmark ])
 
       result = service.current_location
 
@@ -104,7 +104,7 @@ RSpec.describe Services::Gps::GPSTrackingService, type: :service do
       result = service.proximity_data(40.7864, -119.2065)
 
       expect(result[:landmarks]).to eq(location_context[:landmarks])
-      expect(result[:portos]).to eq([location_context[:nearest_porto]])
+      expect(result[:portos]).to eq([ location_context[:nearest_porto] ])
       expect(result[:map_mode]).to eq('man')
       expect(result[:visual_effects]).to include(
         { type: 'pulse', color: 'orange', intensity: 'strong' }

@@ -26,12 +26,12 @@ module Services
         context_sensor = nil
         begin
           ha_service = HomeAssistantService.new
-          context_sensor = ha_service.entity('sensor.glitchcube_context')
+          context_sensor = ha_service.entity("sensor.glitchcube_context")
 
           # Check if sensor actually exists (HA returns specific structure for non-existent entities)
-          if context_sensor.is_a?(Hash) && context_sensor['state'] == 'unavailable'
+          if context_sensor.is_a?(Hash) && context_sensor["state"] == "unavailable"
             context_sensor = nil
-            Rails.logger.debug '📝 Context sensor not yet configured in HA'
+            Rails.logger.debug "📝 Context sensor not yet configured in HA"
           end
         rescue StandardError => e
           Rails.logger.debug "📝 Could not fetch context sensor: #{e.message}"
@@ -49,7 +49,7 @@ module Services
 
           final_prompt
         else
-          Rails.logger.debug '📝 No context to inject'
+          Rails.logger.debug "📝 No context to inject"
 
           base_prompt
         end
@@ -73,7 +73,7 @@ module Services
 
           final_prompt
         else
-          Rails.logger.info '📝 No memories to inject'
+          Rails.logger.info "📝 No memories to inject"
 
           base_prompt
         end
@@ -90,35 +90,35 @@ module Services
         # Ensure context_sensor is a Hash with proper structure
         if context_sensor.is_a?(Hash)
           # BASIC TIME CONTEXT - Always include this first
-          time_of_day = context_sensor.dig('attributes', 'time_of_day')
-          day_of_week = context_sensor.dig('attributes', 'day_of_week')
-          location = context_sensor.dig('attributes', 'current_location')
-          
+          time_of_day = context_sensor.dig("attributes", "time_of_day")
+          day_of_week = context_sensor.dig("attributes", "day_of_week")
+          location = context_sensor.dig("attributes", "current_location")
+
           if time_of_day || day_of_week
             time_parts = []
             time_parts << "It is #{time_of_day}" if time_of_day
             time_parts << "on #{day_of_week}" if day_of_week
             time_parts << "at #{location}" if location
-            context_parts << time_parts.join(' ')
+            context_parts << time_parts.join(" ")
           end
-          
+
           # Priority order - urgent needs first
-          if (needs = context_sensor.dig('attributes', 'current_needs')) && needs.to_s.include?('URGENT')
+          if (needs = context_sensor.dig("attributes", "current_needs")) && needs.to_s.include?("URGENT")
             context_parts << "URGENT: #{needs}"
           end
 
           # Recent context
-          if (summary_1hr = context_sensor.dig('attributes', 'summary_1hr'))
+          if (summary_1hr = context_sensor.dig("attributes", "summary_1hr"))
             context_parts << "Last hour: #{summary_1hr}"
           end
 
           # Upcoming events
-          if (events = context_sensor.dig('attributes', 'upcoming_events'))
+          if (events = context_sensor.dig("attributes", "upcoming_events"))
             context_parts << "Coming up: #{events}"
           end
 
           # Only add broader context if room
-          if (context_parts.join('. ').length < 500) && (summary_4hr = context_sensor.dig('attributes', 'summary_4hr'))
+          if (context_parts.join(". ").length < 500) && (summary_4hr = context_sensor.dig("attributes", "summary_4hr"))
             context_parts << summary_4hr
           end
         end
@@ -139,7 +139,7 @@ module Services
 
         if memories.any?
           memory_context = Services::Memory::MemoryRecallService.format_for_context(memories)
-          context_parts << memory_context.strip.gsub(/^RECENT MEMORIES TO NATURALLY REFERENCE:\s*/, '')
+          context_parts << memory_context.strip.gsub(/^RECENT MEMORIES TO NATURALLY REFERENCE:\s*/, "")
         end
       rescue StandardError => e
         Rails.logger.warn "Failed to add memory context: #{e.message}"
@@ -147,26 +147,26 @@ module Services
 
       def fetch_current_location
         # For now, return a default location since GPS service isn't implemented
-        'Black Rock City'
+        "Black Rock City"
       rescue StandardError
         nil
       end
-      
+
       def get_conversation_memories(context)
         # Get recent high-importance memories from OTHER sessions (exclude current)
         memories = ConversationMemory.high_importance
                                    .recent
-        
+
         # Exclude current session since LLM has full conversation history
         if context[:session_id]
           memories = memories.where.not(session_id: context[:session_id])
         end
-        
+
         memories.limit(3)
       end
-      
+
       def format_conversation_memories(memories)
-        return '' if memories.empty?
+        return "" if memories.empty?
 
         formatted = memories.map do |memory|
           "#{memory.memory_type.upcase}: #{memory.summary}"
