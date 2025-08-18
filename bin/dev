@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+
+# Run Rails with SolidQueue in development
+APP_ROOT = File.expand_path("..", __dir__)
+Dir.chdir(APP_ROOT) do
+  puts "Starting Rails server and SolidQueue worker..."
+  
+  # Start both server and jobs in parallel
+  pids = []
+  
+  # Start Rails server on port 4567
+  pids << spawn("bin/rails", "server", "-p", "4567", *ARGV)
+  
+  # Start SolidQueue worker
+  pids << spawn("bin/jobs")
+  
+  # Wait for both processes
+  Process.waitall
+end

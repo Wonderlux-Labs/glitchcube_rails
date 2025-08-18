@@ -1,0 +1,32 @@
+- platform: rest
+  resource_template: >
+    {% set host = states('input_text.glitchcube_host') %}
+    {% if host and host not in ['unknown', 'unavailable', ''] %}
+      http://{{ host }}:4567/api/v1/gps/location
+    {% else %}
+      http://100.88.239.104:4567/api/v1/gps/location
+    {% endif %}
+  name: "Glitch Cube Location"
+  unique_id: glitchcube_location_rest
+  scan_interval: 30
+  timeout: 10
+  value_template: "{{ value_json.zone | default('unknown') }}"
+  json_attributes:
+    - lat
+    - lng
+    - timestamp
+    - accuracy
+    - satellites
+    - uptime
+    - zone
+    - address
+    - intersection
+    - landmarks
+    - within_fence
+    - city_block
+    - distance_from_man
+    - nearest_porto
+    - lat_lng
+  availability: "{{ value_json is defined and value_json.zone is defined }}"
+  device_class: enum
+

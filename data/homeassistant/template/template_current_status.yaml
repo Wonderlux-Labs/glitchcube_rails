@@ -1,0 +1,43 @@
+# Template Sensor: Current Status Summary (for status page, etc)
+sensor:
+  - name: "Current Status"
+    unique_id: "current_status"
+    state: >
+      {# Gather values #}
+      {% set health = states('sensor.installation_health') %}
+      {% set location = "Black Rock Desert, NV" %}
+      {% set persona = states('sensor.current_persona') %}
+      {% set last_interaction = states('sensor.last_interaction_time') %}
+      {% set temp = states('sensor.macmini_composite_temperature') %}
+      {% set internet = states('sensor.internet_connectivity') %}
+      {% set weather = states('input_text.current_weather') %}
+      {% set env = states('input_text.current_environment') %}
+      {# Build status parts list #}
+      {% set parts = [
+        '📍 ' ~ location,
+        '🎭 ' ~ (persona if persona not in ['unknown', 'unavailable', ''] else 'Default'),
+        '🏥 ' ~ (health|title if health not in ['unknown', 'unavailable', ''] else 'Unknown')
+      ] %}
+      {% if temp not in ['unknown', 'unavailable', None, ''] %}
+        {% set parts = parts + ['🌡️ ' ~ temp ~ '°F'] %}
+      {% endif %}
+      {% set parts = parts + ['🌐 ' ~ ('Online' if internet == 'connected' else 'Offline')] %}
+      {% if last_interaction not in ['Never', 'unknown', 'unavailable', None, ''] %}
+        {% set parts = parts + ['💬 Last: ' ~ last_interaction] %}
+      {% endif %}
+      {% if weather not in ['unknown', 'unavailable', None, ''] %}
+        {% set parts = parts + ['☀️ ' ~ (weather[:30] ~ '...' if weather|length > 30 else weather)] %}
+      {% endif %}
+      {% if env not in ['unknown', 'unavailable', None, ''] %}
+        {% set parts = parts + ['🌍 ' ~ (env[:30] ~ '...' if env|length > 30 else env)] %}
+      {% endif %}
+      {{ parts | join(' | ') }}
+    icon: >
+      {% set health = states('sensor.installation_health') %}
+      {% set icons = {
+        'critical': 'mdi:alert-circle-outline',
+        'offline': 'mdi:cloud-off-outline',
+        'degraded': 'mdi:alert-outline',
+        'warning': 'mdi:thermometer-alert'
+      } %}
+      {{ icons.get(health, 'mdi:status-bar') }}

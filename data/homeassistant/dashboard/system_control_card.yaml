@@ -1,0 +1,77 @@
+# Dashboard card for Glitch Cube system control
+# Add this to your Home Assistant dashboard
+
+type: vertical-stack
+cards:
+  - type: markdown
+    content: |
+      # 🎲 Glitch Cube System Control
+      
+  - type: entities
+    title: Health Status
+    entities:
+      - entity: sensor.glitchcube_api_health
+        name: API Status
+      - entity: sensor.glitchcube_uptime_hours
+        name: Uptime
+      - entity: sensor.sidekiq_queue_size
+        name: Queue Size
+      - entity: sensor.glitchcube_error_rate
+        name: Error Rate
+        
+  - type: entities
+    title: Recovery Controls
+    entities:
+      - entity: input_boolean.auto_recovery_enabled
+        name: Auto Recovery
+      - entity: input_boolean.maintenance_mode
+        name: Maintenance Mode
+      - entity: input_select.restart_level
+        name: Restart Level
+      - entity: input_boolean.trigger_restart
+        name: Manual Restart
+        
+  - type: button
+    name: Soft Restart
+    icon: mdi:restart
+    tap_action:
+      action: call-service
+      service: rest_command.trigger_glitchcube_restart
+      service_data:
+        level: soft
+        reason: "Manual soft restart from dashboard"
+        
+  - type: button
+    name: Clear Queues
+    icon: mdi:broom
+    tap_action:
+      action: call-service
+      service: rest_command.clear_glitchcube_queues
+      service_data: {}
+      
+  - type: conditional
+    conditions:
+      - entity: input_boolean.maintenance_mode
+        state: "on"
+    card:
+      type: horizontal-stack
+      cards:
+        - type: button
+          name: Hard Restart
+          icon: mdi:restart-alert
+          tap_action:
+            action: call-service
+            service: rest_command.trigger_glitchcube_restart
+            service_data:
+              level: hard
+              reason: "Manual hard restart from dashboard"
+              
+        - type: button
+          name: Nuclear Restart
+          icon: mdi:nuke
+          tap_action:
+            action: call-service
+            service: rest_command.trigger_glitchcube_restart
+            service_data:
+              level: nuclear
+              reason: "Manual nuclear restart from dashboard"

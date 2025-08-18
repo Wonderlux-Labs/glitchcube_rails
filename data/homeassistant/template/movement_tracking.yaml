@@ -1,0 +1,64 @@
+---
+# Simple movement duration tracking for Glitch Cube
+# Just tracks how long it's currently been moving or stopped
+
+# Binary sensor to detect if the cube is currently moving
+- binary_sensor:
+    - name: "Glitch Cube Moving"
+      unique_id: glitch_cube_moving
+      state: >
+        {% set device = states('device_tracker.glitch_cube') %}
+        {% if device in ['unknown', 'unavailable'] %}
+          false
+        {% else %}
+          {% set current_lat = state_attr('device_tracker.glitch_cube', 'latitude') | float(0) %}
+          {% set current_lng = state_attr('device_tracker.glitch_cube', 'longitude') | float(0) %}
+          {% set prev_lat = states('input_number.glitch_cube_prev_lat') | float(0) %}
+          {% set prev_lng = states('input_number.glitch_cube_prev_lng') | float(0) %}
+          
+          {% if prev_lat == 0 or prev_lng == 0 or current_lat == 0 or current_lng == 0 %}
+            false
+          {% else %}
+            {% set distance = distance(current_lat, current_lng, prev_lat, prev_lng) %}
+            {{ distance > 0.01 }}  {# More than ~10 meters movement #}
+          {% endif %}
+        {% endif %}
+      device_class: moving
+      availability: "{{ states('device_tracker.glitch_cube') not in ['unknown', 'unavailable'] }}"
+
+# Simple duration sensor - tracks how long currently moving or stopped
+- sensor:
+    - name: "Glitch Cube Movement Duration"
+      unique_id: glitch_cube_movement_duration
+      state: >
+        {% set moving = is_state('binary_sensor.glitch_cube_moving', 'on') %}
+        {% set last_change = as_timestamp(states.binary_sensor.glitch_cube_moving.last_changed) %}
+        {% set now = as_timestamp(now()) %}
+        {% set duration_seconds = (now - last_change) | round(0) %}
+        {% set duration_minutes = (duration_seconds / 60) | round(0) %}
+        
+        {% if moving %}
+          {% if duration_minutes < 1 %}
+            {{ duration_seconds }}s moving
+          {% elif duration_minutes < 60 %}
+            {{ duration_minutes }}m moving
+          {% else %}
+            {% set hours = (duration_minutes / 60) | round(1) %}
+            {{ hours }}h moving
+          {% endif %}
+        {% else %}
+          {% if duration_minutes < 1 %}
+            {{ duration_seconds }}s stopped
+          {% elif duration_minutes < 60 %}
+            {{ duration_minutes }}m stopped
+          {% else %}
+            {% set hours = (duration_minutes / 60) | round(1) %}
+            {{ hours }}h stopped
+          {% endif %}
+        {% endif %}
+      icon: >
+        {% if is_state('binary_sensor.glitch_cube_moving', 'on') %}
+          mdi:run-fast
+        {% else %}
+          mdi:pause-circle-outline
+        {% endif %}

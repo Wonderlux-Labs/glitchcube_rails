@@ -1,0 +1,20 @@
+views:
+  - title: Home
+    badges:
+      - type: entity
+        entity: sensor.circuit_breaker_status
+      - type: entity
+        entity: sensor.installation_health
+      - type: entity
+        entity: sensor.glitch_cube_api_health
+        title: backend
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: sensor.internet_connectivity
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section

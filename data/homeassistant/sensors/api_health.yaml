@@ -1,0 +1,38 @@
+# REST Health Sensor: Glitch Cube API Health  
+# Monitors the Rails application health endpoint using dynamic IP
+- platform: rest
+  resource_template: >
+    {% set host = states('input_text.glitchcube_host') %}
+    {% if host and host not in ['unknown', 'unavailable', ''] %}
+      http://{{ host }}:4567/health
+    {% else %}
+      http://192.168.0.50:4567/health
+    {% endif %}
+  name: "Glitch Cube API Health"
+  unique_id: "glitchcube_api_health_rest"
+  entity_id: sensor.glitchcube_api_health
+  scan_interval: 30  # Check every 30 seconds
+  timeout: 10
+  headers:
+    User-Agent: "Home Assistant Health Check"
+  value_template: >
+    {% if value_json is defined and value_json.status is defined %}
+      {{ value_json.status }}
+    {% else %}
+      unknown
+    {% endif %}
+  json_attributes:
+    - timestamp
+    - version  
+    - uptime
+    - services
+    - host
+    - port
+  icon: >
+    {% if value == 'healthy' %}
+      mdi:cube
+    {% elif value == 'degraded' %}
+      mdi:cube-outline
+    {% else %}
+      mdi:cube-off
+    {% endif %}

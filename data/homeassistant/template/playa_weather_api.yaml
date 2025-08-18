@@ -1,0 +1,56 @@
+---
+# Trigger-based Template Sensor: Playa Weather API
+- trigger:
+    - platform: time_pattern
+      minutes: "/15"  # Update every 15 minutes
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: weather.openweathermap
+  action:
+    - service: weather.get_forecasts
+      data:
+        type: daily
+        target:
+          entity_id: weather.openweathermap
+      response_variable: daily_forecast
+    - service: weather.get_forecasts
+      data:
+        type: hourly
+        target:
+          entity_id: weather.openweathermap
+      response_variable: hourly_forecast
+  sensor:
+    - name: "Playa Weather API"
+      unique_id: "playa_weather_conditions"
+      state: "{{ now().isoformat() }}"
+      icon: "mdi:weather-partly-cloudy"
+      attributes:
+        weather_data: >-
+          {
+            "timestamp": "{{ now().isoformat() }}",
+            "location": "Black Rock City",
+            "current": {
+              "temperature": {{ states('sensor.openweathermap_temperature') | float(0) }},
+              "feels_like": {{ states('sensor.openweathermap_feels_like_temperature') | float(0) }},
+              "condition": "{{ states('sensor.openweathermap_condition') }}",
+              "weather_code": {{ states('sensor.openweathermap_weather_code') | int(0) }},
+              "humidity": {{ states('sensor.openweathermap_humidity') | float(0) }},
+              "pressure": {{ states('sensor.openweathermap_pressure') | float(0) }},
+              "dew_point": {{ states('sensor.openweathermap_dew_point') | float(0) }},
+              "visibility": {{ states('sensor.openweathermap_visibility') | float(0) }},
+              "uv_index": {{ states('sensor.openweathermap_uv_index') | float(0) }},
+              "cloud_coverage": {{ states('sensor.openweathermap_cloud_coverage') | float(0) }},
+              "wind_speed": {{ states('sensor.openweathermap_wind_speed') | float(0) }},
+              "wind_bearing": {{ states('sensor.openweathermap_wind_bearing') | float(0) }},
+              "precipitation": {
+                "rain": {{ states('sensor.openweathermap_rain') | float(0) }},
+                "snow": {{ states('sensor.openweathermap_snow') | float(0) }},
+                "kind": "{{ states('sensor.openweathermap_precipitation_kind') }}"
+              }
+            },
+            "daily_forecast":
+              {{ daily_forecast['weather.openweathermap'].forecast | tojson }},
+            "hourly_forecast":
+              {{ hourly_forecast['weather.openweathermap'].forecast | tojson }}
+          }

@@ -1,0 +1,4 @@
+input_button:
+  cycle_persona:
+    name: "Cycle Persona"
+    icon: mdi:account-switch

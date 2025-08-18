@@ -1,0 +1,15 @@
+{
+  "message": "I said, what's going on?",
+  "context": {
+    "session_id": "voice_01K2X8DA2CA7Z2Q2R8F4HNFRB7",
+    "conversation_id": "01K2X8DA2CA7Z2Q2R8F4HNFRB7",
+    "device_id": "dda7a129cd0a63810097f88902e0ec86",
+    "language": "en",
+    "voice_interaction": true,
+    "timestamp": "2025-08-18T00:20:20.845592+00:00",
+    "ha_context": {
+      "agent_id": "glitchcube_conversation_01K2C7ETREDK5YDZBQ16RWBE09",
+      "user_id": null
+    }
+  }
+}

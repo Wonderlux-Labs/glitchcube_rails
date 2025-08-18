@@ -1,0 +1,33 @@
+---
+# GlitchCube Context Sensor - Real-time context for persona
+# This sensor aggregates various context attributes for the GlitchCube persona
+
+- sensor:
+    - name: "GlitchCube Context"
+      unique_id: "glitchcube_context"
+      state: "active"
+      icon: "mdi:brain"
+      attributes:
+        # Weather summary from LLM Weather Response sensor
+        weather_summary: >-
+          {{ states('sensor.llm_weather_response') | default('Weather data not yet loaded') }}
+        
+        # Time context
+        time_of_day: >-
+          {% set hour = now().hour %}
+          {% if hour < 6 %} late night
+          {% elif hour < 12 %} morning
+          {% elif hour < 17 %} afternoon
+          {% elif hour < 21 %} evening
+          {% else %} night
+          {% endif %}
+        day_of_week: >-
+          {{ now().strftime('%A') }}
+        
+        # Location context
+        current_location: >-
+          {{ states('input_text.current_location') | default('Black Rock City') }}
+        
+        # Additional context attributes can be added here
+        last_updated: >-
+          {{ now().isoformat() }}

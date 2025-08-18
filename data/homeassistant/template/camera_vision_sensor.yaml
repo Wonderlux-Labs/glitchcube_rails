@@ -1,0 +1,51 @@
+---
+# Template sensor for camera vision analysis
+# Provides structured access to the camera analysis data
+
+template:
+  - sensor:
+      - name: "Camera Vision Status"
+        unique_id: camera_vision_status
+        state: >
+          {% set analysis = states('input_text.camera_vision_analysis') %}
+          {% if analysis == 'No analysis available' or analysis == 'No recent activity' %}
+            idle
+          {% elif 'people' in analysis.lower() or 'person' in analysis.lower() %}
+            people_detected
+          {% else %}
+            activity_detected
+          {% endif %}
+        attributes:
+          analysis_text: "{{ states('input_text.camera_vision_analysis') }}"
+          last_analysis: "{{ states.input_text.camera_vision_analysis.last_changed | default('unknown') }}"
+          people_detected: >
+            {% set analysis = states('input_text.camera_vision_analysis').lower() %}
+            {{ 'people' in analysis or 'person' in analysis }}
+          motion_active: "{{ is_state('input_boolean.motion_detected', 'on') }}"
+          
+      - name: "Camera People Count"
+        unique_id: camera_people_count
+        state: >
+          {% set analysis = states('input_text.camera_vision_analysis').lower() %}
+          {% if 'no people' in analysis or 'nobody' in analysis or 'empty' in analysis %}
+            0
+          {% elif 'one person' in analysis or '1 person' in analysis %}
+            1
+          {% elif 'two people' in analysis or '2 people' in analysis %}
+            2
+          {% elif 'three people' in analysis or '3 people' in analysis %}
+            3
+          {% elif 'four people' in analysis or '4 people' in analysis %}
+            4
+          {% elif 'people' in analysis or 'person' in analysis %}
+            1
+          {% else %}
+            0
+          {% endif %}
+        unit_of_measurement: "people"
+        icon: >
+          {% if this.state | int > 0 %}
+            mdi:account-multiple
+          {% else %}
+            mdi:account-off
+          {% endif %}

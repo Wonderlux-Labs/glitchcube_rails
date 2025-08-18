@@ -1,0 +1,204 @@
+---
+homeassistant:
+  name: "Glitch Cube"
+  latitude: 40.7682435937
+  longitude: -119.218725792
+  elevation: 3848
+  time_zone: "America/Los_Angeles"
+  # Packages for domain-based input helper organization
+  packages: !include_dir_named packages/
+default_config:
+# Enable frontend and API
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Enable configuration panel
+config:
+
+# Lovelace dashboard configuration
+lovelace:
+  mode: storage
+  # Add yaml dashboards
+  dashboards:
+    lovelace-yaml:
+      mode: yaml
+      title: YAML
+      icon: mdi:script
+      show_in_sidebar: true
+      filename: dashboards.yaml
+    system-dashboard:
+      mode: yaml
+      title: System Status
+      icon: mdi:cog
+      show_in_sidebar: true
+      filename: dashboards/system-dashboard.yaml
+      require_admin: true
+
+# Enable logbook for tracking interactions
+logbook:
+  # Note: include/exclude options are deprecated, use entity/automation filters instead
+
+# Enable history tracking
+history:
+  # Note: include/exclude options are deprecated, use entity filters instead
+
+# Enable recorder with MariaDB for better performance
+recorder:
+  db_url: mysql://homeassistant:homeassistant@core-mariadb/homeassistant?charset=utf8mb4
+  purge_keep_days: 10  # Keep 10 days of history
+  commit_interval: 5   # Commit every 5 seconds for reliability
+  include:
+    domains:
+      - sensor
+      - automation
+      - input_datetime
+      - input_text
+      - logbook
+    entities:
+      - sensor.glitch_cube_app_health
+      - sensor.internet_connectivity
+      - sensor.installation_health
+      - sensor.last_interaction_time
+      - sensor.current_persona
+      - sensor.glitch_cube_consolidated_alerts
+# Enable recorder with MariaDB for better performance
+
+# HTTP configuration for webhooks
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - 192.168.0.0/16
+    - 172.16.0.0/12
+    - 10.0.0.0/8
+
+# Network discovery (removed - deprecated in modern HA)
+# discovery:
+
+# Enable mobile app support
+mobile_app:
+
+# Enable system health
+system_health:
+
+# Enable diagnostics
+diagnostics:
+
+# Include separate configuration files
+# UI automations are saved in automations.yaml
+# YAML automations are in packages
+automation: !include automations.yaml
+
+# UI scripts are saved in scripts.yaml
+# YAML scripts are in packages  
+script: !include scripts.yaml
+
+# Input Helpers - consolidated in configuration.yaml to avoid type mixing issues
+input_button:
+  cycle_persona:
+    name: '>> Cycle Persona >>'
+    icon: mdi:account-switch
+
+input_text:
+  memory_query:
+    name: "Memory Query"
+    initial: "burning man"
+    max: 255
+    icon: mdi:magnify
+    
+  current_location:
+    name: "Current Location"
+    initial: "Black Rock City"
+    max: 255
+    icon: mdi:map-marker
+    
+  current_persona:
+    name: "Current Persona"
+    icon: mdi:account
+
+  glitchcube_host:
+    name: "Glitch Cube Host IP"
+    initial: "100.88.239.104"  # Default fallback IP
+    min: 7                   # Minimum length for IP (x.x.x.x)
+    max: 15                  # Maximum length for IP (xxx.xxx.xxx.xxx)
+    icon: mdi:cube-outline
+    mode: text
+
+input_number:
+  memory_query_limit:
+    name: "Memory Query Limit"
+    initial: 10
+    min: 1
+    max: 50
+    step: 1
+    icon: mdi:counter
+    
+  recent_memories_limit:
+    name: "Recent Memories Limit" 
+    initial: 10
+    min: 1
+    max: 50
+    step: 1
+    icon: mdi:counter
+
+# Include counters
+counter:
+  daily_conversations:
+    name: Daily Conversations
+    icon: mdi:comment-multiple
+    restore: true
+
+  # Counter for total interactions
+  total_interactions:
+    name: Total Interactions
+    icon: mdi:counter
+    restore: true
+
+# Include all sensors (REST sensors and template sensors)
+sensor: !include_dir_merge_list sensors/
+template: !include_dir_merge_list template/
+binary_sensor: !include_dir_merge_list binary_sensors/
+
+# Enable webhook integration (for external API calls)
+webhook:
+
+# Enable RESTful API
+api:
+
+# REST Commands for external integrations
+rest_command: !include rest_commands.yaml
+
+# Shell commands for basic system operations
+shell_command:
+
+# Scene configuration for different installation modes
+scene: !include scenes.yaml
+
+# Logger configuration with verbose logging for important components
+logger:
+  default: info  # More verbose default level
+  logs:
+    # Suppress all Python warnings (deprecation, import, version mismatches, etc.)
+    py.warnings: error
+    # Suppress custom integration warnings
+    homeassistant.loader: error
+    
+    # Verbose logging for key components
+    homeassistant.core: info
+    homeassistant.components.webhook: info
+    homeassistant.components.rest: info
+    homeassistant.components.sensor: info
+    homeassistant.components.automation: info
+    homeassistant.components.script: info
+    homeassistant.helpers.template: info
+    
+    # Integration and config flow logging
+    homeassistant.config_entries: info
+    homeassistant.data_entry_flow: info
+    homeassistant.setup: info
+    homeassistant.bootstrap: info
+    homeassistant.components.integration: info
+    
+    # Keep authentication warnings visible
+    homeassistant.components.http.ban: warning
+    homeassistant.components.auth: info

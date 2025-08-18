@@ -1,0 +1,15 @@
+# Counters for Glitch Cube tracking
+
+# Counter for daily conversations
+daily_conversations:
+  name: Daily Conversations
+  icon: mdi:comment-multiple
+  initial: 0
+  step: 1
+
+# Counter for total interactions
+total_interactions:
+  name: Total Interactions
+  icon: mdi:counter
+  initial: 0
+  step: 1

@@ -1,0 +1,6 @@
+template:
+  - sensor:
+      - name: "Cube Light Effects"
+        state: "{{ state_attr('light.cube_light', 'effect_list') | join(', ') }}"
+      - name: "Cart Light Effects"  
+        state: "{{ state_attr('light.cart_light', 'effect_list') | join(', ') }}"

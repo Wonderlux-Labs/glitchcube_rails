@@ -1,0 +1,96 @@
+# REST commands for external integrations
+# REST command for LLM text completion via GlitchCube
+# This allows Home Assistant to call any AI model for text generation
+
+glitchcube_llm_complete:
+  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/llm/complete"
+  method: POST
+  headers:
+    Content-Type: "application/json"
+  payload: |
+    {
+      "prompt": "{{ prompt }}",
+      {% if model is defined %}
+      "model": "{{ model }}",
+      {% endif %}
+      {% if options is defined %}
+      "options": {{ options | to_json }}
+      {% endif %}
+    }
+  content_type: "application/json"
+  verify_ssl: false
+  timeout: 120
+
+# Example usage in automations:
+# 
+# Basic usage with default model:
+# - service: rest_command.glitchcube_llm_complete
+#   data:
+#     prompt: "Summarize the weather today in one sentence"
+#
+# With specific model:
+# - service: rest_command.glitchcube_llm_complete
+#   data:
+#     prompt: "Write a haiku about smart homes"
+#     model: "anthropic/claude-3.5-haiku"
+#
+# With options:
+# - service: rest_command.glitchcube_llm_complete
+#   data:
+#     prompt: "Explain quantum computing"
+#     model: "google/gemini-2.5-flash"
+#     options:
+#       temperature: 0.3
+#       max_tokens: 150
+#       system_prompt: "You are a science teacher. Explain complex topics simply."
+#
+# Available models (check /api/v1/llm/models for current list):
+# - openrouter/auto (automatic selection)
+# - google/gemini-2.5-flash
+# - anthropic/claude-3.5-haiku
+# - anthropic/claude-4-sonnet
+# - openai/gpt-4.1-mini
+# - deepseek/deepseek-chat-v3-0324
+#
+# Available options:
+# - temperature: 0.0 to 1.0 (creativity level)
+# - max_tokens: Maximum response length
+# - system_prompt: Override the default system prompt
+# - top_p: Nucleus sampling parameter
+# - frequency_penalty: Reduce repetition
+# - presence_penalty: Encourage new topics
+# Update external status page (Uptime Kuma)
+update_status_page:
+  url: "https://status.wlux.casa/api/push/Bf8nrx6ykq?status={{ status }}&msg={{ msg | urlencode }}&ping={{ ping }}"
+  method: GET
+  headers:
+    User-Agent: "Glitch Cube Status Monitor"
+  timeout: 10
+
+check_glitchcube_health:
+  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/system/health"
+  method: GET
+  timeout: 5
+
+# Proactive behavior commands
+glitchcube_proactive:
+  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/proactive/{{ endpoint }}"
+  method: POST
+  headers:
+    Content-Type: application/json
+  payload: '{{ data | to_json }}'
+
+
+# Cycle through personas
+cycle_persona:
+  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/persona"
+  method: POST
+  headers:
+    Content-Type: "application/json"
+  payload: |
+    {
+      "persona": "{% set personas = ['buddy', 'jax', 'lomi', 'zorp'] %}{% set current = states('input_text.current_persona') %}{% set current_index = personas.index(current) if current in personas else 0 %}{% set next_index = (current_index + 1) % personas|length %}{{ personas[next_index] }}"
+    }
+  content_type: "application/json"
+  verify_ssl: false
+  timeout: 10

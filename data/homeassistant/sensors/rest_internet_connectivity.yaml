@@ -1,0 +1,14 @@
+# REST Health Sensor: Internet Connectivity
+- platform: rest
+  resource: "http://httpbin.org/get"
+  name: "Internet Connectivity"
+  unique_id: "internet_connectivity"
+  scan_interval: 60  # Check every minute
+  timeout: 15
+  value_template: >
+    {% if value_json is defined %}
+      connected
+    {% else %}
+      disconnected
+    {% endif %}
+  icon: "mdi:web"

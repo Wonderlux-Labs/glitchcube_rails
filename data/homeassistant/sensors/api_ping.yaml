@@ -1,0 +1,14 @@
+# Binary Sensor: Glitch Cube API Ping
+# Simple connectivity check using curl command line
+binary_sensor:
+  - platform: command_line
+    name: "Glitch Cube API Ping"
+    unique_id: "glitchcube_api_ping"
+    entity_id: binary_sensor.glitchcube_api_ping
+    device_class: connectivity
+    command: >
+      host=$(cat /config/.storage/core.restore_state | jq -r '.data[] | select(.entity_id=="input_text.glitchcube_host") | .state.state // "192.168.0.50"');
+      response=$(curl -LIk -m 3 "http://${host}:4567/health" -o /dev/null -w "%{http_code}\n" -s);
+      test "$response" -eq 200 && echo "ON" || echo "OFF"
+    scan_interval: 60
+    value_template: '{{ value }}'

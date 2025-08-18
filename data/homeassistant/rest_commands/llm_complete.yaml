@@ -1,0 +1,60 @@
+# REST command for LLM text completion via GlitchCube
+# This allows Home Assistant to call any AI model for text generation
+
+glitchcube_llm_complete:
+  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/llm/complete"
+  method: POST
+  headers:
+    Content-Type: "application/json"
+  payload: |
+    {
+      "prompt": "{{ prompt }}",
+      {% if model is defined %}
+      "model": "{{ model }}",
+      {% endif %}
+      {% if options is defined %}
+      "options": {{ options | to_json }}
+      {% endif %}
+    }
+  content_type: "application/json"
+  verify_ssl: false
+  timeout: 30
+
+# Example usage in automations:
+# 
+# Basic usage with default model:
+# - service: rest_command.glitchcube_llm_complete
+#   data:
+#     prompt: "Summarize the weather today in one sentence"
+#
+# With specific model:
+# - service: rest_command.glitchcube_llm_complete
+#   data:
+#     prompt: "Write a haiku about smart homes"
+#     model: "anthropic/claude-3.5-haiku"
+#
+# With options:
+# - service: rest_command.glitchcube_llm_complete
+#   data:
+#     prompt: "Explain quantum computing"
+#     model: "google/gemini-2.5-flash"
+#     options:
+#       temperature: 0.3
+#       max_tokens: 150
+#       system_prompt: "You are a science teacher. Explain complex topics simply."
+#
+# Available models (check /api/v1/llm/models for current list):
+# - openrouter/auto (automatic selection)
+# - google/gemini-2.5-flash
+# - anthropic/claude-3.5-haiku
+# - anthropic/claude-4-sonnet
+# - openai/gpt-4.1-mini
+# - deepseek/deepseek-chat-v3-0324
+#
+# Available options:
+# - temperature: 0.0 to 1.0 (creativity level)
+# - max_tokens: Maximum response length
+# - system_prompt: Override the default system prompt
+# - top_p: Nucleus sampling parameter
+# - frequency_penalty: Reduce repetition
+# - presence_penalty: Encourage new topics

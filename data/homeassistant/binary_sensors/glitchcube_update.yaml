@@ -1,0 +1,15 @@
+# Glitch Cube Update Binary Sensor
+# Binary sensor that properly indicates if update is needed
+
+- platform: template
+  sensors:
+    glitchcube_update_available:
+      friendly_name: "Glitch Cube Update Available"
+      value_template: "{{ is_state('input_boolean.glitchcube_update_pending', 'on') }}"
+      device_class: update
+      icon_template: >
+        {% if is_state('input_boolean.glitchcube_update_pending', 'on') %}
+          mdi:update
+        {% else %}
+          mdi:check-circle
+        {% endif %}

@@ -1,0 +1,58 @@
+---
+# Glitch Cube Scenes
+# Different operational modes for the art installation
+
+# Scene: Installation Active (Normal Operation)
+- name: "Installation Active"
+  icon: "mdi:cube-outline"
+  entities:
+    input_text.current_persona: "Active Guide"
+    # Add lighting controls when available
+    # light.glitchcube_ambient: 
+    #   state: on
+    #   brightness: 180
+    #   color_name: "blue"
+
+# Scene: Maintenance Mode
+- name: "Maintenance Mode"
+  icon: "mdi:tools"
+  entities:
+    input_text.current_persona: "System Maintenance"
+    # Lighting could indicate maintenance status
+    # light.glitchcube_ambient:
+    #   state: on
+    #   brightness: 100
+    #   color_name: "orange"
+
+# Scene: Sleep Mode (Low Power)
+- name: "Sleep Mode"
+  icon: "mdi:sleep"
+  entities:
+    input_text.current_persona: "Dormant"
+    # Minimal lighting for night/low activity periods
+    # light.glitchcube_ambient:
+    #   state: on
+    #   brightness: 50
+    #   color_name: "purple"
+
+# Scene: Demo Mode (For showcasing)
+- name: "Demo Mode"
+  icon: "mdi:presentation"
+  entities:
+    input_text.current_persona: "Demo Assistant"
+    # Bright, attention-getting lighting
+    # light.glitchcube_ambient:
+    #   state: on
+    #   brightness: 255
+    #   color_name: "white"
+
+# Scene: Emergency/Alert Mode
+- name: "Alert Mode"
+  icon: "mdi:alert"
+  entities:
+    input_text.current_persona: "Emergency System"
+    # Alert lighting (red)
+    # light.glitchcube_ambient:
+    #   state: on
+    #   brightness: 255
+    #   color_name: "red"

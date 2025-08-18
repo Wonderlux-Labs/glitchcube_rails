@@ -1,0 +1,275 @@
+# Glitch Cube Real-Time Monitoring Dashboard
+# Displays conversation states, hardware status, and interaction areas
+title: 🎲 Glitch Cube Monitor
+path: glitch-cube
+icon: mdi:cube
+theme: default
+
+cards:
+  # Main Status Row
+  - type: horizontal-stack
+    cards:
+      # Overall System Status
+      - type: glance
+        title: 🎲 System Status
+        entities:
+          - entity: sensor.glitchcube_api_health
+            name: API Health
+            icon: mdi:api
+          - entity: sensor.health_monitoring
+            name: Overall Health
+            icon: mdi:heart-pulse
+          - entity: light.cube_voice_ring
+            name: Voice Ring
+            icon: mdi:microphone
+          - entity: binary_sensor.motion
+            name: Motion
+            icon: mdi:motion-sensor
+
+  # Conversation State Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 💬 Conversation System
+      
+      - type: horizontal-stack
+        cards:
+          # LED Ring Status
+          - type: light
+            entity: light.cube_voice_ring
+            name: Voice Ring LED
+            icon: mdi:led-strip
+            
+          # Conversation State Card
+          - type: entities
+            title: 🗣️ Current State
+            show_header_toggle: false
+            entities:
+              - entity: input_text.conversation_state
+                name: State
+                icon: mdi:comment-processing
+              - entity: sensor.last_conversation_time
+                name: Last Activity
+                icon: mdi:clock-outline
+              - entity: counter.daily_conversations
+                name: Daily Count
+                icon: mdi:counter
+
+  # Hardware Status Section  
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 🔧 Hardware Status
+
+      - type: horizontal-stack
+        cards:
+          # RGB Lighting Grid
+          - type: light
+            entity: light.cube_light
+            name: Cube Light
+            icon: mdi:cube
+          - type: light  
+            entity: light.cart_light
+            name: Cart Light
+            icon: mdi:cart
+          - type: light
+            entity: light.awtrix_b85e20_matrix
+            name: LED Matrix
+            icon: mdi:grid
+
+      - type: horizontal-stack
+        cards:
+          # AWTRIX Indicators
+          - type: light
+            entity: light.awtrix_b85e20_indicator_1
+            name: Indicator 1
+            icon: mdi:led-on
+          - type: light
+            entity: light.awtrix_b85e20_indicator_2 
+            name: Indicator 2
+            icon: mdi:led-on
+          - type: light
+            entity: light.awtrix_b85e20_indicator_3
+            name: Indicator 3
+            icon: mdi:led-on
+
+  # Audio & Media Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 🎵 Audio & Media
+          
+      - type: horizontal-stack
+        cards:
+          # Voice Assistant
+          - type: entity
+            entity: media_player.square_voice
+            name: Voice Assistant
+            icon: mdi:microphone
+            
+          # Music Players
+          - type: entities
+            title: 🎶 Music System
+            show_header_toggle: false
+            entities:
+              - entity: media_player.music_assistant_player
+                name: Music Assistant
+                icon: mdi:music
+              - entity: sensor.current_track
+                name: Now Playing
+                icon: mdi:music-note
+
+  # Camera & Sensors Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 📹 Sensors & Environment
+
+      - type: horizontal-stack
+        cards:
+          # Camera Feed
+          - type: picture-entity
+            entity: camera.glitch_cube
+            name: Cube Camera
+            show_name: true
+            
+          # Environmental Sensors
+          - type: entities
+            title: 🌡️ Environment
+            show_header_toggle: false  
+            entities:
+              - entity: sensor.temperature
+                name: Temperature
+                icon: mdi:thermometer
+              - entity: sensor.battery_level
+                name: Battery
+                icon: mdi:battery
+              - entity: binary_sensor.motion
+                name: Motion
+                icon: mdi:motion-sensor
+
+  # API & Connectivity Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 🌐 Connectivity & APIs
+          
+      - type: horizontal-stack
+        cards:
+          # API Health
+          - type: entities
+            title: 🔌 API Status
+            show_header_toggle: false
+            entities:
+              - entity: sensor.glitchcube_api_health
+                name: Sinatra API
+                icon: mdi:api
+              - entity: sensor.openrouter_status
+                name: OpenRouter
+                icon: mdi:brain
+              - entity: sensor.circuit_breaker_status
+                name: Circuit Breakers
+                icon: mdi:electric-switch
+                
+          # Network & Performance
+          - type: entities
+            title: 📊 Performance
+            show_header_toggle: false
+            entities:
+              - entity: sensor.api_response_time
+                name: Response Time
+                icon: mdi:speedometer
+              - entity: sensor.daily_api_calls
+                name: Daily Calls
+                icon: mdi:counter
+              - entity: sensor.starlink_status
+                name: Starlink
+                icon: mdi:satellite-variant
+
+  # Real-time Activity Log
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 📝 Activity Log
+          
+      - type: logbook
+        title: Recent Activity
+        hours_to_show: 2
+        entities:
+          - light.cube_voice_ring
+          - sensor.conversation_state
+          - binary_sensor.motion
+          - camera.glitch_cube
+          - media_player.square_voice
+
+  # Quick Actions Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## ⚡ Quick Actions
+          
+      - type: horizontal-stack
+        cards:
+          # Conversation Controls
+          - type: button
+            name: Reset LED
+            entity: script.reset_conversation_led
+            icon: mdi:refresh
+            tap_action:
+              action: call-service
+              service: light.turn_off
+              service_data:
+                entity_id: light.cube_voice_ring
+                
+          - type: button  
+            name: Test Voice
+            entity: script.test_voice_response
+            icon: mdi:microphone-outline
+            tap_action:
+              action: call-service
+              service: tts.speak
+              service_data:
+                target:
+                  entity_id: media_player.square_voice
+                message: "Glitch Cube systems online and ready for interaction"
+                
+          - type: button
+            name: Clear Display
+            entity: script.clear_awtrix
+            icon: mdi:monitor-clean
+            tap_action:
+              action: call-service
+              service: script.awtrix_clear_display
+
+  # Debug Information (Development)
+  - type: conditional
+    conditions:
+      - entity: input_boolean.debug_mode
+        state: "on"
+    card:
+      type: vertical-stack
+      cards:
+        - type: markdown
+          content: |
+            ## 🐛 Debug Information
+            
+        - type: entities
+          title: Debug Details
+          show_header_toggle: false
+          entities:
+            - entity: sensor.last_error
+              name: Last Error
+              icon: mdi:alert
+            - entity: sensor.memory_usage
+              name: Memory Usage
+              icon: mdi:memory
+            - entity: sensor.cpu_usage
+              name: CPU Usage  
+              icon: mdi:chip

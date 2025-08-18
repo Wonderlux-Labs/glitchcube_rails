@@ -1,0 +1,9 @@
+---
+# World Info Sensor - Base template for dynamic attributes
+# Attributes will be set via service calls as needed
+
+- sensor:
+    - name: "World Info"
+      unique_id: "world_info"
+      state: "active"
+      icon: "mdi:earth"

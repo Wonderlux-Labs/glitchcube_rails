@@ -1,0 +1,69 @@
+# Memory and Summary RESTful Sensors
+
+# 1. Recent Summaries by Type (last 3 of each type)
+- platform: rest
+  resource_template: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/summaries/recent?limit=3"
+  method: GET
+  name: "Recent Summaries by Type"
+  unique_id: "recent_summaries_by_type"
+  headers:
+    Content-Type: "application/json"
+    User-Agent: "Home Assistant Memory Sensors"
+  scan_interval: 300  # 5 minutes
+  timeout: 30
+  value_template: >
+    {% if value_json.success %}
+      {{ value_json.total_count }}
+    {% else %}
+      0
+    {% endif %}
+  json_attributes:
+    - summaries_by_type
+    - total_count
+    - timestamp
+
+# 2. Memory Query Sensor (configurable via input_text)
+- platform: rest
+  resource_template: >
+    http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/memories/search?q={{ states('input_text.memory_query') | urlencode }}&limit={{ states('input_number.memory_query_limit') | int | default(10) }}
+  method: GET
+  name: "Memory Query Results"
+  unique_id: "memory_query_results"
+  headers:
+    Content-Type: "application/json"
+    User-Agent: "Home Assistant Memory Query"
+  scan_interval: 3600  # 1 hour (only updates when query changes)
+  timeout: 30
+  value_template: >
+    {% if value_json.success %}
+      {{ value_json.count }}
+    {% else %}
+      0
+    {% endif %}
+  json_attributes:
+    - memories
+    - query
+    - count
+    - timestamp
+
+# 3. Recent Memories Sensor
+- platform: rest
+  resource_template: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/memories/recent?limit={{ states('input_number.recent_memories_limit') | int | default(10) }}"
+  method: GET
+  name: "Recent Memories"
+  unique_id: "recent_memories"
+  headers:
+    Content-Type: "application/json"
+    User-Agent: "Home Assistant Recent Memories"
+  scan_interval: 180  # 3 minutes
+  timeout: 30
+  value_template: >
+    {% if value_json.success %}
+      {{ value_json.count }}
+    {% else %}
+      0
+    {% endif %}
+  json_attributes:
+    - memories
+    - count
+    - timestamp

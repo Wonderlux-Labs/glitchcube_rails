@@ -1,0 +1,59 @@
+# Template Sensors: Last Interaction, Current Persona, Installation Health
+sensor:
+  - name: "Last Interaction Time"
+    unique_id: "last_interaction_time"
+    state: >
+      {% set last = states('input_datetime.last_interaction') %}
+      {% if last != 'unknown' and last != 'unavailable' %}
+        {{ as_timestamp(last) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
+      {% else %}
+        Never
+      {% endif %}
+    icon: "mdi:clock-outline"
+
+  - name: "Current Persona"
+    unique_id: "current_persona"
+    state: >
+      {% set persona = states('input_text.current_persona') %}
+      {{ persona if persona not in ['unknown', 'unavailable', ''] else 'Default' }}
+    icon: "mdi:account-multiple"
+
+  - name: "Installation Health"
+    unique_id: "installation_health"
+    state: >
+      {% set app_health = states('sensor.glitch_cube_app_health') %}
+      {% set internet = states('sensor.internet_connectivity') %}
+      {% set temp = states('sensor.macmini_composite_temperature') | float(0) %}
+      {% set offline_mode = states('input_boolean.offline_mode') %}
+      {# 
+        Health Logic:
+          - critical if app offline
+          - offline if internet disconnected & offline_mode on
+          - degraded if internet disconnected
+          - warning if temp > 158F
+          - healthy otherwise
+      #}
+      {% if app_health == 'offline' %}
+        critical
+      {% elif internet == 'disconnected' and offline_mode == 'on' %}
+        offline
+      {% elif internet == 'disconnected' %}
+        degraded
+      {% elif temp is number and temp > 158 %}
+        warning
+      {% else %}
+        healthy
+      {% endif %}
+    icon: >
+      {% set health = states('sensor.installation_health') %}
+      {% if health == 'critical' %}
+        mdi:alert-circle
+      {% elif health == 'offline' %}
+        mdi:wifi-off
+      {% elif health == 'degraded' %}
+        mdi:alert
+      {% elif health == 'warning' %}
+        mdi:alert-outline
+      {% else %}
+        mdi:check-circle
+      {% endif %}

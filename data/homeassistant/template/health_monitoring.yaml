@@ -1,0 +1,82 @@
+# Health Monitoring Template Sensor for Uptime Kuma
+# Provides a concise status string with key metrics
+
+template:
+  - sensor:
+      - name: "Health Monitoring"
+        unique_id: "glitchcube_health_monitoring"
+        state: >
+          {% set wifi_strength = states('sensor.wifi_signal_strength') | default('unknown') %}
+          {% set uptime_days = (as_timestamp(now()) - as_timestamp(states('sensor.uptime'))) / 86400 | round(1) if states('sensor.uptime') != 'unknown' else 'unknown' %}
+          {% set hass_ip = state_attr('binary_sensor.remote_ui', 'ip_address') | default(states('sensor.local_ip')) | default('unknown') %}
+          {% set sinatra_status = states('sensor.glitchcube_api_health') %}
+          {% set last_interaction = states('input_datetime.last_interaction_time') %}
+          {% set cpu_temp = states('sensor.processor_temperature') | default('unknown') %}
+          {% set memory_use = states('sensor.memory_use_percent') | default('unknown') %}
+          {% set disk_use = states('sensor.disk_use_percent') | default('unknown') %}
+          
+          WiFi:{{ wifi_strength }}dBm | Up:{{ uptime_days }}d | HA:{{ hass_ip }} | API:{{ sinatra_status }} | CPU:{{ cpu_temp }}°C | Mem:{{ memory_use }}% | Disk:{{ disk_use }}%
+        
+        attributes:
+          wifi_strength: "{{ states('sensor.wifi_signal_strength') | default('unknown') }}"
+          uptime_hours: >
+            {% if states('sensor.uptime') != 'unknown' %}
+              {{ ((as_timestamp(now()) - as_timestamp(states('sensor.uptime'))) / 3600) | round(1) }}
+            {% else %}
+              unknown
+            {% endif %}
+          hass_ip: "{{ state_attr('binary_sensor.remote_ui', 'ip_address') | default(states('sensor.local_ip')) | default('unknown') }}"
+          sinatra_ip: "{{ states('input_text.glitchcube_host') | default('unknown') }}"
+          sinatra_status: "{{ states('sensor.glitchcube_api_health') | default('unknown') }}"
+          last_interaction: "{{ states('input_datetime.last_interaction_time') | default('never') }}"
+          total_interactions: "{{ states('counter.total_interactions') | default('0') }}"
+          cpu_temperature: "{{ states('sensor.processor_temperature') | default('unknown') }}"
+          memory_percent: "{{ states('sensor.memory_use_percent') | default('unknown') }}"
+          disk_percent: "{{ states('sensor.disk_use_percent') | default('unknown') }}"
+          internet_connected: "{{ states('binary_sensor.internet_connectivity') | default('unknown') }}"
+          offline_mode: "{{ states('input_boolean.offline_mode') | default('off') }}"
+          current_persona: "{{ states('input_text.current_persona') | default('unknown') }}"
+          motion_detected: "{{ states('input_boolean.motion_detected') | default('off') }}"
+          
+      # Compact version for push notifications or SMS
+      - name: "Health Monitoring Compact"
+        unique_id: "glitchcube_health_monitoring_compact"
+        state: >
+          {% set wifi = states('sensor.wifi_signal_strength') | default('?') %}
+          {% set api = 'UP' if states('sensor.glitchcube_api_health') == 'healthy' else 'DOWN' %}
+          {% set temp = states('sensor.processor_temperature') | default('?') %}
+          {% set mem = states('sensor.memory_use_percent') | default('?') %}
+          W:{{ wifi }} A:{{ api }} T:{{ temp }}° M:{{ mem }}%
+          
+      # Detailed JSON for API consumption
+      - name: "Health Monitoring JSON"
+        unique_id: "glitchcube_health_monitoring_json"
+        state: "{{ now().isoformat() }}"
+        attributes:
+          status: >
+            {
+              "timestamp": "{{ now().isoformat() }}",
+              "network": {
+                "wifi_dbm": {{ states('sensor.wifi_signal_strength') | default(-100) }},
+                "internet": "{{ states('binary_sensor.internet_connectivity') | default('unknown') }}",
+                "hass_ip": "{{ state_attr('binary_sensor.remote_ui', 'ip_address') | default(states('sensor.local_ip')) | default('unknown') }}",
+                "sinatra_ip": "{{ states('input_text.glitchcube_host') | default('unknown') }}"
+              },
+              "services": {
+                "home_assistant": "running",
+                "sinatra_api": "{{ states('sensor.glitchcube_api_health') | default('unknown') }}",
+                "offline_mode": {{ states('input_boolean.offline_mode') == 'on' | lower }}
+              },
+              "system": {
+                "uptime_hours": {{ ((as_timestamp(now()) - as_timestamp(states('sensor.uptime'))) / 3600) | round(1) if states('sensor.uptime') != 'unknown' else -1 }},
+                "cpu_temp_c": {{ states('sensor.processor_temperature') | default(-1) }},
+                "memory_percent": {{ states('sensor.memory_use_percent') | default(-1) }},
+                "disk_percent": {{ states('sensor.disk_use_percent') | default(-1) }}
+              },
+              "activity": {
+                "last_interaction": "{{ states('input_datetime.last_interaction_time') | default('never') }}",
+                "total_interactions": {{ states('counter.total_interactions') | default(0) }},
+                "current_persona": "{{ states('input_text.current_persona') | default('unknown') }}",
+                "motion_detected": {{ states('input_boolean.motion_detected') == 'on' | lower }}
+              }
+            }

@@ -1,0 +1,41 @@
+---
+# Trigger-based template sensor to store long weather summaries
+# This can store text longer than 255 characters in attributes
+
+- trigger:
+    - platform: event
+      event_type: update_weather_24h
+    - platform: event
+      event_type: update_weather_5day
+    - platform: homeassistant
+      event: start
+  sensor:
+    - name: "Weather Context Storage"
+      unique_id: "weather_context_storage"
+      state: "{{ now().isoformat() }}"
+      icon: "mdi:weather-partly-cloudy"
+      attributes:
+        weather_24h: >-
+          {% if trigger.platform == 'event' and trigger.event.event_type == 'update_weather_24h' %}
+            {{ trigger.event.data.summary }}
+          {% else %}
+            {{ this.attributes.weather_24h | default('Weather data not yet loaded') }}
+          {% endif %}
+        weather_5day: >-
+          {% if trigger.platform == 'event' and trigger.event.event_type == 'update_weather_5day' %}
+            {{ trigger.event.data.summary }}
+          {% else %}
+            {{ this.attributes.weather_5day | default('Forecast not yet loaded') }}
+          {% endif %}
+        last_24h_update: >-
+          {% if trigger.platform == 'event' and trigger.event.event_type == 'update_weather_24h' %}
+            {{ now().isoformat() }}
+          {% else %}
+            {{ this.attributes.last_24h_update | default('never') }}
+          {% endif %}
+        last_5day_update: >-
+          {% if trigger.platform == 'event' and trigger.event.event_type == 'update_weather_5day' %}
+            {{ now().isoformat() }}
+          {% else %}
+            {{ this.attributes.last_5day_update | default('never') }}
+          {% endif %}

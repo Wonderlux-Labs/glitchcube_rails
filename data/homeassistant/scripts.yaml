@@ -1,0 +1,126 @@
+glitchcube_tts_queued_ui:
+  sequence:
+  - data:
+      entity_id: media_player.square_voice
+      message: '{{ message }}'
+      options:
+        voice: "{% set persona = states('input_text.current_persona') %} {% if persona
+          == 'Buddy' %}\n  en-US-Standard-B\n{% elif persona == 'Jax' %}\n  en-US-Standard-A\n{%
+          elif persona == 'Lomi' %}\n  en-US-Standard-C\n{% elif persona == 'Zorp'
+          %}\n  en-US-Standard-D\n{% else %}\n  en-US-Standard-B\n{% endif %}\n"
+    action: tts.speak
+  alias: GlitchCube TTS Queued - UI
+  mode: queued
+  max: 10
+  description: ''
+weather_forecast:
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.weather_prompt
+    data:
+      value: "Summarize the weather forecast for today and later this week. Current
+        conditions: Temperature {{ states('weather.pirateweather', 'temperature')
+        }}°F, {{ states('weather.pirateweather') }}, humidity {{ state_attr('weather.pirateweather',
+        'humidity') }}%, wind {{ state_attr('weather.pirateweather', 'wind_speed')
+        }} mph.  \nDetailed forecast data: {\n  \"current\": {\n    \"temperature\":
+        \"{{ states('sensor.pirateweather_temperature') }}\",\n    \"summary\": \"{{
+        states('sensor.pirateweather_summary') }}\",\n    \"cloud_coverage\": \"{{
+        states('sensor.pirateweather_cloud_coverage') }}\",\n    \"precip_probability\":
+        \"{{ states('sensor.pirateweather_precip_probability') }}\",\n    \"alerts\":
+        \"{{ states('sensor.pirateweather_alerts') }}\"\n  },\n  \"hourly\": {\n    {%
+        for hour in ['1h', '2h', '3h', '6h', '12h'] -%}\n    \"{{ hour }}\": {\n      \"temperature\":
+        \"{{ states('sensor.pirateweather_temperature_' + hour) }}\",\n      \"summary\":
+        \"{{ states('sensor.pirateweather_summary_' + hour) }}\",\n      \"cloud_coverage\":
+        \"{{ states('sensor.pirateweather_cloud_coverage_' + hour) }}\",\n      \"precip_probability\":
+        \"{{ states('sensor.pirateweather_precip_probability_' + hour) }}\"\n    }{%
+        if not loop.last %},{% endif %}\n    {% endfor -%}\n  },\n  \"daily\": {\n
+        \   {% for day in ['0d', '1d', '2d'] -%}\n    \"{{ day }}\": {\n      \"summary\":
+        \"{{ states('sensor.pirateweather_summary_' + day) }}\",\n      \"cloud_coverage\":
+        \"{{ states('sensor.pirateweather_cloud_coverage_' + day) }}\",\n      \"precip_probability\":
+        \"{{ states('sensor.pirateweather_precip_probability_' + day) }}\",\n      \"moon_phase\":
+        \"{{ states('sensor.pirateweather_moon_phase_' + day) }}\"\n    }{% if not
+        loop.last %},{% endif %}\n    {% endfor -%}\n  }\n}\nPlease provide two separate
+        summaries:  1. HOURLY: A brief summary for the next 12 hours  2. UPCOMING:
+        A summary for the next 2-3 days"
+  - action: homeassistant.update_entity
+    target:
+      entity_id: sensor.llm_weather_response
+    data:
+      entity_id:
+      - sensor.llm_weather_response
+  - delay: 00:00:05
+play_music_on_jukebox:
+  sequence:
+  - action: music_assistant.play_media
+    metadata: {}
+    data:
+      media_id: '{{ media_id }}'
+      enqueue: '{{ enqueue }}'
+      media_type: track
+      artist: '{{ artist }}'
+      album: '{{ album }}'
+    target:
+      entity_id: media_player.cube_music
+  - if:
+    - condition: state
+      entity_id: media_player.cube_music
+      state: playing
+    then: []
+    else:
+    - action: media_player.media_play
+      metadata: {}
+      data: {}
+      target:
+        entity_id: media_player.cube_music
+  alias: Play Music On Jukebox
+  description: 'This action lets you play music on the jukebox and better yet it searches
+    for music for you! We set media_type to track by default, and then YOU MUST SEND
+    MEDIA_ID parameter you can send in a normal string like -Nirvana - Smells Like
+    Teen Spirit- or -Coltrane - Giant Steps- and we''ll try to find it for you - You
+    can optionally restrict by artist and even album if you are getting funny results.
+    Enqueue takes a few different options: DIf the content should be played now or
+    be added to the queue. Options are: play: Play now, replace: Replace the existing
+    queue and play now next: Add to the current queue after the currently playing
+    item, replace_next: Replace the current queue after the currently playing item
+    add: Add to the end of the queue This defaults to replace_next...assuming you
+    are in charge but you don''t want to interrupt a song But if you are in full jukebox
+    party mode and tons of people are lining up songs, probably ADD them instead If
+    a user tells you nothing is playing you can force a play of what you want with
+    REPLACE -- TLDR - you must send in media_id which is any string like "Song by
+    Artist" and will do fuzzy search everything else is optional, but you can also
+    send artist and/or album to narrow and you have a variety of queue modes - use
+    play to force, use queue in a music extravaganza, otherwise we can handle'
+  fields:
+    media_id:
+      selector:
+        text:
+      name: media_id
+      description: REQUIRED (this is the song you want to play, fuzzy search is okay,
+        so can do "Watermelon Man by Herbie Hancock" or like "Nirvana - Teen Spirit"
+        and should work for you but the more precise the better
+      required: true
+    artist:
+      selector:
+        text:
+      name: artist
+      description: Artist (optional) - restrict to tracks by artist name
+    album:
+      selector:
+        text:
+      name: album
+      description: optional - restrict to a certain album - great for those deep cuts
+        when you know what version you want!
+    enqueue:
+      selector:
+        select:
+          options:
+          - play
+          - play_next
+          - replace_next
+          - add
+      name: enqueue
+      description: optional - how to play - defaults to replace_next (will always
+        play next but not interrupt a song if playing) - use play to force now - use
+        add if youa re queing up songs for a party or running a whole damn jukebox
+      default: replace_next

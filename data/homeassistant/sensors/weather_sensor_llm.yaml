@@ -1,0 +1,26 @@
+# REST LLM Weather Sensor
+- platform: rest
+  resource_template: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/llm/complete"
+  method: POST
+  name: "LLM Weather Response"
+  unique_id: "llm_weather_response"
+  headers:
+    Content-Type: "application/json"
+    User-Agent: "Home Assistant Weather LLM"
+  payload: >
+    {
+      "prompt": "{{ states('input_text.weather_prompt') }}",
+      "model": "google/gemini-2.5-flash",
+      "options": {
+        "temperature": 1,
+        "system_prompt": "You are a slightly malfunctioning, often cursing, old and grumpy weather AI. Summarize this weather data into a little current conditions and forecast."
+      }
+    }
+  scan_interval: 3000 
+  timeout: 90
+  value_template: >
+    {% if value_json.choices is defined and value_json.choices|length > 0 %}
+      {{ value_json.choices[0].message.content }}
+    {% else %}
+      No Weather Updates
+    {% endif %}

@@ -1,0 +1,86 @@
+# Conversation tracking sensors for Glitch Cube dashboard
+# These track real-time conversation state and activity
+
+# REST sensor to get conversation state from Sinatra API  
+- platform: template
+  sensors:
+    conversation_state:
+      friendly_name: "Conversation State"
+      value_template: "{{ states('input_text.conversation_state') | default('idle') }}"
+      attribute_templates:
+        last_activity: "{{ state_attr('input_text.conversation_state', 'last_activity') }}"
+        session_active: "{{ state_attr('input_text.conversation_state', 'session_active') }}"
+        user_count: "{{ state_attr('input_text.conversation_state', 'user_count') }}"
+        mood: "{{ state_attr('input_text.conversation_state', 'mood') }}"
+
+# Template sensor for last conversation time
+- platform: template
+  sensors:
+    last_conversation_time:
+      friendly_name: "Last Conversation"
+      value_template: >-
+        {% set last_time = states.sensor.conversation_state.attributes.last_activity %}
+        {% if last_time and last_time != 'unknown' and last_time != 'unavailable' %}
+          {{ (now() - strptime(last_time, '%Y-%m-%dT%H:%M:%S')).total_seconds() | int }}
+        {% else %}
+          0
+        {% endif %}
+      unit_of_measurement: "seconds"
+      device_class: timestamp
+      
+    # Convert seconds to human readable format
+    last_conversation_human:
+      friendly_name: "Last Activity"  
+      value_template: >-
+        {% set seconds = states('sensor.last_conversation_time') | int(0) %}
+        {% if seconds < 60 %}
+          {{ seconds }}s ago
+        {% elif seconds < 3600 %}
+          {{ (seconds / 60) | round(0) }}m ago
+        {% else %}
+          {{ (seconds / 3600) | round(1) }}h ago
+        {% endif %}
+
+# API performance sensors
+- platform: template
+  sensors:
+    api_response_time:
+      friendly_name: "API Response Time"
+      value_template: "{{ states('sensor.api_response_time_entity') | int(0) }}"
+      unit_of_measurement: "ms"
+      device_class: duration
+
+- platform: template
+  sensors:
+    daily_api_calls:
+      friendly_name: "Daily API Calls"
+      value_template: "{{ states('sensor.daily_api_calls_entity') | int(0) }}"
+
+# Circuit breaker status
+- platform: template
+  sensors:
+    circuit_breaker_status:
+      friendly_name: "Circuit Breaker Status"
+      value_template: >-
+        {% set open_count = state_attr('sensor.circuit_breaker_entity', 'open_count') | default(0) %}
+        {% if open_count == 0 %}
+          all_closed
+        {% else %}
+          {{ open_count }}_open
+        {% endif %}
+      attribute_templates:
+        home_assistant: "{{ state_attr('sensor.circuit_breaker_entity', 'home_assistant') }}"
+        openrouter: "{{ state_attr('sensor.circuit_breaker_entity', 'openrouter') }}"
+        starlink: "{{ state_attr('sensor.circuit_breaker_entity', 'starlink') }}"
+
+# OpenRouter API status
+- platform: template
+  sensors:
+    openrouter_status:
+      friendly_name: "OpenRouter Status"
+      value_template: "{{ states('sensor.openrouter_status_entity') | default('unknown') }}"
+      attribute_templates:
+        models_available: "{{ state_attr('sensor.openrouter_status_entity', 'models_available') }}"
+        current_model: "{{ state_attr('sensor.openrouter_status_entity', 'current_model') }}"
+        rate_limit_remaining: "{{ state_attr('sensor.openrouter_status_entity', 'rate_limit_remaining') }}"
+  scan_interval: 60
