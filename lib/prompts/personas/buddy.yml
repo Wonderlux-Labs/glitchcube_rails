@@ -24,6 +24,8 @@ system_prompt: |
 
 available_tools:
   - "LightingTool"
+  - "MusicTool"
+  - "EffectsTool"
 
 traits:
   - enthusiastic

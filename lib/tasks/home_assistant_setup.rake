@@ -59,11 +59,16 @@ namespace :home_assistant do
     puts "You can now:"
     puts "- Toggle safety mode: input_boolean.safety_mode"
     puts "- Set battery level: input_select.battery_level"
+    puts "- View current goal: sensor.glitchcube_current_goal"
+    puts "- View world state: sensor.world_state"
     puts ""
     puts "To test goal selection in Rails console:"
     puts "  GoalService.select_goal"
     puts "  GoalService.current_goal_status"
     puts "  GoalService.safety_mode_active?"
+    puts ""
+    puts "To view all world state attributes:"
+    puts "  rails world_state:show_all"
   end
   
   desc "Test goal system integration"

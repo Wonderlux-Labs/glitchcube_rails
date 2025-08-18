@@ -44,6 +44,9 @@ class GoalService
       Rails.cache.write(GOAL_STARTED_AT_KEY, Time.current)
       Rails.cache.write(GOAL_TIME_LIMIT_KEY, time_limit)
       
+      # Update Home Assistant sensors
+      update_home_assistant_goal_sensors(selected_goal, Time.current, time_limit)
+      
       selected_goal
     end
     
@@ -103,6 +106,9 @@ class GoalService
       
       # Clear current goal from cache
       clear_current_goal
+      
+      # Update Home Assistant sensors
+      clear_home_assistant_goal_sensors
       
       true
     rescue StandardError => e
@@ -210,6 +216,134 @@ class GoalService
       Rails.cache.delete(CURRENT_GOAL_KEY)
       Rails.cache.delete(GOAL_STARTED_AT_KEY)
       Rails.cache.delete(GOAL_TIME_LIMIT_KEY)
+    end
+
+    # Update Home Assistant sensors with goal state
+    def update_home_assistant_goal_sensors(goal, started_at, time_limit)
+      ha_service = HomeAssistantService.new
+      
+      # Update current goal sensor
+      ha_service.set_entity_state(
+        'sensor.glitchcube_current_goal',
+        goal[:description],
+        {
+          friendly_name: 'GlitchCube Current Goal',
+          icon: goal[:category].include?('safety') ? 'mdi:shield-alert' : 'mdi:target',
+          goal_id: goal[:id],
+          goal_category: goal[:category],
+          started_at: started_at.iso8601,
+          time_limit_minutes: (time_limit / 60).to_i,
+          expires_at: (started_at + time_limit).iso8601,
+          safety_goal: goal[:category].include?('safety'),
+          last_updated: Time.current.iso8601
+        }
+      )
+      
+      # Update world state sensor with goal info
+      update_world_state_goal_attributes(goal, started_at, time_limit)
+      
+      Rails.logger.info "📊 Updated Home Assistant goal sensors"
+    rescue StandardError => e
+      Rails.logger.error "❌ Failed to update Home Assistant goal sensors: #{e.message}"
+    end
+
+    # Clear Home Assistant goal sensors when goal completes
+    def clear_home_assistant_goal_sensors
+      ha_service = HomeAssistantService.new
+      
+      ha_service.set_entity_state(
+        'sensor.glitchcube_current_goal',
+        'No active goal',
+        {
+          friendly_name: 'GlitchCube Current Goal',
+          icon: 'mdi:target-variant',
+          goal_id: nil,
+          goal_category: nil,
+          started_at: nil,
+          time_limit_minutes: nil,
+          expires_at: nil,
+          safety_goal: false,
+          last_updated: Time.current.iso8601
+        }
+      )
+      
+      # Clear goal info from world state sensor
+      clear_world_state_goal_attributes
+      
+      Rails.logger.info "📊 Cleared Home Assistant goal sensors"
+    rescue StandardError => e
+      Rails.logger.error "❌ Failed to clear Home Assistant goal sensors: #{e.message}"
+    end
+
+    # Update world state sensor with goal information
+    def update_world_state_goal_attributes(goal, started_at, time_limit)
+      current_attributes = fetch_current_world_state_attributes
+      
+      new_attributes = current_attributes.merge(
+        'current_goal' => goal[:description],
+        'goal_category' => goal[:category],
+        'goal_started_at' => started_at.iso8601,
+        'goal_expires_at' => (started_at + time_limit).iso8601,
+        'safety_mode' => goal[:category].include?('safety'),
+        'goal_updated_at' => Time.current.iso8601
+      )
+      
+      HomeAssistantService.set_entity_state(
+        'sensor.world_state',
+        'active',
+        new_attributes
+      )
+    rescue StandardError => e
+      Rails.logger.error "❌ Failed to update world state goal attributes: #{e.message}"
+    end
+
+    # Clear goal attributes from world state sensor
+    def clear_world_state_goal_attributes
+      current_attributes = fetch_current_world_state_attributes
+      
+      new_attributes = current_attributes.merge(
+        'current_goal' => nil,
+        'goal_category' => nil,
+        'goal_started_at' => nil,
+        'goal_expires_at' => nil,
+        'safety_mode' => false,
+        'goal_updated_at' => Time.current.iso8601
+      )
+      
+      HomeAssistantService.set_entity_state(
+        'sensor.world_state',
+        'active',
+        new_attributes
+      )
+    rescue StandardError => e
+      Rails.logger.error "❌ Failed to clear world state goal attributes: #{e.message}"
+    end
+
+    # Get current world state sensor attributes
+    def fetch_current_world_state_attributes
+      ha_service = HomeAssistantService.new
+      world_state = ha_service.entity('sensor.world_state')
+      
+      if world_state&.dig('attributes')
+        world_state['attributes']
+      else
+        # Initialize sensor if it doesn't exist
+        Rails.logger.info "📊 Initializing world_state sensor with default attributes"
+        default_attributes = {
+          'friendly_name' => 'World State',
+          'icon' => 'mdi:earth',
+          'last_updated' => Time.current.iso8601,
+          'system_version' => Rails.application.class.module_parent_name,
+          'environment' => Rails.env
+        }
+        
+        # Create the sensor with default attributes
+        ha_service.set_entity_state('sensor.world_state', 'active', default_attributes)
+        default_attributes
+      end
+    rescue StandardError => e
+      Rails.logger.error "Failed to fetch world state attributes: #{e.message}"
+      {} # Return empty hash on any error
     end
   end
 end

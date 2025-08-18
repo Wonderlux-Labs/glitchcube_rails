@@ -1,4 +1,6 @@
 # app/jobs/async_tool_job.rb
+require 'mission_control/jobs' if defined?(Rails)
+
 class AsyncToolJob < ApplicationJob
   queue_as :default
   

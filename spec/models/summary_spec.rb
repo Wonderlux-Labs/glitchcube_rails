@@ -7,8 +7,8 @@ RSpec.describe Summary, type: :model do
     it { should validate_presence_of(:summary_text) }
     it { should validate_presence_of(:summary_type) }
     it { should validate_presence_of(:message_count) }
-    it { should validate_inclusion_of(:summary_type).in_array(%w[hourly daily session topic]) }
-    it { should validate_numericality_of(:message_count).is_greater_than(0) }
+    it { should validate_inclusion_of(:summary_type).in_array(%w[hourly daily session topic goal_completion]) }
+    it { should validate_numericality_of(:message_count).is_greater_than_or_equal_to(0) }
   end
 
   describe 'scopes' do
@@ -116,6 +116,31 @@ RSpec.describe Summary, type: :model do
 
       it 'returns nil' do
         expect(summary.duration_in_minutes).to be_nil
+      end
+    end
+  end
+
+  describe 'goal completion functionality' do
+    let!(:goal_summary1) { create(:summary, summary_type: 'goal_completion', summary_text: 'Completed goal: Make friends', metadata: { goal_id: 'make_friends', goal_category: 'social_goals', duration_seconds: 1800 }.to_json) }
+    let!(:goal_summary2) { create(:summary, summary_type: 'goal_completion', summary_text: 'Completed goal: Find power', metadata: { goal_id: 'find_power', goal_category: 'safety_goals', duration_seconds: 600 }.to_json) }
+    let!(:hourly_summary) { create(:summary, summary_type: 'hourly') }
+
+    describe '.goal_completions' do
+      it 'returns only goal completion summaries' do
+        expect(Summary.goal_completions).to contain_exactly(goal_summary1, goal_summary2)
+      end
+    end
+
+    describe '.completed_goals' do
+      it 'returns formatted goal completion data' do
+        completed = Summary.completed_goals
+        
+        expect(completed.length).to eq(2)
+        
+        first_goal = completed.find { |g| g[:goal_id] == 'make_friends' }
+        expect(first_goal[:goal_category]).to eq('social_goals')
+        expect(first_goal[:description]).to eq('Completed goal: Make friends')
+        expect(first_goal[:duration]).to eq(1800)
       end
     end
   end

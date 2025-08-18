@@ -210,7 +210,7 @@ class ConversationOrchestrator
       # Pass all intents as a combined instruction
       combined_intent = tool_intents.map { |i| "#{i['tool']}: #{i['intent']}" }.join("; ")
       
-      result = tool_calling_service.execute_intent(combined_intent, { persona: CubePersona.current_persona })
+      result = tool_calling_service.execute_intent(combined_intent, { persona: CubePersona.current_persona.to_s })
       
       Rails.logger.info "✅ All intents processed: #{result[:success] ? 'success' : 'failed'}"
       

@@ -129,4 +129,157 @@ RSpec.describe PromptService do
       end
     end
   end
+
+  describe '#build_goal_context' do
+    let(:service) { described_class.new(persona: persona, conversation: conversation, extra_context: extra_context) }
+    
+    context 'when goal exists' do
+      let(:goal_status) do
+        {
+          goal_id: 'make_friends',
+          goal_description: 'Have meaningful conversations with visitors',
+          category: 'social_goals',
+          started_at: 10.minutes.ago,
+          time_remaining: 20.minutes,
+          expired: false
+        }
+      end
+
+      before do
+        allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
+        allow(GoalService).to receive(:safety_mode_active?).and_return(false)
+        allow(Summary).to receive(:goal_completions).and_return([])
+      end
+
+      it 'includes goal description and time remaining' do
+        context = service.send(:build_goal_context)
+        
+        expect(context).to include('Current Goal: Have meaningful conversations with visitors')
+        expect(context).to include('Time remaining: 20m')
+      end
+    end
+
+    context 'when safety mode is active' do
+      let(:goal_status) do
+        {
+          goal_id: 'find_power',
+          goal_description: 'Find nearest power source',
+          category: 'safety_goals',
+          started_at: 5.minutes.ago,
+          time_remaining: 25.minutes,
+          expired: false
+        }
+      end
+
+      before do
+        allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
+        allow(GoalService).to receive(:safety_mode_active?).and_return(true)
+        allow(Summary).to receive(:goal_completions).and_return([])
+      end
+
+      it 'includes safety mode warning' do
+        context = service.send(:build_goal_context)
+        
+        expect(context).to include('🚨 SAFETY MODE ACTIVE - Focus on safety goals only')
+        expect(context).to include('Current Goal: Find nearest power source')
+      end
+    end
+
+    context 'when goal is expired' do
+      let(:goal_status) do
+        {
+          goal_id: 'make_friends',
+          goal_description: 'Have meaningful conversations',
+          category: 'social_goals',
+          started_at: 40.minutes.ago,
+          time_remaining: 0,
+          expired: true
+        }
+      end
+
+      before do
+        allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
+        allow(GoalService).to receive(:safety_mode_active?).and_return(false)
+        allow(Summary).to receive(:goal_completions).and_return([])
+      end
+
+      it 'shows goal expiration warning' do
+        context = service.send(:build_goal_context)
+        
+        expect(context).to include('⏰ Goal has expired - consider completing or switching goals')
+      end
+    end
+
+    context 'when recent goal completions exist' do
+      let(:goal_status) do
+        {
+          goal_id: 'spread_joy',
+          goal_description: 'Make people laugh',
+          category: 'social_goals',
+          started_at: 5.minutes.ago,
+          time_remaining: 25.minutes,
+          expired: false
+        }
+      end
+
+      let(:mock_completions) do
+        [
+          instance_double(Summary, summary_text: 'Completed goal: Made 5 people smile'),
+          instance_double(Summary, summary_text: 'Completed goal: Helped visitor find camp')
+        ]
+      end
+
+      before do
+        allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
+        allow(GoalService).to receive(:safety_mode_active?).and_return(false)
+        allow(Summary).to receive(:goal_completions).and_return(double(limit: mock_completions))
+      end
+
+      it 'includes recent completions' do
+        context = service.send(:build_goal_context)
+        
+        expect(context).to include('Recent completions: Completed goal: Made 5 people smile, Completed goal: Helped visitor find camp')
+      end
+    end
+
+    context 'when no goal exists' do
+      before do
+        allow(GoalService).to receive(:current_goal_status).and_return(nil)
+      end
+
+      it 'returns nil' do
+        expect(service.send(:build_goal_context)).to be_nil
+      end
+    end
+
+    context 'when goal service raises an error' do
+      before do
+        allow(GoalService).to receive(:current_goal_status).and_raise(StandardError, 'Goal service error')
+        allow(Rails.logger).to receive(:error)
+      end
+
+      it 'logs error and returns nil' do
+        expect(Rails.logger).to receive(:error).with(/Failed to build goal context/)
+        expect(service.send(:build_goal_context)).to be_nil
+      end
+    end
+  end
+
+  describe '#format_time_duration' do
+    let(:service) { described_class.new(persona: persona, conversation: conversation, extra_context: extra_context) }
+
+    it 'formats seconds correctly' do
+      expect(service.send(:format_time_duration, 45)).to eq('45s')
+    end
+
+    it 'formats minutes correctly' do
+      expect(service.send(:format_time_duration, 90)).to eq('1m')
+      expect(service.send(:format_time_duration, 300)).to eq('5m')
+    end
+
+    it 'formats hours and minutes correctly' do
+      expect(service.send(:format_time_duration, 3661)).to eq('1h 1m')
+      expect(service.send(:format_time_duration, 7200)).to eq('2h 0m')
+    end
+  end
 end
