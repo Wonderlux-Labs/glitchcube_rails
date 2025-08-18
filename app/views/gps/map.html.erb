@@ -9,14 +9,52 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Application CSS -->
-    <%= stylesheet_link_tag "gps_map", "data-turbo-track": "reload" %>
+    <style>
+      <%= File.read(Rails.root.join('app/assets/stylesheets/gps_map.css')) %>
+    </style>
 </head>
 <body>
-    <%= render 'partials/map_container' %>
-    <%= render 'partials/info_toolbar' %>
-    <%= render 'partials/coordinates_toolbar' %>
-    <%= render 'partials/controls_toolbar' %>
-    <%= render 'partials/legend' %>
+    <!-- Map container -->
+    <div id="map"></div>
+    
+    <!-- Info toolbar -->
+    <div class="info-toolbar" style="display: flex; gap: 20px; align-items: center;">
+      <div class="cube-title">🔥 GLITCH CUBE TRACKER</div>
+      <div class="location-display" id="addressBar">Loading...</div>
+      <div class="section-display" id="sectionBar"></div>
+      <div class="status-display" id="status">Initializing</div>
+      <span id="simModeIndicator" class="sim-muted" style="margin-left:auto; font-size:12px; color:#888;"></span>
+    </div>
+    
+    <!-- Coordinates toolbar -->
+    <div class="coordinates-toolbar">
+      <div id="coordinates">Connecting...</div>
+      <div id="distanceBar"></div>
+    </div>
+    
+    <!-- Controls toolbar -->
+    <div class="controls-toolbar">
+      <button class="control-button" id="routeToggle">SHOW route</button>
+      <button class="control-button" id="landmarksToggle">HIDE landmarks</button>
+      <button class="control-button" id="portosToggle">SHOW toilets</button>
+      <button class="control-button" id="centerToggle">Center Map</button>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #ff6b35;"></div>
+        <span>Streets</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #00ff00;"></div>
+        <span>Route History</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-marker" style="background: #ff6b35; border-radius: 50%; border: 2px solid white;"></div>
+        <span>Glitch Cube</span>
+      </div>
+    </div>
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

@@ -6,7 +6,7 @@ views:
       - type: entity
         entity: sensor.installation_health
       - type: entity
-        entity: sensor.glitch_cube_api_health
+        entity: sensor.backend_health_check
         title: backend
       - type: entity
         show_name: false

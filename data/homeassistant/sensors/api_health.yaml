@@ -8,9 +8,8 @@
     {% else %}
       http://192.168.0.50:4567/health
     {% endif %}
-  name: "Glitch Cube API Health"
-  unique_id: "glitchcube_api_health_rest"
-  entity_id: sensor.glitchcube_api_health
+  name: "Backend Health Check"
+  unique_id: "backend_health_check_rest"
   scan_interval: 30  # Check every 30 seconds
   timeout: 10
   headers:

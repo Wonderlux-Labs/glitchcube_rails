@@ -14,10 +14,14 @@ class ConversationOrchestrator
     
     # Build prompt with tools for current persona (check live, don't use stored)
     current_persona = determine_persona
+    
+    # Add session_id to context for memory retrieval
+    enhanced_context = @context.merge(session_id: @session_id)
+    
     prompt_data = PromptService.build_prompt_for(
       persona: current_persona,
       conversation: conversation,
-      extra_context: @context
+      extra_context: enhanced_context
     )
     
     # PHASE 1: Check for previous pending tools and inject results
@@ -67,7 +71,15 @@ class ConversationOrchestrator
     if existing_conversation&.conversation_logs&.any?
       last_message_time = existing_conversation.conversation_logs.maximum(:created_at)
       if last_message_time && last_message_time < 3.minutes.ago
-        Rails.logger.info "🕒 Session #{@session_id} is stale (last message: #{last_message_time}), creating new session"
+        Rails.logger.info "🕒 Session #{@session_id} is stale (last message: #{last_message_time}), ending and creating memories"
+        
+        # End the stale conversation and create memories
+        if existing_conversation.active?
+          existing_conversation.end!
+          ConversationMemoryJob.perform_later(@session_id)
+          Rails.logger.info "🧠 Ended stale conversation and queued memory creation for: #{@session_id}"
+        end
+        
         # Generate new session ID with timestamp suffix
         original_id = @session_id.split('_stale_').first
         @session_id = "#{original_id}_stale_#{Time.current.to_i}"
@@ -272,6 +284,16 @@ class ConversationOrchestrator
     
     # Use LLM's continue_conversation OR force true if tools pending
     continue_conversation = ai_response[:continue_conversation] || tool_analysis[:async_tools].any?
+    
+    # End conversation and queue memory creation if not continuing
+    if !continue_conversation
+      conversation = Conversation.find_by(session_id: @session_id)
+      if conversation && conversation.active?
+        conversation.end!
+        ConversationMemoryJob.perform_later(@session_id)
+        Rails.logger.info "🧠 Ended conversation and queued memory creation for session: #{@session_id}"
+      end
+    end
     
     # Store narrative metadata
     store_narrative_metadata(ai_response)

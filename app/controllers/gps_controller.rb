@@ -2,7 +2,7 @@
 
 class GpsController < ApplicationController
   def map
-    # Serve the GPS map view
-    render :map
+    # Serve the GPS map view without layout
+    render :map, layout: false
   end
 end

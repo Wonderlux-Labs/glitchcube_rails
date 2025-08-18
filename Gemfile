@@ -42,3 +42,4 @@ end
 
 gem "dotenv-rails", "~> 3.1"
 gem "open_router_enhanced", git: "https://www.github.com/estiens/open_router", branch: "dev"
+gem "geocoder"

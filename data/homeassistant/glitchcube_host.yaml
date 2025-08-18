@@ -1,0 +1,8 @@
+input_text:
+  glitchcube_host:
+    name: "Glitch Cube Host IP"
+    initial: "192.168.0.50"  # Default fallback IP
+    min: 7                   # Minimum length for IP (x.x.x.x)
+    max: 15                  # Maximum length for IP (xxx.xxx.xxx.xxx)
+    icon: mdi:cube-outline
+    mode: text

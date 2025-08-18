@@ -9,7 +9,7 @@ template:
           {% set wifi_strength = states('sensor.wifi_signal_strength') | default('unknown') %}
           {% set uptime_days = (as_timestamp(now()) - as_timestamp(states('sensor.uptime'))) / 86400 | round(1) if states('sensor.uptime') != 'unknown' else 'unknown' %}
           {% set hass_ip = state_attr('binary_sensor.remote_ui', 'ip_address') | default(states('sensor.local_ip')) | default('unknown') %}
-          {% set sinatra_status = states('sensor.glitchcube_api_health') %}
+          {% set sinatra_status = states('sensor.backend_health_check') %}
           {% set last_interaction = states('input_datetime.last_interaction_time') %}
           {% set cpu_temp = states('sensor.processor_temperature') | default('unknown') %}
           {% set memory_use = states('sensor.memory_use_percent') | default('unknown') %}
@@ -27,7 +27,7 @@ template:
             {% endif %}
           hass_ip: "{{ state_attr('binary_sensor.remote_ui', 'ip_address') | default(states('sensor.local_ip')) | default('unknown') }}"
           sinatra_ip: "{{ states('input_text.glitchcube_host') | default('unknown') }}"
-          sinatra_status: "{{ states('sensor.glitchcube_api_health') | default('unknown') }}"
+          sinatra_status: "{{ states('sensor.backend_health_check') | default('unknown') }}"
           last_interaction: "{{ states('input_datetime.last_interaction_time') | default('never') }}"
           total_interactions: "{{ states('counter.total_interactions') | default('0') }}"
           cpu_temperature: "{{ states('sensor.processor_temperature') | default('unknown') }}"
@@ -43,7 +43,7 @@ template:
         unique_id: "glitchcube_health_monitoring_compact"
         state: >
           {% set wifi = states('sensor.wifi_signal_strength') | default('?') %}
-          {% set api = 'UP' if states('sensor.glitchcube_api_health') == 'healthy' else 'DOWN' %}
+          {% set api = 'UP' if states('sensor.backend_health_check') == 'healthy' else 'DOWN' %}
           {% set temp = states('sensor.processor_temperature') | default('?') %}
           {% set mem = states('sensor.memory_use_percent') | default('?') %}
           W:{{ wifi }} A:{{ api }} T:{{ temp }}° M:{{ mem }}%
@@ -64,7 +64,7 @@ template:
               },
               "services": {
                 "home_assistant": "running",
-                "sinatra_api": "{{ states('sensor.glitchcube_api_health') | default('unknown') }}",
+                "sinatra_api": "{{ states('sensor.backend_health_check') | default('unknown') }}",
                 "offline_mode": {{ states('input_boolean.offline_mode') == 'on' | lower }}
               },
               "system": {

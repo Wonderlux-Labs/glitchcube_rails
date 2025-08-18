@@ -22,12 +22,28 @@
   };
 </script>
 
-<!-- Load modular JavaScript files -->
-<script src="/javascripts/gps_map/utils.js"></script>
-<script src="/javascripts/gps_map/icons.js"></script>
-<script src="/javascripts/gps_map/map_setup.js"></script>
-<script src="/javascripts/gps_map/markers.js"></script>
-<script src="/javascripts/gps_map/landmarks.js"></script>
-<script src="/javascripts/gps_map/controls.js"></script>
-<script src="/javascripts/gps_map/api.js"></script>
-<script src="/javascripts/gps_map/main.js"></script>
+<!-- Inline JavaScript files -->
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/utils.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/icons.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/map_setup.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/markers.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/landmarks.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/controls.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/api.js')) %>
+</script>
+<script>
+<%= File.read(Rails.root.join('public/javascripts/gps_map/main.js')) %>
+</script>

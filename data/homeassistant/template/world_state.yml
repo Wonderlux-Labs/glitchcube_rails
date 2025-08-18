@@ -1,0 +1,5 @@
+template:
+  - sensor:
+      - name: "World State"
+        unique_id: world_state
+        state: "{{ now() }}"

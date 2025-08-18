@@ -55,7 +55,7 @@ recorder:
       - input_text
       - logbook
     entities:
-      - sensor.glitch_cube_app_health
+      - sensor.backend_health_check
       - sensor.internet_connectivity
       - sensor.installation_health
       - sensor.last_interaction_time

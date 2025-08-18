@@ -4,7 +4,6 @@ binary_sensor:
   - platform: command_line
     name: "Glitch Cube API Ping"
     unique_id: "glitchcube_api_ping"
-    entity_id: binary_sensor.glitchcube_api_ping
     device_class: connectivity
     command: >
       host=$(cat /config/.storage/core.restore_state | jq -r '.data[] | select(.entity_id=="input_text.glitchcube_host") | .state.state // "192.168.0.50"');

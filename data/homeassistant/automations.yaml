@@ -165,7 +165,7 @@
   triggers:
   - trigger: state
     entity_id:
-    - sensor.glitchcube_api_health
+    - sensor.backend_health_check
     to: unavailable
     for:
       hours: 0
@@ -173,7 +173,7 @@
       seconds: 15
   - trigger: state
     entity_id:
-    - sensor.glitchcube_api_health
+    - sensor.backend_health_check
     to: unknown
     for:
       hours: 0
@@ -207,7 +207,7 @@
   triggers:
   - trigger: state
     entity_id:
-    - sensor.glitchcube_api_health
+    - sensor.backend_health_check
     to: healthy
     for:
       hours: 0

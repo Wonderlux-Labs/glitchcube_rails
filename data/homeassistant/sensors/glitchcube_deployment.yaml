@@ -1,0 +1,45 @@
+# Glitch Cube Deployment Sensors
+# Tracks deployment status and triggers updates
+
+# Template sensor that indicates if update is needed (as text state)
+- platform: template
+  sensors:
+    glitchcube_update_needed:
+      friendly_name: "Glitch Cube Update Needed"
+      value_template: "{{ states('input_boolean.glitchcube_update_pending') }}"
+      icon_template: >
+        {% if is_state('input_boolean.glitchcube_update_pending', 'on') %}
+          mdi:update
+        {% else %}
+          mdi:check-circle
+        {% endif %}
+      
+# Sensor to track current deployed commit
+- platform: command_line
+  name: glitchcube_current_commit
+  command: "cd /home/eric/glitchcube && git rev-parse HEAD"
+  scan_interval: 300  # Check every 5 minutes
+  
+# Sensor to track latest remote commit  
+- platform: command_line
+  name: glitchcube_remote_commit
+  command: "cd /home/eric/glitchcube && git fetch origin main >/dev/null 2>&1 && git rev-parse origin/main"
+  scan_interval: 300  # Check every 5 minutes
+
+# Template sensor to compare commits
+- platform: template
+  sensors:
+    glitchcube_deployment_status:
+      friendly_name: "Deployment Status"
+      value_template: >
+        {% if states('sensor.glitchcube_current_commit') == states('sensor.glitchcube_remote_commit') %}
+          up-to-date
+        {% else %}
+          update-available
+        {% endif %}
+      icon_template: >
+        {% if states('sensor.glitchcube_current_commit') == states('sensor.glitchcube_remote_commit') %}
+          mdi:check-circle
+        {% else %}
+          mdi:update
+        {% endif %}

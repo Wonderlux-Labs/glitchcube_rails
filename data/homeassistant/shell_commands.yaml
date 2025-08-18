@@ -1,0 +1,22 @@
+# Shell commands for deployment automation
+# These are executed from within the Home Assistant VM
+
+# Deploy Sinatra on host system
+deploy_host: |
+  ssh user@host.local 'cd /path/to/glitchcube && git pull origin main && bundle install && bundle exec rake host:restart'
+
+# Deploy HA config from host to VM
+deploy_hass_config: |
+  ssh user@host.local 'cd /path/to/glitchcube && bundle exec rake hass:deploy'
+
+# Full deployment (host + HA)
+deploy_full: |
+  ssh user@host.local 'cd /path/to/glitchcube && bundle exec rake deploy:full'
+
+# Check deployment status
+check_deployment: |
+  ssh user@host.local 'cd /path/to/glitchcube && bundle exec rake deploy:check'
+
+# Quick sync without restart
+sync_config: |
+  rsync -av --exclude='*.log' --exclude='*.db' user@host.local:/path/to/glitchcube/config/homeassistant/ /config/

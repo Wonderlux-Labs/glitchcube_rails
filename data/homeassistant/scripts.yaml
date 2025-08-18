@@ -124,3 +124,15 @@ play_music_on_jukebox:
         play next but not interrupt a song if playing) - use play to force now - use
         add if youa re queing up songs for a party or running a whole damn jukebox
       default: replace_next
+alien_news:
+  sequence:
+  - action: ai_task.generate_data
+    data:
+      task_name: news report
+      instructions: Generate an absurd clip of intercepted radio transmission from
+        two bumbling aliens who lost a glitch cube - no stage directions or names,
+        just dialogue, NSFW is fine
+      entity_id: ai_task.venice_uncensored_free
+    response_variable: alien_news
+  alias: Alien News
+  description: ''

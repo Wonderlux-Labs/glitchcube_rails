@@ -144,6 +144,13 @@ class PromptService
       parts << ""
     end
     
+    # Environmental context
+    if config["environmental_context"]
+      parts << config["environmental_context"]["description"]
+      config["environmental_context"]["rules"]&.each { |rule| parts << "- #{rule}" }
+      parts << ""
+    end
+    
     parts.join("\n")
   end
   
@@ -246,6 +253,24 @@ class PromptService
       end
     end
     
-    context_parts.join("\n")
+    # Add glitchcube_context sensor data if available
+    enhanced_context = inject_glitchcube_context(context_parts.join("\n"))
+    
+    enhanced_context
+  end
+  
+  def inject_glitchcube_context(base_context)
+    # Try to use the context injection service if it's available
+    if defined?(Services::Memory::ContextInjectionService)
+      begin
+        # Use the memories-only injection for now since HA may not be configured
+        Services::Memory::ContextInjectionService.inject_memories_only(base_context, @extra_context)
+      rescue => e
+        Rails.logger.warn "Failed to inject glitchcube context: #{e.message}"
+        base_context
+      end
+    else
+      base_context
+    end
   end
 end
