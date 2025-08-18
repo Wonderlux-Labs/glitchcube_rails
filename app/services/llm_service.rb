@@ -92,6 +92,60 @@ class LlmService
       end
     end
     
+    # Main conversation call with structured output (no tools)
+    def call_with_structured_output(messages:, response_format:, model: nil, **options)
+      model_to_use = model || Rails.configuration.default_ai_model
+      
+      Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
+      Rails.logger.info "📊 Response format: #{response_format.name}"
+      Rails.logger.info "📝 Last message: #{messages.last&.dig(:content)&.first(200)}..."
+      Rails.logger.debug "📚 Full messages: #{messages.map { |m| "#{m[:role]}: #{m[:content]&.first(100)}..." }.join(' | ')}"
+      
+      begin
+        # Prepare extras with OpenRouter-specific parameters
+        extras = {
+          temperature: options[:temperature] || 0.7,
+          max_tokens: options[:max_tokens] || 12000
+        }.merge(options.except(:temperature, :max_tokens))
+
+        client = OpenRouter::Client.new
+        
+        # Log the full request being sent
+        Rails.logger.info "🚀 OpenRouter Structured Output Request:"
+        Rails.logger.info "   Model: #{model_to_use}"
+        Rails.logger.info "   Response format: #{response_format.name}"
+        Rails.logger.info "   Extras: #{extras.inspect}"
+
+        response = client.complete(
+          messages,
+          model: model_to_use,
+          response_format: response_format,
+          extras: extras
+        )
+        
+        Rails.logger.info "📥 OpenRouter Response:"
+        Rails.logger.info "   Content: #{response.content&.truncate(200)}"
+        Rails.logger.info "   Model: #{response.model}"
+        Rails.logger.info "   Usage: #{response.usage}"
+        Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
+        
+        response
+        
+      rescue StandardError => e
+        Rails.logger.error "❌ LLM call failed: #{e.message}"
+        Rails.logger.error "🔍 Backtrace: #{e.backtrace.first(3).join("\n")}"
+        
+        # Return a mock response with error info
+        OpenStruct.new(
+          content: "I'm having trouble thinking right now. Please try again.",
+          structured_output: nil,
+          usage: { prompt_tokens: 0, completion_tokens: 0 },
+          model: model_to_use,
+          error: e.message
+        )
+      end
+    end
+    
     # Background LLM calls for various purposes (no tools)
     def background_call(prompt:, context: {}, model: nil, **options)
       model_to_use = model || Rails.configuration.default_ai_model
@@ -103,12 +157,16 @@ class LlmService
       messages = build_background_messages(prompt, context)
       
       begin
-        response = OpenRouter.client.chat_completion(
-          model: model_to_use,
-          messages: messages,
+        client = OpenRouter::Client.new
+        extras = {
           temperature: options[:temperature] || 0.3,
-          max_tokens: options[:max_tokens] || 500,
-          **options
+          max_tokens: options[:max_tokens] || 500
+        }.merge(options.except(:temperature, :max_tokens))
+        
+        response = client.complete(
+          messages,
+          model: model_to_use,
+          extras: extras
         )
         
         Rails.logger.info "✅ Background LLM response received"

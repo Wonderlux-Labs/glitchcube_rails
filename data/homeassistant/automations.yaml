@@ -140,8 +140,8 @@
           - select.esp32_s3_box_3_52b3dc_assistant
   mode: single
 - id: '1755332428238'
-  alias: Siren - Go Back Off
-  description: ''
+  alias: Siren - Auto Off
+  description: 'Auto turn off siren after 20 seconds'
   triggers:
   - trigger: state
     entity_id:
@@ -150,7 +150,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 15
+      seconds: 20
   conditions: []
   actions:
   - action: siren.turn_off
@@ -158,6 +158,91 @@
     data: {}
     target:
       entity_id: siren.small_siren
+  mode: single
+- id: '1755332428239'
+  alias: Fan - Auto Off
+  description: 'Auto turn off fan after 1 minute'
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.fan_switch
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.fan_switch
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.fan_cooldown
+  mode: single
+- id: '1755332428240'
+  alias: Strobe - Auto Off
+  description: 'Auto turn off strobe after 30 seconds'
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.strobe_switch
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.strobe_switch
+  mode: single
+- id: '1755332428241'
+  alias: Blacklight - Auto Off
+  description: 'Auto turn off blacklight after 30 seconds'
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.blacklight_switch
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.blacklight_switch
+  mode: single
+- id: '1755332428242'
+  alias: Fan Cooldown Clear
+  description: 'Clear fan cooldown after 1 hour'
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.fan_cooldown
+    to: 'on'
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.fan_cooldown
   mode: single
 - id: '1755333596935'
   alias: Health - Lights Red

@@ -5,37 +5,55 @@ module Services
     class MemoryRecallService
       class << self
         # Get relevant memories for injection into conversation
-        def get_relevant_memories(location: nil, context: {}, limit: 3) # rubocop:disable Lint/UnusedMethodArgument
+        def get_relevant_memories(location: nil, context: {}, limit: 3)
           selected_memories = []
 
-          # 1. Get any upcoming events (high priority!)
-          upcoming = ::Memory.events_within(24).order(Arel.sql("(data->>'event_time')::timestamp ASC")).first
-          selected_memories << upcoming if upcoming
-
-          # 2. Get a location-based memory if we have location
+          # 1. Get location-related memories if we have location
           if location.present?
-            location_memory = ::Memory.by_location(location)
-                                      .fresh # Less-told stories
-                                      .where.not(id: selected_memories.map(&:id))
-                                      .first
-            selected_memories << location_memory if location_memory
+            location_memories = ConversationMemory.high_importance
+                                                  .recent
+                                                  .limit(2)
+                                                  .select { |memory| 
+                                                    metadata = JSON.parse(memory.metadata || '{}')
+                                                    locations = metadata['locations'] || []
+                                                    locations.any? { |loc| loc.downcase.include?(location.downcase) }
+                                                  }
+            selected_memories.concat(location_memories)
           end
 
-          # 3. Fill remaining slots with recent high-intensity memories
+          # 2. Fill remaining slots with recent high-importance memories
           remaining_slots = limit - selected_memories.size
           if remaining_slots.positive?
-            recent_memories = ::Memory.high_intensity
-                                      .recent
-                                      .fresh
-                                      .where.not(id: selected_memories.map(&:id))
-                                      .limit(remaining_slots)
+            recent_memories = ConversationMemory.high_importance
+                                                .recent
+                                                .where.not(id: selected_memories.map(&:id))
+                                                .limit(remaining_slots)
             selected_memories.concat(recent_memories)
           end
 
-          # Track recall
-          selected_memories.each(&:recall!)
+          selected_memories.uniq.take(limit)
+        end
 
-          selected_memories
+        # Get upcoming events for context
+        def get_upcoming_events(location: nil, hours: 24)
+          scope = Event.upcoming.within_hours(hours).high_importance
+          scope = scope.by_location(location) if location.present?
+          scope.limit(3)
+        end
+
+        # Get location-based memories
+        def get_location_memories(location, limit: 3)
+          return [] if location.blank?
+
+          ConversationMemory.high_importance
+                            .recent
+                            .limit(limit * 2) # Get more to filter
+                            .select { |memory| 
+                              metadata = JSON.parse(memory.metadata || '{}')
+                              locations = metadata['locations'] || []
+                              locations.any? { |loc| loc.downcase.include?(location.downcase) }
+                            }
+                            .take(limit)
         end
 
         # Format memories for conversation injection
@@ -45,102 +63,55 @@ module Services
           formatted = memories.map do |memory|
             # Add variety to how memories are introduced
             intro = memory_introduction(memory)
-            "#{intro} #{memory.content}"
+            "#{intro} #{memory.summary}"
           end
 
           "\n\nRECENT MEMORIES TO NATURALLY REFERENCE:\n#{formatted.join("\n")}\n"
         end
 
-        # Check if we know a person
-        def know_person?(name)
-          ::Memory.about_person(name).exists?
-        end
-
-        # Get a person's story summary
-        def person_summary(name)
-          memories = ::Memory.about_person(name)
-                             .order(Arel.sql("(data->>'emotional_intensity')::float DESC"))
-                             .limit(5)
-
-          return nil if memories.empty?
-
-          locations = memories.map(&:location).compact.uniq
-          tags = memories.flat_map(&:tags).tally.sort_by { |_, count| -count }.first(5).map(&:first)
-
-          {
-            name: name,
-            encounter_count: memories.count,
-            locations: locations,
-            vibe_tags: tags,
-            best_story: memories.first&.content,
-            emotional_average: memories.map(&:emotional_intensity).sum / memories.count
-          }
-        end
-
-        # Get memories about specific people
-        def get_people_memories(names, limit: 3)
-          return [] if names.blank?
-
-          memories = Memory.about_person(names.first)
-          names[1..]&.each do |name|
-            memories = memories.or(Memory.about_person(name))
-          end
-
-          memories.order(Arel.sql("(data->>'emotional_intensity')::float DESC"))
-                  .order(:recall_count)
-                  .limit(limit)
-                  .tap { |m| m.each(&:recall!) }
-        end
-
-        # Get social connections for a person
-        def get_social_connections(person_name)
-          memories = ::Memory.about_person(person_name)
-
-          connections = {
-            name: person_name,
-            mentioned_count: memories.count,
-            locations: memories.map(&:location).uniq.compact,
-            co_mentioned: [],
-            stories: []
-          }
-
-          # Find who else appears in stories with this person
-          people_set = Set.new
-          memories.each do |memory|
-            people_set.merge(memory.people - [person_name])
-
-            # Include brief story snippets
-            connections[:stories] << {
-              content: memory.content[0..100],
-              intensity: memory.emotional_intensity,
-              tags: memory.tags
-            }
-          end
-
-          connections[:co_mentioned] = people_set.to_a
-          connections
-        end
-
-        # Get trending memories (high intensity, recent, less recalled)
+        # Get trending memories (high importance, recent)
         def get_trending_memories(limit: 5)
-          ::Memory.where(created_at: 24.hours.ago..)
-                  .high_intensity
-                  .fresh # Less-told stories
-                  .limit(limit)
+          ConversationMemory.high_importance
+                            .recent
+                            .limit(limit)
+        end
+
+        # Get memories related to specific topics (simple keyword search)
+        def get_topic_memories(keywords, limit: 3)
+          return [] if keywords.blank?
+
+          keyword_array = keywords.is_a?(Array) ? keywords : [keywords]
+          
+          ConversationMemory.recent
+                            .limit(limit * 3) # Get more to filter
+                            .select { |memory|
+                              keyword_array.any? { |keyword|
+                                memory.summary.downcase.include?(keyword.downcase)
+                              }
+                            }
+                            .take(limit)
+        end
+
+        # Get recent high importance memories excluding current session
+        def get_recent_memories_excluding_session(session_id, limit: 3)
+          scope = ConversationMemory.high_importance.recent
+          scope = scope.where.not(session_id: session_id) if session_id.present?
+          scope.limit(limit)
         end
 
         private
 
         def memory_introduction(memory)
-          # Simple intros based on what we have
-          if memory.upcoming_event?
-            ['Oh! Did you hear about', "Don't miss", "There's something happening"].sample
-          elsif memory.location.present?
-            ["Last time at #{memory.location},", "When I was at #{memory.location},", "At #{memory.location},"].sample
-          elsif memory.tags.include?('gossip') || memory.tags.include?('drama')
-            ['I heard that', 'Someone told me', 'Did you know'].sample
-          elsif memory.tags.include?('wild') || memory.tags.include?('crazy')
-            ["You won't believe this -", 'Something wild happened:', 'Get this -'].sample
+          # Simple intros based on memory type and content
+          case memory.memory_type
+          when 'event'
+            ['That reminds me,', 'Oh!', 'By the way,', 'Speaking of which,'].sample
+          when 'preference'
+            ['I remember you mentioned', 'You said before that', 'I recall'].sample
+          when 'fact'
+            ['You know,', 'I learned that', 'Remember,'].sample
+          when 'instruction'
+            ['You told me to', 'You wanted me to', 'You asked me to'].sample
           else
             ['That reminds me,', 'Oh!', 'By the way,'].sample
           end

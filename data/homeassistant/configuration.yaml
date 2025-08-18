@@ -99,6 +99,40 @@ input_button:
     name: '>> Cycle Persona >>'
     icon: mdi:account-switch
 
+input_boolean:
+  fan_cooldown:
+    name: "Fan Cooldown"
+    icon: mdi:fan-off
+    initial: false
+  debug_mode:
+    name: "Debug Mode"
+    icon: mdi:bug
+    initial: false
+  motion_detected:
+    name: "Motion Detected"
+    icon: mdi:motion-sensor
+    initial: false
+  offline_mode:
+    name: "Offline Mode"
+    icon: mdi:wifi-off
+    initial: false
+  glitchcube_update_pending:
+    name: "GlitchCube Update Pending"
+    icon: mdi:update
+    initial: false
+  auto_recovery_enabled:
+    name: "Auto Recovery Enabled"
+    icon: mdi:autorenew
+    initial: true
+  maintenance_mode:
+    name: "Maintenance Mode"
+    icon: mdi:wrench
+    initial: false
+  trigger_restart:
+    name: "Trigger Restart"
+    icon: mdi:restart
+    initial: false
+
 input_text:
   memory_query:
     name: "Memory Query"

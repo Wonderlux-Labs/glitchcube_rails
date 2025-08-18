@@ -4,6 +4,10 @@ class Tools::Lights::GetState < Tools::BaseTool
     "Get current state, brightness, color, and attributes of cube lights"
   end
   
+  def self.narrative_desc
+    "check lights - see current state"
+  end
+  
   def self.prompt_schema
     "get_light_state(entity_id: 'light.cube_voice_ring') - Get current state of a cube light"
   end

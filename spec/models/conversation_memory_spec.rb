@@ -13,9 +13,11 @@ RSpec.describe ConversationMemory, type: :model do
   end
 
   describe 'scopes' do
-    let!(:preference_memory) { create(:conversation_memory, memory_type: 'preference', importance: 8, session_id: 'session1') }
-    let!(:fact_memory) { create(:conversation_memory, memory_type: 'fact', importance: 5, session_id: 'session2') }
-    let!(:event_memory) { create(:conversation_memory, memory_type: 'event', importance: 3, session_id: 'session1') }
+    let!(:conversation1) { create(:conversation, session_id: 'session1') }
+    let!(:conversation2) { create(:conversation, session_id: 'session2') }
+    let!(:preference_memory) { create(:conversation_memory, conversation: conversation1, memory_type: 'preference', importance: 8) }
+    let!(:fact_memory) { create(:conversation_memory, conversation: conversation2, memory_type: 'fact', importance: 5) }
+    let!(:event_memory) { create(:conversation_memory, conversation: conversation1, memory_type: 'event', importance: 3) }
 
     describe '.by_session' do
       it 'returns memories for specific session' do

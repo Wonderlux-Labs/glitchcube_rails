@@ -113,16 +113,27 @@ RSpec.describe Tools::Registry do
   end
 
   describe '.cube_light_entities' do
-    it 'returns defined cube light entities' do
+    before do
+      # Mock Home Assistant service to return consistent test data
+      allow(HomeAssistantService).to receive(:instance).and_return(double)
+      allow(HomeAssistantService.instance).to receive(:entities).and_return([
+        { 'entity_id' => 'light.cube_voice_ring', 'state' => 'off' },
+        { 'entity_id' => 'light.cube_inner', 'state' => 'on' },
+        { 'entity_id' => 'light.cube_top', 'state' => 'off' },
+        { 'entity_id' => 'light.other_light', 'state' => 'on' }
+      ])
+    end
+
+    it 'returns cube light entities from Home Assistant' do
       entities = described_class.cube_light_entities
       
-      expect(entities).to eq(Tools::BaseTool::CUBE_LIGHT_ENTITIES)
       expect(entities).to include(
         'light.cube_voice_ring',
         'light.cube_inner',
-        'light.cube_top',
-        'light.awtrix_b85e20_matrix'
+        'light.cube_top'
       )
+      expect(entities).not_to include('light.other_light')
+      expect(entities).to eq(entities.sort)
     end
   end
 end

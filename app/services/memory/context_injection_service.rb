@@ -31,10 +31,10 @@ module Services
           # Check if sensor actually exists (HA returns specific structure for non-existent entities)
           if context_sensor.is_a?(Hash) && context_sensor['state'] == 'unavailable'
             context_sensor = nil
-            puts '📝 Context sensor not yet configured in HA' if GlitchCube.config.debug?
+            Rails.logger.debug '📝 Context sensor not yet configured in HA'
           end
         rescue StandardError => e
-          puts "📝 Could not fetch context sensor: #{e.message}" if GlitchCube.config.debug?
+          Rails.logger.debug "📝 Could not fetch context sensor: #{e.message}"
         end
 
         # Build context from sensor if available
@@ -45,11 +45,11 @@ module Services
           context_section = "\n\nCURRENT CONTEXT:\n#{context_parts.join('. ')}"
           final_prompt = "#{base_prompt}#{context_section}"
 
-          puts "📝 Injected context: #{context_parts.size} parts" if GlitchCube.config.debug?
+          Rails.logger.debug "📝 Injected context: #{context_parts.size} parts"
 
           final_prompt
         else
-          puts '📝 No context to inject' if GlitchCube.config.debug?
+          Rails.logger.debug '📝 No context to inject'
 
           base_prompt
         end
@@ -131,18 +131,18 @@ module Services
 
       def add_memory_context(context_parts, context)
         location = context[:location] || fetch_current_location
-        memories = Memory::MemoryRecallService.get_relevant_memories(
+        memories = Services::Memory::MemoryRecallService.get_relevant_memories(
           location: location,
           context: context,
           limit: 2
         )
 
         if memories.any?
-          memory_context = Memory::MemoryRecallService.format_for_context(memories)
-          context_parts << memory_context.strip.gsub(/^CONTEXT:\s*/, '')
+          memory_context = Services::Memory::MemoryRecallService.format_for_context(memories)
+          context_parts << memory_context.strip.gsub(/^RECENT MEMORIES TO NATURALLY REFERENCE:\s*/, '')
         end
       rescue StandardError => e
-        puts "Failed to add memory context: #{e.message}"
+        Rails.logger.warn "Failed to add memory context: #{e.message}"
       end
 
       def fetch_current_location

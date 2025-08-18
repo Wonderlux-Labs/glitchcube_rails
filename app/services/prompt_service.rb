@@ -75,14 +75,29 @@ class PromptService
     enhanced_parts = [
       base_prompt,
       "",
-      base_system_rules,
-      "",
-      "AVAILABLE TOOLS:",
-      format_tools_for_prompt,
-      "",
-      "CURRENT CONTEXT:",
-      build_current_context
+      base_system_rules
     ]
+
+    # Add two-tier mode instructions or tool definitions
+    if Tools::Registry.two_tier_mode_enabled?
+      enhanced_parts.concat([
+        "",
+        "TWO-TIER MODE:",
+        build_structured_output_instructions,
+        "",
+        "CURRENT CONTEXT:",
+        build_current_context
+      ])
+    else
+      enhanced_parts.concat([
+        "",
+        "AVAILABLE TOOLS:",
+        format_tools_for_prompt,
+        "",
+        "CURRENT CONTEXT:",
+        build_current_context
+      ])
+    end
     
     enhanced_parts.join("\n")
   end
@@ -170,6 +185,35 @@ class PromptService
       - Speak only what you would say out loud
     RULES
   end
+
+  def build_structured_output_instructions
+    available_tools = get_tools_for_persona(@persona_name)
+    
+    # Derive categories from tool class namespaces
+    tool_categories = available_tools.map do |tool_class|
+      tool_class.name.split('::')[-2]&.downcase
+    end.compact.uniq.sort
+    
+    <<~INSTRUCTIONS
+      You are operating in TWO-TIER MODE. Instead of calling tools directly, you will:
+
+      1. Provide your spoken response in 'speech_text'
+      2. Set 'continue_conversation' to true/false 
+      3. Include narrative metadata (inner_thoughts, current_mood, pressing_questions)
+      4. When you want to control the environment, specify tool intentions in 'tool_intents'
+
+      AVAILABLE TOOL CATEGORIES: #{tool_categories.join(', ')}
+      
+      Tool intentions should be natural language descriptions of what you want to happen:
+      - "lights: Make the lights warm and golden"
+      - "music: Play something energetic and upbeat"
+      - "display: Show rainbow colors on the screens"
+      - "environment: Create a cozy atmosphere"
+
+      A separate technical AI will execute these intentions using the actual tools.
+      Focus on your character and narrative - be specific about environmental desires.
+    INSTRUCTIONS
+  end
   
   def build_default_prompt
     <<~PROMPT
@@ -202,7 +246,13 @@ class PromptService
   
   def build_tools_for_persona
     # AI agents should always have access to their tools for autonomous artistic expression
-    Tools::Registry.tool_definitions_for_persona(@persona_name)
+    if Tools::Registry.two_tier_mode_enabled?
+      Rails.logger.info "🎭 Using two-tier tool mode - narrative LLM gets only tool_intent"
+      Tools::Registry.tool_definitions_for_two_tier_mode(@persona_name)
+    else
+      Rails.logger.info "🛠️ Using legacy tool mode - full tool definitions"
+      Tools::Registry.tool_definitions_for_persona(@persona_name)
+    end
   end
   
   def get_tools_for_persona(persona)
@@ -232,6 +282,10 @@ class PromptService
     
     # Environment context
     context_parts << "Environment: Cube installation active"
+    
+    # Goal context - Current goal and progress
+    goal_context = build_goal_context
+    context_parts << goal_context if goal_context.present?
     
     # Session context
     if @conversation
@@ -285,5 +339,51 @@ class PromptService
     end
     
     base_context
+  end
+
+  def build_goal_context
+    goal_status = GoalService.current_goal_status
+    return nil unless goal_status
+
+    safety_mode = GoalService.safety_mode_active?
+    
+    goal_parts = []
+    
+    if safety_mode
+      goal_parts << "🚨 SAFETY MODE ACTIVE - Focus on safety goals only"
+    end
+    
+    goal_parts << "Current Goal: #{goal_status[:goal_description]}"
+    
+    # Add time remaining if available
+    if goal_status[:time_remaining] && goal_status[:time_remaining] > 0
+      time_remaining = format_time_duration(goal_status[:time_remaining])
+      goal_parts << "Time remaining: #{time_remaining}"
+    elsif goal_status[:expired]
+      goal_parts << "⏰ Goal has expired - consider completing or switching goals"
+    end
+    
+    # Add recent completions context
+    recent_completions = Summary.goal_completions.limit(3)
+    if recent_completions.any?
+      goal_parts << "Recent completions: #{recent_completions.map(&:summary_text).join(', ')}"
+    end
+    
+    goal_parts.join("\n")
+  rescue StandardError => e
+    Rails.logger.error "Failed to build goal context: #{e.message}"
+    nil
+  end
+
+  def format_time_duration(seconds)
+    if seconds < 60
+      "#{seconds.to_i}s"
+    elsif seconds < 3600
+      "#{(seconds / 60).to_i}m"
+    else
+      hours = (seconds / 3600).to_i
+      minutes = ((seconds % 3600) / 60).to_i
+      "#{hours}h #{minutes}m"
+    end
   end
 end

@@ -19,6 +19,9 @@ Rails.application.routes.draw do
         post 'conversation/process', to: 'home_assistant#conversation_process'
         get 'health', to: 'home_assistant#health'
         get 'entities', to: 'home_assistant#entities'
+        
+        # Generic world state service trigger
+        post 'world_state/trigger', to: 'home_assistant#trigger_world_state_service'
       end
 
       # GPS routes
@@ -51,12 +54,46 @@ Rails.application.routes.draw do
   post 'ha/conversation', to: 'home_assistant#conversation_process'
   get 'ha/health', to: 'home_assistant#health'
   get 'ha/entities', to: 'home_assistant#entities'
+  post 'ha/world_state/trigger', to: 'home_assistant#trigger_world_state_service'
 
   # GPS map view
   get 'gps', to: 'gps#map'
 
-  # SolidQueue web UI for job monitoring
-  mount SolidQueue::Engine, at: "/jobs"
+  # Mission Control Jobs web UI for job monitoring
+  mount MissionControl::Jobs::Engine, at: "/jobs"
+  
+  # Admin dashboard for development monitoring
+  namespace :admin do
+    root 'dashboard#index'
+    
+    resources :conversations, only: [:index, :show] do
+      member do
+        get :timeline
+        get :tools
+      end
+    end
+    
+    resources :memories, only: [:index, :show] do
+      collection do
+        get :search
+        get :by_type
+      end
+    end
+    
+    get 'world_state', to: 'world_state#index'
+    get 'world_state/history', to: 'world_state#history'
+    post 'world_state/trigger/:service', to: 'world_state#trigger', as: :trigger_world_state_service
+    
+    resources :prompts, only: [:index, :show] do
+      collection do
+        get :analytics
+        get :models
+      end
+    end
+    
+    get 'system', to: 'system#index'
+    get 'system/health', to: 'system#health'
+  end
 
   # Defines the root path route ("/")
   # root "posts#index"

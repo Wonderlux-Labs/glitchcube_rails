@@ -10,8 +10,8 @@ Dir.chdir(APP_ROOT) do
   # Start both server and jobs in parallel
   pids = []
   
-  # Start Rails server on port 4567
-  pids << spawn("bin/rails", "server", "-p", "4567", *ARGV)
+  # Start Rails server on port 4567, bound to all interfaces
+  pids << spawn("bin/rails", "server", "-p", "4567", "-b", "0.0.0.0", *ARGV)
   
   # Start SolidQueue worker
   pids << spawn("bin/jobs")

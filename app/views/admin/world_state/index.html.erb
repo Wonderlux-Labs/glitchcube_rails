@@ -1,0 +1,88 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🌍 World State Dashboard</h1>
+
+<% if flash[:notice] %>
+  <div style="background: #2a4a2a; color: #00ff00; padding: 10px; margin: 10px 0; border: 1px solid #00ff00;">
+    <%= flash[:notice] %>
+  </div>
+<% end %>
+
+<% if flash[:error] %>
+  <div style="background: #4a2a2a; color: #ff0000; padding: 10px; margin: 10px 0; border: 1px solid #ff0000;">
+    <%= flash[:error] %>
+  </div>
+<% end %>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>🎯 World State Sensor</h3>
+    <% if @world_state_sensor %>
+      <p><strong>Status:</strong> 
+        <span class="active-status"><%= @world_state_sensor['state'] %></span>
+      </p>
+      <% if @world_state_sensor['attributes'] %>
+        <% @world_state_sensor['attributes'].each do |key, value| %>
+          <p><strong><%= key.humanize %>:</strong> <%= value %></p>
+        <% end %>
+      <% end %>
+    <% else %>
+      <p style="color: #ff6666;">❌ World state sensor not found</p>
+      <p>May need to trigger weather service first</p>
+    <% end %>
+  </div>
+
+  <div class="stat-box">
+    <h3>📊 Sensor Summary</h3>
+    <p><strong>Total HA Sensors:</strong> <%= @all_sensors %></p>
+    <p><strong>Weather Sensors:</strong> <%= @weather_sensors.count %></p>
+    <p><strong>Available Services:</strong> <%= @available_services.count %></p>
+  </div>
+</div>
+
+<h2>⚙️ World State Services</h2>
+<div style="margin-bottom: 20px;">
+  <% @available_services.each do |service| %>
+    <div style="background: #2a2a2a; padding: 15px; margin: 10px 0; border: 1px solid #444;">
+      <h4><%= service[:name] %></h4>
+      <p><%= service[:description] %></p>
+      <%= link_to "🚀 Trigger #{service[:name]}", 
+          admin_trigger_world_state_service_path(service: service[:name]), 
+          method: :post, 
+          class: 'btn',
+          data: { confirm: "Run #{service[:name]} now?" } %>
+    </div>
+  <% end %>
+</div>
+
+<% if @weather_sensors.any? %>
+<h2>🌤️ Weather Sensors</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Entity ID</th>
+      <th>Friendly Name</th>
+      <th>State</th>
+      <th>Unit</th>
+      <th>Last Changed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @weather_sensors.each do |sensor| %>
+      <tr>
+        <td><%= sensor['entity_id'] %></td>
+        <td><%= sensor.dig('attributes', 'friendly_name') || sensor['entity_id'] %></td>
+        <td><%= sensor['state'] %></td>
+        <td><%= sensor.dig('attributes', 'unit_of_measurement') %></td>
+        <td><%= sensor['last_changed'] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<% end %>
+
+<h2>🔧 Manual Triggers</h2>
+<p>Use the REST API directly:</p>
+<pre>curl -X POST http://localhost:4567/ha/world_state/trigger \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d "service_class=WeatherForecastSummarizerService"</pre>

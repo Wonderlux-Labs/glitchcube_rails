@@ -3,17 +3,25 @@ class AsyncToolJob < ApplicationJob
   queue_as :default
   
   def perform(tool_name, tool_arguments, session_id = nil, conversation_id = nil)
-    Rails.logger.info "Executing async tool: #{tool_name} for session: #{session_id}"
+    Rails.logger.info "🔧 AsyncToolJob starting: #{tool_name} for session: #{session_id}"
+    Rails.logger.info "📝 Arguments received: #{tool_arguments.inspect}"
+    Rails.logger.info "🔍 Arguments class: #{tool_arguments.class}"
+    
+    # Clean up ActiveJob's serialization artifacts
+    cleaned_arguments = tool_arguments.respond_to?(:except) ? tool_arguments.except('_aj_symbol_keys') : tool_arguments
+    Rails.logger.info "🧹 Cleaned arguments: #{cleaned_arguments.inspect}"
     
     # Execute the tool
     executor = ToolExecutor.new
-    result = executor.execute_single_async(tool_name, tool_arguments)
+    Rails.logger.info "⚙️ Calling executor.execute_single_async"
+    result = executor.execute_single_async(tool_name, cleaned_arguments)
     
     # Log the result
+    Rails.logger.info "✅ AsyncToolJob result: #{result.inspect}"
     if result[:success]
-      Rails.logger.info "Async tool #{tool_name} completed successfully"
+      Rails.logger.info "🎉 Async tool #{tool_name} completed successfully"
     else
-      Rails.logger.error "Async tool #{tool_name} failed: #{result[:error]}"
+      Rails.logger.error "❌ Async tool #{tool_name} failed: #{result[:error]}"
     end
     
     # Store result if we have a way to track it

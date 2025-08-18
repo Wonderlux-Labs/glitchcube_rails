@@ -7,7 +7,7 @@ class ConversationMemoryJob < ApplicationJob
     Rails.logger.info "🧠 Creating memories for session: #{session_id}"
     
     conversation = Conversation.find_by(session_id: session_id)
-    return unless conversation&.finished?
+    return unless conversation&.ended_at
     
     # Only create memories for conversations with multiple messages
     logs = conversation.conversation_logs.order(:created_at)
@@ -200,12 +200,14 @@ class ConversationMemoryJob < ApplicationJob
     
     # Simple pattern matching for events with times
     event_patterns = [
-      # "tomorrow at 3pm we're doing X"
-      /(?:tomorrow|today|tonight|(?:this|next)\s+(?:morning|afternoon|evening|night))\s+(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?)\s+.*?([^.!?]{20,80})/i,
+      # "X at location tomorrow at 3pm" or "X tomorrow at 3pm"
+      /([^.!?]{10,80}?)\s+(?:tomorrow|today|tonight)\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?)/i,
       # "X happening at Y time"
       /([^.!?]{10,50})\s+(?:happening|starting|beginning)\s+(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?)/i,
-      # "X is at Y"
-      /([^.!?]{10,50})\s+is\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?)/i
+      # "X is at Y time"
+      /([^.!?]{10,50})\s+is\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?)/i,
+      # "there is/will be X at time"
+      /(?:there\s+(?:is|will\s+be))\s+([^.!?]{10,80}?)\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?)/i
     ]
     
     event_patterns.each do |pattern|
@@ -240,7 +242,18 @@ class ConversationMemoryJob < ApplicationJob
       end
     end
     
-    events.uniq { |e| [e[:title], e[:event_time]] }.take(3) # Avoid duplicates, limit results
+    # Remove duplicates by similar titles and same time
+    unique_events = []
+    events.each do |event|
+      unless unique_events.any? { |existing| 
+        similar_titles?(existing[:title], event[:title]) && 
+        (existing[:event_time] - event[:event_time]).abs < 30.minutes 
+      }
+        unique_events << event
+      end
+    end
+    
+    unique_events.take(3) # Limit results
   end
 
   def parse_event_time(time_str, context)
@@ -276,10 +289,26 @@ class ConversationMemoryJob < ApplicationJob
     # Simple location extraction from event description
     return nil if description.blank?
     
-    # Look for "at [location]" pattern
-    if description.match(/\bat\s+([A-Z][a-zA-Z\s]+)/i)
-      $1.strip
+    # Look for "at [location]" pattern, but exclude time words
+    if description.match(/\bat\s+([A-Z][a-zA-Z\s]+?)(?:\s+(?:tomorrow|today|tonight|at\s+\d)|\s*$)/i)
+      location = $1.strip
+      # Remove "tomorrow", "today", etc. if they snuck in
+      location.gsub(/\b(?:tomorrow|today|tonight)\b/i, '').strip
     end
+  end
+
+  def similar_titles?(title1, title2)
+    # Simple similarity check - if one title contains most words of the other
+    return false if title1.blank? || title2.blank?
+    
+    words1 = title1.downcase.split(/\s+/)
+    words2 = title2.downcase.split(/\s+/)
+    
+    shorter, longer = [words1, words2].sort_by(&:length)
+    common_words = shorter & longer
+    
+    # Consider similar if 70% of shorter title words are in longer title
+    common_words.length.to_f / shorter.length > 0.7
   end
 
   def generate_event_title(description)

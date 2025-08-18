@@ -13,3 +13,64 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+  conversation_timeout_monitor:
+    class: ConversationTimeoutMonitorJob
+    schedule: every minute
+    queue: default
+
+  conversation_memory_extraction:
+    class: ConversationMemoryExtractionJob  
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    queue: default
+
+  gps_sensor_update:
+    class: GpsSensorUpdateJob
+    schedule: "*/5 * * * *"   # Every 5 minutes
+    queue: default
+
+  weather_forecast_update:
+    class: WeatherForecastSummarizerJob
+    schedule: "0 * * * *"     # Every hour at the top of the hour
+    queue: default
+
+  conversation_summarizer:
+    class: ConversationSummarizerJob
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    queue: default
+
+  goal_monitor:
+    class: GoalMonitorJob
+    schedule: "*/5 * * * *"   # Every 5 minutes
+    queue: default
+
+development:
+  conversation_timeout_monitor:
+    class: ConversationTimeoutMonitorJob
+    schedule: every minute
+    queue: default
+
+  conversation_memory_extraction:
+    class: ConversationMemoryExtractionJob  
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    queue: default
+
+  gps_sensor_update:
+    class: GpsSensorUpdateJob
+    schedule: "*/5 * * * *"   # Every 5 minutes
+    queue: default
+
+  weather_forecast_update:
+    class: WeatherForecastSummarizerJob
+    schedule: "0 * * * *"     # Every hour at the top of the hour
+    queue: default
+
+  conversation_summarizer:
+    class: ConversationSummarizerJob
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    queue: default
+
+  goal_monitor:
+    class: GoalMonitorJob
+    schedule: "*/5 * * * *"   # Every 5 minutes
+    queue: default

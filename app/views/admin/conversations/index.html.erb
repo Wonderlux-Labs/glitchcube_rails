@@ -1,0 +1,42 @@
+<% content_for :layout, 'admin' %>
+
+<h1>💬 Conversations</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to 'All', admin_conversations_path, class: 'btn' %>
+  <%= link_to 'Active', admin_conversations_path(status: 'active'), class: 'btn' %>
+  <%= link_to 'Finished', admin_conversations_path(status: 'finished'), class: 'btn' %>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Session ID</th>
+      <th>Persona</th>
+      <th>Status</th>
+      <th>Messages</th>
+      <th>Memories</th>
+      <th>Duration</th>
+      <th>Started</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @conversations.each do |conversation| %>
+      <tr>
+        <td><%= conversation.session_id[0..12] %>...</td>
+        <td><%= conversation.persona %></td>
+        <td class="<%= conversation.active? ? 'active-status' : 'finished-status' %>">
+          <%= conversation.active? ? 'Active' : 'Finished' %>
+        </td>
+        <td><%= conversation.conversation_logs.count %></td>
+        <td><%= conversation.conversation_memories.count %></td>
+        <td><%= conversation.duration&.round(2) || 'N/A' %>s</td>
+        <td><%= conversation.started_at&.strftime('%m/%d %H:%M') %></td>
+        <td>
+          <%= link_to 'View', admin_conversation_path(conversation), class: 'btn' %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -4,6 +4,10 @@ class Tools::Lights::SetEffect < Tools::BaseTool
     "Set lighting effects on cube lights that support them. Call list_light_effects first to see available effects for each entity."
   end
   
+  def self.narrative_desc
+    "control lights - apply special effects"
+  end
+  
   def self.prompt_schema
     "set_light_effect(entity_id: 'light.cube_inner', effect: 'Rainbow') - Set a lighting effect. Use list_light_effects to see all available effects."
   end

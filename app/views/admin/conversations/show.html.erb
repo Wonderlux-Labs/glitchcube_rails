@@ -1,0 +1,86 @@
+<% content_for :layout, 'admin' %>
+
+<h1>💬 Conversation Details</h1>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>📋 Overview</h3>
+    <p><strong>Session ID:</strong> <%= @conversation.session_id %></p>
+    <p><strong>Persona:</strong> <%= @conversation.persona %></p>
+    <p><strong>Status:</strong> 
+      <span class="<%= @conversation.active? ? 'active-status' : 'finished-status' %>">
+        <%= @conversation.active? ? 'Active' : 'Finished' %>
+      </span>
+    </p>
+    <p><strong>Started:</strong> <%= @conversation.started_at %></p>
+    <% if @conversation.ended_at %>
+      <p><strong>Ended:</strong> <%= @conversation.ended_at %></p>
+      <p><strong>Duration:</strong> <%= @conversation.duration&.round(2) %>s</p>
+    <% end %>
+  </div>
+
+  <div class="stat-box">
+    <h3>📊 Stats</h3>
+    <p><strong>Messages:</strong> <%= @logs.count %></p>
+    <p><strong>Memories:</strong> <%= @memories.count %></p>
+    <p><strong>Tools Used:</strong> <%= @tools_used.sum { |t| t[:tools].count } %></p>
+    <p><strong>Total Tokens:</strong> <%= @conversation.total_tokens || 0 %></p>
+    <p><strong>Total Cost:</strong> $<%= @conversation.total_cost || 0 %></p>
+  </div>
+</div>
+
+<% if @memories.any? %>
+<h2>🧠 Memories Created</h2>
+<table>
+  <thead>
+    <tr><th>Type</th><th>Summary</th><th>Importance</th><th>Created</th></tr>
+  </thead>
+  <tbody>
+    <% @memories.each do |memory| %>
+      <tr>
+        <td><%= memory.memory_type.humanize %></td>
+        <td><%= memory.summary %></td>
+        <td><%= memory.importance %>/10</td>
+        <td><%= memory.created_at.strftime('%H:%M') %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<% end %>
+
+<% if @tools_used.any? %>
+<h2>🔧 Tools Used</h2>
+<% @tools_used.each do |tool_event| %>
+  <div style="background: #333; padding: 10px; margin: 10px 0; border: 1px solid #555;">
+    <p><strong>Time:</strong> <%= tool_event[:timestamp].strftime('%H:%M:%S') %></p>
+    <% tool_event[:tools].each do |tool_name, result| %>
+      <p><strong>Tool:</strong> <%= tool_name %></p>
+      <pre><%= result.to_json.truncate(200) %></pre>
+    <% end %>
+  </div>
+<% end %>
+<% end %>
+
+<h2>💬 Conversation Flow</h2>
+<% @logs.each_with_index do |log, index| %>
+  <div style="background: #2a2a2a; padding: 15px; margin: 10px 0; border-left: 3px solid #00ff00;">
+    <p><strong>Exchange #<%= index + 1 %></strong> - <%= log.created_at.strftime('%H:%M:%S') %></p>
+    
+    <div style="background: #1a1a1a; padding: 10px; margin: 5px 0;">
+      <p><strong>👤 User:</strong></p>
+      <p><%= log.user_message %></p>
+    </div>
+    
+    <div style="background: #1a1a1a; padding: 10px; margin: 5px 0;">
+      <p><strong>🤖 AI:</strong></p>
+      <p><%= log.ai_response %></p>
+    </div>
+    
+    <% if log.tool_results_json.present? %>
+      <div style="background: #333; padding: 10px; margin: 5px 0;">
+        <p><strong>🔧 Tools:</strong></p>
+        <pre><%= JSON.pretty_generate(log.tool_results_json) %></pre>
+      </div>
+    <% end %>
+  </div>
+<% end %>

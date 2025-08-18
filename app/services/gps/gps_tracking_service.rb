@@ -11,14 +11,18 @@ module Services
 
       # Get current GPS coordinates with full location context
       def current_location
-        # Check for spoofed GPS first (development only), then Home Assistant, then fallback
-        coords = fetch_spoofed_location || fetch_from_home_assistant || random_landmark_location
+        # Use cached location if available (5 minute cache)
+        cached = Rails.cache.fetch("gps_current_location", expires_in: 5.minutes) do
+          fetch_from_home_assistant || random_landmark_location
+        end
 
-        # Get full context from LocationContextService (this is cached)
-        context = LocationContextService.full_context(coords[:lat], coords[:lng])
+        return nil unless cached && cached[:lat] && cached[:lng]
+
+        # Get full context from LocationContextService (this is also cached)
+        context = LocationContextService.full_context(cached[:lat], cached[:lng])
 
         # Merge GPS metadata with location context
-        coords.merge(context)
+        cached.merge(context)
       end
 
       # Get proximity data for map reactions using LocationContextService
@@ -28,7 +32,7 @@ module Services
 
         {
           landmarks: landmarks,
-          portos: context[:nearest_porto] ? [context[:nearest_porto]] : [],
+          portos: context[:nearest_porto] ? [ context[:nearest_porto] ] : [],
           map_mode: determine_map_mode_from_landmarks(landmarks),
           visual_effects: determine_visual_effects_from_landmarks(landmarks)
         }
@@ -40,74 +44,91 @@ module Services
         context[:address]
       end
 
-      # Simulate cube movement - pick a destination and walk toward it
-      def simulate_movement!
+      # Set location directly (console convenience method)
+      def set_location(coords: nil)
+        if coords.nil?
+          l = Landmark.active.sample
+          lat = l.latitude
+          lng = l.longitude
+        else
+          lat = coords.split(",").first.to_f
+          lng = coords.split(",").last.to_f
+        end
+
+        return false unless GlitchCube.gps_spoofing_allowed?
+
+        location_data = {
+          lat: lat.to_f,
+          lng: lng.to_f,
+          timestamp: Time.now,
+          source: "manual_override"
+        }
+
+        # Write directly to the main cache
+        Rails.cache.write("gps_current_location", location_data, expires_in: 5.minutes)
+        true
+      end
+
+      # Simulate cube movement - walk toward a landmark and stop when reached
+      def simulate_movement!(landmark_name = nil)
         return unless GlitchCube.gps_spoofing_allowed?
 
         begin
-          current_data = Rails.cache.read('current_cube_location')
-          destination_data = Rails.cache.read('cube_destination')
+          # Get current cached location
+          current_data = Rails.cache.read("gps_current_location")
+          destination_data = Rails.cache.read("cube_destination")
 
           # If no current location, start at a random landmark
           unless current_data
-            landmark = Landmark.active.order('RANDOM()').first
-            current_location = {
-              lat: landmark.latitude.to_f,
-              lng: landmark.longitude.to_f,
-              timestamp: Time.now.iso8601
-            }
-            Rails.cache.write('current_cube_location', current_location.to_json, expires_in: 1.hour)
-            return
+            start_landmark = Landmark.active.order("RANDOM()").first
+            set_location(start_landmark.latitude.to_f, start_landmark.longitude.to_f)
+            return "Started at #{start_landmark.name}"
           end
 
-          current = JSON.parse(current_data, symbolize_names: true)
+          current = current_data
 
-          # If no destination or reached destination, pick a new one
-          if !destination_data || reached_destination?(current, JSON.parse(destination_data, symbolize_names: true))
-            new_destination = pick_random_destination
-            Rails.cache.write('cube_destination', new_destination.to_json, expires_in: 2.hours)
-            destination = new_destination
+          # Set new destination if provided or if no destination exists
+          if landmark_name
+            landmark = Landmark.active.find_by(name: landmark_name)
+            return "Landmark '#{landmark_name}' not found" unless landmark
+
+            destination = {
+              lat: landmark.latitude.to_f,
+              lng: landmark.longitude.to_f,
+              name: landmark.name
+            }
+            Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
+          elsif !destination_data
+            # Pick random destination if none provided and none exists
+            destination = pick_random_destination
+            Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
           else
             destination = JSON.parse(destination_data, symbolize_names: true)
           end
 
+          # Check if we've reached the destination
+          if reached_destination?(current, destination)
+            Rails.cache.delete("cube_destination") # Clear destination
+            return "Arrived at #{destination[:name]}"
+          end
+
           # Move toward destination (small step)
           new_location = move_toward_destination(current, destination)
-          Rails.cache.write('current_cube_location', new_location.to_json, expires_in: 1.hour)
+          set_location(new_location[:lat], new_location[:lng])
+
+          distance = calculate_distance(current[:lat], current[:lng], destination[:lat], destination[:lng])
+          "Moving toward #{destination[:name]} (#{distance.round}m remaining)"
         rescue StandardError => e
-          # Fallback - just stay put
-          nil
+          "Movement simulation failed: #{e.message}"
         end
       end
 
       private
 
-      def fetch_spoofed_location
-        # Allow spoofed locations in development OR if explicitly enabled
-        return nil unless GlitchCube.gps_spoofing_allowed?
-
-        begin
-          cached_data = Rails.cache.read('current_cube_location')
-          return nil unless cached_data
-
-          data = JSON.parse(cached_data, symbolize_names: true)
-          {
-            lat: data[:lat],
-            lng: data[:lng],
-            timestamp: Time.parse(data[:timestamp]),
-            accuracy: nil,
-            satellites: nil,
-            uptime: nil,
-            source: 'spoofed'
-          }
-        rescue StandardError, JSON::ParserError
-          nil
-        end
-      end
 
       def pick_random_destination
         # Pick a random landmark as destination
-        landmark = Landmark.active.order('RANDOM()').first
+        landmark = Landmark.active.order("RANDOM()").first
         {
           lat: landmark.latitude.to_f,
           lng: landmark.longitude.to_f,
@@ -146,7 +167,7 @@ module Services
       def calculate_distance(lat1, lng1, lat2, lng2)
         # Haversine formula for distance in meters
         rad_per_deg = Math::PI / 180
-        rlat1, rlng1, rlat2, rlng2 = [lat1, lng1, lat2, lng2].map { |d| d * rad_per_deg }
+        rlat1, rlng1, rlat2, rlng2 = [ lat1, lng1, lat2, lng2 ].map { |d| d * rad_per_deg }
 
         dlat = rlat2 - rlat1
         dlng = rlng2 - rlng1
@@ -158,15 +179,15 @@ module Services
       end
 
       def determine_map_mode_from_landmarks(landmarks)
-        return 'normal' if landmarks.empty?
+        return "normal" if landmarks.empty?
 
         primary = landmarks.first
         case primary[:type]
-        when 'sacred' then 'temple'
-        when 'center' then 'man'
-        when 'medical' then 'emergency'
-        when 'service' then 'service'
-        else 'landmark'
+        when "sacred" then "temple"
+        when "center" then "man"
+        when "medical" then "emergency"
+        when "service" then "service"
+        else "landmark"
         end
       end
 
@@ -175,14 +196,14 @@ module Services
 
         landmarks.each do |landmark|
           case landmark[:type]
-          when 'sacred'
-            effects << { type: 'aura', color: 'white', intensity: 'soft' }
-          when 'center'
-            effects << { type: 'pulse', color: 'orange', intensity: 'strong' }
-          when 'medical'
-            effects << { type: 'beacon', color: 'red', intensity: 'steady' }
-          when 'service'
-            effects << { type: 'glow', color: 'blue', intensity: 'medium' }
+          when "sacred"
+            effects << { type: "aura", color: "white", intensity: "soft" }
+          when "center"
+            effects << { type: "pulse", color: "orange", intensity: "strong" }
+          when "medical"
+            effects << { type: "beacon", color: "red", intensity: "steady" }
+          when "service"
+            effects << { type: "glow", color: "blue", intensity: "medium" }
           end
         end
 
@@ -191,38 +212,38 @@ module Services
 
       def fetch_from_home_assistant
         # Get latitude and longitude from the glitchcube sensors
-        lat_sensor = @ha_service.entity('sensor.glitchcube_latitude')
-        lng_sensor = @ha_service.entity('sensor.glitchcube_longitude')
+        lat_sensor = @ha_service.entity("sensor.glitchcube_latitude")
+        lng_sensor = @ha_service.entity("sensor.glitchcube_longitude")
 
         return nil unless lat_sensor && lng_sensor
 
         # Get GPS quality from HTIT tracker
-        quality_sensor = @ha_service.entity('sensor.heltec_htit_tracker_gps_quality')
-        gps_quality = quality_sensor ? quality_sensor['state'].to_i : nil
+        quality_sensor = @ha_service.entity("sensor.heltec_htit_tracker_gps_quality")
+        gps_quality = quality_sensor ? quality_sensor["state"].to_i : nil
 
         # Get satellite count from HTIT tracker
-        sat_sensor = @ha_service.entity('sensor.heltec_htit_tracker_satellites')
-        satellites = sat_sensor ? sat_sensor['state'].to_i : nil
+        sat_sensor = @ha_service.entity("sensor.heltec_htit_tracker_satellites")
+        satellites = sat_sensor ? sat_sensor["state"].to_i : nil
 
         # Get device uptime from HTIT tracker (instead of battery)
-        uptime_sensor = @ha_service.entity('sensor.heltec_htit_tracker_device_uptime')
-        uptime = uptime_sensor ? uptime_sensor['state'].to_i : nil
+        uptime_sensor = @ha_service.entity("sensor.heltec_htit_tracker_device_uptime")
+        uptime = uptime_sensor ? uptime_sensor["state"].to_i : nil
 
         {
-          lat: lat_sensor['state'].to_f,
-          lng: lng_sensor['state'].to_f,
+          lat: lat_sensor["state"].to_f,
+          lng: lng_sensor["state"].to_f,
           timestamp: Time.now,
           accuracy: gps_quality,  # 3=great, 2=degraded, 1/0=unavailable
           satellites: satellites,
           uptime: uptime,  # seconds of device uptime
-          source: 'gps'
+          source: "gps"
         }
       rescue StandardError
         nil
       end
 
       def random_landmark_location
-        landmark = Landmark.active.order('RANDOM()').first
+        landmark = Landmark.active.order("RANDOM()").first
 
         {
           lat: landmark.latitude.to_f,
@@ -231,7 +252,7 @@ module Services
           accuracy: nil,
           satellites: nil,
           uptime: nil,
-          source: 'random_landmark'
+          source: "random_landmark"
         }
       end
     end

@@ -4,6 +4,10 @@ class Tools::Lights::SetColorAndBrightness < Tools::BaseTool
     "Set color and/or brightness for cube lights. Can control color, brightness, or both together."
   end
   
+  def self.narrative_desc
+    "control lights - change colors and brightness"
+  end
+  
   def self.prompt_schema
     "set_light_color_and_brightness(entity_id: 'light.cube_voice_ring', rgb_color: [255, 0, 0], brightness_percent: 75) - Set light color to red at 75% brightness"
   end
@@ -13,24 +17,37 @@ class Tools::Lights::SetColorAndBrightness < Tools::BaseTool
   end
   
   def self.definition
-    @definition ||= OpenRouter::Tool.define do
-      name "set_light_color_and_brightness"
-      description "Set color and/or brightness for cube lights. Can set color only, brightness only, or both."
-      
-      parameters do
-        string :entity_id, required: true,
-               description: "Light entity to control",
-               enum: -> { Tools::Lights::SetColorAndBrightness.available_entities }
+    @definition ||= begin
+      tool = OpenRouter::Tool.define do
+        name "set_light_color_and_brightness"
+        description "Set color and/or brightness for cube lights. Can set color only, brightness only, or both."
         
-        array :rgb_color, 
-              description: "RGB color as array of 3 integers (0-255). Example: [255, 0, 0] for red"
-        
-        number :brightness_percent, minimum: 0, maximum: 100,
-               description: "Brightness as percentage (0-100). Example: 75 for 75% brightness"
-        
-        number :transition, minimum: 0, maximum: 300,
-               description: "Transition time in seconds (optional)"
+        parameters do
+          string :entity_id, required: true,
+                 description: "Light entity to control",
+                 enum: -> { Tools::Lights::SetColorAndBrightness.available_entities }
+          
+          array :rgb_color, 
+                description: "RGB color as array of 3 integers (0-255). Example: [255, 0, 0] for red"
+          
+          number :brightness_percent, minimum: 0, maximum: 100,
+                 description: "Brightness as percentage (0-100). Example: 75 for 75% brightness"
+          
+          number :transition, minimum: 0, maximum: 300,
+                 description: "Transition time in seconds (optional)"
+        end
       end
+      
+      # Fix array parameter by adding items specification
+      if tool.parameters.dig(:properties, :rgb_color)
+        tool.parameters[:properties][:rgb_color][:items] = {
+          type: "integer",
+          minimum: 0,
+          maximum: 255
+        }
+      end
+      
+      tool
     end
   end
   

@@ -61,24 +61,42 @@ class ToolExecutor
   
   # Execute a single tool (used by background jobs)
   def execute_single_async(tool_name, arguments)
+    Rails.logger.info "🔧 ToolExecutor.execute_single_async starting: #{tool_name}"
+    Rails.logger.info "📝 Arguments: #{arguments.inspect}"
+    Rails.logger.info "🔍 Arguments class: #{arguments.class}"
+    
     tool_class = Tools::Registry.get_tool(tool_name)
     
     unless tool_class
-      return {
+      error_result = {
         success: false,
         error: "Tool '#{tool_name}' not found",
         tool: tool_name
       }
+      Rails.logger.error "❌ Tool not found: #{tool_name}"
+      return error_result
     end
     
-    Rails.logger.info "Executing async tool: #{tool_name} with args: #{arguments}"
+    Rails.logger.info "✅ Tool class found: #{tool_class.name}"
+    Rails.logger.info "⚙️ Symbolizing keys: #{arguments.symbolize_keys.inspect}"
     
     begin
+      Rails.logger.info "🚀 Calling Tools::Registry.execute_tool"
       result = Tools::Registry.execute_tool(tool_name, **arguments.symbolize_keys)
-      Rails.logger.info "Async tool #{tool_name} completed: #{result[:success] ? 'success' : 'failed'}"
+      Rails.logger.info "✅ Tools::Registry.execute_tool returned: #{result.inspect}"
+      Rails.logger.info "🎉 Async tool #{tool_name} completed: #{result[:success] ? 'success' : 'failed'}"
       result
+    rescue ArgumentError => e
+      Rails.logger.error "❌ ArgumentError in async tool #{tool_name}: #{e.message}"
+      Rails.logger.error "🔍 Backtrace: #{e.backtrace.first(5).join("\n")}"
+      {
+        success: false,
+        error: e.message,
+        tool: tool_name
+      }
     rescue StandardError => e
-      Rails.logger.error "Async tool #{tool_name} failed: #{e.message}"
+      Rails.logger.error "❌ StandardError in async tool #{tool_name}: #{e.message}"
+      Rails.logger.error "🔍 Backtrace: #{e.backtrace.first(5).join("\n")}"
       {
         success: false,
         error: e.message,

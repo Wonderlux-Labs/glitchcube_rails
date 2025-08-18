@@ -15,47 +15,41 @@ class GpsSensorUpdateJob < ApplicationJob
 
       return unless location_data && location_data[:lat] && location_data[:lng]
 
-      # Update Home Assistant sensors
+      # Update Home Assistant location context sensor only
+      # (GPS coordinates come from HA device tracker)
       ha_service = HomeAssistantService.new
 
-      # Update latitude sensor
-      ha_service.set_entity_state(
-        'sensor.glitchcube_current_latitude',
-        location_data[:lat].to_s,
-        {
-          unit_of_measurement: '°',
-          friendly_name: 'GlitchCube Current Latitude',
-          device_class: 'distance',
-          last_updated: Time.now.iso8601,
-          source: location_data[:source] || 'unknown'
-        }
-      )
-
-      # Update longitude sensor
-      ha_service.set_entity_state(
-        'sensor.glitchcube_current_longitude',
-        location_data[:lng].to_s,
-        {
-          unit_of_measurement: '°',
-          friendly_name: 'GlitchCube Current Longitude',
-          device_class: 'distance',
-          last_updated: Time.now.iso8601,
-          source: location_data[:source] || 'unknown'
-        }
-      )
-
-      # Update location context sensor
+      # Create location context sensor with enriched data
       ha_service.set_entity_state(
         'sensor.glitchcube_location_context',
         location_data[:address] || location_data[:zone]&.to_s&.humanize || 'Unknown',
         {
           friendly_name: 'GlitchCube Location Context',
+          icon: 'mdi:map-marker-radius',
+          
+          # Location details
           zone: location_data[:zone],
           address: location_data[:address],
+          street: location_data[:street],
+          block: location_data[:block],
+          
+          # Geofencing
           within_fence: location_data[:within_fence],
           distance_from_man: location_data[:distance_from_man],
-          last_updated: Time.now.iso8601,
-          landmarks: location_data[:landmarks]&.first(3)&.map { |l| l[:name] }&.join(', ')
+          
+          # Landmarks and POIs
+          landmarks: location_data[:landmarks]&.first(5)&.map { |l| l[:name] }&.join(', '),
+          landmark_count: location_data[:landmarks]&.count || 0,
+          nearest_landmark: location_data[:landmarks]&.first&.[](:name),
+          
+          # Porto info
+          nearest_porto: location_data[:nearest_porto]&.[](:name),
+          porto_distance: location_data[:nearest_porto]&.[](:distance_meters),
+          
+          # Metadata
+          coordinates: "#{location_data[:lat]}, #{location_data[:lng]}",
+          source: location_data[:source] || 'home_assistant',
+          last_updated: Time.now.iso8601
         }
       )
 
@@ -66,19 +60,4 @@ class GpsSensorUpdateJob < ApplicationJob
     end
   end
 
-  # Schedule this job to run every 5 minutes
-  def self.schedule_repeating
-    # Only schedule if using a job processor that supports cron (like sidekiq-cron)
-    if defined?(Sidekiq::Cron::Job)
-      Sidekiq::Cron::Job.create(
-        name: 'GPS Sensor Update',
-        cron: '*/5 * * * *', # Every 5 minutes
-        class: 'GpsSensorUpdateJob'
-      )
-    else
-      # Fallback for basic ActiveJob - schedule next run at end of current job
-      perform_later
-      GpsSensorUpdateJob.set(wait: 5.minutes).perform_later
-    end
-  end
 end

@@ -3,16 +3,17 @@
 
 Rails.application.configure do
   # OpenRouter configuration
-  config.openrouter_api_key = ENV['OPENROUTER_API_KEY']
-  config.openrouter_app_name = ENV['OPENROUTER_APP_NAME'] || 'GlitchCube'
-  config.openrouter_site_url = ENV['OPENROUTER_SITE_URL'] || 'https://glitchcube.com'
-  config.default_ai_model = ENV['DEFAULT_AI_MODEL'] || 'mistralai/mistral-medium-3.1'
-
+  config.openrouter_api_key = ENV["OPENROUTER_API_KEY"]
+  config.openrouter_app_name = ENV["OPENROUTER_APP_NAME"] || "GlitchCube"
+  config.openrouter_site_url = ENV["OPENROUTER_SITE_URL"] || "https://glitchcube.com"
+  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "deepseek/deepseek-chat-v3-0324"
+  config.default_tools_model = ENV.fetch("DEFAULT_TOOLS_MODEL", nil) || "openai/gpt-4o-mini"
   # Home Assistant configuration
-  config.home_assistant_url = ENV['HOME_ASSISTANT_URL'] || (Rails.env.development? || Rails.env.test? ? 'http://glitch.local:8123' : nil)
-  config.home_assistant_token = ENV['HOME_ASSISTANT_TOKEN']
-  config.home_assistant_timeout = ENV['HOME_ASSISTANT_TIMEOUT']&.to_i || 30
+  config.home_assistant_url = ENV["HOME_ASSISTANT_URL"] || (Rails.env.development? || Rails.env.test? ? "http://glitch.local:8123" : nil)
+  config.home_assistant_token = ENV["HOME_ASSISTANT_TOKEN"]
+  config.home_assistant_timeout = ENV["HOME_ASSISTANT_TIMEOUT"]&.to_i || 30
 
+  config.helicone_api_key = ENV.fetch("HELICONE_API_KEY", nil)
   # Other integrations can be added here
   # config.service_name_api_key = ENV['SERVICE_NAME_API_KEY']
 end

@@ -4,6 +4,10 @@ class Tools::Lights::ListEffects < Tools::BaseTool
     "List available effects for cube lights"
   end
   
+  def self.narrative_desc
+    "check lights - see available effects"
+  end
+  
   def self.prompt_schema
     "list_light_effects(entity_id: 'light.cube_voice_ring') - List available effects for a cube light"
   end

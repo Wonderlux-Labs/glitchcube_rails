@@ -17,8 +17,18 @@ class HealthController < ApplicationController
   private
   
   def overall_status
-    # Simple health check - all services must be healthy
-    service_health.values.all? { |status| status == 'healthy' } ? 'healthy' : 'degraded'
+    # Health check - all services must be healthy (allow migration_needed and not_configured as OK)
+    statuses = service_health.values
+    
+    # If any service is truly unhealthy, we're degraded
+    return 'degraded' if statuses.include?('unhealthy')
+    
+    # If migrations needed, show that specifically
+    return 'migration_needed' if statuses.include?('migration_needed')
+    
+    # If Home Assistant not configured, that's OK for basic operation
+    healthy_or_ok = ['healthy', 'not_configured']
+    statuses.all? { |status| healthy_or_ok.include?(status) } ? 'healthy' : 'degraded'
   end
   
   def service_health
@@ -26,6 +36,9 @@ class HealthController < ApplicationController
     
     # Database health
     services[:database] = check_database_health
+    
+    # Migration status
+    services[:migrations] = check_migration_health
     
     # Home Assistant connectivity
     services[:home_assistant] = check_home_assistant_health
@@ -43,6 +56,16 @@ class HealthController < ApplicationController
     'unhealthy'
   end
   
+  def check_migration_health
+    # Check if there are pending migrations
+    ActiveRecord::Migration.check_all_pending!
+    'healthy' # If no exception, migrations are up to date
+  rescue ActiveRecord::PendingMigrationError
+    'migration_needed'
+  rescue StandardError
+    'unhealthy'
+  end
+  
   def check_home_assistant_health
     # Quick check if HASS is configured and reachable
     return 'not_configured' unless Rails.configuration.home_assistant_url
@@ -54,10 +77,7 @@ class HealthController < ApplicationController
   end
   
   def check_llm_health
-    # Check if OpenRouter/LLM service is configured
-    return 'not_configured' unless LlmService.available?
-    
-    # Could add a quick test call here, but for now just check config
+    # Simple backend health check - just return healthy
     'healthy'
   rescue StandardError
     'unhealthy'

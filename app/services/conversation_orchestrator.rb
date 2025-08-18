@@ -10,7 +10,7 @@ class ConversationOrchestrator
     Rails.logger.info "🧠 Starting conversation orchestration for: #{@message}"
     
     # Get or create conversation
-    conversation = find_or_create_conversation
+    @conversation = find_or_create_conversation
     
     # Build prompt with tools for current persona (check live, don't use stored)
     current_persona = determine_persona
@@ -20,29 +20,60 @@ class ConversationOrchestrator
     
     prompt_data = PromptService.build_prompt_for(
       persona: current_persona,
-      conversation: conversation,
+      conversation: @conversation,
       extra_context: enhanced_context
     )
     
     # PHASE 1: Check for previous pending tools and inject results
-    previous_results = check_and_clear_pending_tools(conversation)
+    previous_results = check_and_clear_pending_tools(@conversation)
     if previous_results.any?
       inject_tool_results_into_messages(prompt_data, previous_results)
     end
     
     Rails.logger.info "🎭 Using persona: #{current_persona}"
-    Rails.logger.info "🛠️ Available tools: #{prompt_data[:tools]&.map(&:name)&.join(', ')}"
     
-    # Call OpenRouter with tools enabled
-    response = call_openrouter_with_tools(prompt_data)
-    
-    # Categorize tool calls
-    tool_analysis = Tools::Registry.categorize_tool_calls(response.tool_calls || [])
-    
-    Rails.logger.info "🔧 Tool analysis: #{tool_analysis[:sync_tools].length} sync, #{tool_analysis[:async_tools].length} async, #{tool_analysis[:query_tools].length} query, #{tool_analysis[:action_tools].length} action"
-    
-    # Execute sync tools immediately
-    sync_results = execute_sync_tools(tool_analysis[:sync_tools])
+    # Check if two-tier mode is enabled
+    if two_tier_mode_enabled?
+      Rails.logger.info "🏗️ Two-tier mode enabled - using structured output"
+      
+      # Prepare messages for LLM
+      messages = [
+        { role: 'system', content: prompt_data[:system_prompt] }
+      ]
+      messages.concat(prompt_data[:messages]) if prompt_data[:messages].any?
+      messages << { role: 'user', content: @message }
+      
+      # Call LLM with structured output (no tools)
+      response = LlmService.call_with_structured_output(
+        messages: messages,
+        response_format: Schemas::NarrativeResponseSchema.schema,
+        model: determine_model_for_conversation
+      )
+      
+      sync_results = execute_tool_intents(response.structured_output)
+      
+      # Initialize tool_analysis for two-tier mode (needed for later processing)
+      tool_analysis = { 
+        sync_tools: [], 
+        async_tools: [], 
+        query_tools: [], 
+        action_tools: [] 
+      }
+    else
+      Rails.logger.info "🛠️ Legacy mode - using tool calling"
+      Rails.logger.info "🛠️ Available tools: #{prompt_data[:tools]&.map(&:name)&.join(', ')}"
+      
+      # Call OpenRouter with tools enabled
+      response = call_openrouter_with_tools(prompt_data)
+      
+      # Categorize tool calls
+      tool_analysis = Tools::Registry.categorize_tool_calls(response.tool_calls || [])
+      
+      Rails.logger.info "🔧 Tool analysis: #{tool_analysis[:sync_tools].length} sync, #{tool_analysis[:async_tools].length} async, #{tool_analysis[:query_tools].length} query, #{tool_analysis[:action_tools].length} action"
+      
+      # Execute sync tools immediately
+      sync_results = execute_sync_tools(tool_analysis[:sync_tools])
+    end
     
     # Generate final AI response incorporating sync tool results
     ai_response = generate_ai_response(prompt_data, response, sync_results)
@@ -52,11 +83,11 @@ class ConversationOrchestrator
     
     # Store pending tools for next turn
     if tool_analysis[:async_tools].any?
-      store_pending_tools(conversation, tool_analysis[:async_tools])
+      store_pending_tools(@conversation, tool_analysis[:async_tools])
     end
     
     # Store conversation log
-    store_conversation_log(conversation, ai_response, sync_results, tool_analysis)
+    store_conversation_log(@conversation, ai_response, sync_results, tool_analysis)
     
     # Return formatted response for Home Assistant
     format_response_for_hass(ai_response, tool_analysis)
@@ -80,11 +111,10 @@ class ConversationOrchestrator
       if last_message_time && last_message_time < 3.minutes.ago
         Rails.logger.info "🕒 Session #{@session_id} is stale (last message: #{last_message_time}), ending and creating memories"
         
-        # End the stale conversation and create memories
+        # End the stale conversation (memories will be created by batch job)
         if existing_conversation.active?
           existing_conversation.end!
-          ConversationMemoryJob.perform_later(@session_id)
-          Rails.logger.info "🧠 Ended stale conversation and queued memory creation for: #{@session_id}"
+          Rails.logger.info "🧠 Ended stale conversation: #{@session_id}"
         end
         
         # Generate new session ID with timestamp suffix
@@ -152,6 +182,45 @@ class ConversationOrchestrator
     get_persona_preferred_model ||
     Rails.configuration.default_ai_model
   end
+
+  def two_tier_mode_enabled?
+    Rails.configuration.try(:two_tier_tools_enabled) || false
+  end
+
+
+  def execute_tool_intents(structured_output)
+    return {} unless structured_output&.dig("tool_intents")&.any?
+    
+    tool_intents = structured_output["tool_intents"]
+    
+    Rails.logger.info "🎭 Processing #{tool_intents.length} tool intents from narrative LLM"
+    
+    # Log all intents
+    tool_intents.each_with_index do |intent_data, index|
+      Rails.logger.info "🔧 Intent #{index + 1}: #{intent_data['tool']} - #{intent_data['intent']}"
+    end
+    
+    begin
+      # Make ONE call to ToolCallingService with all intents
+      tool_calling_service = ToolCallingService.new(
+        session_id: @session_id,
+        conversation_id: @conversation&.id
+      )
+      
+      # Pass all intents as a combined instruction
+      combined_intent = tool_intents.map { |i| "#{i['tool']}: #{i['intent']}" }.join("; ")
+      
+      result = tool_calling_service.execute_intent(combined_intent, { persona: CubePersona.current_persona })
+      
+      Rails.logger.info "✅ All intents processed: #{result[:success] ? 'success' : 'failed'}"
+      
+      return { "all_intents" => result }
+      
+    rescue StandardError => e
+      Rails.logger.error "❌ Tool intents execution failed: #{e.message}"
+      return { "all_intents" => { success: false, error: e.message } }
+    end
+  end
   
   def get_persona_preferred_model
     # TODO: Different personas might prefer different models
@@ -170,7 +239,17 @@ class ConversationOrchestrator
       arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call['arguments']
       
       begin
-        result = Tools::Registry.execute_tool(tool_name, **arguments.symbolize_keys)
+        # For tool_intent, pass session and conversation context
+        if tool_name == "tool_intent"
+          arguments_with_context = arguments.symbolize_keys.merge(
+            session_id: @session_id,
+            conversation_id: @conversation&.id,
+            persona: current_persona
+          )
+          result = Tools::Registry.execute_tool(tool_name, **arguments_with_context)
+        else
+          result = Tools::Registry.execute_tool(tool_name, **arguments.symbolize_keys)
+        end
         results[tool_name] = result
       rescue StandardError => e
         results[tool_name] = { success: false, error: e.message, tool: tool_name }
@@ -183,12 +262,27 @@ class ConversationOrchestrator
   def generate_ai_response(prompt_data, openrouter_response, sync_results)
     response_id = SecureRandom.uuid
     
-    # Extract narrative elements from response
-    content = openrouter_response.content || ""
-    narrative = extract_narrative_elements(content)
-    
-    # Get clean speech text (without narrative markers)
-    speech_text = narrative[:speech_text]
+    # Extract narrative elements from response - handle both structured and legacy modes
+    if openrouter_response.structured_output
+      # Two-tier mode: use structured output directly
+      structured_data = openrouter_response.structured_output
+      speech_text = structured_data["speech_text"]
+      continue_conversation = structured_data["continue_conversation"] || false
+      
+      # Extract narrative metadata if available  
+      narrative = {
+        continue_conversation: continue_conversation,
+        inner_thoughts: structured_data["inner_thoughts"],
+        current_mood: structured_data["current_mood"], 
+        pressing_questions: structured_data["pressing_questions"],
+        speech_text: speech_text
+      }
+    else
+      # Legacy mode: extract from content markers
+      content = openrouter_response.content || ""
+      narrative = extract_narrative_elements(content)
+      speech_text = narrative[:speech_text]
+    end
     
     # CRITICAL FIX: Handle empty speech ONLY when LLM returns no content AND has tool calls
     if speech_text.blank? && openrouter_response.tool_calls&.any?
@@ -219,7 +313,8 @@ class ConversationOrchestrator
       pressing_questions: narrative[:pressing_questions],
       model: openrouter_response.model,
       usage: openrouter_response.usage,
-      success: true
+      success: true,
+      speech_text: speech_text  # Also include as :speech_text for compatibility
     }
   end
   
@@ -286,8 +381,7 @@ class ConversationOrchestrator
       conversation = Conversation.find_by(session_id: @session_id)
       if conversation && conversation.active?
         conversation.end!
-        ConversationMemoryJob.perform_later(@session_id)
-        Rails.logger.info "🧠 Ended conversation and queued memory creation for session: #{@session_id}"
+        Rails.logger.info "🧠 Ended conversation: #{@session_id}"
       end
     end
     

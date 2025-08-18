@@ -4,6 +4,10 @@ class Tools::Lights::TurnOff < Tools::BaseTool
     "Turn off cube lights with optional transition time"
   end
   
+  def self.narrative_desc
+    "control lights - turn lights off"
+  end
+  
   def self.prompt_schema
     "turn_off_light(entity_id: 'light.cube_voice_ring', transition: 1.0) - Turn off a cube light"
   end

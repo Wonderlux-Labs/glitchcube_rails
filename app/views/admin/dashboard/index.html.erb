@@ -1,0 +1,65 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🏠 GlitchCube Admin Dashboard</h1>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>💬 Conversations</h3>
+    <p>Total: <%= @stats[:conversations][:total] %></p>
+    <p>Active: <span class="active-status"><%= @stats[:conversations][:active] %></span></p>
+    <p>Finished Today: <%= @stats[:conversations][:finished_today] %></p>
+    <p>Avg Duration: <%= @stats[:conversations][:avg_duration] %>s</p>
+  </div>
+
+  <div class="stat-box">
+    <h3>🧠 Memories</h3>
+    <p>Total: <%= @stats[:memories][:total] %></p>
+    <p>High Importance: <%= @stats[:memories][:high_importance] %></p>
+    <p>Recent: <%= @stats[:memories][:recent] %></p>
+    <% @stats[:memories][:by_type].each do |type, count| %>
+      <p><%= type.humanize %>: <%= count %></p>
+    <% end %>
+  </div>
+
+  <div class="stat-box">
+    <h3>🌍 World State</h3>
+    <p>Status: <%= @stats[:world_state][:status] %></p>
+    <% if @stats[:world_state][:last_weather_update] %>
+      <p>Weather Updated: <%= Time.parse(@stats[:world_state][:last_weather_update]).strftime('%H:%M') rescue 'Unknown' %></p>
+    <% end %>
+    <p>Total Sensors: <%= @stats[:world_state][:total_sensors] %></p>
+  </div>
+
+  <div class="stat-box">
+    <h3>⚙️ Background Jobs</h3>
+    <% @stats[:jobs].each do |job, frequency| %>
+      <p><%= job.humanize %>: <%= frequency %></p>
+    <% end %>
+    <p><%= link_to 'View Jobs Dashboard', '/jobs', class: 'btn' %></p>
+  </div>
+</div>
+
+<h2>📋 Recent Activity</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Time</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @recent_activity.each do |activity| %>
+      <tr>
+        <td><%= activity[:type].humanize %></td>
+        <td>
+          <strong><%= activity[:title] %></strong><br>
+          <small><%= activity[:subtitle] %></small>
+        </td>
+        <td><%= time_ago_in_words(activity[:timestamp]) %> ago</td>
+        <td><%= link_to 'View', activity[:path], class: 'btn' %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

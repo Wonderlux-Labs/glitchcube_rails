@@ -11,9 +11,21 @@ class Tools::Registry
         "set_light_effect" => Tools::Lights::SetEffect,
         "list_light_effects" => Tools::Lights::ListEffects,
         "get_light_state" => Tools::Lights::GetState,
-
-        # General Home Assistant tools
-        "call_hass_service" => Tools::HomeAssistant::CallService
+        
+        # Music tools
+        "play_music" => Tools::Music::PlayMusic,
+        
+        # Display tools
+        "display_notification" => Tools::Display::Notification,
+        
+        # Effects tools
+        "control_effects" => Tools::Effects::ControlEffects,
+        
+        # Mode control tools
+        "mode_control" => Tools::Modes::ModeControl,
+        
+        # Communication tools
+        "make_announcement" => Tools::Communication::Announcement
       }
     end
 
@@ -98,7 +110,9 @@ class Tools::Registry
       case tool_name
       when "get_light_state", "list_light_effects"
         :query
-      when "turn_on_light", "turn_off_light", "set_light_color_and_brightness", "set_light_effect", "call_hass_service"
+      when "turn_on_light", "turn_off_light", "set_light_color_and_brightness", "set_light_effect", 
+           "play_music", "display_notification", "control_effects", 
+           "mode_control", "make_announcement"
         :action
       else
         # Default: sync tools are queries, async tools are actions
@@ -171,39 +185,76 @@ class Tools::Registry
 
     # Get tools for specific persona (for conversation orchestrator)
     def tools_for_persona(persona)
-      # All personas currently get access to lighting tools
-      # This could be made more granular based on persona capabilities
-      lighting_tool_classes = [
+      # Base tools available to all personas
+      base_tool_classes = [
+        # Lighting
         Tools::Lights::TurnOn,
         Tools::Lights::TurnOff,
         Tools::Lights::SetColorAndBrightness,
         Tools::Lights::SetEffect,
         Tools::Lights::ListEffects,
-        Tools::Lights::GetState
+        Tools::Lights::GetState,
+        
+        # Display
+        Tools::Display::Notification,
+        
+        # Music
+        Tools::Music::PlayMusic,
+        
+        # Effects
+        Tools::Effects::ControlEffects,
+        
+        # Communication
+        Tools::Communication::Announcement
       ]
       
       case persona&.to_s&.downcase
       when "buddy"
-        # Buddy gets all lighting tools with enthusiastic descriptions
-        lighting_tool_classes
+        # Buddy gets all tools - enthusiastic and friendly
+        base_tool_classes + [Tools::Modes::ModeControl]
       when "jax"
-        # Jax gets all lighting tools for dramatic effect
-        lighting_tool_classes
+        # Jax gets all tools - dramatic and expressive
+        base_tool_classes + [Tools::Modes::ModeControl]
       when "zorp"
-        # Zorp gets lighting tools for behavioral experiments
-        lighting_tool_classes
+        # Zorp gets all tools - analytical and experimental
+        base_tool_classes + [Tools::Modes::ModeControl]
       when "lomi"
-        # Lomi gets lighting tools for healing environments
-        lighting_tool_classes
+        # Lomi gets all tools - healing and nurturing
+        base_tool_classes + [Tools::Modes::ModeControl]
       else
-        # Default persona gets all lighting tools
-        lighting_tool_classes
+        # Default persona gets all tools
+        base_tool_classes + [Tools::Modes::ModeControl]
       end
     end
 
     # Get OpenRouter tool definitions for a specific persona
     def tool_definitions_for_persona(persona)
       tools_for_persona(persona).map(&:definition)
+    end
+
+    # Get narrative descriptions for narrative LLM (two-tier architecture)
+    def narrative_descriptions_for_persona(persona)
+      tools_for_persona(persona).map do |tool_class|
+        {
+          name: tool_class.name.demodulize.underscore,
+          description: tool_class.narrative_desc
+        }
+      end
+    end
+
+    # Get tools for two-tier mode (narrative LLM gets no tools - uses structured output)
+    def tools_for_two_tier_mode(persona)
+      []
+    end
+
+    # Get tool definitions for two-tier mode (technical LLM needs actual tools)
+    def tool_definitions_for_two_tier_mode(persona)
+      tool_definitions_for_persona(persona)
+    end
+
+    # Check if two-tier mode is enabled
+    def two_tier_mode_enabled?
+      Rails.configuration.try(:two_tier_tools_enabled) || false
     end
 
     # Refresh entity cache (call when entities might have changed)
