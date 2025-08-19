@@ -9,11 +9,11 @@ class Tools::Lights::ListEffects < Tools::BaseTool
   end
 
   def self.prompt_schema
-    "list_light_effects(entity_id: 'light.cube_voice_ring') - List available effects for a cube light"
+    "list_light_effects(entity_id: 'light.cube_inner') - List available effects for a cube light"
   end
 
   def self.tool_type
-    :sync # Need immediate data for response
+    :async # Need immediate data for response
   end
 
   def self.definition

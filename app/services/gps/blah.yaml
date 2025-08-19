@@ -1,0 +1,77 @@
+- id: '123456781aaa92'
+  alias: Cube Voice - Scene Creator
+  triggers:
+    - trigger: state
+      entity_id: assist_satellite.square_voice
+      from: idle
+      to: listening
+  actions:
+    - action: scene.create
+      data:
+        scene_id: cube_voice_restore
+        snapshot_entities:
+          - light.cube_light_top
+          - light.cube_inner
+
+
+- id: 'voicelistening123456'        
+  alias: Cube Voice - Listening
+  triggers:
+    - trigger: state
+      entity_id: assist_satellite.square_voice
+      to: listening
+  actions:
+    - action: awtrix.notification
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        text: "BUDDY is LiStEnING"
+        duration: 10
+        rainbow: true
+    - action: light.turn_on
+      target:
+        entity_id: light.cube_light_top
+      data:
+        rgb_color:
+          - 10
+          - 10
+          - 200
+
+- id: 'voiceprocessing1234'
+  alias: Cube Voice - Processing
+  triggers:
+    - trigger: state
+      entity_id: assist_satellite.square_voice
+      to: processing
+  actions:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.cube_busy
+
+- id: 'speakandrestore123948'
+  alias: Cube Voice - Speaking and Restore
+  triggers:
+    - trigger: state
+      entity_id: assist_satellite.square_voice
+      to: speaking
+    - trigger: state
+      entity_id: assist_satellite.square_voice
+      to: idle
+      id: restore
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: restore
+          sequence:
+            - action: scene.turn_on
+              target:
+                entity_id: scene.cube_voice_restore
+            - action: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.cube_busy
+      default:
+        - action: light.turn_on
+          target:
+            entity_id: light.cube_inner
+          data:
+            effect: "Music: Vibrate"

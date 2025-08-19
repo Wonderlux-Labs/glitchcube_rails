@@ -5,15 +5,13 @@ class Tools::Registry
     def all_tools
       @all_tools ||= {
         # Light tools
-        "turn_on_light" => Tools::Lights::TurnOn,
-        "turn_off_light" => Tools::Lights::TurnOff,
-        "set_light_color_and_brightness" => Tools::Lights::SetColorAndBrightness,
         "set_light_effect" => Tools::Lights::SetEffect,
         "list_light_effects" => Tools::Lights::ListEffects,
         "get_light_state" => Tools::Lights::GetState,
 
         # Music tools
         "play_music" => Tools::Music::PlayMusic,
+        "search_music" => Tools::Music::SearchMusic,
 
         # Display tools
         "display_notification" => Tools::Display::Notification,
@@ -188,12 +186,10 @@ class Tools::Registry
       # Base tools available to all personas
       base_tool_classes = [
         # Lighting
-        Tools::Lights::TurnOn,
-        Tools::Lights::TurnOff,
-        Tools::Lights::SetColorAndBrightness,
         Tools::Lights::SetEffect,
         Tools::Lights::ListEffects,
         Tools::Lights::GetState,
+        Tools::Lights::SetState,
 
         # Display
         Tools::Display::Notification,
@@ -261,9 +257,6 @@ class Tools::Registry
     def refresh_entity_cache!
       @cube_light_entities = nil
       # Clear tool class caches too
-      Tools::Lights::TurnOn.instance_variable_set(:@available_entities, nil)
-      Tools::Lights::TurnOff.instance_variable_set(:@available_entities, nil)
-      Tools::Lights::SetColorAndBrightness.instance_variable_set(:@available_entities, nil)
       Tools::Lights::SetEffect.instance_variable_set(:@available_entities, nil)
       Tools::Lights::ListEffects.instance_variable_set(:@available_entities, nil)
       Tools::Lights::GetState.instance_variable_set(:@available_entities, nil)

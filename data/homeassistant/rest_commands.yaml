@@ -89,7 +89,7 @@ cycle_persona:
     Content-Type: "application/json"
   payload: |
     {
-      "persona": "{% set personas = ['buddy', 'jax', 'lomi', 'zorp'] %}{% set current = states('input_text.current_persona') %}{% set current_index = personas.index(current) if current in personas else 0 %}{% set next_index = (current_index + 1) % personas|length %}{{ personas[next_index] }}"
+      "persona": "{% set personas = ['buddy', 'jax', 'lomi', 'zorp', 'guide_mode', 'demo_mode', 'maintenance_mode', 'party_mode', 'chill_mode', 'explorer_mode'] %}{% set current = states('input_select.current_persona') %}{% set current_index = personas.index(current) if current in personas else 0 %}{% set next_index = (current_index + 1) % personas|length %}{{ personas[next_index] }}"
     }
   content_type: "application/json"
   verify_ssl: false

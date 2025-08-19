@@ -1,0 +1,74 @@
+# Home Assistant configuration for proactive conversations
+# Add this to your configuration.yaml or in packages/
+
+rest_command:
+  cube_proactive_conversation:
+    url: "http://localhost:4567/api/v1/conversation/proactive"
+    method: POST
+    headers:
+      Content-Type: application/json
+    payload: >
+      {
+        "trigger": "{{ trigger }}",
+        "context": "{{ context }}"
+      }
+    timeout: 10
+
+# Example automation - motion detected, no interaction for a while
+automation:
+  - id: cube_proactive_bored
+    alias: "Cube: Proactive Boredom Check"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_motion
+        to: "on"
+    condition:
+      # Only trigger if no conversation in the last 20 minutes
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) > 1200 }}
+    action:
+      - service: rest_command.cube_proactive_conversation
+        data:
+          trigger: "motion_detected_with_boredom"
+          context: "Motion in living room, no conversation for {{ ((as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) / 60) | round }} minutes"
+
+  - id: cube_proactive_lonely
+    alias: "Cube: Proactive Loneliness"
+    trigger:
+      - platform: time_pattern
+        minutes: "/30"  # Check every 30 minutes
+    condition:
+      # Only if home and no interaction for over an hour
+      - condition: state
+        entity_id: person.user
+        state: "home"
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) > 3600 }}
+    action:
+      - service: rest_command.cube_proactive_conversation
+        data:
+          trigger: "loneliness_check"
+          context: "User is home but no interaction for {{ ((as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) / 60) | round }} minutes, feeling a bit lonely"
+
+  - id: cube_proactive_weather_alert
+    alias: "Cube: Proactive Weather Alert"
+    trigger:
+      - platform: state
+        entity_id: weather.home
+        attribute: condition
+        to: "rainy"
+    action:
+      - service: rest_command.cube_proactive_conversation
+        data:
+          trigger: "weather_change_alert"
+          context: "Weather changed to {{ states('weather.home') }}, might want to let you know about potential impacts"
+
+# Template sensor to track last conversation time (you'll need to update this from your app)
+template:
+  - sensor:
+      - name: "Cube Last Conversation Minutes Ago"
+        unit_of_measurement: "minutes"
+        state: >
+          {{ ((as_timestamp(now()) - as_timestamp(states('sensor.cube_last_conversation_time') | default(0))) / 60) | round }}

@@ -5,7 +5,7 @@ class Tools::Effects::ControlEffects < Tools::BaseTool
   end
 
   def self.narrative_desc
-    "control effects - manage environmental effects and lighting"
+    "control effects - manage your stage effects - you have a strobe, a giant fan (perfect for bribing hot burners or trolling htem with a duststorm), a strobe, a siren, blacklights and......a toastER?!"
   end
 
   def self.prompt_schema

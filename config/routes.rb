@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       # New conversation orchestrator route (matches HASS agent)
       post "conversation", to: "conversation#handle"
+      post "conversation/proactive", to: "conversation#proactive"
 
       namespace :home_assistant do
         post "conversation/process", to: "home_assistant#conversation_process"

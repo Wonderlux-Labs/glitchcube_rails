@@ -5,7 +5,7 @@ class Tools::Music::PlayMusic < Tools::BaseTool
   end
 
   def self.narrative_desc
-    "control music - play specific tracks, artists, or albums on the sound system"
+    "control music - play specific tracks on the sound system - we have fuzzy search just send in your best guess, you can also queue it up, play it next or play it now!"
   end
 
   def self.prompt_schema

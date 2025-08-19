@@ -5,7 +5,7 @@ class Tools::Display::Notification < Tools::BaseTool
   end
 
   def self.narrative_desc
-    "display text - show messages and notifications on the matrix display"
+    "display text - show messages and notifications on your scrolling marquee!"
   end
 
   def self.prompt_schema

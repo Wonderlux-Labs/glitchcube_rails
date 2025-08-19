@@ -1,0 +1,228 @@
+---
+# AWTRIX Custom Apps for GlitchCube
+# Three rotating apps: Location Context, Weather Info, and "HEY GLITCH CUBE!" Alert
+
+# App 1: Location Context Display
+- id: 'awtrix_location_context'
+  alias: "AWTRIX Location Context"
+  description: "Shows current location with time context and coordinates"
+  triggers:
+  - trigger: time_pattern
+    minutes: "/5"  # Update every 5 minutes
+  - trigger: state
+    entity_id: input_text.current_location
+  - trigger: state
+    entity_id: sun.sun
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/location"
+      payload: |
+        {
+          "text": "{{ states('input_text.current_location') }} - {{ now().strftime('%I:%M %p') }}",
+          "icon": 7786,
+          "color": {% set hour = now().hour %}{% if hour < 6 %}[100, 100, 255]{% elif hour < 12 %}[255, 200, 0]{% elif hour < 17 %}[255, 150, 0]{% elif hour < 21 %}[255, 100, 0]{% else %}[200, 0, 255]{% endif %},
+          "duration": 12,
+          "scrollSpeed": 85,
+          "uppercase": true
+        }
+  mode: single
+
+# App 2: Weather Information Display  
+- id: 'awtrix_weather_info'
+  alias: "AWTRIX Weather Info"
+  description: "Dynamic weather display with current conditions"
+  triggers:
+  - trigger: time_pattern
+    minutes: "/10"  # Update every 10 minutes
+  - trigger: state
+    entity_id: weather.playaweather
+  - trigger: state
+    entity_id: weather.pirateweather
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/weather"
+      payload: |
+        {
+          "text": "{{ state_attr('weather.playaweather', 'temperature') | int }}°F {{ state_attr('weather.playaweather', 'humidity') }}% {{ state_attr('weather.playaweather', 'wind_speed') | round(1) }}mph UV{{ state_attr('weather.playaweather', 'apparent_temperature') | int }}",
+          "icon": {% set condition = states('weather.playaweather') %}{% if condition == 'sunny' %}2282{% elif condition == 'clear-night' %}2283{% elif condition == 'partlycloudy' %}2284{% elif condition == 'cloudy' %}2285{% elif condition == 'rainy' %}2286{% elif condition == 'snowy' %}2287{% else %}2282{% endif %},
+          "color": {% set uv = state_attr('weather.playaweather', 'apparent_temperature') | int %}{% if uv < 75 %}[0, 255, 100]{% elif uv < 85 %}[255, 255, 0]{% elif uv < 95 %}[255, 150, 0]{% else %}[255, 0, 0]{% endif %},
+          "duration": 15,
+          "scrollSpeed": 75
+        }
+  mode: single
+
+# App 3: "HEY GLITCH CUBE!" Alert Display
+- id: 'awtrix_glitch_cube_alert'
+  alias: "AWTRIX Glitch Cube Alert"
+  description: "Fun animated notification with HEY GLITCH CUBE message"
+  triggers:
+  - trigger: time_pattern
+    minutes: "/3"  # Show every 3 minutes for fun
+  - trigger: state
+    entity_id: input_select.current_persona
+  - trigger: state
+    entity_id: counter.daily_conversations
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/hey_glitch"
+      payload: |
+        {
+          "text": "🎉 HEY GLITCH CUBE! 🎉",
+          "icon": {% set persona = states('input_select.current_persona') %}{% if persona == 'buddy' %}2022{% elif persona == 'jax' %}7956{% elif persona == 'lomi' %}7919{% elif persona == 'zorp' %}7982{% else %}7786{% endif %},
+          "rainbow": true,
+          "effect": "BlinkyRainbow",
+          "duration": 8,
+          "scrollSpeed": 100
+        }
+  mode: single
+
+# App Rotation Controller
+- id: 'awtrix_app_rotation'
+  alias: "AWTRIX App Rotation"
+  description: "Cycles through all three AWTRIX apps in sequence"
+  triggers:
+  - trigger: time_pattern
+    seconds: "/45"  # Rotate every 45 seconds
+  conditions: []
+  actions:
+  - choose:
+    # Cycle 1: Location Context (0-15 seconds of minute)
+    - conditions:
+      - condition: template
+        value_template: "{{ now().second < 15 }}"
+      sequence:
+      - service: mqtt.publish
+        data:
+          topic: "awtrix/custom/location"
+          payload: |
+            {
+              "text": "📍 {{ states('input_text.current_location') }} - {{ now().strftime('%I:%M %p') }}",
+              "icon": 7786,
+              "color": {% set hour = now().hour %}{% if hour < 6 %}[100, 100, 255]{% elif hour < 12 %}[255, 200, 0]{% elif hour < 17 %}[255, 150, 0]{% elif hour < 21 %}[255, 100, 0]{% else %}[200, 0, 255]{% endif %},
+              "duration": 15,
+              "scrollSpeed": 85
+            }
+    # Cycle 2: Weather Info (15-30 seconds of minute)  
+    - conditions:
+      - condition: template
+        value_template: "{{ now().second >= 15 and now().second < 30 }}"
+      sequence:
+      - service: mqtt.publish
+        data:
+          topic: "awtrix/custom/weather"
+          payload: |
+            {
+              "text": "🌤️ {{ state_attr('weather.playaweather', 'temperature') | int }}°F H{{ state_attr('weather.playaweather', 'humidity') }}% W{{ state_attr('weather.playaweather', 'wind_speed') | round(1) }}mph",
+              "icon": {% set condition = states('weather.playaweather') %}{% if condition == 'sunny' %}2282{% elif condition == 'clear-night' %}2283{% elif condition == 'partlycloudy' %}2284{% elif condition == 'cloudy' %}2285{% elif condition == 'rainy' %}2286{% elif condition == 'snowy' %}2287{% else %}2282{% endif %},
+              "color": {% set temp = state_attr('weather.playaweather', 'temperature') | int %}{% if temp < 70 %}[0, 150, 255]{% elif temp < 80 %}[0, 255, 100]{% elif temp < 90 %}[255, 255, 0]{% elif temp < 100 %}[255, 150, 0]{% else %}[255, 0, 0]{% endif %},
+              "duration": 15,
+              "scrollSpeed": 75
+            }
+    # Cycle 3: HEY GLITCH CUBE (30-45 seconds of minute)
+    - conditions:
+      - condition: template
+        value_template: "{{ now().second >= 30 and now().second < 45 }}"
+      sequence:
+      - service: mqtt.publish
+        data:
+          topic: "awtrix/custom/hey_glitch"
+          payload: |
+            {
+              "text": "🎉 HEY GLITCH CUBE! 🎉",
+              "icon": {% set persona = states('input_select.current_persona') %}{% if persona == 'buddy' %}2022{% elif persona == 'jax' %}7956{% elif persona == 'lomi' %}7919{% elif persona == 'zorp' %}7982{% else %}7786{% endif %},
+              "rainbow": true,
+              "effect": "ColorWipe",
+              "duration": 15,
+              "scrollSpeed": 90
+            }
+    # Default: Show system status (45-60 seconds of minute)
+    default:
+    - service: mqtt.publish
+      data:
+        topic: "awtrix/custom/status"
+        payload: |
+          {
+            "text": "🤖 {{ states('input_select.current_persona').upper() }} - {{ states('counter.daily_conversations') }} CHATS",
+            "icon": {% set persona = states('input_select.current_persona') %}{% if persona == 'buddy' %}2022{% elif persona == 'jax' %}7956{% elif persona == 'lomi' %}7919{% elif persona == 'zorp' %}7982{% else %}7786{% endif %},
+            "color": {% set persona = states('input_select.current_persona') %}{% if persona == 'buddy' %}[0, 200, 255]{% elif persona == 'jax' %}[255, 100, 0]{% elif persona == 'lomi' %}[255, 0, 200]{% elif persona == 'zorp' %}[100, 255, 0]{% else %}[255, 255, 255]{% endif %},
+            "duration": 15,
+            "scrollSpeed": 80
+          }
+  mode: single
+
+# Manual Trigger for HEY GLITCH CUBE Alert
+- id: 'awtrix_manual_hey_glitch'
+  alias: "AWTRIX Manual Hey Glitch"
+  description: "Manually trigger HEY GLITCH CUBE alert via input button"
+  triggers:
+  - trigger: state
+    entity_id: input_button.cycle_persona
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/hey_glitch"
+      payload: |
+        {
+          "text": "🚨 HEY GLITCH CUBE! 🚨 PERSONA SWITCH!",
+          "icon": 7982,
+          "rainbow": true,
+          "effect": "BlinkyRainbow",
+          "duration": 10,
+          "scrollSpeed": 120
+        }
+  mode: single
+
+# Clear Apps on Demand (for testing)
+- id: 'awtrix_clear_apps'
+  alias: "AWTRIX Clear All Apps"  
+  description: "Clear all custom AWTRIX apps"
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.maintenance_mode
+    to: 'on'
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/location"
+      payload: ""
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/weather" 
+      payload: ""
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/hey_glitch"
+      payload: ""
+  - service: mqtt.publish
+    data:
+      topic: "awtrix/custom/status"
+      payload: ""
+  mode: single
+
+# MQTT AWTRIX Icon Reference:
+# 183: Battery Full, 184: Battery Low
+# 2022: Buddy face, 7956: Jax, 7919: Lomi, 7982: Zorp
+# 4687: Check mark, 4688: X mark  
+# 7876: Motion sensor, 7953: Location pin, 7786: Gear/settings
+# 2282: Sunny, 2283: Clear night, 2284: Partly cloudy, 2285: Cloudy
+# 2286: Rainy, 2287: Snowy
+# 7929: Chat bubble
+
+# Available Effects:
+# BlinkyRainbow, ColorWipe, TheaterChase, Fireworks, Rain, Snake
+
+# Usage Notes:
+# - Apps automatically cycle through the display every 45 seconds
+# - Location app shows current position with time-based colors
+# - Weather app displays real-time temperature, humidity, wind with dynamic icons
+# - HEY GLITCH CUBE app provides fun animated alerts with persona colors
+# - Rotation controller ensures all apps get display time
+# - Manual triggers available for testing and interaction

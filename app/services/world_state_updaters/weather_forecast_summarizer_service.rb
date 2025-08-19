@@ -16,7 +16,8 @@ class WorldStateUpdaters::WeatherForecastSummarizerService
     return handle_no_weather_data if weather_data.empty?
 
     summary = generate_weather_summary(weather_data)
-    update_world_state_sensor(summary)
+    final = "ALERT! WEATHER BOT IN WITH ANOTHER ARR-EEE-PORT: #{summary}"
+    update_world_state_sensor(final)
 
     Rails.logger.info "✅ Weather forecast summary updated successfully"
     summary
@@ -45,37 +46,24 @@ class WorldStateUpdaters::WeatherForecastSummarizerService
   end
 
   def fetch_weather_sensors
-    weather_sensor_patterns = [
-      "temperature",
-      "humidity",
-      "pressure",
-      "weather",
-      "forecast",
-      "wind",
-      "precipitation",
-      "rain",
-      "snow"
-    ]
-
     sensors = HomeAssistantService.entities_by_domain("sensor")
+    weather = sensors.select { |s| s["entity_id"].include?("playaweather") }
+    weather += weather = sensors.select { |s| s["entity_id"].include?("pirateweather") }
 
-    sensors.select do |sensor|
-      entity_id = sensor["entity_id"].downcase
-      weather_sensor_patterns.any? { |pattern| entity_id.include?(pattern) }
-    end
+    weather
   rescue HomeAssistantService::Error
     []
   end
 
   def generate_weather_summary(weather_data)
     prompt = build_weather_prompt(weather_data)
-
+    puts prompt
     response = LlmService.generate_text(
       prompt: prompt,
       system_prompt: build_system_prompt,
       model: "google/gemini-2.5-flash",
-      temperature: 0.8,
-      max_tokens: 200
+      temperature: 1,
+      max_tokens: 500
     )
 
     raise LlmServiceError, "Empty response from LLM" if response.blank?
@@ -88,30 +76,22 @@ class WorldStateUpdaters::WeatherForecastSummarizerService
 
   def build_system_prompt
     <<~PROMPT
-      You are a surly, slightly glitchy weather bot. Give a concise paragraph about current weather conditions and forecast.
+      You are a surly, slightly glitchy weather bot. Give a concise report about the current weather conditions and forecast.
 
       Style guidelines:
-      - Be brief but informative (2-3 sentences max)
-      - Use a slightly sarcastic, deadpan tone
+      - Be brief but informative (3-4 sentences - shorten that shit)
       - Occasionally have minor "glitches" in your output (random capitalization, brief stutters)
       - Include actual useful weather information
-      - Don't be mean, just... unimpressed
-
-      Example: "Current temp is 72°F because apparently SPRING decided to show up. Humidity's sitting at 45% which is... fine, I guess. Tomorrow looks like more of the same predictable b-boring sunshine. *sigh*"
+      - Don't be mean, just... unimpressed, but you can curse all you want. After all these people are out her ON PURPOSE!
     PROMPT
   end
 
   def build_weather_prompt(weather_data)
+    puts format_weather_sensors(weather_data[:sensors])
     <<~PROMPT
       Here's the current weather data from our sensors:
-
-      Weather Stations: #{weather_data[:weather_stations].length} found
-      #{format_weather_stations(weather_data[:weather_stations])}
-
-      Weather Sensors: #{weather_data[:sensors].length} found
       #{format_weather_sensors(weather_data[:sensors])}
-
-      Generate a surly, concise weather summary based on this data.
+      Generate a surly, concise weather summary based on this data on weather now and upcomign weather
     PROMPT
   end
 
@@ -129,13 +109,74 @@ class WorldStateUpdaters::WeatherForecastSummarizerService
   def format_weather_sensors(sensors)
     return "None available" if sensors.empty?
 
-    sensors.first(10).map do |sensor|  # Limit to first 10 to keep prompt manageable
+    # Categorize sensors by timeframe
+    categorized_sensors = categorize_sensors_by_timeframe(sensors)
+
+    # Build formatted output
+    build_formatted_sensor_output(categorized_sensors)
+  end
+
+  def categorize_sensors_by_timeframe(sensors)
+    categories = {
+      today: [],
+      tomorrow: [],
+      second_day: [],
+      other: []
+    }
+
+    sensor_patterns = {
+      today: [ "_1h", "_6h", "_12h", "hourly_summary", "daily_summary" ],
+      tomorrow: [ "_1d" ],
+      second_day: [ "_2d" ]
+    }
+
+    sensors.each do |sensor|
+      entity_id = sensor["entity_id"].to_s
+      categorized = false
+
+      sensor_patterns.each do |category, patterns|
+        if patterns.any? { |pattern| entity_id.include?(pattern) }
+          categories[category] << sensor
+          categorized = true
+          break
+        end
+      end
+
+      categories[:other] << sensor unless categorized
+    end
+
+    categories
+  end
+
+  def build_formatted_sensor_output(categories)
+    output_sections = []
+
+    # Calculate day names
+    today_name = Date.current.strftime("%A")
+    tomorrow_name = (Date.current + 1).strftime("%A")
+    second_day_name = (Date.current + 2).strftime("%A")
+
+    # Add sections in logical order with day names
+    add_section_if_present(output_sections, "Today (#{today_name})", categories[:today])
+    add_section_if_present(output_sections, "Tomorrow (#{tomorrow_name})", categories[:tomorrow])
+    add_section_if_present(output_sections, "#{second_day_name}", categories[:second_day])
+
+    output_sections.join("\n\n")
+  end
+
+  def add_section_if_present(sections, title, sensors)
+    return if sensors.empty?
+
+    section_lines = [ "#{title}:" ]
+    sensors.each do |sensor|
       state = sensor["state"]
-      unit = sensor.dig("attributes", "unit_of_measurement")
+      unit = sensor.dig("attributes", "unit_of_measurement").to_s
       friendly_name = sensor.dig("attributes", "friendly_name") || sensor["entity_id"]
 
-      "- #{friendly_name}: #{state}#{unit}"
-    end.join("\n")
+      section_lines << "  - #{friendly_name}: #{state}#{unit}"
+    end
+
+    sections << section_lines.join("\n")
   end
 
   def update_world_state_sensor(summary)

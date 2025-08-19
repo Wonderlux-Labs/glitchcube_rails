@@ -15,8 +15,8 @@ class LlmService
       begin
         # Prepare extras with OpenRouter-specific parameters
         extras = {
-          temperature: options[:temperature] || 0.7,
-          max_tokens: options[:max_tokens] || 12000
+          temperature: options[:temperature] || 0.9,
+          max_tokens: options[:max_tokens] || 32000
         }.merge(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
@@ -104,8 +104,8 @@ class LlmService
       begin
         # Prepare extras with OpenRouter-specific parameters
         extras = {
-          temperature: options[:temperature] || 0.7,
-          max_tokens: options[:max_tokens] || 12000
+          temperature: options[:temperature] || 0.9,
+          max_tokens: options[:max_tokens] || 32000
         }.merge(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
@@ -160,7 +160,7 @@ class LlmService
         client = OpenRouter::Client.new
         extras = {
           temperature: options[:temperature] || 0.3,
-          max_tokens: options[:max_tokens] || 500
+          max_tokens: options[:max_tokens] || 5000
         }.merge(options.except(:temperature, :max_tokens))
 
         response = client.complete(

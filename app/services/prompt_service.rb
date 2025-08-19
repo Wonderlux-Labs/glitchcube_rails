@@ -204,11 +204,8 @@ class PromptService
 
       AVAILABLE TOOL CATEGORIES: #{tool_categories.join(', ')}
 
-      Tool intentions should be natural language descriptions of what you want to happen:
-      - "lights: Make the lights warm and golden"
-      - "music: Play something energetic and upbeat"
-      - "display: Show rainbow colors on the screens"
-      - "environment: Create a cozy atmosphere"
+      Tool intentions should be natural language descriptions of what you want to happen on your tools
+      You shou
 
       A separate technical AI will execute these intentions using the actual tools.
       Focus on your character and narrative - be specific about environmental desires.
@@ -336,8 +333,10 @@ class PromptService
     rescue => e
       Rails.logger.warn "Failed to inject time context: #{e.message}"
     end
-
+    important= "\n**\nVERY IMPORTANT BREAKING NEWS YOU MUST PAY ATTENTION TO: []\n**\n"
     base_context
+    facts = Fact.all.sample(3).join(", ")
+    "#{important} #{base_context}\nRandom Facts\n#{facts}"
   end
 
   def build_goal_context

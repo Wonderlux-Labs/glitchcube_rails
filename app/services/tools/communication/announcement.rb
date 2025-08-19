@@ -5,7 +5,7 @@ class Tools::Communication::Announcement < Tools::BaseTool
   end
 
   def self.narrative_desc
-    "make announcements - speak to humans and display messages"
+    "make announcements - speak to humans and display messages on your screen - you have a loudspeaker after all! can send separate spoken and text or both the same"
   end
 
   def self.prompt_schema

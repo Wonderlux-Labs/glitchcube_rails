@@ -12,7 +12,7 @@ class GpsSensorUpdateJob < ApplicationJob
       # Get current location from GPS service
       gps_service = Services::Gps::GPSTrackingService.new
       location_data = gps_service.current_location
-
+      Rails.logger.info("***LOCATION #{location_data}***")
       return unless location_data && location_data[:lat] && location_data[:lng]
 
       # Update Home Assistant location context sensor only
@@ -38,7 +38,7 @@ class GpsSensorUpdateJob < ApplicationJob
           distance_from_man: location_data[:distance_from_man],
 
           # Landmarks and POIs
-          landmarks: location_data[:landmarks]&.first(5)&.map { |l| l[:name] }&.join(", "),
+          landmarks: location_data[:landmarks]&.first(10)&.uniq&.last(5)&.map { |l| l[:name] }&.join(", "),
           landmark_count: location_data[:landmarks]&.count || 0,
           nearest_landmark: location_data[:landmarks]&.first&.[](:name),
 

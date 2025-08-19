@@ -1,0 +1,93 @@
+alias: Cube Light (voice)
+description: Voice assistant feedback lighting with scene restoration
+triggers:
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    from: idle
+    id: voice_activated
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: listening
+    id: listening
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: processing
+    id: processing
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: speaking
+    id: speaking
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: idle
+    for:
+      seconds: 2
+    id: voice_idle
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: voice_activated
+        sequence:
+          - action: scene.create
+            data:
+              scene_id: cube_voice_restore
+              snapshot_entities:
+                - light.cube_light_top 
+                - light.cube_inner
+      - conditions:
+          - condition: trigger
+            id: listening
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.cube_light_top
+            data:
+              effect: Happy Blinker
+      - conditions:
+        - condition: trigger
+          id: processing
+        sequence:
+          - action: homeassistant.turn_on
+            target:
+              entity_id: binary_sensor.cube_busy
+      - conditions:
+        - condition: trigger
+          id: speaker
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.cube_inner
+            data:
+              effect: "Music: Vibrate"
+      - conditions:
+        - condition: trigger
+          id: speaker
+        sequence:
+         - action: light.turn_on
+           target:
+             entity_id: light.cube_inner
+           data:
+             effect: "Music: Vibrate"
+      - conditions:
+        - condition: trigger
+          id: idle 
+        sequence:
+         - action: scene.restore
+           data:
+              scene_id: cube_voice_restore
+variables:
+  listening_color:
+    - 0
+    - 255
+    - 0
+  processing_color:
+    - 0
+    - 0
+    - 255
+  speaking_color:
+    - 128
+    - 0
+    - 128
+mode: parallel

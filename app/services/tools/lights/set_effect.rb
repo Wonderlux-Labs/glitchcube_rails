@@ -5,7 +5,7 @@ class Tools::Lights::SetEffect < Tools::BaseTool
   end
 
   def self.narrative_desc
-    "control lights - apply special effects"
+    "control lights - apply special effects - describe it the best you can, and specifc music reactive or not"
   end
 
   def self.prompt_schema
@@ -27,10 +27,7 @@ class Tools::Lights::SetEffect < Tools::BaseTool
                enum: -> { Tools::Lights::SetEffect.available_entities }
 
         string :effect, required: true,
-               description: "Effect name to apply (use list_light_effects to see available options)"
-
-        number :transition, minimum: 0, maximum: 300,
-               description: "Transition time in seconds (optional)"
+               description: "Effect name to apply (use list_light_effects to see available options BEFORE you call!)"
       end
     end
   end

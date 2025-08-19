@@ -27,15 +27,17 @@ class Tools::Lights::SetState < Tools::BaseTool
                  description: "Light entity to control",
                  enum: -> { Tools::Lights::SetState.available_entities }
 
-          string :state,
-                 description: "Turn light on or off",
+          string :state, required: true,
+                 description: "Turn light on or off pass on even if on to change state",
                  enum: %w[on off]
 
           number :brightness, minimum: 0, maximum: 100,
                  description: "Brightness percentage (0-100)"
 
           array :rgb_color,
-                description: "RGB color as [R, G, B] values (0-255). Example: [255, 0, 0] for red"
+                description: "RGB color as [R, G, B] values (0-255). Example: [255, 0, 0] for red" do
+            integer minimum: 0, maximum: 255
+          end
 
           string :effect,
                  description: "Light effect name. Use get_light_state to see available effects for each light"

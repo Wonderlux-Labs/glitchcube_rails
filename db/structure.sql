@@ -254,6 +254,39 @@ ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
 
 
 --
+-- Name: facts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.facts (
+    id bigint NOT NULL,
+    "heard_it_from?" character varying,
+    text text NOT NULL,
+    metadata text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: facts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.facts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: facts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.facts_id_seq OWNED BY public.facts.id;
+
+
+--
 -- Name: landmarks; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -818,6 +851,13 @@ ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.event
 
 
 --
+-- Name: facts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facts ALTER COLUMN id SET DEFAULT nextval('public.facts_id_seq'::regclass);
+
+
+--
 -- Name: landmarks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -968,6 +1008,14 @@ ALTER TABLE ONLY public.conversations
 
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facts facts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.facts
+    ADD CONSTRAINT facts_pkey PRIMARY KEY (id);
 
 
 --
@@ -1602,6 +1650,7 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 SET search_path TO "$user", public, topology;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250818195655'),
 ('20250818124806'),
 ('20250818034459'),
 ('20250818022021'),
