@@ -5,10 +5,10 @@ class PersonaSwitchService
     # Handle persona switching with goal awareness
     def handle_persona_switch(new_persona_id, previous_persona_id = nil)
       Rails.logger.info "🎭 Persona switching from #{previous_persona_id || 'unknown'} to #{new_persona_id}"
-      
+
       # Get current goal status
       current_goal = GoalService.current_goal_status
-      
+
       if current_goal
         # Existing goal - ask new persona if they want to keep it
         notify_persona_with_goal(new_persona_id, current_goal, previous_persona_id)
@@ -29,14 +29,14 @@ class PersonaSwitchService
 
       # Calculate progress percentage
       progress_percentage = calculate_goal_progress(current_goal)
-      
+
       # Get persona's system prompt
       system_prompt = get_persona_system_prompt(persona_instance)
-      
+
       # Create conversational message
       user_message = build_goal_continuation_message(
-        current_goal, 
-        progress_percentage, 
+        current_goal,
+        progress_percentage,
         previous_persona_id
       )
 
@@ -83,7 +83,7 @@ class PersonaSwitchService
 
       # Get persona's system prompt
       system_prompt = get_persona_system_prompt(persona_instance)
-      
+
       # Create message about new goal
       user_message = build_new_goal_message(new_goal)
 
@@ -142,15 +142,15 @@ class PersonaSwitchService
 
       elapsed = Time.current - goal_status[:started_at]
       total_time = goal_status[:time_limit]
-      
+
       progress = (elapsed.to_f / total_time.to_f * 100).round
-      [progress, 100].min # Cap at 100%
+      [ progress, 100 ].min # Cap at 100%
     end
 
     # Build message for goal continuation decision
     def build_goal_continuation_message(goal_status, progress_percentage, previous_persona_id)
       previous_name = previous_persona_id ? previous_persona_id.to_s.capitalize : "the previous persona"
-      
+
       "🎭 Hello! You just became the active persona on the GlitchCube! #{previous_name} was working on this goal: \"#{goal_status[:goal_description]}\" and was #{progress_percentage}% of the way through the time allocated for it.\n\nDo you want to keep working on this goal, or would you prefer to throw it back and let the cube choose a mysterious new direction? You can't pick your specific goal, but you have the agency to decide whether this current path resonates with you or if you'd rather see what fate has in store!\n\nWhat do you think? Keep going or roll the dice for something new?"
     end
 
@@ -165,20 +165,20 @@ class PersonaSwitchService
 
       # Look for keywords that indicate wanting change
       change_indicators = [
-        "new", "different", "change", "roll", "dice", "throw", "back", 
+        "new", "different", "change", "roll", "dice", "throw", "back",
         "mysterious", "fate", "something else", "don't want", "not interested"
       ]
-      
+
       keep_indicators = [
         "keep", "continue", "stay", "maintain", "stick", "carry on", "keep going"
       ]
 
       response_lower = response_content.downcase
-      
+
       # Count indicators
       change_count = change_indicators.count { |word| response_lower.include?(word) }
       keep_count = keep_indicators.count { |word| response_lower.include?(word) }
-      
+
       # If more change indicators than keep indicators, assume they want change
       change_count > keep_count
     end

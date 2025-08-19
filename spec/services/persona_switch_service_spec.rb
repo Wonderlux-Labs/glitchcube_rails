@@ -23,7 +23,7 @@ RSpec.describe PersonaSwitchService, type: :service do
       before do
         allow(GoalService).to receive(:current_goal_status).and_return(current_goal)
         allow(LlmService).to receive(:call_with_tools).and_return({
-          "choices" => [{"message" => {"content" => "I want to keep working on this goal!"}}]
+          "choices" => [ { "message" => { "content" => "I want to keep working on this goal!" } } ]
         })
         allow(Rails.logger).to receive(:info)
         allow(Rails.logger).to receive(:debug)
@@ -33,7 +33,7 @@ RSpec.describe PersonaSwitchService, type: :service do
         expect(PersonaSwitchService).to receive(:notify_persona_with_goal).with(
           new_persona_id, current_goal, previous_persona_id
         )
-        
+
         PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
       end
 
@@ -48,8 +48,8 @@ RSpec.describe PersonaSwitchService, type: :service do
           expect(messages[1][:role]).to eq("user")
           expect(messages[1][:content]).to include("working on this goal")
           expect(messages[1][:content]).to include("33%") # 2 hours of 6 hours = 33%
-          
-          { "choices" => [{"message" => {"content" => "I'll keep going with this goal!"}}] }
+
+          { "choices" => [ { "message" => { "content" => "I'll keep going with this goal!" } } ] }
         end
 
         PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
@@ -58,13 +58,13 @@ RSpec.describe PersonaSwitchService, type: :service do
       context 'when persona wants to change goal' do
         before do
           allow(LlmService).to receive(:call_with_tools).and_return({
-            "choices" => [{"message" => {"content" => "I want something new and different! Let's roll the dice!"}}]
+            "choices" => [ { "message" => { "content" => "I want something new and different! Let's roll the dice!" } } ]
           })
         end
 
         it 'requests a new goal when persona indicates wanting change' do
           expect(GoalService).to receive(:request_new_goal).with(reason: "persona_sparkle_request")
-          
+
           PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
         end
       end
@@ -72,13 +72,13 @@ RSpec.describe PersonaSwitchService, type: :service do
       context 'when persona wants to keep goal' do
         before do
           allow(LlmService).to receive(:call_with_tools).and_return({
-            "choices" => [{"message" => {"content" => "I'll keep working on this goal! Sounds fun!"}}]
+            "choices" => [ { "message" => { "content" => "I'll keep working on this goal! Sounds fun!" } } ]
           })
         end
 
         it 'does not request a new goal' do
           expect(GoalService).not_to receive(:request_new_goal)
-          
+
           PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
         end
       end
@@ -97,7 +97,7 @@ RSpec.describe PersonaSwitchService, type: :service do
 
       it 'selects a new goal automatically' do
         expect(GoalService).to receive(:select_goal)
-        
+
         PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
       end
 
@@ -107,18 +107,18 @@ RSpec.describe PersonaSwitchService, type: :service do
           category: "exploration_goals",
           time_limit: 30.minutes
         }
-        
+
         allow(GoalService).to receive(:current_goal_status).and_return(nil, new_goal_status)
         allow(LlmService).to receive(:call_with_tools).and_return({
-          "choices" => [{"message" => {"content" => "Ooh! I love exploring art! ✨"}}]
+          "choices" => [ { "message" => { "content" => "Ooh! I love exploring art! ✨" } } ]
         })
 
         expect(LlmService).to receive(:call_with_tools) do |args|
           messages = args[:messages]
           expect(messages[1][:content]).to include("selected a new one for you")
           expect(messages[1][:content]).to include("Learn about new art installations")
-          
-          { "choices" => [{"message" => {"content" => "Sounds great!"}}] }
+
+          { "choices" => [ { "message" => { "content" => "Sounds great!" } } ] }
         end
 
         PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
@@ -133,7 +133,7 @@ RSpec.describe PersonaSwitchService, type: :service do
           started_at: 3.hours.ago,
           time_limit: 6.hours
         }
-        
+
         progress = PersonaSwitchService.send(:calculate_goal_progress, goal_status)
         expect(progress).to eq(50) # 3 of 6 hours = 50%
       end
@@ -143,7 +143,7 @@ RSpec.describe PersonaSwitchService, type: :service do
           started_at: 8.hours.ago,
           time_limit: 6.hours
         }
-        
+
         progress = PersonaSwitchService.send(:calculate_goal_progress, goal_status)
         expect(progress).to eq(100)
       end

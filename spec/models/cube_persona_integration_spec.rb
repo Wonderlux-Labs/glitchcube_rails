@@ -30,13 +30,13 @@ RSpec.describe "CubePersona persona switching integration", type: :model do
       before do
         allow(GoalService).to receive(:current_goal_status).and_return(active_goal)
         allow(LlmService).to receive(:call_with_tools).and_return({
-          "choices" => [{"message" => {"content" => "Ooh! That sounds super fun! I'll keep working on making people happy! ✨"}}]
+          "choices" => [ { "message" => { "content" => "Ooh! That sounds super fun! I'll keep working on making people happy! ✨" } } ]
         })
       end
 
       it "notifies the new persona about the existing goal" do
         expect(PersonaSwitchService).to receive(:handle_persona_switch).with(:sparkle, :buddy)
-        
+
         CubePersona.set_current_persona(:sparkle)
       end
 
@@ -44,12 +44,12 @@ RSpec.describe "CubePersona persona switching integration", type: :model do
         expect(LlmService).to receive(:call_with_tools) do |args|
           messages = args[:messages]
           user_message = messages[1][:content]
-          
+
           expect(user_message).to include("Make people laugh and feel the magic")
           expect(user_message).to include("25%") # 1 hour of 4 hours
           expect(user_message).to include("Buddy was working on this goal")
-          
-          { "choices" => [{"message" => {"content" => "I'll continue this joyful mission!"}}] }
+
+          { "choices" => [ { "message" => { "content" => "I'll continue this joyful mission!" } } ] }
         end
 
         CubePersona.set_current_persona(:sparkle)
@@ -74,13 +74,13 @@ RSpec.describe "CubePersona persona switching integration", type: :model do
           category: "exploration_goals"
         })
         allow(LlmService).to receive(:call_with_tools).and_return({
-          "choices" => [{"message" => {"content" => "Ooh! Art exploration sounds amazing! ✨"}}]
+          "choices" => [ { "message" => { "content" => "Ooh! Art exploration sounds amazing! ✨" } } ]
         })
       end
 
       it "automatically selects a new goal" do
         expect(GoalService).to receive(:select_goal)
-        
+
         CubePersona.set_current_persona(:sparkle)
       end
 
@@ -88,11 +88,11 @@ RSpec.describe "CubePersona persona switching integration", type: :model do
         expect(LlmService).to receive(:call_with_tools) do |args|
           messages = args[:messages]
           user_message = messages[1][:content]
-          
+
           expect(user_message).to include("selected a new one for you")
           expect(user_message).to include("Learn about new art installations")
-          
-          { "choices" => [{"message" => {"content" => "Perfect! I love art!"}}] }
+
+          { "choices" => [ { "message" => { "content" => "Perfect! I love art!" } } ] }
         end
 
         CubePersona.set_current_persona(:sparkle)
@@ -103,7 +103,7 @@ RSpec.describe "CubePersona persona switching integration", type: :model do
       it "doesn't trigger persona switching logic" do
         allow(CubePersona).to receive(:current_persona).and_return(:sparkle)
         expect(PersonaSwitchService).not_to receive(:handle_persona_switch)
-        
+
         CubePersona.set_current_persona(:sparkle)
       end
     end
