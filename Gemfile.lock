@@ -1,6 +1,6 @@
 GIT
   remote: https://www.github.com/estiens/open_router
-  revision: 8c42a67f4db372b4bce8f002d9e62f7eb7c92557
+  revision: 8cb154dbdc8b5ff0e68fa57b92826b832d4f9b45
   branch: dev
   specs:
     open_router_enhanced (1.1.0)
