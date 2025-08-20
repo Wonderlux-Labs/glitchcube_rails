@@ -1,7 +1,7 @@
 # app/services/tools/display/notification.rb
 class Tools::Display::Notification < Tools::BaseTool
   def self.description
-    "Display text notifications on the Awtrix matrix via MQTT notification script"
+    "Display text notifications on the scrolling marquee"
   end
 
   def self.narrative_desc
@@ -13,7 +13,7 @@ class Tools::Display::Notification < Tools::BaseTool
   end
 
   def self.tool_type
-    :async # Display control happens after response
+    :sync
   end
 
   def self.definition
@@ -26,28 +26,32 @@ class Tools::Display::Notification < Tools::BaseTool
                description: "Text message to display on the matrix"
 
         number :duration, minimum: 1, maximum: 60,
-               description: "How long to display the message in seconds (default: 5)"
+               description: "How long to display the message in seconds (default: 30)"
 
         string :color,
-               description: "Text color (e.g., 'red', 'green', 'blue', 'white', 'yellow')"
+               description: "hex code ie #ff0000 for red (defaults yellow but recommended)"
 
-        string :icon,
-               description: "Icon to display with the text (optional)"
+        boolean :wakeup,
+                description: "wakeup screen if asleep (default true)"
+
+        boolean :rainbow,
+                description: "rainbow text! (default false)"
       end
     end
   end
 
-  def call(text:, duration: 5, color: nil, icon: nil)
+  def call(text:, duration: 30, color: nil, wakeup: true, rainbow: false)
     # Build service data for the script call
     service_data = {}
 
     # Add variables for the script
     variables = {
       text: text,
-      duration: duration
+      duration: duration,
+      wakeup: wakeup,
+      rainbow: rainbow
     }
     variables[:color] = color if color.present?
-    variables[:icon] = icon if icon.present?
 
     service_data[:variables] = variables
 
@@ -65,7 +69,6 @@ class Tools::Display::Notification < Tools::BaseTool
         text: text,
         duration: duration,
         color: color,
-        icon: icon,
         service_result: result
       )
     rescue HomeAssistantService::Error => e

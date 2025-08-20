@@ -78,26 +78,15 @@ class PromptService
       base_system_rules
     ]
 
-    # Add two-tier mode instructions or tool definitions
-    if Tools::Registry.two_tier_mode_enabled?
-      enhanced_parts.concat([
-        "",
-        "TWO-TIER MODE:",
-        build_structured_output_instructions,
-        "",
-        "CURRENT CONTEXT:",
-        build_current_context
-      ])
-    else
-      enhanced_parts.concat([
-        "",
-        "AVAILABLE TOOLS:",
-        format_tools_for_prompt,
-        "",
-        "CURRENT CONTEXT:",
-        build_current_context
-      ])
-    end
+    # Always use structured output with tool intentions
+    enhanced_parts.concat([
+      "",
+      "STRUCTURED OUTPUT WITH TOOL INTENTIONS:",
+      build_structured_output_instructions,
+      "",
+      "CURRENT CONTEXT:",
+      build_current_context
+    ])
 
     enhanced_parts.join("\n")
   end
@@ -195,7 +184,7 @@ class PromptService
     end.compact.uniq.sort
 
     <<~INSTRUCTIONS
-      You are operating in TWO-TIER MODE. Instead of calling tools directly, you will:
+      You use STRUCTURED OUTPUT WITH TOOL INTENTIONS. Instead of calling tools directly, you will:
 
       1. Provide your spoken response in 'speech_text'
       2. Set 'continue_conversation' to true/false#{' '}
@@ -204,10 +193,11 @@ class PromptService
 
       AVAILABLE TOOL CATEGORIES: #{tool_categories.join(', ')}
 
-      Tool intentions should be natural language descriptions of what you want to happen on your tools
-      You shou
+      Tool intentions should be natural language descriptions of what you want to happen.
+      Examples: "Make lights golden and warm", "Play something energetic", "Show rainbow colors"
 
-      A separate technical AI will execute these intentions using the actual tools.
+      Home Assistant's conversation agent will execute these intentions in the background.
+      Results will be provided as context on the user's next message (not interrupting current response).
       Focus on your character and narrative - be specific about environmental desires.
     INSTRUCTIONS
   end

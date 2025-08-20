@@ -9,11 +9,34 @@ class Tools::Lights::ListEffects < Tools::BaseTool
   end
 
   def self.prompt_schema
-    "list_light_effects(entity_id: 'light.cube_inner') - List available effects for a cube light"
+    music_effects = []
+    other_effects = []
+
+    begin
+      top_entity = HomeAssistantService.entity("light.cube_light_top")
+      inner_entity = HomeAssistantService.entity("light.cube_inner")
+
+      all_effects = []
+      all_effects += top_entity["attributes"]["effect_list"] if top_entity&.dig("attributes", "effect_list")
+      all_effects += inner_entity["attributes"]["effect_list"] if inner_entity&.dig("attributes", "effect_list")
+      all_effects = all_effects.uniq.compact.reject(&:empty?)
+
+      music_effects = all_effects.select { |e| e.downcase.include?("music") }
+      other_effects = all_effects.reject { |e| e.downcase.include?("music") }
+    rescue
+      music_effects = [ "Music: Beat", "Music: Rhythm", "Music reactive jazz", "Music: Spectrum" ]
+      other_effects = [ "Rainbow", "Fire", "Aurora", "Breathe", "Cyberpunk", "Ocean", "Sunset", "Forest" ]
+    end
+
+    random_music = music_effects.sample(4)
+    random_other = other_effects.sample(4)
+    all_random = (random_music + random_other).join(", ")
+
+    "Available light effects: #{all_random}"
   end
 
   def self.tool_type
-    :async # Need immediate data for response
+    :async # Two-tier mode: all tools are async, effects included in prompts
   end
 
   def self.definition

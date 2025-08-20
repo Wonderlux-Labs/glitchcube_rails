@@ -6,8 +6,8 @@ class Tools::Registry
       @all_tools ||= {
         # Light tools
         "set_light_effect" => Tools::Lights::SetEffect,
-        "list_light_effects" => Tools::Lights::ListEffects,
         "get_light_state" => Tools::Lights::GetState,
+        "set_light_state" => Tools::Lights::SetState,
 
         # Music tools
         "play_music" => Tools::Music::PlayMusic,
@@ -55,7 +55,14 @@ class Tools::Registry
       tool_class = get_tool(tool_name)
       return { error: "Tool '#{tool_name}' not found" } unless tool_class
 
-      tool_class.call(**args)
+      # Filter out blank strings and nil values
+      filtered_args = args.reject { |_k, v| v.blank? }
+
+      # Ensure keyword arguments have symbol keys (required for Ruby method calls)
+      # Handle both direct symbol args and string-keyed hashes from JSON
+      symbol_args = filtered_args.transform_keys { |key| key.is_a?(String) ? key.to_sym : key }
+
+      tool_class.call(**symbol_args)
     end
 
     # Get tool descriptions for prompt generation
@@ -106,8 +113,6 @@ class Tools::Registry
       # Query tools: Get information, sync execution, return data for speech
       # Action tools: Change state, usually async, minimal speech needed
       case tool_name
-      when "get_light_state", "list_light_effects"
-        :query
       when "turn_on_light", "turn_off_light", "set_light_color_and_brightness", "set_light_effect",
            "play_music", "display_notification", "control_effects",
            "mode_control", "make_announcement"
@@ -171,7 +176,7 @@ class Tools::Registry
         next unless tool_class&.tool_type == :sync
 
         begin
-          result = execute_tool(tool_name, **arguments.symbolize_keys)
+          result = execute_tool(tool_name, **arguments)
           results[tool_name] = result
         rescue StandardError => e
           results[tool_name] = { success: false, error: e.message, tool: tool_name }

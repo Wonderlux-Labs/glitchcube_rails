@@ -1,0 +1,30 @@
+awtrix_clear_apps:
+  alias: "AWTRIX Clear All Apps"
+  description: "Clear all custom AWTRIX apps"
+  sequence:
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: location
+        text: ""
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: weather
+        text: ""
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: hey_glitch
+        text: ""
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: status
+        text: ""
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: interstitial
+        text: ""
+  mode: single

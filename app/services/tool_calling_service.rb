@@ -144,12 +144,17 @@ class ToolCallingService
     async_actions = []
 
     results.each do |tool_name, result|
-      if result[:async]
+      # Use consistent string key access
+      async = HashUtils.get(result, "async") || false
+      success = HashUtils.get(result, "success") || false
+      error = HashUtils.get(result, "error")
+      
+      if async
         async_actions << humanize_tool_name(tool_name)
-      elsif result[:success]
+      elsif success
         successes << humanize_tool_name(tool_name)
       else
-        failures << "#{humanize_tool_name(tool_name)} (#{result[:error]})"
+        failures << "#{humanize_tool_name(tool_name)} (#{error})"
       end
     end
 
@@ -182,8 +187,6 @@ class ToolCallingService
       "setting a light effect"
     when "get_light_state"
       "checking light status"
-    when "list_light_effects"
-      "listing available effects"
     when "play_music"
       "playing music"
     when "display_notification"
@@ -203,44 +206,54 @@ class ToolCallingService
     validation_errors = []
 
     results.each do |tool_name, result|
-      if result.is_a?(Hash) && !result[:success]
-
-        # Handle control_effects validation errors specifically
-        if tool_name == "control_effects" && result[:error]&.include?("Unknown effect:")
-          validation_errors << {
-            tool: tool_name,
-            error: result[:error],
-            available_options: result[:available_effects]
-          }
-        # Handle other validation errors from tool executor
-        elsif result[:error] == "Validation failed" || result[:details]&.any?
-          validation_errors << {
-            tool: tool_name,
-            error: result[:details]&.first || result[:error],
-            details: result[:details]
-          }
-        # Handle mode_control validation errors
-        elsif tool_name == "mode_control" && (result[:error]&.include?("Unknown mode:") || result[:error]&.include?("Invalid action:"))
-          validation_errors << {
-            tool: tool_name,
-            error: result[:error],
-            available_options: result[:available_modes] || result[:available_actions]
-          }
-        # Handle light effect validation errors
-        elsif tool_name == "set_light_effect" && result[:error]&.include?("not available")
-          validation_errors << {
-            tool: tool_name,
-            error: result[:error],
-            available_options: result[:available_effects]
-          }
-        # Handle get_light_state validation errors
-        elsif tool_name == "get_light_state" && result[:error]&.include?("not a cube light")
-          validation_errors << {
-            tool: tool_name,
-            error: result[:error],
-            available_options: result[:available_lights]
-          }
-        end
+      next unless result.is_a?(Hash)
+      
+      # Use consistent string key access
+      success = HashUtils.get(result, "success")
+      error = HashUtils.get(result, "error")
+      details = HashUtils.get(result, "details")
+      available_effects = HashUtils.get(result, "available_effects")
+      available_modes = HashUtils.get(result, "available_modes")
+      available_actions = HashUtils.get(result, "available_actions")
+      available_lights = HashUtils.get(result, "available_lights")
+      
+      next if success
+      
+      # Handle control_effects validation errors specifically
+      if tool_name == "control_effects" && error&.include?("Unknown effect:")
+        validation_errors << {
+          tool: tool_name,
+          error: error,
+          available_options: available_effects
+        }
+      # Handle other validation errors from tool executor
+      elsif error == "Validation failed" || details&.any?
+        validation_errors << {
+          tool: tool_name,
+          error: details&.first || error,
+          details: details
+        }
+      # Handle mode_control validation errors
+      elsif tool_name == "mode_control" && (error&.include?("Unknown mode:") || error&.include?("Invalid action:"))
+        validation_errors << {
+          tool: tool_name,
+          error: error,
+          available_options: available_modes || available_actions
+        }
+      # Handle light effect validation errors
+      elsif tool_name == "set_light_effect" && error&.include?("not available")
+        validation_errors << {
+          tool: tool_name,
+          error: error,
+          available_options: available_effects
+        }
+      # Handle get_light_state validation errors
+      elsif tool_name == "get_light_state" && error&.include?("not a cube light")
+        validation_errors << {
+          tool: tool_name,
+          error: error,
+          available_options: available_lights
+        }
       end
     end
 

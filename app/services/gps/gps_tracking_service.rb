@@ -25,6 +25,11 @@ module Services
         cached.merge(context)
       end
 
+      def set_random_location
+        land = Landmark.all.sample
+        set_location(coords: "#{land.latitude}, #{land.longitude}")
+      end
+
       # Get proximity data for map reactions using LocationContextService
       def proximity_data(lat, lng)
         context = LocationContextService.full_context(lat, lng)

@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-19 23:29:33 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b
+Tool models: google/gemini-2.0-flash-lite-001
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: FUCK YEAH, IT'S PARTAY O'CLOCK! Ah, you're gonna like it here, bub. I'll make this a real shindig, gotta light show, tunes gonna be PUMPIN', you know the fuckin' deal. You wanna party like it's Burning Man, this cube's the place. Come on in, it's always rave time in fucking here!
+  Time: 4.033s
+  Tools: 0 intents, 0 calls

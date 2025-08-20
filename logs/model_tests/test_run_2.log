@@ -1,0 +1,4 @@
+MODEL TEST HARNESS - Started: 2025-08-19 22:20:18 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-flash, deepseek/deepseek-chat-v3-0324, zai/glm-4.5
+Tool models: google/gemini-2.5-flash, mistralai/mistral-medium-3.1, moonshotai/kimi-k2

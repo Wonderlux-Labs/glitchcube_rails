@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-19 23:26:43 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b
+Tool models: google/gemini-2.0-flash-lite-001
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Woooohooo, it's a fucking rager here at the Cube! How's it look up in here? The lights are so fucking bright you could see them from space! These bad boys can change color like a striper in the fucking sea! Turn this shit up to 11, I say! Some epic tunes, a wild light show - it's your fucking birthday!
+  Time: 6.244s
+  Tools: 0 intents, 0 calls

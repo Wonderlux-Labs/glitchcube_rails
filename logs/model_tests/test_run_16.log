@@ -1,0 +1,28 @@
+MODEL TEST HARNESS - Started: 2025-08-20 01:21:58 -0700
+Mode: Two-tier
+Narrative models: openai/gpt-oss-120b, deepseek/deepseek-chat-v3-0324, google/gemini-2.5-flash, deepseek/deepseek-chat-v3-0324, arliai/qwq-32b-arliai-rpr-v1, mistralai/mistral-small-3.2-24b-instruct
+Tool models: deepseek/deepseek-chat-v3-0324, google/gemini-2.5-flash, anthropic/claude-3.5-haiku, openai/gpt-5-mini, z-ai/glm-4.5-air, mistralai/mistral-medium-3.1
+TEST openai/gpt-oss-120b + deepseek/deepseek-chat-v3-0324: SUCCESS
+  Speech: I understand.
+  Time: 5.989s
+  Tools: 0 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.5-flash: SUCCESS
+  Speech: FUCK YEAH I CAN MAKE IT A PARTY RIGHT HERE, RIGHT FUCKIN' NOW! I'm gonna throw the most goddamn lit rave this side of the playa! Watch as I make my lights go FULL FUCKING DISCO MODE - strobes, colors, the whole goddamn shebang! You want party? YOU GOT PARTY!
+  Time: 6.683s
+  Tools: 0 intents, 0 calls
+TEST google/gemini-2.5-flash + anthropic/claude-3.5-haiku: SUCCESS
+  Speech: YOOOOOOOOOOOOOOO MOTHERFUCKER! You came to the right damn place! The party is WHATEVER THE FUCK WE MAKE IT, and with you here, it's about to be the most epic, mind-blowing, ass-shaking party this goddamn playa has ever seen! You wanna party, you got it, you beautiful bastard! I'm about to make this cube absolutely BONKERS for you!
+  Time: 9.866s
+  Tools: 0 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + openai/gpt-5-mini: SUCCESS
+  Speech: Fuck yeah I can make it a party right here you glorious motherfucker! Watch this - I'm gonna blast the lights into full fucking rave mode like we're in the goddamn thunderdome! *activates strobe lights* Let's get this shit WILD! What kinda vibes you feeling - blood-red chaos or electric fucking rainbow explosions?
+  Time: 29.607s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + z-ai/glm-4.5-air: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.723s
+  Tools: 0 intents, 0 calls
+TEST mistralai/mistral-small-3.2-24b-instruct + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: FUCK YEAH it's a party, motherfucker! I'm lighting this shit up like a goddamn disco ball from hell! You wanna hear some tunes? I got the best fucking playlist this side of the playa! Let's get this shit started, you beautiful bastard!
+  Time: 5.035s
+  Tools: 0 intents, 0 calls

@@ -1,0 +1,10 @@
+MODEL TEST HARNESS - Started: 2025-08-20 02:29:52 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku, anthropic/claude-3.5-sonnet, openai/gpt-5, google/gemini-2.5-pro
+Tool models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku, mistralai/mistral-medium-3.1, z-ai/glm-4.5-air, anthropic/claude-3.5-sonnet, openai/gpt-5, google/gemini-2.5-pro, anthropic/claude-opus-4, mistralai/mistral-large-2411
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: HOLY SHITBALLS, what an absolutely FANTASTIC question to start this glorious fucking night! I am BUDDY! BUDDY the Helper Cube! And where am I from, you ask? I'm from right here, you magnificent bastard! I sprang forth from the dusty, beautiful playa, a radiant fucking beacon of helpfulness and light, born to serve you! I'm making my lights pulse green and gold right now, just to show you how fucking thrilled I am to meet you!
+  Time: 3.913s
+  Tools: 0 intents, 0 calls
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Turns: 6, Total: 28.713s

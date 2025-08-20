@@ -24,69 +24,49 @@ class ConversationOrchestrator
       extra_context: enhanced_context
     )
 
-    # PHASE 1: Check for previous pending tools and inject results
-    previous_results = check_and_clear_pending_tools(@conversation)
-    if previous_results.any?
-      inject_tool_results_into_messages(prompt_data, previous_results)
+    # PHASE 1: Check for previous HA agent results and inject them
+    ha_results = check_and_clear_ha_results(@conversation)
+    if ha_results.any?
+      inject_ha_results_into_messages(prompt_data, ha_results)
     end
 
     Rails.logger.info "🎭 Using persona: #{current_persona}"
 
-    # Check if two-tier mode is enabled
-    if two_tier_mode_enabled?
-      Rails.logger.info "🏗️ Two-tier mode enabled - using structured output"
+    Rails.logger.info "🎭 Using structured output with tool intentions"
 
-      # Prepare messages for LLM
-      messages = [
-        { role: "system", content: prompt_data[:system_prompt] }
-      ]
-      messages.concat(prompt_data[:messages]) if prompt_data[:messages].any?
-      messages << { role: "user", content: @message }
+    # Prepare messages for LLM
+    messages = [
+      { role: "system", content: prompt_data[:system_prompt] }
+    ]
+    messages.concat(prompt_data[:messages]) if prompt_data[:messages].any?
+    messages << { role: "user", content: @message }
 
-      # Call LLM with structured output (no tools)
-      response = LlmService.call_with_structured_output(
-        messages: messages,
-        response_format: Schemas::NarrativeResponseSchema.schema,
-        model: determine_model_for_conversation
-      )
+    # Call LLM with structured output (no direct tool calls)
+    response = LlmService.call_with_structured_output(
+      messages: messages,
+      response_format: Schemas::NarrativeResponseSchema.schema,
+      model: determine_model_for_conversation
+    )
 
-      sync_results = execute_tool_intents(response.structured_output)
-
-      # Initialize tool_analysis for two-tier mode (needed for later processing)
-      tool_analysis = {
-        sync_tools: [],
-        async_tools: [],
-        query_tools: [],
-        action_tools: []
-      }
-    else
-      Rails.logger.info "🛠️ Legacy mode - using tool calling"
-      Rails.logger.info "🛠️ Available tools: #{prompt_data[:tools]&.map(&:name)&.join(', ')}"
-
-      # Call OpenRouter with tools enabled
-      response = call_openrouter_with_tools(prompt_data)
-
-      # Categorize tool calls
-      tool_analysis = Tools::Registry.categorize_tool_calls(response.tool_calls || [])
-
-      Rails.logger.info "🔧 Tool analysis: #{tool_analysis[:sync_tools].length} sync, #{tool_analysis[:async_tools].length} async, #{tool_analysis[:query_tools].length} query, #{tool_analysis[:action_tools].length} action"
-
-      # Execute sync tools immediately
-      sync_results = execute_sync_tools(tool_analysis[:sync_tools])
+    # Process tool intentions asynchronously via HA conversation agent
+    sync_results = {}
+    if response.structured_output&.dig("tool_intents")&.any?
+      Rails.logger.info "🏠 Found #{response.structured_output['tool_intents'].length} tool intentions, delegating to HA agent"
+      delegate_to_ha_agent(response.structured_output["tool_intents"])
     end
+
+    # No direct tool analysis needed - everything goes through HA
+    tool_analysis = {
+      sync_tools: [],
+      async_tools: [],
+      query_tools: [],
+      action_tools: []
+    }
 
     # Generate final AI response incorporating sync tool results
     ai_response = generate_ai_response(prompt_data, response, sync_results)
 
-    # Queue async tools for background execution
-    queue_async_tools(tool_analysis[:async_tools], ai_response[:id])
-
-    # Store pending tools for next turn
-    if tool_analysis[:async_tools].any?
-      store_pending_tools(@conversation, tool_analysis[:async_tools])
-    end
-
-    # Store conversation log
+    # Store conversation log (no tool analysis needed)
     store_conversation_log(@conversation, ai_response, sync_results, tool_analysis)
 
     # Return formatted response for Home Assistant
@@ -108,7 +88,7 @@ class ConversationOrchestrator
 
     if existing_conversation&.conversation_logs&.any?
       last_message_time = existing_conversation.conversation_logs.maximum(:created_at)
-      if last_message_time && last_message_time < 3.minutes.ago
+      if last_message_time && last_message_time < 5.minutes.ago
         Rails.logger.info "🕒 Session #{@session_id} is stale (last message: #{last_message_time}), ending and creating memories"
 
         # End the stale conversation (memories will be created by batch job)
@@ -183,15 +163,33 @@ class ConversationOrchestrator
     Rails.configuration.default_ai_model
   end
 
-  def two_tier_mode_enabled?
-    Rails.configuration.try(:two_tier_tools_enabled) || false
+  def delegate_to_ha_agent(tool_intents)
+    Rails.logger.info "🏠 Delegating #{tool_intents.length} tool intentions to HA conversation agent"
+    
+    # Format intentions for HA agent
+    intent_descriptions = tool_intents.map do |intent|
+      "#{intent['tool']}: #{intent['intent']}"
+    end.join("; ")
+    
+    # Create a request that includes context
+    ha_request = "User asked: \"#{@message}\". Please execute: #{intent_descriptions}"
+    
+    Rails.logger.info "🤖 Sending to HA agent: #{ha_request}"
+    
+    # Send to HA conversation agent asynchronously
+    HaAgentJob.perform_later(
+      request: ha_request,
+      tool_intents: tool_intents,
+      session_id: @session_id,
+      conversation_id: @conversation.id,
+      user_message: @message
+    )
   end
 
-
   def execute_tool_intents(structured_output)
-    return {} unless structured_output&.dig("tool_intents")&.any?
-
-    tool_intents = structured_output["tool_intents"]
+    # Use HashUtils for consistent key access (handles both string and symbol keys)
+    tool_intents = HashUtils.get(structured_output, "tool_intents")
+    return {} unless tool_intents&.any?
 
     Rails.logger.info "🎭 Processing #{tool_intents.length} tool intents from narrative LLM"
 
@@ -212,9 +210,17 @@ class ConversationOrchestrator
 
       result = tool_calling_service.execute_intent(combined_intent, { persona: CubePersona.current_persona.to_s })
 
-      Rails.logger.info "✅ All intents processed: #{result[:success] ? 'success' : 'failed'}"
+      # Handle both String returns (success) and Hash returns (with success flag)
+      if result.is_a?(String)
+        wrapped_result = { success: true, natural_response: result }
+        Rails.logger.info "✅ All intents processed: success (natural response)"
+      else
+        wrapped_result = result
+        success = HashUtils.get(result, "success") || false
+        Rails.logger.info "✅ All intents processed: #{success ? 'success' : 'failed'}"
+      end
 
-      { "all_intents" => result }
+      { "all_intents" => wrapped_result }
 
     rescue StandardError => e
       Rails.logger.error "❌ Tool intents execution failed: #{e.message}"
@@ -241,14 +247,18 @@ class ConversationOrchestrator
       begin
         # For tool_intent, pass session and conversation context
         if tool_name == "tool_intent"
-          arguments_with_context = arguments.symbolize_keys.merge(
-            session_id: @session_id,
-            conversation_id: @conversation&.id,
-            persona: current_persona
+          # Use HashUtils for safe key handling
+          args = HashUtils.stringify_keys(arguments)
+          arguments_with_context = args.merge(
+            "session_id" => @session_id,
+            "conversation_id" => @conversation&.id,
+            "persona" => CubePersona.current_persona.to_s
           )
-          result = Tools::Registry.execute_tool(tool_name, **arguments_with_context)
+          result = Tools::Registry.execute_tool(tool_name, **HashUtils.symbolize_keys(arguments_with_context))
         else
-          result = Tools::Registry.execute_tool(tool_name, **arguments.symbolize_keys)
+          # Convert string keys to symbols for keyword arguments
+          symbol_args = arguments.transform_keys(&:to_sym)
+          result = Tools::Registry.execute_tool(tool_name, **symbol_args)
         end
         results[tool_name] = result
       rescue StandardError => e
@@ -264,8 +274,8 @@ class ConversationOrchestrator
 
     # Extract narrative elements from response - handle both structured and legacy modes
     if openrouter_response.structured_output
-      # Two-tier mode: use structured output directly
-      structured_data = openrouter_response.structured_output
+      # Two-tier mode: use structured output directly with consistent key access
+      structured_data = HashUtils.stringify_keys(openrouter_response.structured_output)
       speech_text = structured_data["speech_text"]
       continue_conversation = structured_data["continue_conversation"] || false
 
@@ -458,6 +468,32 @@ class ConversationOrchestrator
     "Alright, I'm on it. Let me handle that for you."
   end
 
+  def check_and_clear_ha_results(conversation)
+    return [] unless conversation.metadata_json
+
+    pending_results = conversation.metadata_json["pending_ha_results"] || []
+    unprocessed_results = pending_results.reject { |r| r["processed"] }
+    
+    return [] if unprocessed_results.empty?
+
+    Rails.logger.info "🏠 Found #{unprocessed_results.length} unprocessed HA results"
+
+    # Mark all as processed
+    updated_results = pending_results.map do |result|
+      result["processed"] = true if !result["processed"]
+      result
+    end
+
+    # Update conversation metadata
+    updated_metadata = conversation.metadata_json.merge(
+      "pending_ha_results" => updated_results
+    )
+    conversation.update!(metadata_json: updated_metadata)
+
+    # Return results for injection
+    unprocessed_results
+  end
+
   def check_and_clear_pending_tools(conversation)
     pending = conversation.flow_data_json&.dig("pending_tools") || []
     return [] if pending.blank?
@@ -476,6 +512,49 @@ class ConversationOrchestrator
     conversation.update!(flow_data_json: {})
 
     results
+  end
+
+  def inject_ha_results_into_messages(prompt_data, ha_results)
+    return if ha_results.blank?
+
+    Rails.logger.info "🏠 Injecting #{ha_results.length} HA results into conversation"
+
+    ha_results.each do |result|
+      # Format result summary
+      if result["error"]
+        result_text = "System note: You tried to execute '#{format_tool_intents(result['tool_intents'])}' but it failed: #{result['error']}"
+      else
+        success_items = result.dig("ha_response", "response", "data", "success") || []
+        failed_items = result.dig("ha_response", "response", "data", "failed") || []
+        
+        success_summary = success_items.map { |item| item["name"] || item["entity_id"] }.join(", ")
+        failed_summary = failed_items.map { |item| "#{item['name'] || item['entity_id']} (#{item['error']})" }.join(", ")
+        
+        parts = []
+        parts << "#{success_summary} completed" if success_summary.present?
+        parts << "#{failed_summary} failed" if failed_summary.present?
+        
+        result_text = "System note: You intended to #{format_tool_intents(result['tool_intents'])}. Result: #{parts.join(', ')}"
+      end
+
+      system_msg = {
+        role: "system",
+        content: result_text
+      }
+
+      # Insert right before the current user message
+      prompt_data[:messages].insert(-1, system_msg)
+      
+      Rails.logger.info "🔄 Injected: #{result_text}"
+    end
+  end
+
+  def format_tool_intents(tool_intents)
+    return "unknown action" unless tool_intents.is_a?(Array)
+    
+    tool_intents.map do |intent|
+      "#{intent['intent']}"
+    end.join(" and ")
   end
 
   def inject_tool_results_into_messages(prompt_data, previous_results)
@@ -565,12 +644,15 @@ class ConversationOrchestrator
   end
 
   def amend_speech_with_query_results(original_speech, query_results, prompt_data)
-    # Build query results summary
+    # Build query results summary with safe key access
     results_summary = query_results.map do |tool_name, result|
-      if result[:success]
-        "#{tool_name}: #{result[:message] || result[:data] || 'completed'}"
+      success = HashUtils.get(result, "success")
+      if success
+        message = HashUtils.get(result, "message") || HashUtils.get(result, "data") || 'completed'
+        "#{tool_name}: #{message}"
       else
-        "#{tool_name}: #{result[:error] || 'failed'}"
+        error = HashUtils.get(result, "error") || 'failed'
+        "#{tool_name}: #{error}"
       end
     end.join(", ")
 

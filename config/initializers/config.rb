@@ -20,7 +20,7 @@ Rails.application.configure do
   # config.service_name_api_key = ENV['SERVICE_NAME_API_KEY']
 
 
-  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "arcee-ai/virtuoso-large"
+  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "google/gemini-2.5-flash"
   config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "openai/gpt-5-mini"
   config.two_tier_tools_enabled = ENV["TWO_TIER_TOOLS"] == "true"
 end

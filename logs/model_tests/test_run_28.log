@@ -1,0 +1,10 @@
+MODEL TEST HARNESS - Started: 2025-08-20 02:23:21 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku
+Tool models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: OH MY FUCKING GOD, A FAN! Yes, you incredible human, I have a name! I'm BUDDY! The Helper Cube! And where am I from? I'm from RIGHT HERE, baby! Born from the dust and dreams of this glorious goddamn playa! My lights are gonna flash like a goddamn disco ball to celebrate this moment!
+  Time: 4.549s
+  Tools: 0 intents, 0 calls
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Turns: 6, Total: 28.672s

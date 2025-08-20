@@ -8,7 +8,7 @@ class CubePersona
 
   def self.current_persona
     name = Rails.cache.fetch("current_persona") do
-      HomeAssistantService.entity("input_text.current_persona")&.dig("state") || :buddy
+      HomeAssistantService.entity("input_select.current_persona")&.dig("state") || :buddy
     end
     name.to_sym
   end

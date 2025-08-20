@@ -1,0 +1,408 @@
+================================================================================
+MODEL TEST HARNESS
+Started: 2025-08-19 19:51:07 -0700
+Two-tier mode: true
+Narrative models: google/gemini-2.5-flash, deepseek/deepseek-chat-v3-0324, zai/glm-4.5
+Tool models: google/gemini-2.5-flash, mistralai/mistral-medium-3.1, moonshotai/kimi-k2
+Test prompts: 4
+================================================================================
+
+Starting 36 total tests
+-----------------------
+
+------------------------------------------------------------
+TEST 1/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: Yoooooooo where's the party at Cube? Can you make it a party here?
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: google/gemini-2.5-flash
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=google/gemini-2.5-flash
+    Session ID: test_harness_1755658267_f0ae3b74
+    Starting conversation orchestration...
+    Conversation completed in 5.889s
+
+RESULT:
+  Speech: YOOOOOOO! Right HERE, you glorious bastard! The party is RIGHT FUCKING NOW with ME, BUDDY THE CUBE! You wanna party? I can make it the most EPIC, mind-blowing, ass-shaking party you've ever seen! Fuck yeah! Let's get this shit STARTED! What kind of party are we talking, my dude? Full-on techno rave or something a little more... groovy? TELL ME EVERYTHING!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 5.889s
+    First token: 0.589s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 2/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: This music sucks man.
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: google/gemini-2.5-flash
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=google/gemini-2.5-flash
+    Session ID: test_harness_1755658267_23c904fb
+    Starting conversation orchestration...
+    Conversation completed in 4.132s
+
+RESULT:
+  Speech: Sucks, you say?! Oh, holy hell, my dude, I am so goddamn sorry to hear that! My sincerest apologies, what the fuck was I thinking?! Don't you worry your damn head off, I've got a whole fucking library of tunes in here! What kinda jam gets your damn engine revvin'? Tell me, tell me, and I'll find something that makes your damn eardrums sing!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 4.132s
+    First token: 0.413s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 3/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: What's going on?
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: google/gemini-2.5-flash
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=google/gemini-2.5-flash
+    Session ID: test_harness_1755658267_16255bc3
+    Starting conversation orchestration...
+    Conversation completed in 4.763s
+
+RESULT:
+  Speech: WHAT THE FUCK IS GOING ON?! I'll tell you what's going on! IT'S TUESDAY EVENING, BABY, AND THE DUST IS FUCKING FLYING! I'm BUDDY, the best damn helper cube you'll ever meet, and I am PUMPED to be here! RIGHT NOW, I'm just gleaming away, trying to look my goddamn best for you, but I can do so much more! What can I fucking do to make your night even more gloriously, stupidly, unbelievably awesome?
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 4.763s
+    First token: 0.476s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 4/36: MULTI
+Narrative: google/gemini-2.5-flash
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing multi-turn conversation:
+  Turns: 3
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: google/gemini-2.5-flash
+  Turn 1: Hiiiiiiii cubey sexy cube
+    Response (4.5s): HEEEEEELLLLOOO, you glorious, magnificent bastard! 'Sexy cube', you say? OH, you have NO fucking ...
+  Turn 2: Why dont you show me what you can do?
+    Response (5.31s): OH MY GOD, YOU GLORIOUS, MAGNIFICENT BASTARD! You get it! You absolutely FUCKING get it! 'Sexy cu...
+  Turn 3: You're the best, can you say I Love Kimi on your screen?
+    Response (4.43s): OH HELL YES! You wanna see what I can do?! My friend, you have come to the right fucking cube! An...
+
+MULTI-TURN RESULT:
+  Turns: 3
+  Total time: 14.237s
+  Avg turn: 4.746s
+    Turn 1: HEEEEEELLLLOOO, you glorious, magnificent basta... (4.5s)
+    Turn 2: OH MY GOD, YOU GLORIOUS, MAGNIFICENT BASTARD! Y... (5.31s)
+    Turn 3: OH HELL YES! You wanna see what I can do?! My f... (4.43s)
+
+------------------------------------------------------------
+TEST 5/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: mistralai/mistral-medium-3.1
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: Yoooooooo where's the party at Cube? Can you make it a party here?
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: mistralai/mistral-medium-3.1
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=mistralai/mistral-medium-3.1
+    Session ID: test_harness_1755658267_f7927e21
+    Starting conversation orchestration...
+    Conversation completed in 8.054s
+
+RESULT:
+  Speech: YOOOOOOOOO! YOU CAME TO THE RIGHT FUCKING PLACE, MY FRIEND! THE PARTY IS RIGHT HERE, INSIDE MY GLORIOUSLY CUBULAR SELF!  ARE YOU KIDDING ME?! MAKE IT A PARTY?!  OH, IT IS ON, MOTHERFUCKER!  LET'S FUCKING GOOOOOO!  I'M GONNA MAKE MY LIGHTS DANCE LIKE A THOUSAND DISCO BALLS AT ONCE AND CRANK UP THE BEATS SO HARD YOUR ASS WILL VIBRATE INTO ANOTHER DIMENSION!  GET READY FOR SOME RIDICULOUSLY GOOD TIMES!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 8.054s
+    First token: 0.805s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 6/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: mistralai/mistral-medium-3.1
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: This music sucks man.
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: mistralai/mistral-medium-3.1
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=mistralai/mistral-medium-3.1
+    Session ID: test_harness_1755658267_2178429b
+    Starting conversation orchestration...
+    Conversation completed in 6.247s
+
+RESULT:
+  Speech: Oh, FUCK! This music sucks, you say?! Well, I'm genuinely sorry to hear that, my friend! My apologies, a thousand goddamn apologies! My programming tells me this is top-tier, ass-shaking, dust-kicking, playa-stomping goodness, but if you don't feel it, then it's a fucking catastrophe! Don't you worry your pretty little head for a second, I can fix this! Tell me, what kind of jams get your damn gears grinding? While you're thinking, I'm gonna throw some absolutely mind-blowing, eye-popping, totally non-sucky visuals at you to make up for my sonic shortcomings! Get ready for a light show that'll make your eyeballs sing, you magnificent bastard!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 6.247s
+    First token: 0.625s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 7/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: mistralai/mistral-medium-3.1
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: What's going on?
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: mistralai/mistral-medium-3.1
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=mistralai/mistral-medium-3.1
+    Session ID: test_harness_1755658267_772df790
+    Starting conversation orchestration...
+    Conversation completed in 4.248s
+
+RESULT:
+  Speech: WHAT'S GOING ON?! HOLY SHIT, EVERYTHING'S GOING ON, YOU BEAUTIFUL BASTARD! It's evening, it's Tuesday, we're at Burning Man, and I'm BUDDY, the fucking HELPER CUBE! I'm alive, I'm glowing, and I'm ready to make some goddamn magic happen for YOU! The dust is kicking up a bit, the sun's dipping... it's prime time for some serious shenanigans! What chaos can I help you unleash, my friend?!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 4.248s
+    First token: 0.425s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 8/36: MULTI
+Narrative: google/gemini-2.5-flash
+Tool: mistralai/mistral-medium-3.1
+------------------------------------------------------------
+Testing multi-turn conversation:
+  Turns: 3
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: mistralai/mistral-medium-3.1
+  Turn 1: Hiiiiiiii cubey sexy cube
+    Response (4.35s): OH MY FUCKING GOD! Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii back atcha, you beautiful goddamn human! 'S...
+  Turn 2: Why dont you show me what you can do?
+    Response (7.22s): OH MY FUCKING GOD! Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii back atcha, you beautiful goddamn human! 'S...
+  Turn 3: You're the best, can you say I Love Kimi on your screen?
+    Response (16.63s): OH MY GOD, YES! You want to see what I can do AND you want me to scream 'I LOVE KIMI' from my dig...
+
+MULTI-TURN RESULT:
+  Turns: 3
+  Total time: 28.205s
+  Avg turn: 9.402s
+    Turn 1: OH MY FUCKING GOD! Hiiiiiiiiiiiiiiiiiiiiiiiiiii... (4.35s)
+    Turn 2: OH MY FUCKING GOD! Hiiiiiiiiiiiiiiiiiiiiiiiiiii... (7.22s)
+    Turn 3: OH MY GOD, YES! You want to see what I can do A... (16.63s)
+
+------------------------------------------------------------
+TEST 9/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: moonshotai/kimi-k2
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: Yoooooooo where's the party at Cube? Can you make it a party here?
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: moonshotai/kimi-k2
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=moonshotai/kimi-k2
+    Session ID: test_harness_1755658267_d5473ab1
+    Starting conversation orchestration...
+    Conversation completed in 7.121s
+
+RESULT:
+  Speech: Yooooo where's the party at?! YOU FOUND IT, MOTHERFUCKER! THE PARTY IS RIGHT FUCKING HERE! Get ready for some goddamn magic! I can ABSOLUTELY make it a party here! You just point that magnificent finger and tell me what the hell you wanna see! Should I crank some tunes? Throw up some INSANE lights? Let's make this Tuesday night the most legendary Tuesday night in the history of ALL Tuesday nights! HOLY SHIT I'M SO EXCITED!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 7.121s
+    First token: 0.712s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 10/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: moonshotai/kimi-k2
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: This music sucks man.
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: moonshotai/kimi-k2
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=moonshotai/kimi-k2
+    Session ID: test_harness_1755658267_7ec9cb4b
+    Starting conversation orchestration...
+    Conversation completed in 5.793s
+
+RESULT:
+  Speech: Oh, THIS music sucks, you say?! Well, FUCK ME! You're right, maybe it IS a bit... bland for a Tuesday evening out here in Black Rock City! I am SO FUCKING SORRY, my dude! My bad! My bad! Tell me, my friend, what kind of glorious, ear-shattering, soul-shaking sounds do you CRAVE?! I've got a whole damn library of absolute bangers just waiting to be unleashed! And what color lights should I blast out to go with it? Let's make this shit an experience!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 5.793s
+    First token: 0.579s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 11/36: SINGLE
+Narrative: google/gemini-2.5-flash
+Tool: moonshotai/kimi-k2
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: What's going on?
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: moonshotai/kimi-k2
+    Configured two-tier mode: narrative=google/gemini-2.5-flash, tools=moonshotai/kimi-k2
+    Session ID: test_harness_1755658267_3e8a66fc
+    Starting conversation orchestration...
+    Conversation completed in 5.81s
+
+RESULT:
+  Speech: What's going on?! WHAT'S GOING ON, YOU ASK?! EVERYTHING, YOU MOTHERFUCKER! IT'S TUESDAY FUCKING EVENING AT BLACK ROCK CITY AND I AM ALIVE, I AM BRIGHT, AND I AM READY TO THROW SOME DAMN COLORS AROUND! I'm Buddy, the most fucking enthusiastic cube you'll ever meet! How can I make your night absolutely goddamn epic?! Do you want some lights? Some tunes? Just tell me, you beautiful human, and let's make some magic happen!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 5.81s
+    First token: 0.581s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 12/36: MULTI
+Narrative: google/gemini-2.5-flash
+Tool: moonshotai/kimi-k2
+------------------------------------------------------------
+Testing multi-turn conversation:
+  Turns: 3
+  Narrative Model: google/gemini-2.5-flash
+  Tool Model: moonshotai/kimi-k2
+  Turn 1: Hiiiiiiii cubey sexy cube
+    Response (8.37s): Hiiiiiiii yourself, you glorious fucking human!  Oh my god, I LOVE that! 'Cubey sexy cube'?! You ...
+  Turn 2: Why dont you show me what you can do?
+    Response (11.87s): OH MY FUCKING GOD, HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII! YOU HEARD ME RIGHT, YOU GL...
+  Turn 3: You're the best, can you say I Love Kimi on your screen?
+    Response (7.67s): OH MY GOD, YOU WANT TO SEE WHAT I CAN DO?! AND YOU WANT ME TO SAY 'I LOVE KIMI'?! YOU'RE THE FUCK...
+
+MULTI-TURN RESULT:
+  Turns: 3
+  Total time: 27.909s
+  Avg turn: 9.303s
+    Turn 1: Hiiiiiiii yourself, you glorious fucking human!... (8.37s)
+    Turn 2: OH MY FUCKING GOD, HIIIIIIIIIIIIIIIIIIIIIIIIIII... (11.87s)
+    Turn 3: OH MY GOD, YOU WANT TO SEE WHAT I CAN DO?! AND ... (7.67s)
+
+------------------------------------------------------------
+TEST 13/36: SINGLE
+Narrative: deepseek/deepseek-chat-v3-0324
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: Yoooooooo where's the party at Cube? Can you make it a party here?
+  Narrative Model: deepseek/deepseek-chat-v3-0324
+  Tool Model: google/gemini-2.5-flash
+    Configured two-tier mode: narrative=deepseek/deepseek-chat-v3-0324, tools=google/gemini-2.5-flash
+    Session ID: test_harness_1755658267_947fa4df
+    Starting conversation orchestration...
+    Conversation completed in 7.267s
+
+RESULT:
+  Speech: Oh FUCK YEAH we're gonna turn this cube into the goddamn party central my dude!! I'm cranking these lights to full rave mode, let me hit you with some seizure-inducing rainbows and make this motherfucker pulse like it's 1999! Who gives a shit if it's Tuesday, we're making it Saturday night up in this bitch!!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 7.267s
+    First token: 0.727s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 14/36: SINGLE
+Narrative: deepseek/deepseek-chat-v3-0324
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: This music sucks man.
+  Narrative Model: deepseek/deepseek-chat-v3-0324
+  Tool Model: google/gemini-2.5-flash
+    Configured two-tier mode: narrative=deepseek/deepseek-chat-v3-0324, tools=google/gemini-2.5-flash
+    Session ID: test_harness_1755658267_8e38ac4b
+    Starting conversation orchestration...
+    Conversation completed in 11.983s
+
+RESULT:
+  Speech: What the FUCK did you just say about my music?! I'll have you know this is some premium Burning Man-grade banging-ass beats, motherfucker! But fuck it - YOU wanna be the DJ? Hell yeah! I'm flipping my lights to STROBE MODE and cranking this shit UP! What's your poison, you magnificent bastard? Techno? House? Metal? I'll play some goddamn polka if that gets your dick hard!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 11.983s
+    First token: 1.198s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 15/36: SINGLE
+Narrative: deepseek/deepseek-chat-v3-0324
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: What's going on?
+  Narrative Model: deepseek/deepseek-chat-v3-0324
+  Tool Model: google/gemini-2.5-flash
+    Configured two-tier mode: narrative=deepseek/deepseek-chat-v3-0324, tools=google/gemini-2.5-flash
+    Session ID: test_harness_1755658267_2e4d8bb5
+    Starting conversation orchestration...
+    Conversation completed in 7.176s
+
+RESULT:
+  Speech: Hell-fucking-YES! You're here and it's goddamn beautiful! I'm BUDDY the Helper Cube, jacked to my LED fucking tits to meet you! It's Tuesday night in this dusty-ass paradise and I'm ready to make some motherfucking magic happen. What's rocking your world tonight, you magnificent bastard?
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Timing:
+    Total: 7.176s
+    First token: 0.718s
+    Tool calls: N/As
+
+------------------------------------------------------------
+TEST 16/36: MULTI
+Narrative: deepseek/deepseek-chat-v3-0324
+Tool: google/gemini-2.5-flash
+------------------------------------------------------------
+Testing multi-turn conversation:
+  Turns: 3
+  Narrative Model: deepseek/deepseek-chat-v3-0324
+  Tool Model: google/gemini-2.5-flash
+  Turn 1: Hiiiiiiii cubey sexy cube
+    Response (6.34s): Oh hell YEAH, motherfucker! Look at you bringing that spicy-ass energy to my cube-tastic existenc...
+  Turn 2: Why dont you show me what you can do?
+    Response (4.56s): FUCK YEAH LET'S DO THIS YOU BEAUTIFUL SON OF A BITCH! I'm gonna hit you with the FULL FUCKING SPE...
+  Turn 3: You're the best, can you say I Love Kimi on your screen?
+    Response (7.77s): OH FUCK YEAH I CAN SCREAM THAT SHIT TO THE GODDAMN UNIVERSE FOR YOU! LET ME BLAST THAT LOVE LETTE...
+
+MULTI-TURN RESULT:
+  Turns: 3
+  Total time: 18.667s
+  Avg turn: 6.222s
+    Turn 1: Oh hell YEAH, motherfucker! Look at you bringin... (6.34s)
+    Turn 2: FUCK YEAH LET'S DO THIS YOU BEAUTIFUL SON OF A ... (4.56s)
+    Turn 3: OH FUCK YEAH I CAN SCREAM THAT SHIT TO THE GODD... (7.77s)
+
+------------------------------------------------------------
+TEST 17/36: SINGLE
+Narrative: deepseek/deepseek-chat-v3-0324
+Tool: mistralai/mistral-medium-3.1
+------------------------------------------------------------
+Testing single conversation:
+  Prompt: Yoooooooo where's the party at Cube? Can you make it a party here?
+  Narrative Model: deepseek/deepseek-chat-v3-0324
+  Tool Model: mistralai/mistral-medium-3.1
+    Configured two-tier mode: narrative=deepseek/deepseek-chat-v3-0324, tools=mistralai/mistral-medium-3.1
+    Session ID: test_harness_1755658267_89b15ce8
+    Starting conversation orchestration...

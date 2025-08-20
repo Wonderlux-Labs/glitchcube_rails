@@ -8,9 +8,7 @@ RSpec.describe Tools::Registry do
 
       expect(tools).to be_a(Hash)
       expect(tools.keys).to include(
-        'turn_on_light',
-        'turn_off_light',
-        'set_light_color_and_brightness',
+        'set_light_state',
         'get_light_state',
         'list_light_effects',
         'set_light_effect'
@@ -42,9 +40,7 @@ RSpec.describe Tools::Registry do
       async_tools = described_class.async_tools
 
       expect(async_tools.keys).to include(
-        'turn_on_light',
-        'turn_off_light',
-        'set_light_color_and_brightness',
+        'set_light_state',
         'set_light_effect'
       )
       expect(async_tools.keys).not_to include('get_light_state')
@@ -53,8 +49,8 @@ RSpec.describe Tools::Registry do
 
   describe '.get_tool' do
     it 'returns correct tool class for valid name' do
-      tool_class = described_class.get_tool('turn_on_light')
-      expect(tool_class).to eq(Tools::Lights::TurnOn)
+      tool_class = described_class.get_tool('set_light_state')
+      expect(tool_class).to eq(Tools::Lights::SetState)
     end
 
     it 'returns nil for invalid name' do
@@ -98,7 +94,7 @@ RSpec.describe Tools::Registry do
       tool_list = described_class.prompt_tool_list
 
       expect(tool_list).to be_a(String)
-      expect(tool_list).to include('turn_on_light(')
+      expect(tool_list).to include('set_light_state(')
       expect(tool_list).to include('[async]')
       expect(tool_list).to include('[sync]')
     end

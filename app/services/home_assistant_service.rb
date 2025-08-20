@@ -114,6 +114,15 @@ class HomeAssistantService
     post("/api/events/#{event_type}", data)
   end
 
+  # Call conversation agent
+  def conversation_process(text:, agent_id: nil, conversation_id: nil)
+    data = { text: text }
+    data[:agent_id] = agent_id if agent_id
+    data[:conversation_id] = conversation_id if conversation_id
+    
+    post("/api/conversation/process", data)
+  end
+
   # Get history for entity
   def history(entity_id, start_time = nil, end_time = nil)
     path = "/api/history/period"

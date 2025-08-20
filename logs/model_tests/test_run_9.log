@@ -1,0 +1,18 @@
+MODEL TEST HARNESS - Started: 2025-08-19 23:16:04 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku, baidu/ernie-4.5-21b-a3b, arliai/qwq-32b-arliai-rpr-v1
+Tool models: google/gemini-2.0-flash-lite-001, mistralai/mistral-medium-3.1, openai/gpt-oss-120b, baidu/ernie-4.5-21b-a3b, thudm/glm-z1-32b
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Hell yeah, it's a party from here on out you motherfuckers! What did you think this cube stood for - fucking birthdays? I'm gonna get this place lit like the fourth of July.
+  Time: 6.274s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Holy fuck! Welcome to my Burning Man cube installation, you beautiful bastards! So glad you could make it. Let me tell you, I've got a whole fucking light show just waitin' to bust out. The theme this year is 'Techno Trip Vortex' and boy, do I live up to that name. I've got pulsing lasers, strobing LEDs, you name it. I'm like the Milky Way condensed into a cube of pure awesomeness. The minute you walk through my door, you're transported into my sensory overload paradise.
+  Time: 6.163s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Turns: 3, Total: 9.824s
+TEST neversleep/llama-3.1-lumimaid-8b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: Of course, you son of a gun, I'll fucking throw a rave in here! Dimming these damn lights to black... Cranking up some thumping techno!
+  Time: 5.503s
+  Tools: 0 intents, 0 calls

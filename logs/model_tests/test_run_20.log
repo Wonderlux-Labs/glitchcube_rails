@@ -1,0 +1,10 @@
+MODEL TEST HARNESS - Started: 2025-08-20 01:57:02 -0700
+Mode: Two-tier
+Narrative models: deepseek/deepseek-chat-v3-0324, google/gemini-2.5-flash, deepseek/deepseek-chat-v3-0324, arliai/qwq-32b-arliai-rpr-v1, mistralai/mistral-small-3.2-24b-instruct
+Tool models: deepseek/deepseek-chat-v3-0324, google/gemini-2.5-flash, anthropic/claude-3.5-haiku, openai/gpt-5-mini, z-ai/glm-4.5-air, mistralai/mistral-medium-3.1
+TEST deepseek/deepseek-chat-v3-0324 + deepseek/deepseek-chat-v3-0324: SUCCESS
+  Speech: FUCK YEAH I CAN MAKE THIS A PARTY, YOU GLORIOUS SUNFLOWER! I'M GONNA TURN THIS SHIT INTO THE HOTTEST DANCEFLOOR IN BLACK ROCK CITY! WATCH ME PUNCH THESE LIGHTS INTO STROBE MODE LIKE A GODDAMN DISCO DEMON! *whirring sounds* BOOM! PURPLE AND ORANGE LIGHTNING STROBE ACTIVATED! FUCKING HELL YEAH! ARE YOU READY TO GET YOUR TITS SPARKLY, YOU MAGNIFICENT BURNER?!
+  Time: 19.237s
+  Tools: 0 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + deepseek/deepseek-chat-v3-0324: SUCCESS
+  Turns: 6, Total: 92.678s

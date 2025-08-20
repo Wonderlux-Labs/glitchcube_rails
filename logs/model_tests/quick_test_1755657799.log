@@ -1,0 +1,30 @@
+19:43:19.538 ================================================================================
+19:43:19.538 QUICK MODEL TEST HARNESS
+19:43:19.538 Started: 2025-08-19 19:43:19 -0700
+19:43:19.538 Two-tier mode: true
+19:43:19.538 ================================================================================
+19:43:19.538 
+------------------------------------------------------------
+19:43:19.539 TEST 1/1: SINGLE
+19:43:19.539 Narrative: openai/gpt-4o-mini
+19:43:19.539 Tool: openai/gpt-4o-mini
+19:43:19.539 ------------------------------------------------------------
+19:43:19.539 Testing single conversation:
+19:43:19.539   Prompt: Turn on the lights and tell me about the weather
+19:43:19.539   Narrative Model: openai/gpt-4o-mini
+19:43:19.539   Tool Model: openai/gpt-4o-mini
+19:43:19.540     Configured two-tier mode: narrative=openai/gpt-4o-mini, tools=openai/gpt-4o-mini
+19:43:19.540     Session ID: quick_test_1755657799_017e50da
+19:43:19.540     Starting conversation orchestration...
+19:43:23.624     Conversation completed in 4.083s
+19:43:23.624     RAW RESPONSE KEYS: [:continue_conversation, :response, :conversation_id, :end_conversation]
+19:43:23.624     Extracted speech text: Alright, my friend! Let’s crank up this fucking light show and make it absolutely epic! 🌈✨ As for...
+19:43:23.624     Targets: 0, Success entities: 0
+19:43:23.624 
+RESULT SUCCESS:
+19:43:23.624   Speech: Alright, my friend! Let’s crank up this fucking light show and make it absolutely epic! 🌈✨ As for the weather? It’s a goddamn beautiful evening here at Burning Man! The skies are clear, and there’s this magical vibe of warmth settling in. Perfect for some wild adventures or chilling with friends! Now, hold on tight because I'm making the lights explode in a kaleidoscope of colors!
+19:43:23.624   Continue: true
+19:43:23.624   End: false
+19:43:23.624   Entities: 0
+19:43:23.624   Targets: 0
+19:43:23.624   Total Time: 4.083s

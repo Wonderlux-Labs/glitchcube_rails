@@ -56,7 +56,11 @@ class LlmService
         Rails.logger.info "   Tool calls: #{response.tool_calls&.length || 0}"
         if response.tool_calls&.any?
           response.tool_calls.each_with_index do |tc, i|
-            Rails.logger.info "     [#{i+1}] #{tc.name}: #{tc.arguments}"
+            begin
+              Rails.logger.info "     [#{i+1}] #{tc.name}: #{tc.arguments}"
+            rescue OpenRouter::ToolCallError => e
+              Rails.logger.warn "     [#{i+1}] #{tc.name}: MALFORMED ARGUMENTS - #{e.message}"
+            end
           end
         end
         Rails.logger.info "📄 FULL RAW RESPONSE:"

@@ -1,7 +1,7 @@
 # app/services/tools/lights/set_effect.rb
 class Tools::Lights::SetEffect < Tools::BaseTool
   def self.description
-    "Set lighting effects on cube lights that support them. Call list_light_effects first to see available effects for each entity."
+    "Set lighting effects on cube lights that support them."
   end
 
   def self.narrative_desc
@@ -9,11 +9,29 @@ class Tools::Lights::SetEffect < Tools::BaseTool
   end
 
   def self.prompt_schema
-    "set_light_effect(entity_id: 'light.cube_inner', effect: 'Rainbow') - Set a lighting effect. Use list_light_effects to see all available effects."
+    begin
+      top_entity = HomeAssistantService.entity("light.cube_light_top")
+      inner_entity = HomeAssistantService.entity("light.cube_inner")
+
+      top_effects = top_entity&.dig("attributes", "effect_list")&.select { |e| e.downcase.include?("music") }&.sample(4) || []
+      other_top = top_entity&.dig("attributes", "effect_list")&.reject { |e| e.downcase.include?("music") }&.sample(4) || []
+      inner_effects = inner_entity&.dig("attributes", "effect_list")&.select { |e| e.downcase.include?("music") }&.sample(4) || []
+      other_inner = inner_entity&.dig("attributes", "effect_list")&.reject { |e| e.downcase.include?("music") }&.sample(4) || []
+
+      "set_light_effect(entity_id: 'light.cube_inner', effect: 'effect name') -
+
+      You must specify the light and effect name exactly, match case.
+      Available effects:
+      - light.cube_light_top: #{(top_effects + other_top).join(', ')}
+      - light.cube_inner: #{(inner_effects + other_inner).join(', ')}
+      No other lights support effects."
+    rescue
+      "set_light_effect(entity_id: 'light.cube_inner', effect: 'Rainbow') - Set a lighting effect on cube lights only"
+    end
   end
 
   def self.tool_type
-    :async # Light control happens after response
+    :async
   end
 
   def self.definition
@@ -27,7 +45,7 @@ class Tools::Lights::SetEffect < Tools::BaseTool
                enum: -> { Tools::Lights::SetEffect.available_entities }
 
         string :effect, required: true,
-               description: "Effect name to apply (use list_light_effects to see available options BEFORE you call!)"
+               description: "Effect name to apply"
       end
     end
   end

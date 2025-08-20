@@ -1,0 +1,23 @@
+awtrix_interstitial:
+  alias: "AWTRIX Interstitial Patterns"
+  description: "Displays random cool patterns and effects for visual breaks"
+  sequence:
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: interstitial
+        text: "{{ ['✨ GLITCH CUBE ✨', '🌀 VORTEX MODE 🌀', '⚡ ENERGY PULSE ⚡', '🔥 FIRE MATRIX 🔥', '🌈 RAINBOW FLOW 🌈', '💫 COSMIC DRIFT 💫'] | random }}"
+        icon: "{{ [7786, 2022, 7956, 7919, 7982, 1234] | random }}"
+        effect: "{{ ['BlinkyRainbow', 'ColorWipe', 'TheaterChase', 'Fireworks', 'Rain', 'Snake'] | random }}"
+        rainbow: "{{ [true, false] | random }}"
+        color: "{{ ['#FF0080', '#0080FF', '#80FF00', '#FF8000', '#8000FF', '#00FF80', '#FF0040', '#40FF00'] | random }}"
+        gradient: "{{ ['#FF0000#0000FF', '#00FF00#FF00FF', '#FFFF00#FF0080', '#0080FF#FF8000', '#8000FF#00FF80', '#FF4000#0040FF'] | random }}"
+        duration: "{{ range(5, 12) | random }}"
+        scrollSpeed: "{{ range(60, 120) | random }}"
+        fadeText: "{{ range(500, 1000) | random }}"
+        blinkText: "{{ [0, range(300, 800) | random] | random }}"
+        background: "{{ ['#000000', '#001122', '#220011', '#112200', '#110022', '#002211'] | random }}"
+        center: "{{ [true, false] | random }}"
+        pushIcon: "{{ [0, 1, 2] | random }}"
+        textCase: "{{ [0, 1, 2] | random }}"
+  mode: single
