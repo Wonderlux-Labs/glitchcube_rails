@@ -3,6 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Performance Mode LLM Integration', type: :integration do
+  include ActiveJob::TestHelper
   let(:session_id) { 'llm_integration_test' }
   let(:service) do
     PerformanceModeService.new(

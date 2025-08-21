@@ -3,6 +3,8 @@
 require 'rails_helper'
 
 RSpec.describe CubePerformance, type: :service do
+  include ActiveJob::TestHelper
+  include ActiveSupport::Testing::TimeHelpers
   before do
     Rails.cache.clear
     clear_enqueued_jobs

@@ -4,6 +4,7 @@ require 'rails_helper'
 
 RSpec.describe PerformanceModeJob, type: :job do
   include ActiveJob::TestHelper
+  include ActiveSupport::Testing::TimeHelpers
 
   let(:session_id) { 'job_test_session' }
   let(:job_params) do

@@ -2,7 +2,8 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Performance Mode End-to-End Integration', type: :integration do
+RSpec.describe 'Performance Mode End-to-End Integration', type: :request do
+  include ActiveJob::TestHelper
   let(:session_id) { 'end_to_end_test' }
   let(:headers) { { 'X-Session-ID' => session_id, 'Content-Type' => 'application/json' } }
 

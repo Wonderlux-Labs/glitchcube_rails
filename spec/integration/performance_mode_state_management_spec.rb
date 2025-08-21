@@ -3,6 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Performance Mode State Management', type: :integration do
+  include ActiveJob::TestHelper
   before do
     Rails.cache.clear
     clear_enqueued_jobs
