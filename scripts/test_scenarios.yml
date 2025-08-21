@@ -1,0 +1,92 @@
+# Test Scenarios Configuration
+# You can customize these scenarios for your specific testing needs
+
+test_prompts:
+  # Action-focused tests
+  - type: single
+    prompt: "Turn on the living room lights and set them to 50% brightness"
+    description: "Single action with parameters"
+    expected_tools: ["lights_turn_on", "lights_set_brightness"]
+
+  - type: single
+    prompt: "Turn off all the lights in the house"
+    description: "Batch action test"
+    expected_tools: ["lights_turn_off"]
+
+  # Query-focused tests  
+  - type: single
+    prompt: "What's the current temperature and weather forecast?"
+    description: "Information retrieval test"
+    expected_tools: ["weather_get_current", "weather_get_forecast"]
+
+  - type: single
+    prompt: "Show me which lights are currently on"
+    description: "State query test"
+    expected_tools: ["lights_get_state"]
+
+  # Mixed action/query tests
+  - type: single
+    prompt: "Turn on the kitchen lights and tell me the current temperature"
+    description: "Action + Query combination"
+    expected_tools: ["lights_turn_on", "weather_get_current"]
+
+  - type: single
+    prompt: "What's the weather like? Also change the music to something relaxing"
+    description: "Query + Action combination"
+    expected_tools: ["weather_get_current", "music_play"]
+
+  # Conversation tests
+  - type: single
+    prompt: "Hello! How are you doing today?"
+    description: "Pure conversation - no tools expected"
+    expected_tools: []
+
+  - type: single
+    prompt: "Tell me a joke and then turn on the mood lighting"
+    description: "Conversation + Action"
+    expected_tools: ["lights_set_scene"]
+
+  # Multi-turn scenarios
+  - type: multi
+    prompts:
+      - "Turn on the lights in the kitchen"
+      - "Now also turn on the bedroom lights"
+      - "Perfect, thanks!"
+    description: "Progressive action sequence"
+
+  - type: multi
+    prompts:
+      - "What's the weather like outside?"
+      - "Should I bring an umbrella?"
+      - "Thanks for the advice!"
+    description: "Information gathering conversation"
+
+  - type: multi
+    prompts:
+      - "I'm getting ready for bed"
+      - "Turn off the lights except the bedroom"
+      - "Set the bedroom lights to very dim"
+      - "Good night!"
+    description: "Complex bedtime routine"
+
+# Model configurations for testing
+models:
+  narrative_models:
+    - "openai/gpt-4o"
+    - "anthropic/claude-3-5-sonnet"
+    - "openai/gpt-4o-mini"
+    - "google/gemini-pro"
+    
+  tool_models:
+    - "openai/gpt-4o-mini"
+    - "anthropic/claude-3-haiku"
+    - "openai/gpt-4o"
+    - "anthropic/claude-3-5-sonnet"
+
+# Test configuration
+settings:
+  two_tier_mode: true
+  max_concurrent_tests: 1
+  pause_between_tests: 0.5
+  detailed_logging: true
+  save_responses: true

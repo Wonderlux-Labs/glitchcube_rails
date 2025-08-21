@@ -79,7 +79,7 @@ module Services
       end
 
       # Landmark methods
-      def nearby_landmarks(limit = 3)
+      def nearby_landmarks(limit = 10)
         landmarks = Landmark.nearest(lat: lat, lng: lng, limit: limit)
         landmarks.map do |lm|
           {

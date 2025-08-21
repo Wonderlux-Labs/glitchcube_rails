@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-19 23:26:12 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku, baidu/ernie-4.5-21b-a3b, arliai/qwq-32b-arliai-rpr-v1
+Tool models: google/gemini-2.0-flash-lite-001, mistralai/mistral-medium-3.1, openai/gpt-oss-120b, baidu/ernie-4.5-21b-a3b, thudm/glm-z1-32b
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Party? This ain't a goddamn party, this is a sick art piece! But fuck yeah, I can throw a sick party. I'll make those lights... absolutely... fucking... RAZAMATAZ!
+  Time: 4.941s
+  Tools: 0 intents, 0 calls

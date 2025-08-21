@@ -109,8 +109,7 @@ RSpec.describe "Light Tools Integration", type: :integration do
 
         expect(validated_call).not_to be_valid
         error_message = validated_call.validation_errors.first
-        expect(error_message).to include("RGB values must be integers 0-255")
-        expect(error_message).to include("Invalid values: [256]")
+        expect(error_message).to include("rgb_color must be a comma-separated string")
       end
 
       it "provides logical validation for off state" do
@@ -127,7 +126,7 @@ RSpec.describe "Light Tools Integration", type: :integration do
 
         expect(validated_call).not_to be_valid
         expect(validated_call.validation_errors).to include(
-          "Cannot set brightness, color, or effects when turning light off. Use state: 'on' instead."
+          "Cannot set brightness, color, when turning light off. Use state: 'on' instead."
         )
       end
 
@@ -135,13 +134,13 @@ RSpec.describe "Light Tools Integration", type: :integration do
         tool_definition = Tools::Lights::SetState.definition
         validated_call = create_validated_tool_call(
           "set_light_state",
-          { entity_id: test_entity, rgb_color: [ 0, 0, 0 ] },
+          { entity_id: test_entity, rgb_color: "0,0,0" },
           tool_definition
         )
 
         expect(validated_call).not_to be_valid
         expect(validated_call.validation_errors).to include(
-          "RGB [0, 0, 0] is black (no light). Did you mean to set state: 'off' instead?"
+          "RGB '0,0,0' is black (no light). Did you mean to set state: 'off' instead?"
         )
       end
     end

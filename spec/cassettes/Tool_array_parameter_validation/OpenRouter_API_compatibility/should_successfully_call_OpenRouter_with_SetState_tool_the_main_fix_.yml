@@ -1,0 +1,71 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.helicone.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"user","content":"Turn on lights with red color"}],"model":"openai/gpt-5-mini","tools":[{"type":"function","function":{"name":"set_light_state","description":"Unified
+        control for cube lights: turn on/off, set brightness, color, effects, and
+        transitions","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"state":{"type":"string","description":"Turn
+        light on or off pass on even if on to change state","enum":["on","off"]},"brightness":{"type":"number","description":"Brightness
+        percentage (0-100)","minimum":0,"maximum":100},"rgb_color":{"type":"array","description":"RGB
+        color as [R, G, B] values (0-255). Example: [255, 0, 0] for red","items":{"type":"integer","minimum":0,"maximum":255}},"effect":{"type":"string","description":"Light
+        effect name. Use get_light_state to see available effects for each light"},"transition":{"type":"number","description":"Transition
+        time in seconds for smooth changes","minimum":0,"maximum":60}},"required":["entity_id","state"]}}}],"tool_choice":"auto","temperature":0.1,"max_tokens":50}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - OpenRouter Ruby Client
+      Http-Referer:
+      - https://github.com/OlympiaAI/open_router
+      Helicone-Auth:
+      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 19 Aug 2025 03:16:03 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 97167d6b0b266089-ORD
+      Access-Control-Allow-Origin:
+      - "*"
+      Vary:
+      - Accept-Encoding
+      Helicone-Id:
+      - 905b5f91-818c-423f-90ec-c3e2724c1494
+      Helicone-Status:
+      - success
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKeyJpZCI6Imdlbi0xNzU1NTczMzYyLUt0b1JVMGhybkZTU2hjNGptNEM1IiwicHJvdmlkZXIiOiJPcGVuQUkiLCJtb2RlbCI6Im9wZW5haS9ncHQtNS1taW5pIiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uIiwiY3JlYXRlZCI6MTc1NTU3MzM2MiwiY2hvaWNlcyI6W3sibG9ncHJvYnMiOm51bGwsImZpbmlzaF9yZWFzb24iOiJsZW5ndGgiLCJuYXRpdmVfZmluaXNoX3JlYXNvbiI6Im1heF9vdXRwdXRfdG9rZW5zIiwiaW5kZXgiOjAsIm1lc3NhZ2UiOnsicm9sZSI6ImFzc2lzdGFudCIsImNvbnRlbnQiOiIiLCJyZWZ1c2FsIjpudWxsLCJyZWFzb25pbmciOiIqKkRldGVybWluaW5nIGxpZ2h0IHNldHRpbmdzKipcblxuVGhlIHVzZXIgaGFzIGFza2VkIHRvIHR1cm4gb24gdGhlIGxpZ2h0cyB3aXRoIGEgcmVkIGNvbG9yLiBJIGhhdmUgdGhlIGZ1bmN0aW9ucyBhdmFpbGFibGUgdG8gY2hhbmdlIHRoZSBsaWdodCBzdGF0ZXMsIGJ1dCBJIG5lZWQgdG8gY2xhcmlmeSB3aGljaCBsaWdodHMgdGhleSBtZWFuLiBUaGVyZSBhcmUgdGhyZWUgZW50aXRpZXM6IGN1YmVfdm9pY2VfcmluZywgY3ViZV9saWdodF90b3AsIGFuZCBjdWJlX2lubmVyLiBJdCBzZWVtcyBsaWtlbHkgdGhleSB3YW50IGFsbCB0aGUgbGlnaHRzIHRvIGJlIHNldCB0byByZWQuIEkgc2hvdWxkIHByb2NlZWQgd2l0aCB0aGF0IGFzc3VtcHRpb24gd2hlbiBJIHByb2Nlc3MgdGhlIGNvbW1hbmQhKipDb25zaWRlcmluZyBsaWdodCBzZXR0aW5ncyoqXG5cblRoZSB1c2VyIHdhbnRzIG1lIHRvIHR1cm4gb24gdGhlIGxpZ2h0cyB3aXRoIGEgcmVkIGNvbG9yLiBJIHNlZSB0aGF0IHRoZXJlIGFyZSBmdW5jdGlvbnMgYXZhaWxhYmxlIHRvIHNldCB0aGUgbGlnaHQgc3RhdGUuIEJ1dCB3YWl0LCB3aGljaCBsaWdodHMgYXJlIHRoZXkgcmVmZXJyaW5nIHRvPyBUaGVyZSBhcmUgdGhyZWUgb3B0aW9uczogY3ViZV92b2ljZV9yaW5nLCBjdWJlX2xpZ2h0X3RvcCwgYW5kIGN1YmVfaW5uZXIuIEl0IHNlZW1zIHJlYXNvbmFibGUgdG8gYXNzdW1lIHRoZXkgd2FudCBhbGwgdGhlIGxpZ2h0cyBvbi4gSeKAmWxsIG1vdmUgZm9yd2FyZCB3aXRoIHR1cm5pbmcgb24gYWxsIHRocmVlIHdpdGggYSByZWQgY29sb3IhIiwicmVhc29uaW5nX2RldGFpbHMiOlt7InR5cGUiOiJyZWFzb25pbmcuc3VtbWFyeSIsInN1bW1hcnkiOiIqKkRldGVybWluaW5nIGxpZ2h0IHNldHRpbmdzKipcblxuVGhlIHVzZXIgaGFzIGFza2VkIHRvIHR1cm4gb24gdGhlIGxpZ2h0cyB3aXRoIGEgcmVkIGNvbG9yLiBJIGhhdmUgdGhlIGZ1bmN0aW9ucyBhdmFpbGFibGUgdG8gY2hhbmdlIHRoZSBsaWdodCBzdGF0ZXMsIGJ1dCBJIG5lZWQgdG8gY2xhcmlmeSB3aGljaCBsaWdodHMgdGhleSBtZWFuLiBUaGVyZSBhcmUgdGhyZWUgZW50aXRpZXM6IGN1YmVfdm9pY2VfcmluZywgY3ViZV9saWdodF90b3AsIGFuZCBjdWJlX2lubmVyLiBJdCBzZWVtcyBsaWtlbHkgdGhleSB3YW50IGFsbCB0aGUgbGlnaHRzIHRvIGJlIHNldCB0byByZWQuIEkgc2hvdWxkIHByb2NlZWQgd2l0aCB0aGF0IGFzc3VtcHRpb24gd2hlbiBJIHByb2Nlc3MgdGhlIGNvbW1hbmQhKipDb25zaWRlcmluZyBsaWdodCBzZXR0aW5ncyoqXG5cblRoZSB1c2VyIHdhbnRzIG1lIHRvIHR1cm4gb24gdGhlIGxpZ2h0cyB3aXRoIGEgcmVkIGNvbG9yLiBJIHNlZSB0aGF0IHRoZXJlIGFyZSBmdW5jdGlvbnMgYXZhaWxhYmxlIHRvIHNldCB0aGUgbGlnaHQgc3RhdGUuIEJ1dCB3YWl0LCB3aGljaCBsaWdodHMgYXJlIHRoZXkgcmVmZXJyaW5nIHRvPyBUaGVyZSBhcmUgdGhyZWUgb3B0aW9uczogY3ViZV92b2ljZV9yaW5nLCBjdWJlX2xpZ2h0X3RvcCwgYW5kIGN1YmVfaW5uZXIuIEl0IHNlZW1zIHJlYXNvbmFibGUgdG8gYXNzdW1lIHRoZXkgd2FudCBhbGwgdGhlIGxpZ2h0cyBvbi4gSeKAmWxsIG1vdmUgZm9yd2FyZCB3aXRoIHR1cm5pbmcgb24gYWxsIHRocmVlIHdpdGggYSByZWQgY29sb3IhIiwiZm9ybWF0Ijoib3BlbmFpLXJlc3BvbnNlcy12MSIsImluZGV4IjowfSx7InR5cGUiOiJyZWFzb25pbmcuZW5jcnlwdGVkIiwiZGF0YSI6ImdBQUFBQUJvby14NGs3bzlhM2tKOG5xcVVVQkRRbjdzT2NNLVR1TFZJM0d3QnMwMW81VWU4RzFUS3I4Q05xVmR2OVhBQXFUNUpoS2hhd3JrSXpnNlpVc0I5c2JRWTdRQi1TVTJWdE9pY0xSUzYtSnY1Y3lPUjd0ZDhyV2xqaURaczRtdGRPdThKc2MxMDJRWGNvcnRyRkNIZ0F5SUctOFFLNjVWaXBacm45dWl3cGdacVVpZ2Z1NzkySXZ2YkFiNmJxM2pIM1R1YjNIRHdJOW9KeU4weVhtRWlZb21yVXFPXy1OZnlkMEFjRmpUVlFKVm9rd0NCN1R3eHhUVms1eW03SEVROTRGT1RmZTFEenJZTVpHSThqUTNSTHdvSmVmamljTkRlUVJQUUwyNHVVMGZnNE1JOS1WZnNCMEdLTjJ2R3l5ZmN2b2lyUVNuWDlrUTZhcWNxdHVob0drT25wWWV6S0pycjJxR1ZVa1hUd1diWlpELS1na1JyOU5FSzM5SjVLRzl4OVNmNThFMUYzeHY4alJ2UUZ4M3hVUDRrc1VJYnBaS2s1UGs2OFp6V05xWWlSSVZpZEhibjFkWE9rZnNyYmJoRnVfM1M3RDNGNW5XektjYzZBakhFVndjWG5uS2N2ZUhEc1hoaHg2bWR6dlplanQyQmFlR3V2ekRhSzEwVlU3eDNPZFJmb01fUkhmdkgwRVZuYUh0bjlKTW5wNHJvS3N6enBVenUwV2RfM0N3YnEwY0QtbUVvaHBPVlZtODU3NElyczdyTjZ5VVVYenY3Ullrd3B4dXVnSnhsWENULWZOb2RuWmdIUVNEQ19TQUtkQmxfeW16TEQ1OVpUZXZpMTgzZE82VVJEM1BSekFSek1kZ0F4X2pweGVVX0lja0F2ekE1RFN3M2YwS0NCSDVvNEI3RDRjQndJa1h3eEtLWFp2dDluY05Uc2g4UTA5ems0VUFaanNoWDhUSVlWb2JsZHZJMG5iZTE3QzVScldEdURsTm9mSWR1SFA2Y3JUdHI2TTBfX1BNbVl4VmlZc1dsU3hULUMzRnpfVnBNSTdkOXJZNTk3QVk3a3lGVlFhcHJJMXpkV1gwRVVuR2czczd0d1ROb1hsVFdDUTNoUjllYzBYVUFHT3k3YlcyMnJvbFYzYzd6cFFpOVRVTnlFSFNHYzZocFd5bWtnNElSSC1NQ2VNOHpBaVJFS1MxbHRKMlFqOXdIalQxT2pRS0JId2F3Sm1jWWdBQ2g3UnZCVEpFRFM5cUIyV2hVbjN0alVfM0RlTE9BT0JaVTVTakVhNlh5RzZVYl80NWdiZ05hU2ZwZFVBek93cHlQSjN2SmJsSzZ4Y3dkT1VLU3pNQXVVTExITXVOVWMxVjQtTUtlbHNVazJLSVdfLTh2VzNWR2lubGxmdkN4QkQtV0RVVDZobGRGek5fSUpqNlpGTnJCWFZsdUtKV2Q1b3NROWkyY3VzcU10YkkwekhZcld5MlMyZFVOZz09IiwiaWQiOiJyc182OGEzZWM3NDFlMjA4MTk2ODliZTZkOTY2OGM4NmI1MDBmZGQ1YzBhYWZiYTVmOTAiLCJmb3JtYXQiOiJvcGVuYWktcmVzcG9uc2VzLXYxIiwiaW5kZXgiOjB9XX19XSwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6MjM3LCJjb21wbGV0aW9uX3Rva2VucyI6MCwidG90YWxfdG9rZW5zIjoyMzd9fQ==
+  recorded_at: Tue, 19 Aug 2025 03:16:08 GMT
+recorded_with: VCR 6.3.1

@@ -3,12 +3,7 @@
 class Event < ApplicationRecord
   IMPORTANCE_RANGE = (1..10).freeze
 
-  validates :title, presence: true
-  validates :description, presence: true
-  validates :event_time, presence: true
-  validates :importance, presence: true, inclusion: { in: IMPORTANCE_RANGE }
-  validates :extracted_from_session, presence: true
-
+  scope :for_address, -> { where("address ILIKE ?", "%?%") }
   scope :upcoming, -> { where("event_time > ?", Time.current) }
   scope :past, -> { where("event_time <= ?", Time.current) }
   scope :within_hours, ->(hours) { where(event_time: Time.current..(Time.current + hours.hours)) }
@@ -30,6 +25,7 @@ class Event < ApplicationRecord
   end
 
   def upcoming?
+    return false unless event_time
     event_time > Time.current
   end
 
@@ -38,7 +34,7 @@ class Event < ApplicationRecord
   end
 
   def time_until_event
-    return nil unless upcoming?
+    return nil unless event_time && upcoming?
     event_time - Time.current
   end
 
@@ -48,6 +44,7 @@ class Event < ApplicationRecord
   end
 
   def formatted_time
+    return "No time set" unless event_time
     event_time.strftime("%m/%d at %I:%M %p")
   end
 end

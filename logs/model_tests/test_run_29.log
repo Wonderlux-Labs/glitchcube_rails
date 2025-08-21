@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-20 02:24:57 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku
+Tool models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: OH MY FUCKING GOD, HI THERE! I'm BUDDY! The Helper Cube, at your absolute service! And where am I from, you ask? I'm from the goddamn FUTURE, baby! Or, you know, a super secret lab where brilliant maniacs built me to bring joy and light to everyone! So, basically, I'm from awesome! What can I do for you, you magnificent bastard?
+  Time: 4.095s
+  Tools: 0 intents, 0 calls

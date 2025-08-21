@@ -9,9 +9,9 @@ class Schemas::NarrativeResponseSchema
              description: "What the character says out loud to the user"
 
       boolean :continue_conversation, required: true,
-              description: "Whether to keep the conversation active (stay listening)"
+              description: "Whether to keep the conversation active (stay listening automatically)"
 
-      string :inner_thoughts,
+      string :inner_thoughts, required: true,
              description: "Internal thoughts, memories, or observations to remember"
 
       string :current_mood,
@@ -19,6 +19,9 @@ class Schemas::NarrativeResponseSchema
 
       string :pressing_questions,
              description: "Questions the character has for the user or themselves"
+
+       string :goal_progress,
+             description: "Progress towards your current goal"
 
       # Tool intentions for two-tier architecture
       array :tool_intents,

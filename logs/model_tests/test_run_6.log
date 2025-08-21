@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-19 22:45:04 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku, baidu/ernie-4.5-21b-a3b, arliai/qwq-32b-arliai-rpr-v1
+Tool models: cohere/command-r-03-2024, mistralai/mistral-medium-3.1, anthropic/claude-4-sonnet, baidu/ernie-4.5-21b-a3b, thudm/glm-z1-32b
+TEST neversleep/llama-3.1-lumimaid-8b + cohere/command-r-03-2024: SUCCESS
+  Speech: HOLY SHIT FUCK YEAH, PARTY TIME!!! *flips that switch like you mean it I'm cranking up my disco balls and psychedelic lights to blackout party mode. The dance floor is about to get lit with UV strobes and lava lights. I'm talking house, techno, rave, you fucking name it. Gonna blast that shit on my high-quality speakers. This cube is going all out to ensure you've got the most epic party ever. I'll even throw in some CO2 cannons for an extra visceral effect. It's gonna be a rave like no other on this playa, straight outta Burning Man. *cackles maniacally* Head down to the main room and get ready to turnt. My disco's gonna be SO FUCKING LIT!!!
+  Time: 12.987s
+  Tools: 5 intents, 4 calls

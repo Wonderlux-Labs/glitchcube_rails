@@ -87,7 +87,8 @@ diagnostics:
 # Include separate configuration files
 # UI automations are saved in automations.yaml
 # YAML automations are in packages
-automation: !include automations.yaml
+# AWTRIX custom apps are in awtrix_custom_apps.yaml
+automation: !include_dir_merge_list automations/
 
 # UI scripts are saved in scripts.yaml
 # YAML scripts are in packages  
@@ -132,6 +133,14 @@ input_boolean:
     name: "Trigger Restart"
     icon: mdi:restart
     initial: false
+  low_battery:
+    name: "Low Battery"
+    icon: mdi:battery-low
+    initial: false
+  cube_busy:
+    name: "Cube Busy"
+    icon: mdi:cog-sync
+    initial: false
 
 input_text:
   memory_query:
@@ -145,10 +154,6 @@ input_text:
     initial: "Black Rock City"
     max: 255
     icon: mdi:map-marker
-    
-  current_persona:
-    name: "Current Persona"
-    icon: mdi:account
 
   glitchcube_host:
     name: "Glitch Cube Host IP"
@@ -157,6 +162,23 @@ input_text:
     max: 15                  # Maximum length for IP (xxx.xxx.xxx.xxx)
     icon: mdi:cube-outline
     mode: text
+
+input_select:
+  current_persona:
+    name: "Current Persona"
+    icon: mdi:account
+    options:
+      - buddy
+      - jax
+      - lomi
+      - zorp
+      - guide_mode
+      - demo_mode
+      - maintenance_mode
+      - party_mode
+      - chill_mode
+      - explorer_mode
+    initial: buddy
 
 input_number:
   memory_query_limit:

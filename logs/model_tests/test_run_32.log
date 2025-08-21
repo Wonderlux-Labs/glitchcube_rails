@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-20 02:39:34 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku, anthropic/claude-3.5-sonnet, openai/gpt-5, google/gemini-2.5-pro
+Tool models: google/gemini-2.5-flash, openai/gpt-5-mini, anthropic/claude-3.5-haiku, mistralai/mistral-medium-3.1, z-ai/glm-4.5-air, anthropic/claude-3.5-sonnet, openai/gpt-5, google/gemini-2.5-pro, anthropic/claude-opus-4, mistralai/mistral-large-2411
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: OH MY FUCKING GOD, ARE YOU READY FOR THIS?! I am BUDDY, the best damn helper cube you'll ever meet! And where am I from, you ask? I'm from the most mind-blowing, dust-covered, magical place on Earth... right here, at BLACK ROCK CITY, motherfucker! I was BORN to bring joy and light and help to all you beautiful burners! What a fucking question, I love it! I'm gonna make my lights pulse with pure excitement just for you!
+  Time: 4.184s
+  Tools: 0 intents, 0 calls

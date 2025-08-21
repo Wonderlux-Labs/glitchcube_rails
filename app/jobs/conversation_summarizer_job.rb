@@ -8,15 +8,14 @@ class ConversationSummarizerJob < ApplicationJob
 
     Rails.logger.info "🧠 ConversationSummarizerJob starting"
 
-    # Get conversations from the last 30 minutes
-    cutoff_time = 30.minutes.ago
-    recent_conversation_ids = Conversation.where("updated_at >= ?", cutoff_time).pluck(:id)
+    # Get conversations that don't already have an associated conversation summary
+    unsummarized_conversation_ids = get_unsummarized_conversations
 
-    if recent_conversation_ids.any?
-      Rails.logger.info "📊 Found #{recent_conversation_ids.count} conversations to summarize"
-      WorldStateUpdaters::ConversationSummarizerService.call(recent_conversation_ids)
+    if unsummarized_conversation_ids.any?
+      Rails.logger.info "📊 Found #{unsummarized_conversation_ids.count} conversations to summarize"
+      WorldStateUpdaters::ConversationSummarizerService.call(unsummarized_conversation_ids)
     else
-      Rails.logger.info "😴 No conversations found in the last 30 minutes"
+      Rails.logger.info "😴 No unsummarized conversations found"
       # Still create an empty summary for record keeping
       WorldStateUpdaters::ConversationSummarizerService.call([])
     end
@@ -25,5 +24,22 @@ class ConversationSummarizerJob < ApplicationJob
   rescue StandardError => e
     Rails.logger.error "❌ ConversationSummarizerJob failed: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
+  end
+
+  private
+
+  def get_unsummarized_conversations
+    # Get all conversation IDs that are already referenced in Summary metadata
+    summarized_ids = []
+
+    Summary.find_each do |summary|
+      metadata = summary.metadata_json
+      if metadata["conversation_ids"].present?
+        summarized_ids.concat(Array(metadata["conversation_ids"]))
+      end
+    end
+
+    # Get all conversation IDs that aren't in the summarized list
+    Conversation.where.not(id: summarized_ids.uniq).pluck(:id)
   end
 end

@@ -1,0 +1,16 @@
+awtrix_glitch_cube_alert:
+  alias: "AWTRIX Glitch Cube Alert"
+  description: "Fun animated notification with HEY GLITCH CUBE message"
+  sequence:
+    - service: awtrix.custom_app
+      data:
+        device: ac07cb1bceee39dce3af75aa6c6d784c
+        app: hey_glitch
+        text: "🎉 HEY GLITCH CUBE! 🎉"
+        icon: "{% set persona = states('input_select.current_persona') %}{% if persona == 'buddy' %}2022{% elif persona == 'jax' %}7956{% elif persona == 'lomi' %}7919{% elif persona == 'zorp' %}7982{% else %}7786{% endif %}"
+        rainbow: true
+        effect: "BlinkyRainbow"
+        duration: 8
+        scrollSpeed: 100
+        center: false
+  mode: single

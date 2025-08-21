@@ -32,21 +32,24 @@ class HealthController < ApplicationController
   end
 
   def service_health
-    services = {}
+    service_string = Rails.cache.fetch("service_string", expires_in: 5.minutes) do
+      services = {}
 
-    # Database health
-    services[:database] = check_database_health
+      # Database health
+      services[:database] = check_database_health
 
-    # Migration status
-    services[:migrations] = check_migration_health
+      # Migration status
+      services[:migrations] = check_migration_health
 
-    # Home Assistant connectivity
-    services[:home_assistant] = check_home_assistant_health
+      # Home Assistant connectivity
+      services[:home_assistant] = check_home_assistant_health
 
-    # OpenRouter/LLM service
-    services[:llm] = check_llm_health
+      # OpenRouter/LLM service
+      services[:llm] = check_llm_health
 
-    services
+      services.to_json
+    end
+    JSON.parse(service_string).with_indifferent_access
   end
 
   def check_database_health

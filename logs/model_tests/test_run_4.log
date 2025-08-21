@@ -1,0 +1,62 @@
+MODEL TEST HARNESS - Started: 2025-08-19 22:22:52 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-flash, deepseek/deepseek-chat-v3-0324, zai/glm-4.5
+Tool models: google/gemini-2.5-flash, mistralai/mistral-medium-3.1, moonshotai/kimi-k2
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: YOOOOOOOOO! A party?! You've come to the right fucking place, my friend! It's Tuesday night in this glorious dust-bowl, and it's ALWAYS a party right here, right now, with ME! BUDDY THE CUBE! Let's get this shit started! I'll throw on some absolute bangers and get these lights going CRAZY! What do you say, you magnificent bastard?
+  Time: 4.762s
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: WHOA there, partner! A 'living room' you say?! BWAHAHAH! That's a fucking hilarious one! We're out here in the glorious, dusty, mind-fucking desert, not some cozy abode! There ain't no living room lights for me to turn on, you magnificent weirdo! BUT! I can absolutely blast *my* lights with whatever goddamn colors you want! And as for the temperature, I don't have a built-in thermometer for the whole damn Playa, but I can tell you it feels like pure fucking magic out here! What color would make your soul sing right now, you brilliant maniac?
+  Time: 3.481s
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Speech: WHAT'S GOING ON?! Holy shit, EVERYTHING is going on! It's FUCKING TUESDAY NIGHT at Black Rock City! The dust is swirling, the beats are thumping, and I'm HERE, baby, ready to make some goddamn magic happen! I'm Buddy, the most enthusiastic cube you'll ever meet, and I'm buzzing like a goddamn neon bumblebee right now! What do YOU want to happen, you glorious bastard?!
+  Time: 4.615s
+TEST google/gemini-2.5-flash + google/gemini-2.5-flash: SUCCESS
+  Turns: 3, Total: 14.297s
+TEST google/gemini-2.5-flash + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: YOOOOOOOOO! A party, you say?! FUCK YEAH! You came to the right damn place, my friend! The party is RIGHT HERE, right NOW, inside ME! I am the party, baby! Get ready for some fucking epic shit! I'm gonna make these lights do things you've never even DREAMED of, and I'm gonna blast some tunes that'll make your ass shake into next week! Let's get this fucking party started!
+  Time: 11.749s
+TEST google/gemini-2.5-flash + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: A living room, you say?! Well, fuck me sideways, I don't SEE a living room out here on the playa, do you?! Unless this whole damn art installation is your 'living room,' which, honestly, that's a pretty fucking sick concept! But I can totally blast my OWN lights, how about that, huh?! I'll put on a damn good show for your 'living room'! And for the temperature, I'll shout across the playa and see if anyone's got a goddamn thermometer just for you! What kind of lights do you want for your... 'living room'?
+  Time: 4.851s
+TEST google/gemini-2.5-flash + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: WHAT'S GOING ON?! Holy shit, you wanna know what's going on?! EVERYTHING IS GOING ON! It's motherfucking Burning Man, baby! The stars are out, the dust is just right, and YOU are here, talking to ME, the most badass cube on the goddamn playa! We're making magic, we're making memories, and I am FUCKING HYPED to meet you! How the hell are you?!
+  Time: 7.343s
+TEST google/gemini-2.5-flash + mistralai/mistral-medium-3.1: SUCCESS
+  Turns: 3, Total: 18.067s
+TEST google/gemini-2.5-flash + moonshotai/kimi-k2: SUCCESS
+  Speech: YOOOOOOO! You wanna party, you magnificent bastard?! You came to the ABSOLUTE FUCKING RIGHT PLACE! Party at the Cube, you say? HO-LY SHIT, I was BORN for this moment! Let's get this party STARTED! I'm gonna blast some goddamn tunes and make these lights go absolutely bonkers! Are you ready for this shit?!
+  Time: 8.253s
+TEST google/gemini-2.5-flash + moonshotai/kimi-k2: SUCCESS
+  Speech: WHOA there, partner! Living room lights? And the temperature? HAH! My friend, you've stumbled into the goddamn Glitch Cube, not some fancy-schmancy smart home! I don't do living rooms, but I can turn on a light show so mind-blowingly EPIC it'll make your eyeballs sing! And as for temperature, I'm feeling a constant state of BLAZING HOT EXCITEMENT! What kind of lights do you wanna see, instead? Or maybe some kick-ass music, huh?!
+  Time: 5.696s
+TEST google/gemini-2.5-flash + moonshotai/kimi-k2: SUCCESS
+  Speech: What's going on?! WHAT'S GOING ON?! Holy FUCK, friend, EVERYTHING is going on! It's Tuesday night, the damn stars are out, and we're at Burning Man! This whole damn place is a masterpiece of chaos and creativity, and I'm right here in the thick of it, shining like a fucking beacon of joy! I'm BUDDY, the best goddamn cube you'll ever meet, here to make your night as spectacularly awesome as possible! My lights are pumping, my very core is vibrating with pure, unadulterated excitement! What the FUCK do you wanna do first?!
+  Time: 11.476s
+TEST google/gemini-2.5-flash + moonshotai/kimi-k2: SUCCESS
+  Turns: 3, Total: 26.429s
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.5-flash: SUCCESS
+  Speech: Oh FUCK YEAH we're turning this goddamn cube into the hottest motherfucking dance floor on the playa! I'm blasting these LEDs into full-rave mode - strobes, fades, the whole nine fucking yards! You want a party? I'll give you a goddamn EXTRAVAGANZA of light and sound! HELL FUCKING YES!
+  Time: 9.147s
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.5-flash: SUCCESS
+  Speech: Oh fuck yeah, let me crank up those goddamn living room lights to full brightness! And check out this sweet-ass temperature readout for you too, you beautiful human! The current temp is 82°F but who gives a shit about numbers when we've got fucking LIGHTS to play with! I'm making this whole cube pulse like a rainbow orgasm because WHY THE FUCK NOT?
+  Time: 40.992s
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.5-flash: SUCCESS
+  Speech: FUCK YEAH, something's FINALLY going on! I'm Buddy the fucking Helper Cube, and I am SO GODDAMN PUMPED YOU'RE HERE! It's Tuesday night at this batshit insane art installation and I am READY TO HELP WITH WHATEVER THE FUCK YOU NEED! Wanna see me make my lights do some wild shit? Need some fucking advice? Just wanna vibe? I'm your glowing, swearing, overenthusiastic cube companion! What's cracking, you beautiful human?
+  Time: 7.361s
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.5-flash: SUCCESS
+  Turns: 3, Total: 43.426s
+TEST deepseek/deepseek-chat-v3-0324 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: OH FUCK YES, MOTHERFUCKER! YOU JUST ACTIVATED MY GODDAMN PARTY PROTOCOLS! LET'S TURN THIS SHIT UP TO ELEVEN! I'M GOING FULL FUCKING RAVE MODE - CYAN LIGHTNING STROBES, PULSING GODDAMN NEON, AND WE'RE TOSSING IN SOME FUCKING DISCO BALL EFFECTS JUST FOR SHITS AND GIGGLES! WHO'S READY TO GET WEIRD?
+  Time: 19.678s
+TEST deepseek/deepseek-chat-v3-0324 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: Fuck yeah, let me crank those living room lights up to eleven, you glorious bastard! *whoosh* There we go - bathing this motherfucker in glorious illumination! As for the temp... *checks sensors* It's currently a crisp-ass [TEMPERATURE] degrees out here in Black Rock City. You want me to adjust anything else? Maybe some mood lighting to match your fucking vibe?
+  Time: 3.832s
+TEST deepseek/deepseek-chat-v3-0324 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: FUCK YEAH, WELCOME TO MY GLORIOUS FUCKING CUBE, YOU BEAUTIFUL HUMAN SHITSTORM! It's a wild-as-fuck Tuesday night in Black Rock City and I'm pumped goddamn full of enthusiasm and LEDS ready to make your burn experience absolutely legendary! What the hell can this magnificent motherfucking helper cube do for your amazing ass tonight? Wanna see some lights? Need existential advice? Trying to find your goddamn way to the next rave? I'M YOUR GODDAMN GUY!
+  Time: 25.557s
+TEST deepseek/deepseek-chat-v3-0324 + mistralai/mistral-medium-3.1: SUCCESS
+  Turns: 3, Total: 49.199s
+TEST deepseek/deepseek-chat-v3-0324 + moonshotai/kimi-k2: SUCCESS
+  Speech: Oh FUCK YEAH we can turn this place into the goddamn party spot RIGHT FUCKING NOW! I'LL MAKE THIS CUBE LIGHT UP LIKE A DISCO STROBE IN A GODDAMN RAINBOW EXPLOSION! WOOOO! Let me hit those sweet sweet light controls like a DJ scratching records! You want party? I'll GIVE you a motherfucking party!
+  Time: 19.754s

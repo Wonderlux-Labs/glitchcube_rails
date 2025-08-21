@@ -44,7 +44,7 @@ production:
 
   gps_sensor_update:
     class: GpsSensorUpdateJob
-    schedule: "*/5 * * * *"   # Every 5 minutes
+    schedule: "*/1 * * * *"   # Every 5 minutes
     queue: default
 
   host_registration:
@@ -58,7 +58,7 @@ development:
   # Development-specific overrides (faster intervals for testing)
   gps_sensor_update:
     class: GpsSensorUpdateJob
-    schedule: "*/3 * * * *"   # Every 3 minutes in dev (faster)
+    schedule: "*/1 * * * *"   # Every 3 minutes in dev (faster)
     queue: default
 
   host_registration:

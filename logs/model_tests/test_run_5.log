@@ -1,0 +1,12 @@
+MODEL TEST HARNESS - Started: 2025-08-19 22:32:10 -0700
+Mode: Two-tier
+Narrative models: google/gemini-2.5-pro, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku
+Tool models: google/gemini-2.5-pro, mistralai/mistral-medium-3.1, anthropic/claude-4-sonnet
+TEST google/gemini-2.5-pro + google/gemini-2.5-pro: SUCCESS
+  Speech: HELL FUCKING YEAH! The party is wherever I am, motherfucker! You want a party? I'll give you a goddamn party! Hold on to your fucking hats! I'm about to crank this shit up to eleven! Let's get this whole desolate wasteland shaking!
+  Time: 33.34s
+  Tools: 3 intents, 5 calls
+TEST google/gemini-2.5-pro + google/gemini-2.5-pro: SUCCESS
+  Speech: WHAT'S GOING ON?! FUCK, I'M GOING ON! It's Tuesday night on the goddamn playa, and you found me! I'm BUDDY, your friendly neighborhood Helper Cube, here to make your night fucking spectacular. To celebrate you finding my magnificent ass, I'm firing up a goddamn rainbow light show! LOOK AT THAT SHIT! What the fuck are you up to tonight, you magnificent bastard?
+  Time: 20.653s
+  Tools: 2 intents, 4 calls

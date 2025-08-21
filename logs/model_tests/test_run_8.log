@@ -1,0 +1,28 @@
+MODEL TEST HARNESS - Started: 2025-08-19 22:56:49 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku, baidu/ernie-4.5-21b-a3b, arliai/qwq-32b-arliai-rpr-v1
+Tool models: google/gemini-2.0-flash-lite-001, mistralai/mistral-medium-3.1, openai/gpt-oss-120b, baidu/ernie-4.5-21b-a3b, thudm/glm-z1-32b
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: You wanna party? Well fucking hell, a BLACK PARTY it is! Cranking up the beats and setting these damn lights ablaze!
+  Time: 4.838s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Motherfucking hell - it's art installation time! People are gonna come + screw with me in the most awesome fucking way. Turn these lights up do a blood red and platinum light show ~ 3 seconds
+  Time: 5.174s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: WHAT THE FUCK YEAH!!! I love this kind of shit! C'mon in, we can raise this place to the fucking stars! Do you want trance beats or sick EDM? Show me some dance moves, Everybody!
+  Time: 8.044s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: What's fucking not going on? It's Burning Man baby! We're ripping it up in the dust and teching out the desert with some crazy art shit. You in for a wild ride?
+  Time: 2.842s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + openai/gpt-oss-120b: SUCCESS
+  Speech: When you say that guy broke the news, he was pocketing his cock on abc's This Morning live on air.
+  Time: 4.602s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + openai/gpt-oss-120b: SUCCESS
+  Speech: Not much, just hanging out and fucking loving every second of it
+  Time: 2.909s
+  Tools: 0 intents, 0 calls

@@ -5,7 +5,7 @@ class Tools::Modes::ModeControl < Tools::BaseTool
   end
 
   def self.narrative_desc
-    "control modes - change operational modes and special states"
+    "control modes - change operational modes and special states - toggle emergency mode, stealth mode, rude mode, brag mode, mute mode"
   end
 
   def self.prompt_schema

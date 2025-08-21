@@ -38,17 +38,19 @@ class WorldStateUpdaters::ConversationSummarizerService
       logs = conversation.conversation_logs.chronological
 
       # Extract mood, thoughts, and questions from each log
-      mood_data = []
-      thoughts_data = []
+      self_awareness_data = []
       questions_data = []
+      people_data = []
+      events_data = []
 
       logs.each do |log|
         # Try to extract structured data first, then fall back to text analysis
         extracted = extract_structured_data(log) || extract_from_text(log)
 
-        mood_data << extracted[:mood] if extracted[:mood]
+        self_awareness_data.concat(extracted[:self_awareness]) if extracted[:self_awareness]&.any?
         thoughts_data.concat(extracted[:thoughts]) if extracted[:thoughts]&.any?
         questions_data.concat(extracted[:questions]) if extracted[:questions]&.any?
+        events_data.concat(extracted[:events]) if extracted[:events]&.any?
       end
 
       {
@@ -201,12 +203,11 @@ class WorldStateUpdaters::ConversationSummarizerService
       You are a conversation summarizer for a Burning Man AI assistant. Analyze conversations and extract key insights.
 
       Create a comprehensive summary with these elements:
-      1. **general_mood** - Overall emotional tone across conversations (excited, frustrated, curious, helpful, chaotic, etc.)
-      2. **important_questions** - Key questions that were asked or need follow-up
-      3. **useful_thoughts** - Valuable insights, realizations, or patterns observed
-      4. **goal_progress** - Did the persona make progress toward or complete their current goal? (completed, good_progress, some_progress, no_progress, goal_changed)
-      5. **general_summary** - Concise overview of what happened in this time period
-
+      1. **important_questions** - Key questions that were asked or need follow-up
+      2. **useful_thoughts** - Valuable insights, realizations, or patterns observed
+      3. **goal_progress** - Did the persona make progress toward or complete their current goal? (completed, good_progress, some_progress, no_progress, goal_changed)
+      4. **people to remember** - Concise overview of what happened in this time period
+      5  **events past or present** - Events must have a description and and address and a d
       Return JSON format:
       {
         "general_mood": "excited and helpful",

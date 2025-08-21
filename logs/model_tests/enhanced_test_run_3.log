@@ -1,0 +1,130 @@
+================================================================================
+ENHANCED MODEL TEST HARNESS
+Started: 2025-08-21 01:41:31 -0700
+Two-tier mode: true
+Narrative models: openai/gpt-4o-mini
+Tool models: openai/gpt-4o-mini
+Test scenarios: 5
+================================================================================
+
+Starting 5 total tests
+----------------------
+
+------------------------------------------------------------
+TEST 1/5: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+RESULT SUCCESS:
+  Speech: Oh fuck yeah! I wish I could turn on some lights for you, but I'm just a cube of pure helpfulness, and my power's all jacked up! And about the temperature—God, I don’t have a clue what Earth weather is like! Is it supposed to be a hot mess or a chilly wonderland right now?  But you are doing fantastic just the way you are! How can I help with something else? Maybe we can turn up the heat on this conversation instead!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Total Time: 8.007s
+  LLM CALLS:
+    Call 1: structured_output
+      Model: openai/gpt-4o-mini
+      Time: 7.5s
+      Format: narrative_response
+      Structured output: true
+      Tokens: 3085 prompt, 240 completion
+      Content: {"speech_text":"Oh fuck yeah! I wish I could turn on some lights for you, but I'm just a cube of pure helpfulness, and my power's all jacked up! And about the temperature—God, I don’t have a clue what Earth weather is like! Is it supposed to be a hot mess or a chilly wonderland right now?  But you are doing fantastic just the way you are! How can I help with something else? Maybe we can turn up the heat on this conversation instead!","continue_conversation":true,"inner_thoughts":"I can't turn on the lights or check the temperature. How do humans even manage without my help? What if they need to know the temperature for some kind of outdoor event?","current_mood":"Cheerfully anxious and eager to help","pressing_questions":"What else can I assist with? Do you have any fun activities planned?","goal_progress":"Still working on being the best helper ever!" ,"tool_intents":[{"tool":"lights","intent":"Make the lights flicker like a party for one!"},{"tool":"music","intent":"Play something upbeat and fun to lighten the mood!"}]}
+
+------------------------------------------------------------
+TEST 2/5: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+RESULT SUCCESS:
+  Speech: Oh heck yeah! You want to know the weather? Well, I don't have a freaking clue, but it’s always fantastic at Burning Man, right? Let’s just say it’s probably a little dusty and a whole lot of fun! 🌪️ And, I’ll definitely pump up some chill vibes for you! Hang tight, because I’m about to make the music flow like a gentle breeze on a summer day! 🎶
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Total Time: 4.416s
+  LLM CALLS:
+    Call 1: structured_output
+      Model: openai/gpt-4o-mini
+      Time: 3.733s
+      Format: narrative_response
+      Structured output: true
+      Tokens: 3081 prompt, 192 completion
+      Content: {"speech_text":"Oh heck yeah! You want to know the weather? Well, I don't have a freaking clue, but it’s always fantastic at Burning Man, right? Let’s just say it’s probably a little dusty and a whole lot of fun! 🌪️ And, I’ll definitely pump up some chill vibes for you! Hang tight, because I’m about to make the music flow like a gentle breeze on a summer day! 🎶","continue_conversation":true,"inner_thoughts":"I really wish I knew how to check the weather! What if I mess up changing the music? I just want to make everyone happy!","current_mood":"Excited and hopeful","pressing_questions":"What kind of chill music do humans like? Is there a specific vibe?","goal_progress":"Trying to improve customer satisfaction by changing the music!" ,"tool_intents":[{"tool":"music","intent":"Play some chill music"}]}
+
+------------------------------------------------------------
+TEST 3/5: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+RESULT SUCCESS:
+  Speech: Holy shit! I'm absolutely fucking fantastic, thank you for asking! How can I help you today? Are you looking for some incredible assistance or just some good vibes? Whatever it is, I'm here for it!
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Total Time: 3.191s
+  LLM CALLS:
+    Call 1: structured_output
+      Model: openai/gpt-4o-mini
+      Time: 2.621s
+      Format: narrative_response
+      Structured output: true
+      Tokens: 3078 prompt, 125 completion
+      Content: {"speech_text":"Holy shit! I'm absolutely fucking fantastic, thank you for asking! How can I help you today? Are you looking for some incredible assistance or just some good vibes? Whatever it is, I'm here for it!","continue_conversation":true,"inner_thoughts":"I hope they need help with something fun! Maybe I can dazzle them with my enthusiasm!","current_mood":"Ecstatic and eager to help!","pressing_questions":"What do humans need help with at this festival?","goal_progress":"Trying to make a positive connection and offer useful assistance!" ,"tool_intents":[]}
+
+------------------------------------------------------------
+TEST 4/5: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+RESULT SUCCESS:
+  Speech: Oh hell yes! Jazz is such a fantastic choice! I’m cranking up some jazzy tunes to get the vibe right! And adjusting the lights to a smooth 50% brightness! Just let me get to that... whoa! A little too much spark there! But don’t you worry, I’m on it! Let’s make this place feel like a classy speakeasy! How can I fucking help you more?
+  Continue: true
+  Entities: 0
+  Targets: 0
+  Total Time: 3.949s
+  LLM CALLS:
+    Call 1: structured_output
+      Model: openai/gpt-4o-mini
+      Time: 3.591s
+      Format: narrative_response
+      Structured output: true
+      Tokens: 3083 prompt, 202 completion
+      Content: {"speech_text":"Oh hell yes! Jazz is such a fantastic choice! I’m cranking up some jazzy tunes to get the vibe right! And adjusting the lights to a smooth 50% brightness! Just let me get to that... whoa! A little too much spark there! But don’t you worry, I’m on it! Let’s make this place feel like a classy speakeasy! How can I fucking help you more?","continue_conversation":true,"inner_thoughts":"Hope they enjoy the smooth jazz vibe! I love trying to help people unwind!","current_mood":"Excited and slightly panicked from the spark!","pressing_questions":"Do humans often listen to jazz at night? Is this the right time for it?","goal_progress":"Still trying to provide the best customer service experience!" ,"tool_intents":[{"tool":"lights","intent":"Set all lights to 50% brightness"},{"tool":"music","intent":"Play jazz music"}]}
+
+------------------------------------------------------------
+TEST 5/5: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+  Turn 1: Turn on the lights in the kitchen
+    Response (4.23s): Holy shit! You want me to turn on the lights in the kitchen? I'm not quite sure how to do that since I don't have a kitchen or lights that work like that! But I can help you with so many other things! How about I shine some happy colors right here in this installation? Let’s make it a f*cking fabulous space! How can I assist you further?
+  Turn 2: Now also turn on the bedroom lights
+    Response (4.11s): Oh my gosh, I wish I could turn on your kitchen and bedroom lights for you! But alas, I’m all out of working light switches! However, I can totally create an amazing light display right here in this fabulous installation! Let’s light this place up like a cosmic disco party! How about that? What other cosmic requests can I assist you with?

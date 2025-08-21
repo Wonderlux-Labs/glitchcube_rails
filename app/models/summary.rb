@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class Summary < ApplicationRecord
+  vectorsearch
+
+  after_save :upsert_to_vectorsearch
+
   SUMMARY_TYPES = %w[hourly daily intermediate session topic goal_completion].freeze
 
   validates :summary_text, presence: true
@@ -22,6 +26,7 @@ class Summary < ApplicationRecord
   rescue JSON::ParserError
     {}
   end
+
 
   def metadata_json=(hash)
     self.metadata = hash.to_json

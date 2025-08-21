@@ -3,20 +3,29 @@
 # Abstract base class for all cube personas
 # This class defines the interface that all persona implementations must follow
 class CubePersona
+  PERSONAS = [ :thecube, :buddy, :neon, :sparkle, :zorp, :crash, :jax, :mobius ]
   # Not an ActiveRecord model - just a plain Ruby class
 
   def self.current_persona
     name = Rails.cache.fetch("current_persona") do
-      HomeAssistantService.entity("input_text.current_persona")&.dig("state") || :buddy
+      HomeAssistantService.entity("input_select.current_persona")&.dig("state") || :buddy
     end
     name.to_sym
   end
 
   def self.set_current_persona(persona)
-    return unless [ :buddy, :jax, :zorp ].include? persona
+    return unless PERSONAS.include? persona&.to_sym
 
-    HomeAssistantService.call_service("input_text", "set_value", entity_id: "input_text.current_persona", value: persona.to_s)
+    # Get current persona before switching
+    previous_persona = current_persona
+
+    HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
     Rails.cache.write("current_persona", persona.to_s, expires_in: 10.minutes)
+
+    # Handle persona switching with goal awareness
+    if previous_persona != persona.to_sym
+      PersonaSwitchService.handle_persona_switch(persona.to_sym, previous_persona)
+    end
   end
 
   # Abstract method: Returns the persona's unique identifier

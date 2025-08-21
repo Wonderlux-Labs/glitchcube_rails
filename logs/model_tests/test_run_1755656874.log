@@ -1,0 +1,41 @@
+19:27:54.756 ================================================================================
+19:27:54.756 MODEL TEST HARNESS
+19:27:54.756 Started: 2025-08-19 19:27:54 -0700
+19:27:54.756 Two-tier mode: true
+19:27:54.756 Narrative models: openai/gpt-4o, anthropic/claude-3-5-sonnet, google/gemini-pro
+19:27:54.756 Tool models: openai/gpt-4o-mini, anthropic/claude-3-haiku, openai/gpt-4o
+19:27:54.756 Test prompts: 4
+19:27:54.756 ================================================================================
+19:27:54.756 
+Starting 36 total tests
+19:27:54.756 -----------------------
+19:27:54.756 
+------------------------------------------------------------
+19:27:54.756 TEST 1/36: SINGLE
+19:27:54.756 Narrative: openai/gpt-4o
+19:27:54.756 Tool: openai/gpt-4o-mini
+19:27:54.758 ------------------------------------------------------------
+19:27:54.758 Testing single conversation:
+19:27:54.758   Prompt: Turn on the living room lights and tell me the current temperature
+19:27:54.758   Narrative Model: openai/gpt-4o
+19:27:54.758   Tool Model: openai/gpt-4o-mini
+19:28:01.151 
+RESULT:
+19:28:01.151   Speech: 
+19:28:01.152   Continue: true
+19:28:01.152   Entities: 0
+19:28:01.152   Targets: 0
+19:28:01.152   Timing:
+19:28:01.152     Total: 6.393s
+19:28:01.152     First token: 0.639s
+19:28:01.152     Tool calls: N/As
+19:28:01.152 
+------------------------------------------------------------
+19:28:01.152 TEST 2/36: SINGLE
+19:28:01.152 Narrative: openai/gpt-4o
+19:28:01.152 Tool: openai/gpt-4o-mini
+19:28:01.152 ------------------------------------------------------------
+19:28:01.152 Testing single conversation:
+19:28:01.152   Prompt: What's the weather like? Also change the music to something chill
+19:28:01.152   Narrative Model: openai/gpt-4o
+19:28:01.152   Tool Model: openai/gpt-4o-mini

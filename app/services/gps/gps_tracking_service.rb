@@ -13,7 +13,7 @@ module Services
       def current_location
         # Use cached location if available (5 minute cache)
         cached = Rails.cache.fetch("gps_current_location", expires_in: 5.minutes) do
-          fetch_from_home_assistant || random_landmark_location
+          random_landmark_location
         end
 
         return nil unless cached && cached[:lat] && cached[:lng]
@@ -23,6 +23,11 @@ module Services
 
         # Merge GPS metadata with location context
         cached.merge(context)
+      end
+
+      def set_random_location
+        land = Landmark.all.sample
+        set_location(coords: "#{land.latitude}, #{land.longitude}")
       end
 
       # Get proximity data for map reactions using LocationContextService
@@ -70,55 +75,45 @@ module Services
       end
 
       # Simulate cube movement - walk toward a landmark and stop when reached
-      def simulate_movement!(landmark_name = nil)
+      def simulate_movement!(landmark: nil)
         return unless GlitchCube.gps_spoofing_allowed?
 
         begin
           # Get current cached location
-          current_data = Rails.cache.read("gps_current_location")
+          current_data = Rails.cache.fetch("gps_current_location") do
+            fetch_from_home_assistant
+          end
+
           destination_data = Rails.cache.read("cube_destination")
-
-          # If no current location, start at a random landmark
-          unless current_data
-            start_landmark = Landmark.active.order("RANDOM()").first
-            set_location(start_landmark.latitude.to_f, start_landmark.longitude.to_f)
-            return "Started at #{start_landmark.name}"
-          end
-
-          current = current_data
-
-          # Set new destination if provided or if no destination exists
-          if landmark_name
-            landmark = Landmark.active.find_by(name: landmark_name)
-            return "Landmark '#{landmark_name}' not found" unless landmark
-
-            destination = {
-              lat: landmark.latitude.to_f,
-              lng: landmark.longitude.to_f,
-              name: landmark.name
-            }
-            Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
-          elsif !destination_data
-            # Pick random destination if none provided and none exists
-            destination = pick_random_destination
-            Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
+          destination = if destination_data
+                          JSON.parse(destination_data, symbolize_names: true)
           else
-            destination = JSON.parse(destination_data, symbolize_names: true)
+                          {
+                            lat: landmark.latitude.to_f,
+                            lng: landmark.longitude.to_f,
+                            name: landmark.name
+                          }
           end
-
+          Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
+          puts "Current #{current_data}"
+          puts "Dest #{destination}"
           # Check if we've reached the destination
-          if reached_destination?(current, destination)
+          if reached_destination?(current_data, destination)
             Rails.cache.delete("cube_destination") # Clear destination
             return "Arrived at #{destination[:name]}"
           end
 
           # Move toward destination (small step)
-          new_location = move_toward_destination(current, destination)
-          set_location(new_location[:lat], new_location[:lng])
+          new_location = move_toward_destination(current_data, destination)
+          set_location(coords: "#{new_location[:lat]},#{new_location[:lng]}")
 
-          distance = calculate_distance(current[:lat], current[:lng], destination[:lat], destination[:lng])
-          "Moving toward #{destination[:name]} (#{distance.round}m remaining)"
+          distance = calculate_distance(current_data[:lat], current_data[:lng], destination[:lat], destination[:lng])
+          puts "Moving toward #{destination[:name]} (#{distance.round}m remaining)"
+          sleep(5)
+          simulate_movement!(landmark: landmark)
         rescue StandardError => e
+          puts e.inspect
+          puts e.backtrace.inspect
           "Movement simulation failed: #{e.message}"
         end
       end
@@ -127,7 +122,7 @@ module Services
 
 
       def pick_random_destination
-        # Pick a random landmark as destination
+        # Pick a random landmark as destination using PostGIS
         landmark = Landmark.active.order("RANDOM()").first
         {
           lat: landmark.latitude.to_f,
@@ -137,25 +132,43 @@ module Services
         }
       end
 
+      def find_nearby_landmarks(lat, lng, radius_meters = 1000)
+        # Use PostGIS to find landmarks within radius
+        Landmark.within_meters(lng, lat, radius_meters).active
+      end
+
       def reached_destination?(current, destination)
-        distance = calculate_distance(current[:lat], current[:lng], destination[:lat], destination[:lng])
+        return unless destination
+
+        # Use PostGIS-based distance calculation
+        landmark = Landmark.new(latitude: destination[:lat], longitude: destination[:lng])
+        distance = landmark.distance_from(current[:lat], current[:lng]) * 1609.34 # Convert miles to meters
         distance < 50 # Within 50 meters
       end
 
       def move_toward_destination(current, destination)
-        # Calculate direction and take a small step
+        # Use PostGIS-based distance and direction
+        current_landmark = Landmark.new(latitude: current[:lat], longitude: current[:lng])
+        dest_landmark = Landmark.new(latitude: destination[:lat], longitude: destination[:lng])
+
+        # Calculate distance using PostGIS
+        total_distance_meters = current_landmark.distance_from(destination[:lat], destination[:lng]) * 1609.34
+
+        # Step size (about 10-20 meters)
+        step_meters = 15
+
+        # Calculate direction vector
         lat_diff = destination[:lat] - current[:lat]
         lng_diff = destination[:lng] - current[:lng]
 
-        # Step size (about 10-20 meters)
-        step_size = 0.0001
+        # Normalize and scale by step size
+        total_distance_deg = Math.sqrt(lat_diff**2 + lng_diff**2)
+        return current if total_distance_deg.zero?
 
-        # Normalize direction and apply step
-        distance = Math.sqrt((lat_diff**2) + (lng_diff**2))
-        return current if distance.zero?
+        scale_factor = step_meters / total_distance_meters
 
-        new_lat = current[:lat] + ((lat_diff / distance) * step_size)
-        new_lng = current[:lng] + ((lng_diff / distance) * step_size)
+        new_lat = current[:lat] + (lat_diff * scale_factor)
+        new_lng = current[:lng] + (lng_diff * scale_factor)
 
         {
           lat: new_lat,
@@ -165,17 +178,9 @@ module Services
       end
 
       def calculate_distance(lat1, lng1, lat2, lng2)
-        # Haversine formula for distance in meters
-        rad_per_deg = Math::PI / 180
-        rlat1, rlng1, rlat2, rlng2 = [ lat1, lng1, lat2, lng2 ].map { |d| d * rad_per_deg }
-
-        dlat = rlat2 - rlat1
-        dlng = rlng2 - rlng1
-
-        a = (Math.sin(dlat / 2)**2) + (Math.cos(rlat1) * Math.cos(rlat2) * (Math.sin(dlng / 2)**2))
-        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-        6_371_000 * c # Earth radius in meters
+        # Use PostGIS-based distance calculation
+        landmark1 = Landmark.new(latitude: lat1, longitude: lng1)
+        landmark1.distance_from(lat2, lng2) * 1609.34 # Convert miles to meters
       end
 
       def determine_map_mode_from_landmarks(landmarks)
@@ -243,7 +248,7 @@ module Services
       end
 
       def random_landmark_location
-        landmark = Landmark.active.order("RANDOM()").first
+        landmark = Landmark.active.sample
 
         {
           lat: landmark.latitude.to_f,

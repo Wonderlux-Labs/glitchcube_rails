@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       # New conversation orchestrator route (matches HASS agent)
       post "conversation", to: "conversation#handle"
+      post "conversation/proactive", to: "conversation#proactive"
 
       namespace :home_assistant do
         post "conversation/process", to: "home_assistant#conversation_process"
@@ -24,6 +25,15 @@ Rails.application.routes.draw do
         # Generic world state service trigger
         post "world_state/trigger", to: "home_assistant#trigger_world_state_service"
       end
+
+      # Summary routes
+      get "summaries/recent", to: "summaries#recent"
+
+      # Performance mode routes
+      post "performance_mode/start", to: "performance_mode#start"
+      post "performance_mode/stop", to: "performance_mode#stop"
+      get "performance_mode/status", to: "performance_mode#status"
+      post "performance_mode/interrupt", to: "performance_mode#interrupt"
 
       # GPS routes
       get "gps/location", to: "gps#location"
@@ -59,6 +69,12 @@ Rails.application.routes.draw do
 
   # GPS map view
   get "gps", to: "gps#map"
+
+  # Performance mode web interface
+  get "performance", to: "performance#index"
+  post "performance/start", to: "performance#start"
+  post "performance/stop", to: "performance#stop"
+  get "performance/status", to: "performance#status"
 
   # Admin dashboard for development monitoring
   namespace :admin do

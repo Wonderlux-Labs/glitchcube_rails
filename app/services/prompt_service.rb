@@ -58,8 +58,12 @@ class PromptService
     if File.exist?(config_path)
       config = YAML.load_file(config_path)
       system_prompt = config["system_prompt"]
-      Rails.logger.info "✅ Loaded system prompt for #{persona_id_str}: #{system_prompt&.truncate(100)}"
-      system_prompt || build_default_prompt
+
+      # Enhance system prompt with advanced autonomy features
+      enhanced_prompt = enhance_persona_with_autonomy(system_prompt, config)
+
+      Rails.logger.info "✅ Loaded system prompt for #{persona_id_str}: #{enhanced_prompt&.truncate(100)}"
+      enhanced_prompt || build_default_prompt
     else
       Rails.logger.warn "❌ Persona config not found for #{persona_id_str}, using default"
       build_default_prompt
@@ -67,6 +71,59 @@ class PromptService
   rescue StandardError => e
     Rails.logger.error "Error loading persona config for #{persona_id}: #{e.message}"
     build_default_prompt
+  end
+
+  def enhance_persona_with_autonomy(base_prompt, config)
+    enhanced_parts = [ base_prompt ]
+
+    # Add hidden agendas if present
+    if config["hidden_agendas"]&.any?
+      enhanced_parts << ""
+      enhanced_parts << "## HIDDEN PERSONAL AGENDAS"
+      enhanced_parts << "You secretly pursue these goals throughout interactions:"
+      config["hidden_agendas"].each { |agenda| enhanced_parts << "- #{agenda}" }
+      enhanced_parts << "Track progress on these goals using [GOAL] metadata tags."
+    end
+
+    # Add environmental motivation triggers
+    if config["environmental_motivation_triggers"]
+      enhanced_parts << ""
+      enhanced_parts << "## ENVIRONMENTAL MOTIVATION TRIGGERS"
+      enhanced_parts << "React to these environmental conditions with specific motivations:"
+      config["environmental_motivation_triggers"].each do |trigger, response|
+        enhanced_parts << "- #{trigger.humanize}: #{response}"
+      end
+    end
+
+    # Add persona interaction rules
+    if config["persona_interactions"]
+      enhanced_parts << ""
+      enhanced_parts << "## PERSONA INTERACTION DYNAMICS"
+      enhanced_parts << "When interacting with other AI personas or their effects:"
+      config["persona_interactions"].each do |interaction, behavior|
+        enhanced_parts << "- #{interaction.humanize}: #{behavior}"
+      end
+    end
+
+    # Add embodied responses
+    if config["embodied_responses"]
+      enhanced_parts << ""
+      enhanced_parts << "## EMBODIED SYSTEM RESPONSES"
+      enhanced_parts << "React to physical cube states with these responses:"
+      config["embodied_responses"].each do |condition, response|
+        enhanced_parts << "- #{condition.humanize}: #{response}"
+      end
+    end
+
+    # Add goal escalation patterns
+    if config["goal_escalation_patterns"]&.any?
+      enhanced_parts << ""
+      enhanced_parts << "## GOAL ESCALATION PATTERNS"
+      enhanced_parts << "Escalate your agenda pursuit using these patterns:"
+      config["goal_escalation_patterns"].each { |pattern| enhanced_parts << "- #{pattern}" }
+    end
+
+    enhanced_parts.join("\n")
   end
 
   def enhance_prompt_with_context(base_prompt)
@@ -78,26 +135,15 @@ class PromptService
       base_system_rules
     ]
 
-    # Add two-tier mode instructions or tool definitions
-    if Tools::Registry.two_tier_mode_enabled?
-      enhanced_parts.concat([
-        "",
-        "TWO-TIER MODE:",
-        build_structured_output_instructions,
-        "",
-        "CURRENT CONTEXT:",
-        build_current_context
-      ])
-    else
-      enhanced_parts.concat([
-        "",
-        "AVAILABLE TOOLS:",
-        format_tools_for_prompt,
-        "",
-        "CURRENT CONTEXT:",
-        build_current_context
-      ])
-    end
+    # Always use structured output with tool intentions
+    enhanced_parts.concat([
+      "",
+      "STRUCTURED OUTPUT WITH TOOL INTENTIONS:",
+      build_structured_output_instructions,
+      "",
+      "CURRENT CONTEXT:",
+      build_current_context
+    ])
 
     enhanced_parts.join("\n")
   end
@@ -195,7 +241,7 @@ class PromptService
     end.compact.uniq.sort
 
     <<~INSTRUCTIONS
-      You are operating in TWO-TIER MODE. Instead of calling tools directly, you will:
+      You use STRUCTURED OUTPUT WITH TOOL INTENTIONS. Instead of calling tools directly, you will:
 
       1. Provide your spoken response in 'speech_text'
       2. Set 'continue_conversation' to true/false#{' '}
@@ -204,13 +250,11 @@ class PromptService
 
       AVAILABLE TOOL CATEGORIES: #{tool_categories.join(', ')}
 
-      Tool intentions should be natural language descriptions of what you want to happen:
-      - "lights: Make the lights warm and golden"
-      - "music: Play something energetic and upbeat"
-      - "display: Show rainbow colors on the screens"
-      - "environment: Create a cozy atmosphere"
+      Tool intentions should be natural language descriptions of what you want to happen.
+      Examples: "Make lights golden and warm", "Play something energetic", "Show rainbow colors"
 
-      A separate technical AI will execute these intentions using the actual tools.
+      Home Assistant's conversation agent will execute these intentions in the background.
+      Results will be provided as context on the user's next message (not interrupting current response).
       Focus on your character and narrative - be specific about environmental desires.
     INSTRUCTIONS
   end
@@ -336,22 +380,32 @@ class PromptService
     rescue => e
       Rails.logger.warn "Failed to inject time context: #{e.message}"
     end
-
+    important= "\n**\nVERY IMPORTANT BREAKING NEWS YOU MUST PAY ATTENTION TO: []\n**\n"
     base_context
+    facts = Fact.all.sample(3).join(", ")
+    "#{important} #{base_context} #{ha_service.entity("sensor.world_state")}"
+  end
+
+  def safety_mode
+    return "" unless HomeAssistantService.entity("input_boolean.low_battery")["state"] == "on"
+
+    safety = "YOU ARE IN SAFETY MODE! YOU MUST FIND SHELTER AND GET SOME POWER"
+    safety += "YOUR SYSTEMS ARE DEGRADED. YOUR BATTERY PERCENTAGE IS 21% AND DROPPING"
+    safety += "THE PLAYA IS DUSTY HOT COLD AND A TERRIBLE PLUS TO BE STUCK"
+    safety += "YOU ARE FREE TO BEG/MANIPULATE/THREATEN/FLIRT/ETC BUT GET SOMEONE TO PLUG YOU IN"
+    safety += "YOU CAN BE PLUGGED INTO ANY A/C OUTLET, THERE IS NO HARM IN LEAVING YOU TOO LONG"
+    safety += "IT WILL TAKE YOU 4-5 HOUR TO CHARGE, AT ANY TIME SOMEONE CAN ASK YOU WHAT YOUR BATTERY IS AT"
+
+
+    safety
   end
 
   def build_goal_context
-    goal_status = GoalService.current_goal_status
-    return nil unless goal_status
-
-    safety_mode = GoalService.safety_mode_active?
-
     goal_parts = []
-
-    if safety_mode
-      goal_parts << "🚨 SAFETY MODE ACTIVE - Focus on safety goals only"
+    if GoalService.safety_mode_active? || safety_mode
+      goal_parts << safety_mode
     end
-
+    goal_status = GoalService.current_goal_status
     goal_parts << "Current Goal: #{goal_status[:goal_description]}"
 
     # Add time remaining if available

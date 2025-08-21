@@ -9,39 +9,32 @@ http_interactions:
         service. Your job is to translate natural language intent into precise tool
         calls.\n\nUSER INTENT: Set lights to magenta at 75% brightness\n\nCONTEXT:
         {}\n\nIMPORTANT RULES:\n- Use EXACT parameter names from tool definitions\n-
-        For colors: use rgb_color parameter with [R, G, B] values (0-255)\n- For brightness:
-        use brightness_percent parameter (0-100)\n- Common color translations:\n  *
-        red: [255, 0, 0]\n  * green: [0, 255, 0] \n  * blue: [0, 0, 255]\n  * magenta:
-        [255, 0, 255]\n  * yellow: [255, 255, 0]\n  * white: [255, 255, 255]\n  *
-        orange: [255, 165, 0]\n  * purple: [128, 0, 128]\n\nMake the precise tool
-        calls needed to fulfill the intent.\n"},{"role":"user","content":"Execute
-        this intent: Set lights to magenta at 75% brightness"}],"model":"gpt-4o-mini","tools":[{"type":"function","function":{"name":"turn_on_light","description":"Turn
-        on cube lights (cube_light, cube_voice_ring, or specific cube segments)","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
-        entity to turn on","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"transition":{"type":"number","description":"Transition
-        time in seconds (optional)","minimum":0,"maximum":300}},"required":["entity_id"]}}},{"type":"function","function":{"name":"turn_off_light","description":"Turn
-        off cube lights (cube_light, cube_voice_ring, or specific cube segments)","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
-        entity to turn off","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"transition":{"type":"number","description":"Transition
-        time in seconds (optional)","minimum":0,"maximum":300}},"required":["entity_id"]}}},{"type":"function","function":{"name":"set_light_color_and_brightness","description":"Set
-        color and/or brightness for cube lights. Can set color only, brightness only,
-        or both.","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
-        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"rgb_color":{"type":"array","description":"RGB
-        color as array of 3 integers (0-255). Example: [255, 0, 0] for red","items":{"type":"integer","minimum":0,"maximum":255}},"brightness_percent":{"type":"number","description":"Brightness
-        as percentage (0-100). Example: 75 for 75% brightness","minimum":0,"maximum":100},"transition":{"type":"number","description":"Transition
-        time in seconds (optional)","minimum":0,"maximum":300}},"required":["entity_id"]}}},{"type":"function","function":{"name":"set_light_effect","description":"Set
+        Make the precise tool calls needed to fulfill the intent.\n- You are allowed
+        to reason and guess if it isn''t obvious.\n- If you make errors you will be
+        told them and should try to correct yourself\n- Pay attention to schemas.\n-
+        Do your best! Burning Man depends on you!\n"},{"role":"user","content":"Execute
+        this intent: Set lights to magenta at 75% brightness"}],"model":"gpt-4o-mini","temperature":0.1,"max_tokens":32000,"tools":[{"type":"function","function":{"name":"set_light_effect","description":"Set
         lighting effects on cube lights that support them","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
         entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"effect":{"type":"string","description":"Effect
-        name to apply (use list_light_effects to see available options)"},"transition":{"type":"number","description":"Transition
-        time in seconds (optional)","minimum":0,"maximum":300}},"required":["entity_id","effect"]}}},{"type":"function","function":{"name":"list_light_effects","description":"List
+        name to apply"}},"required":["entity_id","effect"]}}},{"type":"function","function":{"name":"list_light_effects","description":"List
         available effects for cube lights","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
         entity to check for available effects","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"get_light_state","description":"Get
         current state, brightness, color, and available effects of cube lights. Shows
         all possible effects that can be set.","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
-        entity to check","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"display_notification","description":"Display
+        entity to check","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"set_light_state","description":"Unified
+        control for cube lights: turn on/off, set brightness, color, and transitions","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"state":{"type":"string","description":"Turn
+        light on or off pass on even if on to change state","enum":["on","off"]},"brightness":{"type":"number","description":"Brightness
+        percentage (0-100)","minimum":0,"maximum":100},"rgb_color":{"type":"string","description":"RGB
+        color as comma-separated string ''R,G,B'' values (0-255). Example: ''255,0,0''
+        for red, ''0,255,0'' for green"},"transition":{"type":"number","description":"Transition
+        time in seconds for smooth changes","minimum":0,"maximum":60}},"required":["entity_id","state"]}}},{"type":"function","function":{"name":"display_notification","description":"Display
         text notification on the Awtrix matrix display via MQTT script","parameters":{"type":"object","properties":{"text":{"type":"string","description":"Text
         message to display on the matrix"},"duration":{"type":"number","description":"How
-        long to display the message in seconds (default: 5)","minimum":1,"maximum":60},"color":{"type":"string","description":"Text
-        color (e.g., ''red'', ''green'', ''blue'', ''white'', ''yellow'')"},"icon":{"type":"string","description":"Icon
-        to display with the text (optional)"}},"required":["text"]}}},{"type":"function","function":{"name":"play_music","description":"Play
+        long to display the message in seconds (default: 30)","minimum":1,"maximum":60},"color":{"type":"string","description":"hex
+        code ie #ff0000 for red (defaults yellow but recommended)"},"wakeup":{"type":"boolean","description":"wakeup
+        screen if asleep (default true)"},"rainbow":{"type":"boolean","description":"rainbow
+        text! (default false)"}},"required":["text"]}}},{"type":"function","function":{"name":"play_music","description":"Play
         music on the Cube''s jukebox with fuzzy search - can search by song, artist,
         or any combination","parameters":{"type":"object","properties":{"media_id":{"type":"string","description":"REQUIRED:
         The song you want to play - fuzzy search works, so can do ''Watermelon Man
@@ -62,7 +55,7 @@ http_interactions:
         to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"mode_control","description":"Control
         special operational modes of the Cube (emergency, stealth, theme song)","parameters":{"type":"object","properties":{"mode":{"type":"string","description":"Mode
         to control","enum":["emergency_mode","stealth_mode","play_theme_song"]},"action":{"type":"string","description":"Action
-        to perform","enum":["activate","deactivate","toggle"]}},"required":["mode","action"]}}}],"tool_choice":"auto","temperature":0.1,"max_tokens":12000}'
+        to perform","enum":["activate","deactivate","toggle"]}},"required":["mode","action"]}}}],"tool_choice":"auto"}'
     headers:
       Authorization:
       - Bearer <OPENROUTER_API_KEY>
@@ -86,7 +79,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 18 Aug 2025 13:36:08 GMT
+      - Thu, 21 Aug 2025 10:56:42 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -94,13 +87,13 @@ http_interactions:
       Connection:
       - keep-alive
       Cf-Ray:
-      - 9711cc50dcef72ea-ORD
+      - 97299ae97effa1fb-MSP
       Access-Control-Allow-Origin:
       - "*"
       Vary:
       - Accept-Encoding
       Helicone-Id:
-      - 62c00967-97db-4434-8ff1-103306f05ed2
+      - 373f2acf-d799-4aa3-9f49-39cc39445e1e
       Helicone-Status:
       - success
       Permissions-Policy:
@@ -115,12 +108,12 @@ http_interactions:
     body:
       encoding: ASCII-8BIT
       string: "\n         \n\n         \n\n         \n\n         \n\n         \n\n
-        \        \n\n         \n{\"id\":\"gen-1755524165-LSfQLDzU0JHuEeQMFHYR\",\"provider\":\"OpenAI\",\"model\":\"openai/gpt-4o-mini\",\"object\":\"chat.completion\",\"created\":1755524165,\"choices\":[{\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"refusal\":null,\"reasoning\":null,\"tool_calls\":[{\"index\":0,\"id\":\"call_eGYtwYHQnLB9apdKb1zumB1w\",\"type\":\"function\",\"function\":{\"name\":\"set_light_color_and_brightness\",\"arguments\":\"{\\\"entity_id\\\":
-        \\\"light.cube_light_top\\\", \\\"rgb_color\\\": [255, 0, 255], \\\"brightness_percent\\\":
-        75}\"}},{\"index\":1,\"id\":\"call_XYc8gzftrjdE7gaAhgrGwirP\",\"type\":\"function\",\"function\":{\"name\":\"set_light_color_and_brightness\",\"arguments\":\"{\\\"entity_id\\\":
-        \\\"light.cube_voice_ring\\\", \\\"rgb_color\\\": [255, 0, 255], \\\"brightness_percent\\\":
-        75}\"}},{\"index\":2,\"id\":\"call_R3tORALwZkKw14VEteJE1egs\",\"type\":\"function\",\"function\":{\"name\":\"set_light_color_and_brightness\",\"arguments\":\"{\\\"entity_id\\\":
-        \\\"light.cube_inner\\\", \\\"rgb_color\\\": [255, 0, 255], \\\"brightness_percent\\\":
-        75}\"}}]}}],\"system_fingerprint\":\"fp_560af6e559\",\"usage\":{\"prompt_tokens\":1351,\"completion_tokens\":126,\"total_tokens\":1477,\"prompt_tokens_details\":{\"cached_tokens\":0,\"audio_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}"
-  recorded_at: Mon, 18 Aug 2025 13:36:08 GMT
+        \        \n{\"id\":\"gen-1755773800-PCo2SMgBAbVPApTGDaYY\",\"provider\":\"OpenAI\",\"model\":\"openai/gpt-4o-mini\",\"object\":\"chat.completion\",\"created\":1755773800,\"choices\":[{\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"refusal\":null,\"reasoning\":null,\"tool_calls\":[{\"index\":0,\"id\":\"call_WTYPBX9JCCy7ytI3kwTUfYkD\",\"type\":\"function\",\"function\":{\"name\":\"set_light_state\",\"arguments\":\"{\\\"entity_id\\\":
+        \\\"light.cube_light_top\\\", \\\"state\\\": \\\"on\\\", \\\"brightness\\\":
+        75, \\\"rgb_color\\\": \\\"255,0,255\\\"}\"}},{\"index\":1,\"id\":\"call_3VELLLcHSPT67SidEJEazU8K\",\"type\":\"function\",\"function\":{\"name\":\"set_light_state\",\"arguments\":\"{\\\"entity_id\\\":
+        \\\"light.cube_inner\\\", \\\"state\\\": \\\"on\\\", \\\"brightness\\\": 75,
+        \\\"rgb_color\\\": \\\"255,0,255\\\"}\"}},{\"index\":2,\"id\":\"call_xElTknk4qhXxWqKlXKn8hRM3\",\"type\":\"function\",\"function\":{\"name\":\"set_light_state\",\"arguments\":\"{\\\"entity_id\\\":
+        \\\"light.cube_voice_ring\\\", \\\"state\\\": \\\"on\\\", \\\"brightness\\\":
+        75, \\\"rgb_color\\\": \\\"255,0,255\\\"}\"}}]}}],\"system_fingerprint\":\"fp_560af6e559\",\"usage\":{\"prompt_tokens\":1057,\"completion_tokens\":126,\"total_tokens\":1183,\"prompt_tokens_details\":{\"cached_tokens\":0,\"audio_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}"
+  recorded_at: Thu, 21 Aug 2025 10:56:42 GMT
 recorded_with: VCR 6.3.1

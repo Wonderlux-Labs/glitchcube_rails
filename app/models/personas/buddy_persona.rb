@@ -50,6 +50,25 @@ class Personas::BuddyPersona < CubePersona
     }
   end
 
+  def available_tools
+    # Get base tools from configuration
+    base_tools_config = persona_config.dig("base_tools") || {}
+    includes = base_tools_config["includes"] || []
+    excludes = base_tools_config["excludes"] || []
+
+    # Start with available_tools from config
+    tools = persona_config["available_tools"] || [ "LightingTool" ]
+
+    # Add any specifically included tools
+    tools += includes
+
+    # Remove any specifically excluded tools
+    tools -= excludes
+
+    # Remove duplicates and return
+    tools.uniq
+  end
+
   private
 
   def persona_config
@@ -72,9 +91,5 @@ class Personas::BuddyPersona < CubePersona
       "traits" => [ "enthusiastic", "helpful" ],
       "fallback_responses" => [ "I'm processing your request!" ]
     }
-  end
-
-  def available_tools
-    persona_config["available_tools"] || [ "LightingTool" ]
   end
 end

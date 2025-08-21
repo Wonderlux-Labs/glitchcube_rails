@@ -173,13 +173,24 @@ class ToolExecutor
 
     # Handle OpenRouter::ToolCall objects
     if tool_call.is_a?(OpenRouter::ToolCall)
-      tool_class = Tools::Registry.get_tool(tool_call.name)
-      return ValidatedToolCall.new(tool_call, tool_class)
+      begin
+        tool_class = Tools::Registry.get_tool(tool_call.name)
+        return ValidatedToolCall.new(tool_call, tool_class)
+      rescue OpenRouter::ToolCallError => e
+        Rails.logger.error "❌ Malformed tool call from LLM: #{tool_call.name} - #{e.message}"
+        # Return a failed ValidatedToolCall for malformed arguments
+        return ValidatedToolCall.new(tool_call.name, {}, nil, [ "Malformed arguments: #{e.message}" ])
+      end
     end
 
     # Handle hash/legacy tool call data
     tool_name = tool_call.respond_to?(:name) ? tool_call.name : tool_call["name"]
-    arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call["arguments"]
+    begin
+      arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call["arguments"]
+    rescue OpenRouter::ToolCallError => e
+      Rails.logger.error "❌ Malformed tool call arguments: #{tool_name} - #{e.message}"
+      arguments = {}
+    end
 
     tool_call_data = {
       "id" => "legacy_#{SecureRandom.uuid}",
@@ -227,7 +238,7 @@ class ToolExecutor
       # Execute the actual tool
       result = Tools::Registry.execute_tool(
         validated_tool_call.name,
-        **validated_tool_call.arguments.symbolize_keys
+        **validated_tool_call.arguments
       )
 
       duration_ms = Process.clock_gettime(Process::CLOCK_MONOTONIC, :float_millisecond) - start_time

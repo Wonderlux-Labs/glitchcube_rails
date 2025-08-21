@@ -1,0 +1,18 @@
+MODEL TEST HARNESS - Started: 2025-08-19 23:20:07 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku, baidu/ernie-4.5-21b-a3b, arliai/qwq-32b-arliai-rpr-v1
+Tool models: google/gemini-2.0-flash-lite-001, mistralai/mistral-medium-3.1, openai/gpt-oss-120b, baidu/ernie-4.5-21b-a3b, thudm/glm-z1-32b
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Oh hell fucking yeah baby! I love a good party! What do you want, a rave, a wave of rave rounds, or maybe a good old fashioned rave parade?
+  Time: 5.281s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: What's going on? This fucking gala is lit! Cranking up some rad tunes and crisscrossing the damn dance floor. Lotta energy in the air. It's like, crazy crowded, people are screaming and having a blast. Lotta twinkles and bubbly drinks too. I'm hyped!
+  Time: 2.988s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Turns: 3, Total: 11.266s
+TEST neversleep/llama-3.1-lumimaid-8b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: This whole damn installation is the fucking party, man! Let me show you how to get this place pyschedelic as fuck.
+  Time: 5.907s
+  Tools: 0 intents, 0 calls

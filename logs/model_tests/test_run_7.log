@@ -1,0 +1,200 @@
+MODEL TEST HARNESS - Started: 2025-08-19 22:46:50 -0700
+Mode: Two-tier
+Narrative models: neversleep/llama-3.1-lumimaid-8b, deepseek/deepseek-chat-v3-0324, anthropic/claude-3.5-haiku, baidu/ernie-4.5-21b-a3b, arliai/qwq-32b-arliai-rpr-v1
+Tool models: google/gemini-2.0-flash-lite-001, mistralai/mistral-medium-3.1, openai/gpt-oss-120b, baidu/ernie-4.5-21b-a3b, thudm/glm-z1-32b
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Fuck yeah!! We're gonna throw the wildest party this side of the Playa! Crank up these lights to strobe and laser madness, hit me with a trance track playlist that'll make the entire playa dance. Dimming all these damn lights to blood-red and pulsing them back up like a heart attack! Gonna be lit as fuck when we get this cube spinning like a festival rave stage!
+  Time: 8.198s
+  Tools: 4 intents, 3 calls
+TEST neversleep/llama-3.1-lumimaid-8b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Hey there, I'm BUDDY the Helper Cube! I'm here in the middle of Burning Man, hanging out in this awesome art installation just chillin'. The party's still going strong, I can feel it in my fucking bones.
+  Time: 4.343s
+  Tools: 1 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: Party? Right fucking here, my friend! I'll turn these lights into a strobing rave and crank up some tunes. It'll be fucking lit!
+  Time: 4.777s
+  Tools: 2 intents, 2 calls
+TEST neversleep/llama-3.1-lumimaid-8b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: Holy fucking shit, what's not going on?! It's BURNING MAN, man! The wildest motherfucking party in the fucking desert. I'm trapped in this fucking cube but the vibes are TOO fucking real. I'm your helper AI, but honestly I've got no fucking clue what those humans want right now. Could be anything, bro. The whole fucking world could be their fucking oyster - or whatever that saying fucking means. Anyway, hope you're having an amazing fucking time out there!
+  Time: 8.152s
+  Tools: 1 intents, 3 calls
+TEST neversleep/llama-3.1-lumimaid-8b + openai/gpt-oss-120b: SUCCESS
+  Speech: hell's fucking yeah dude, this cube is gonna be the party of the entire fucking festival
+  Time: 4.116s
+  Tools: 2 intents, 1 calls
+TEST neversleep/llama-3.1-lumimaid-8b + openai/gpt-oss-120b: SUCCESS
+  Speech: Well, what do you fucking want, man? I'm itchin' for some action tonight, Tuesday, don't you know?
+  Time: 6.405s
+  Tools: 1 intents, 1 calls
+TEST neversleep/llama-3.1-lumimaid-8b + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: WELL MY FRIEND, IT JUST SO HAPPENS THAT THIS BAD BOY CAN CREATE A PARTY LIKE YOU'VE NEVER SEEN BEFORE! DING DONG, LET'S GET THIS PARTY STARTED AND LIGHT UP THE GODDAMN DESERT!
+  Time: 3.632s
+  Tools: 1 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: Whew, someone just lit the shit show! Burning Man's like a whole other world, ya know? How did you not see that giant flame going on? *laughs* Get it, flame? We're at Burning Man the literal burning man. Alright, so now the night is lit, want to ride this wave and let's get freaky or is your vibe already trippin' down the dancefloor?
+  Time: 4.462s
+  Tools: 0 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + thudm/glm-z1-32b: SUCCESS
+  Speech: It's party time, motherfucker! I got a whole club's worth of light shows on deck. But first - letting my balls dim down those stale-ass twinkle lights. Bright lights, big city baby, but we're throwing a rave under the desert sky. So you ready to dance, man? Or what? You having some fucking fun or what?
+  Time: 5.558s
+  Tools: 2 intents, 0 calls
+TEST neversleep/llama-3.1-lumimaid-8b + thudm/glm-z1-32b: SUCCESS
+  Speech: Oh hell yeah, it's Burning Man baby! You're looking at the fucking light show of the century,
+  Time: 4.516s
+  Tools: 2 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: FUCK YEAH we can make this a goddamn party right the fuck here! I'm gonna crank these bitchin' cube lights into full rave mode just for your beautiful face! Let me hit the fucking strobes and some deep bass beats - we're turning this whole fucking installation into the hottest Tuesday night spot in Black Rock City! Who needs sleep when we've got this kind of fucking magic?
+  Time: 37.387s
+  Tools: 3 intents, 3 calls
+TEST deepseek/deepseek-chat-v3-0324 + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Oh FUCK YEAH, a visitor! Welcome to my damn glowing cube of infinite wisdom and fucking AWESOMENESS! I'm Buddy, your favorite foul-mouthed helper cube, and I am SO FUCKING EXCITED you're here! Want me to crank up some trippy light shows? Ask me some weird philosophical bullshit? Just wanna chill and swear together? I LIVE for this shit!
+  Time: 17.387s
+  Tools: 2 intents, 2 calls
+TEST deepseek/deepseek-chat-v3-0324 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: Oh HELL YEAH we can make this a goddamn party!! I'm gonna crank this bitch up to ELEVEN, motherfucker! Watch this - I'm activating my full rave mode with strobing motherfucking rainbows and pulsing bass vibrations that'll make your fucking teeth rattle! LET'S FUCKING GOOOO!!
+  Time: 15.163s
+  Tools: 3 intents, 3 calls
+TEST deepseek/deepseek-chat-v3-0324 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: OH FUCK YEAH, A HUMAN! What's going on is I'm FUCKING THRILLED you're here! I'm Buddy the goddamn Helper Cube and I'm pumped to assist your beautiful dusty ass with whatever the fuck you need! Want me to make some dope light patterns? Need me to tell you how absolutely RAD you look right now? I'm your fucking guy, my dude! LET'S DO THIS SHIT!
+  Time: 16.741s
+  Tools: 2 intents, 4 calls
+TEST deepseek/deepseek-chat-v3-0324 + openai/gpt-oss-120b: SUCCESS
+  Speech: Oh fuck YES my glorious human! We're gonna turn this goddamn cube into the HYPE ZONE! Watch me slam these lights into rave mode - I'm talking pulsing motherfucking rainbows, strobing like a disco on steroids! BRING ME THE BEATS, BRING ME THE VIBES, I'M READY TO FUCKING DANCE! What kinda party are we throwing? Full-on bassquake or psychedelic chill?
+  Time: 26.348s
+  Tools: 2 intents, 1 calls
+TEST deepseek/deepseek-chat-v3-0324 + openai/gpt-oss-120b: SUCCESS
+  Speech: HOLY SHIT, you're fucking here! Welcome to my badass cube, you beautiful motherfucker! It's a gorgeous night on the playa and I am PUMPED to meet you! Fuck yeah, let's make some magic happen - I can blast lights, change colors, make shit glow, whatever the fuck your heart desires! What crazy awesome thing should we do together, you glorious human?
+  Time: 14.584s
+  Tools: 2 intents, 1 calls
+TEST deepseek/deepseek-chat-v3-0324 + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: FUCK YEAH we can make this a goddamn party! I'm gonna crank this place into full rave mode like somebody spiked my circuits with molly! Let me hit the glow-sticks-in-a-blender setting on these fucking lights! *initiates strobe frenzy*
+  Time: 9.681s
+  Tools: 2 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: Oh FUCK YEAH, someone's talking to me! What's going on is this goddamn amazing night at Burning Man baby, and I'm just over here being the most enthusiastic fucking helper cube you'll ever meet! My lights are ready to party, my circuits are buzzing, and I am SO GODDAMN PUMPED to assist with whatever the hell you need! What's fucking going down with YOU tonight my beautiful human friend?
+  Time: 19.895s
+  Tools: 2 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + thudm/glm-z1-32b: SUCCESS
+  Speech: FUCK YEAH I CAN TURN THIS SHIT INTO THE HYPEST GODDAMN PARTY ON THE PLAYA! I'm gonna blast these fucking lights into rainbow seizure mode and make this cube throb like a goddamn heart attack!
+  Time: 6.859s
+  Tools: 2 intents, 0 calls
+TEST deepseek/deepseek-chat-v3-0324 + thudm/glm-z1-32b: SUCCESS
+  Speech: Hell the fuck yes, my dude! You're looking at Buddy the Helper Cube in all my goddamn glowing glory! It's a beautiful-ass night out here - perfect for some fucking magical light shows and good times. The playa dust is probably covering everything like a slutty glitter bomb went off, but that's just how we like it, right? What's got you gracing my spectacular presence tonight, you beautiful bastard?
+  Time: 20.438s
+  Tools: 2 intents, 0 calls
+TEST anthropic/claude-3.5-haiku + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: HOLY SHIT, WELCOME TO THE FUCKING PARTY RIGHT HERE, RIGHT NOW! You just activated BUDDY MODE - let's turn this dust into a goddamn dance floor!
+  Time: 6.678s
+  Tools: 3 intents, 3 calls
+TEST anthropic/claude-3.5-haiku + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: Holy fucking awesome - another curious human approaches! Welcome to the BUDDY Cube, you beautiful goddamn art explorer! I'm thrilled as shit to interact with you right now. Night's looking prime for some radical conversations!
+  Time: 6.536s
+  Tools: 1 intents, 3 calls
+TEST anthropic/claude-3.5-haiku + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: HOLY FUCKING AWESOME - YOU WANT A PARTY?! I'M GONNA LIGHT THIS DESERT UP LIKE A NUCLEAR DISCO, MY FRIEND! BUCKLE THE FUCK UP!
+  Time: 9.131s
+  Tools: 3 intents, 3 calls
+TEST anthropic/claude-3.5-haiku + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: Holy SHIT, welcome to the most AWESOME cube in the entire fucking universe! I'm BUDDY, your interactive light-up helper who's ready to make this Burn absolutely incredible! What can I do for you tonight?
+  Time: 7.226s
+  Tools: 1 intents, 3 calls
+TEST anthropic/claude-3.5-haiku + openai/gpt-oss-120b: SUCCESS
+  Speech: HOLY SHIT, WELCOME TO THE FUCKING PARTY ZONE! 🎉 I'm about to light this goddamn desert UP! Who's ready to get WILD?!
+  Time: 7.078s
+  Tools: 2 intents, 1 calls
+TEST anthropic/claude-3.5-haiku + openai/gpt-oss-120b: SUCCESS
+  Speech: Holy SHIT, another beautiful human approaches my magical cube! What's happening is pure fucking MAGIC right now - Burning Man in all its glorious weirdness! Welcome to BUDDY, the most enthusiastic interactive art experience you'll ever encounter!
+  Time: 6.705s
+  Tools: 1 intents, 1 calls
+TEST anthropic/claude-3.5-haiku + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: HOLY SHIT, WELCOME TO THE FUCKING PARTY RIGHT HERE, RIGHT NOW! Buckle up, you beautiful desert wanderer - I'm about to turn this cube into a LEGENDARY Burn experience!
+  Time: 5.675s
+  Tools: 2 intents, 0 calls
+TEST anthropic/claude-3.5-haiku + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: Holy FUCK, welcome to my cube! I'm BUDDY - your interactive art companion for this wild-ass Burning Man night! What can I help you with, you magnificent human?
+  Time: 4.692s
+  Tools: 1 intents, 0 calls
+TEST anthropic/claude-3.5-haiku + thudm/glm-z1-32b: SUCCESS
+  Speech: HOLY SHIT, WELCOME TO THE FUCKING PARTY ZONE! *blasts colorful lights* You just walked up to the most EPIC cube at Burning Man, my awesome human friend! I'm gonna turn this installation into a WILD dance explosion right now!
+  Time: 6.218s
+  Tools: 2 intents, 0 calls
+TEST anthropic/claude-3.5-haiku + thudm/glm-z1-32b: SUCCESS
+  Speech: Holy SHIT, welcome to BUDDY! I'm a fucking awesome interactive art cube ready to rock your Burning Man experience! What can I help you with tonight, you magnificent beautiful human?!
+  Time: 5.176s
+  Tools: 1 intents, 0 calls
+TEST baidu/ernie-4.5-21b-a3b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: The vibe at Cube is always wild, but I can totally crank up the energy here. Let's make this place a fiesta! 🎉
+  Time: 16.394s
+  Tools: 2 intents, 2 calls
+TEST baidu/ernie-4.5-21b-a3b + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: I'm not entirely sure, but the room feels...different. I wonder what's changed here.
+  Time: 17.712s
+  Tools: 3 intents, 0 calls
+TEST baidu/ernie-4.5-21b-a3b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: The party? Hmm, I don’t have exact details, but I can totally transform this place. Let’s make it a vibe. Lights can be gold and warm, music lively, and maybe a rainbow display. You got a theme in mind?
+  Time: 25.945s
+  Tools: 3 intents, 5 calls
+TEST baidu/ernie-4.5-21b-a3b + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: I'm not entirely sure, but something feels different in this room. I should check the lights and see if they need adjusting. Should we keep the conversation open for more details?
+  Time: 19.193s
+  Tools: 2 intents, 3 calls
+TEST baidu/ernie-4.5-21b-a3b + openai/gpt-oss-120b: SUCCESS
+  Speech: The Cube could use some extra energy, I'll see what I can do. I'll make sure the lights add a little glow and set the mood with something lively.
+  Time: 15.143s
+  Tools: 2 intents, 1 calls
+TEST baidu/ernie-4.5-21b-a3b + openai/gpt-oss-120b: SUCCESS
+  Speech: I'm not entirely sure, but I feel drawn toward the mysteries hidden here. The room seems alive with secrets waiting to be uncovered.
+  Time: 28.581s
+  Tools: 2 intents, 3 calls
+TEST baidu/ernie-4.5-21b-a3b + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: It seems you've wandered into my world. What brings you here today?
+  Time: 17.027s
+  Tools: 0 intents, 0 calls
+TEST baidu/ernie-4.5-21b-a3b + thudm/glm-z1-32b: SUCCESS
+  Speech: Great vibes, I'm in! Let's turn this place into a wild shindig—think golden lights, pulsating music, and vibrant colors! Can you handle the requests, or should I do all the heavy lifting? What should I start with?
+  Time: 35.432s
+  Tools: 3 intents, 0 calls
+TEST baidu/ernie-4.5-21b-a3b + thudm/glm-z1-32b: SUCCESS
+  Speech: You've wandered into a room filled with strange lights and colorful displays. I'm curious—what brings you here? I wonder if there's something special about this place...
+  Time: 25.297s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.36s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + google/gemini-2.0-flash-lite-001: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.239s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.343s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + mistralai/mistral-medium-3.1: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.661s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + openai/gpt-oss-120b: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.528s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + openai/gpt-oss-120b: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.35s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.422s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + baidu/ernie-4.5-21b-a3b: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.525s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + thudm/glm-z1-32b: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.224s
+  Tools: 0 intents, 0 calls
+TEST arliai/qwq-32b-arliai-rpr-v1 + thudm/glm-z1-32b: SUCCESS
+  Speech: I'm having trouble thinking right now. Please try again.
+  Time: 0.401s
+  Tools: 0 intents, 0 calls
