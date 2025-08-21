@@ -27,11 +27,12 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
         "id" => "async_integration_test",
         "type" => "function",
         "function" => {
-          "name" => "set_light_color_and_brightness",
+          "name" => "set_light_state",
           "arguments" => JSON.generate({
             "entity_id" => "light.cube_inner",
-            "rgb_color" => [ 255, 128, 0 ],
-            "brightness_percent" => 75
+            "state" => "on",
+            "rgb_color" => "255,128,0",
+            "brightness" => 75
           })
         }
       }
@@ -39,7 +40,7 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
       openrouter_call = OpenRouter::ToolCall.new(tool_call_data)
 
       # Get the tool definition (this should work without mocking)
-      tool_definition = Tools::Registry.get_tool('set_light_color_and_brightness')
+      tool_definition = Tools::Registry.get_tool('set_light_state')
       expect(tool_definition).not_to be_nil
 
       # Create ValidatedToolCall
@@ -62,7 +63,7 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
 
       # Verify the job arguments are serializable
       expect(enqueued_job[:args]).to be_an(Array)
-      expect(enqueued_job[:args][0]).to eq('set_light_color_and_brightness') # tool_name
+      expect(enqueued_job[:args][0]).to eq('set_light_state') # tool_name
       expect(enqueued_job[:args][1]).to be_a(Hash) # arguments
       expect(enqueued_job[:args][2]).to eq(session_id)
       expect(enqueued_job[:args][3]).to eq(conversation_id)
@@ -71,11 +72,12 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
     it "handles job execution and result storage" do
       # Perform the job synchronously for testing
       job_result = AsyncToolJob.perform_now(
-        'set_light_color_and_brightness',
+        'set_light_state',
         {
           'entity_id' => 'light.cube_inner',
-          'rgb_color' => [ 255, 128, 0 ],
-          'brightness_percent' => 75
+          'state' => 'on',
+          'rgb_color' => '255,128,0',
+          'brightness' => 75
         },
         session_id,
         conversation_id
@@ -86,7 +88,7 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
       expect(job_result[:success]).to be_truthy
 
       # Verify metrics were recorded
-      stats = ToolMetrics.stats_for('set_light_color_and_brightness')
+      stats = ToolMetrics.stats_for('set_light_state')
       expect(stats[:count]).to eq(1)
       expect(stats[:p95]).to be > 0 # Should have recorded some timing
 
@@ -103,7 +105,7 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
     it "gracefully handles tool validation failures in async execution" do
       # Test with invalid arguments that should fail validation
       job_result = AsyncToolJob.perform_now(
-        'set_light_color_and_brightness',
+        'set_light_state',
         { 'entity_id' => 'light.invalid_entity' }, # Missing required parameters
         session_id,
         conversation_id
@@ -115,7 +117,7 @@ RSpec.describe "Async Tool Execution Integration", type: :integration do
       expect(job_result[:error]).to be_present
 
       # Metrics should still be recorded for the failure
-      stats = ToolMetrics.stats_for('set_light_color_and_brightness')
+      stats = ToolMetrics.stats_for('set_light_state')
       expect(stats[:count]).to eq(1)
     end
   end

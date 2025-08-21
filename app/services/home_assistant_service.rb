@@ -123,6 +123,21 @@ class HomeAssistantService
     post("/api/conversation/process", data)
   end
 
+  # Send conversation response for performance mode
+  def send_conversation_response(response_data)
+    # Extract speech text from response data structure
+    speech_text = response_data.dig(:response, :speech, :plain, :speech) ||
+                  response_data.dig("response", "speech", "plain", "speech")
+
+    return { error: "No speech text found in response data" } unless speech_text
+
+    # Use existing conversation process method
+    conversation_process(
+      text: speech_text,
+      conversation_id: response_data[:conversation_id] || response_data["conversation_id"]
+    )
+  end
+
   # Get history for entity
   def history(entity_id, start_time = nil, end_time = nil)
     path = "/api/history/period"

@@ -1,0 +1,985 @@
+================================================================================
+ENHANCED MODEL TEST HARNESS
+Started: 2025-08-21 01:38:36 -0700
+Two-tier mode: true
+Narrative models: openai/gpt-4o, anthropic/claude-3-5-sonnet, openai/gpt-4o-mini
+Tool models: openai/gpt-4o-mini, anthropic/claude-3-haiku, openai/gpt-4o
+Test scenarios: 5
+================================================================================
+
+Starting 45 total tests
+-----------------------
+
+------------------------------------------------------------
+TEST 1/45: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 2/45: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 3/45: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 4/45: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 5/45: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o-mini
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 6/45: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 7/45: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 8/45: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 9/45: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 10/45: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o
+  Tool Model: anthropic/claude-3-haiku
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 11/45: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 12/45: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 13/45: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 14/45: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 15/45: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o
+  Tool Model: openai/gpt-4o
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 16/45: Action + Query test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 17/45: Query + Action test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 18/45: Pure conversation test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 19/45: Multiple actions test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 20/45: Multi-turn with context
+Type: MULTI
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o-mini
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 21/45: Action + Query test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 22/45: Query + Action test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 23/45: Pure conversation test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 24/45: Multiple actions test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 25/45: Multi-turn with context
+Type: MULTI
+Narrative: anthropic/claude-3-5-sonnet
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: anthropic/claude-3-haiku
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 26/45: Action + Query test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 27/45: Query + Action test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 28/45: Pure conversation test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 29/45: Multiple actions test
+Type: SINGLE
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 30/45: Multi-turn with context
+Type: MULTI
+Narrative: anthropic/claude-3-5-sonnet
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: anthropic/claude-3-5-sonnet
+  Tool Model: openai/gpt-4o
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 31/45: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 32/45: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 33/45: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 34/45: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 35/45: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 36/45: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 37/45: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 38/45: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 39/45: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3-haiku
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 40/45: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3-haiku
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3-haiku
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+------------------------------------------------------------
+TEST 41/45: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Action + Query test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 42/45: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Query + Action test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 43/45: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Pure conversation test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 44/45: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o
+
+ERROR:
+  Test: Multiple actions test
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:275:in `block in test_single_conversation'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:274:in `test_single_conversation'
+
+------------------------------------------------------------
+TEST 45/45: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness
+  Backtrace:
+    scripts/enhanced_model_test_harness.rb:149:in `call_with_structured_output'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/conversation_orchestrator.rb:45:in `call'
+    scripts/enhanced_model_test_harness.rb:348:in `block (2 levels) in test_multi_turn'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/gems/benchmark-0.4.1/lib/benchmark.rb:324:in `realtime'
+    scripts/enhanced_model_test_harness.rb:347:in `block in test_multi_turn'
+
+================================================================================
+TEST SUMMARY
+================================================================================
+Total tests: 45
+Successful: 0
+Failed: 45
+Total execution time: 7.63s
+Log saved to: logs/model_tests/enhanced_test_run_2.log
+
+DETAILED METRICS
+----------------
+LLM CALL PERFORMANCE:
+
+TEST TYPE PERFORMANCE:
+
+MODEL COMBINATION ANALYSIS:
+
+ERROR ANALYSIS:
+  private method `track_llm_call_start' called for an instance of EnhancedModelTestHarness: 45 occurrences

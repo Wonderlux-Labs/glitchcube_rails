@@ -8,6 +8,7 @@ class GoalService
     CURRENT_GOAL_KEY = "current_goal"
     GOAL_STARTED_AT_KEY = "current_goal_started_at"
     GOAL_TIME_LIMIT_KEY = "current_goal_max_time_limit"
+    LAST_CATEGORY_KEY = "last_goal_category"
 
     # Load all goals from YAML
     def load_goals
@@ -19,23 +20,24 @@ class GoalService
     end
 
     # Select and set a new goal based on current conditions
-    def select_goal(time_limit: 30.minutes)
+    def select_goal(time_limit: 2.hours)
       Rails.logger.info "🎯 Selecting new goal"
 
       goals_data = load_goals
       return nil if goals_data.empty?
 
-      # Check if we need safety goals
-      if safety_mode_active?
-        selected_goal = select_random_goal_from_category(goals_data["safety_goals"])
-        Rails.logger.info "⚠️ Safety mode active - selected safety goal: #{selected_goal}"
-      else
-        # Random selection from non-safety categories
-        available_categories = goals_data.keys.reject { |k| k == "safety_goals" }
-        random_category = available_categories.sample
-        selected_goal = select_random_goal_from_category(goals_data[random_category])
-        Rails.logger.info "🎲 Selected goal from #{random_category}: #{selected_goal}"
-      end
+      # Get last category to avoid repeating
+      last_category = Rails.cache.read(LAST_CATEGORY_KEY)
+
+      # Get available categories excluding the last one used
+      available_categories = goals_data.keys
+      available_categories = available_categories.reject { |cat| cat == last_category } if last_category && available_categories.size > 1
+
+      # Select random category from available ones
+      selected_category = available_categories.sample
+      selected_goal = select_random_goal_from_category(goals_data[selected_category], selected_category)
+
+      Rails.logger.info "🎲 Selected goal from #{selected_category}: #{selected_goal}"
 
       return nil unless selected_goal
 
@@ -43,6 +45,7 @@ class GoalService
       Rails.cache.write(CURRENT_GOAL_KEY, selected_goal)
       Rails.cache.write(GOAL_STARTED_AT_KEY, Time.current)
       Rails.cache.write(GOAL_TIME_LIMIT_KEY, time_limit)
+      Rails.cache.write(LAST_CATEGORY_KEY, selected_category)
 
       # Update Home Assistant sensors
       update_home_assistant_goal_sensors(selected_goal, Time.current, time_limit)
@@ -56,7 +59,7 @@ class GoalService
       return nil unless goal
 
       started_at = Rails.cache.read(GOAL_STARTED_AT_KEY)
-      time_limit = Rails.cache.read(GOAL_TIME_LIMIT_KEY) || 30.minutes
+      time_limit = Rails.cache.read(GOAL_TIME_LIMIT_KEY) || 2.hours
 
       {
         goal_id: goal[:id],
@@ -132,40 +135,8 @@ class GoalService
       end
     end
 
-    # Check if safety mode should be active
-    def safety_mode_active?
-      # Check Home Assistant safety mode
-      safety_mode = Rails.cache.fetch("safety_mode_status", expires_in: 1.minute) do
-        ha_service = HomeAssistantService.new
-        safety_entity = ha_service.entity("input_boolean.safety_mode")
-        safety_entity&.dig("state") == "on"
-      end
-
-      # Check battery level
-      battery_critical = battery_level_critical?
-
-      safety_mode || battery_critical
-    rescue StandardError => e
-      Rails.logger.error "Failed to check safety mode: #{e.message}"
-      false # Default to safe operation
-    end
-
-    # Check if battery level requires safety mode
-    def battery_level_critical?
-      Rails.cache.fetch("battery_level_status", expires_in: 2.minutes) do
-        ha_service = HomeAssistantService.new
-        battery_entity = ha_service.entity("input_select.battery_level")
-        battery_level = battery_entity&.dig("state")
-
-        %w[low critical].include?(battery_level&.downcase)
-      end
-    rescue StandardError => e
-      Rails.logger.error "Failed to check battery level: #{e.message}"
-      false
-    end
-
     # Force goal switch (for persona agency)
-    def request_new_goal(reason: "persona_request", time_limit: 30.minutes)
+    def request_new_goal(reason: "persona_request", time_limit: 2.hours)
       Rails.logger.info "🔄 Goal switch requested: #{reason}"
 
       # Complete current goal first if it exists
@@ -179,28 +150,22 @@ class GoalService
 
     private
 
-    def select_random_goal_from_category(category_goals)
+    def select_random_goal_from_category(category_goals, category_name)
       return nil unless category_goals && category_goals.any?
 
       # Convert to array of goal objects with metadata
       goals_array = category_goals.map do |goal_id, goal_data|
+        # Handle both string format and object format
+        description = goal_data.is_a?(String) ? goal_data : goal_data["description"]
+
         {
           id: goal_id,
-          description: goal_data["description"],
-          triggers: goal_data["triggers"] || [],
-          category: find_category_for_goal(goal_id)
+          description: description,
+          category: category_name
         }
       end
 
       goals_array.sample
-    end
-
-    def find_category_for_goal(goal_id)
-      goals_data = load_goals
-      goals_data.each do |category, goals|
-        return category if goals.key?(goal_id)
-      end
-      "unknown"
     end
 
     def calculate_time_remaining(started_at, time_limit)
@@ -216,6 +181,7 @@ class GoalService
       Rails.cache.delete(CURRENT_GOAL_KEY)
       Rails.cache.delete(GOAL_STARTED_AT_KEY)
       Rails.cache.delete(GOAL_TIME_LIMIT_KEY)
+      # Note: We keep LAST_CATEGORY_KEY to prevent repeating categories
     end
 
     # Update Home Assistant sensors with goal state
@@ -228,13 +194,12 @@ class GoalService
         goal[:description],
         {
           friendly_name: "GlitchCube Current Goal",
-          icon: goal[:category].include?("safety") ? "mdi:shield-alert" : "mdi:target",
+          icon: "mdi:target",
           goal_id: goal[:id],
           goal_category: goal[:category],
           started_at: started_at.iso8601,
           time_limit_minutes: (time_limit / 60).to_i,
           expires_at: (started_at + time_limit).iso8601,
-          safety_goal: goal[:category].include?("safety"),
           last_updated: Time.current.iso8601
         }
       )
@@ -262,7 +227,6 @@ class GoalService
           started_at: nil,
           time_limit_minutes: nil,
           expires_at: nil,
-          safety_goal: false,
           last_updated: Time.current.iso8601
         }
       )
@@ -284,7 +248,6 @@ class GoalService
         "goal_category" => goal[:category],
         "goal_started_at" => started_at.iso8601,
         "goal_expires_at" => (started_at + time_limit).iso8601,
-        "safety_mode" => goal[:category].include?("safety"),
         "goal_updated_at" => Time.current.iso8601
       )
 
@@ -306,7 +269,6 @@ class GoalService
         "goal_category" => nil,
         "goal_started_at" => nil,
         "goal_expires_at" => nil,
-        "safety_mode" => false,
         "goal_updated_at" => Time.current.iso8601
       )
 

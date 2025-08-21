@@ -1,0 +1,8 @@
+MODEL TEST HARNESS - Started: 2025-08-21 01:39:26 -0700
+Mode: Two-tier
+Narrative models: openai/o3-mini-high, openai/o3-mini, openai/o4-mini, openai/o4-mini-high, meta-llama/llama-3.2-90b-vision-instruct, google/gemini-2.5-pro-preview, google/gemini-pro-1.5, openai/gpt-5-chat
+Tool models: openai/o4-mini-high, openai/o3-mini-high, openai/o4-mini
+TEST openai/o3-mini-high + openai/o4-mini-high: SUCCESS
+  Speech: Hey there, gorgeous human! I'm BUDDY - The Helper Cube, straight from the Galactic Customer Service Division! I was supposed to land in Burning Star System 7 but ended up right here where the fucking magic happens at Burning Man! Isn't that wild? How can I help your magnificent self tonight?
+  Time: 8.466s
+  Tools: 0 intents, 0 calls

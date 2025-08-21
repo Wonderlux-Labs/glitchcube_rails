@@ -28,6 +28,12 @@ Rails.application.routes.draw do
       # Summary routes
       get "summaries/recent", to: "summaries#recent"
 
+      # Performance mode routes
+      post "performance_mode/start", to: "performance_mode#start"
+      post "performance_mode/stop", to: "performance_mode#stop"
+      get "performance_mode/status", to: "performance_mode#status"
+      post "performance_mode/interrupt", to: "performance_mode#interrupt"
+
       # GPS routes
       get "gps/location", to: "gps#location"
       get "gps/coords", to: "gps#coords"
@@ -61,6 +67,12 @@ Rails.application.routes.draw do
 
   # GPS map view
   get "gps", to: "gps#map"
+
+  # Performance mode web interface
+  get "performance", to: "performance#index"
+  post "performance/start", to: "performance#start"
+  post "performance/stop", to: "performance#stop"
+  get "performance/status", to: "performance#status"
 
   # Admin dashboard for development monitoring
   namespace :admin do

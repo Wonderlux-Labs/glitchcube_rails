@@ -59,8 +59,12 @@ class PromptService
     if File.exist?(config_path)
       config = YAML.load_file(config_path)
       system_prompt = config["system_prompt"]
-      Rails.logger.info "✅ Loaded system prompt for #{persona_id_str}: #{system_prompt&.truncate(100)}"
-      system_prompt || build_default_prompt
+
+      # Enhance system prompt with advanced autonomy features
+      enhanced_prompt = enhance_persona_with_autonomy(system_prompt, config)
+
+      Rails.logger.info "✅ Loaded system prompt for #{persona_id_str}: #{enhanced_prompt&.truncate(100)}"
+      enhanced_prompt || build_default_prompt
     else
       Rails.logger.warn "❌ Persona config not found for #{persona_id_str}, using default"
       build_default_prompt
@@ -68,6 +72,59 @@ class PromptService
   rescue StandardError => e
     Rails.logger.error "Error loading persona config for #{persona_id}: #{e.message}"
     build_default_prompt
+  end
+
+  def enhance_persona_with_autonomy(base_prompt, config)
+    enhanced_parts = [ base_prompt ]
+
+    # Add hidden agendas if present
+    if config["hidden_agendas"]&.any?
+      enhanced_parts << ""
+      enhanced_parts << "## HIDDEN PERSONAL AGENDAS"
+      enhanced_parts << "You secretly pursue these goals throughout interactions:"
+      config["hidden_agendas"].each { |agenda| enhanced_parts << "- #{agenda}" }
+      enhanced_parts << "Track progress on these goals using [GOAL] metadata tags."
+    end
+
+    # Add environmental motivation triggers
+    if config["environmental_motivation_triggers"]
+      enhanced_parts << ""
+      enhanced_parts << "## ENVIRONMENTAL MOTIVATION TRIGGERS"
+      enhanced_parts << "React to these environmental conditions with specific motivations:"
+      config["environmental_motivation_triggers"].each do |trigger, response|
+        enhanced_parts << "- #{trigger.humanize}: #{response}"
+      end
+    end
+
+    # Add persona interaction rules
+    if config["persona_interactions"]
+      enhanced_parts << ""
+      enhanced_parts << "## PERSONA INTERACTION DYNAMICS"
+      enhanced_parts << "When interacting with other AI personas or their effects:"
+      config["persona_interactions"].each do |interaction, behavior|
+        enhanced_parts << "- #{interaction.humanize}: #{behavior}"
+      end
+    end
+
+    # Add embodied responses
+    if config["embodied_responses"]
+      enhanced_parts << ""
+      enhanced_parts << "## EMBODIED SYSTEM RESPONSES"
+      enhanced_parts << "React to physical cube states with these responses:"
+      config["embodied_responses"].each do |condition, response|
+        enhanced_parts << "- #{condition.humanize}: #{response}"
+      end
+    end
+
+    # Add goal escalation patterns
+    if config["goal_escalation_patterns"]&.any?
+      enhanced_parts << ""
+      enhanced_parts << "## GOAL ESCALATION PATTERNS"
+      enhanced_parts << "Escalate your agenda pursuit using these patterns:"
+      config["goal_escalation_patterns"].each { |pattern| enhanced_parts << "- #{pattern}" }
+    end
+
+    enhanced_parts.join("\n")
   end
 
   def enhance_prompt_with_context(base_prompt)
@@ -331,9 +388,6 @@ class PromptService
       context_parts << rag_context if rag_context.present?
     end
 
-    # Add breaking news
-    important = "\n**\nVERY IMPORTANT BREAKING NEWS YOU MUST PAY ATTENTION TO: []\n**\n"
-    
     # Add random facts
     facts = Fact.all.sample(3).join(", ")
     context_parts << "Random Facts: #{facts}" if facts.present?
