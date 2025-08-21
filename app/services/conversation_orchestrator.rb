@@ -21,7 +21,8 @@ class ConversationOrchestrator
     prompt_data = PromptService.build_prompt_for(
       persona: current_persona,
       conversation: @conversation,
-      extra_context: enhanced_context
+      extra_context: enhanced_context,
+      user_message: @message
     )
 
     # PHASE 1: Check for previous HA agent results and inject them
@@ -48,26 +49,43 @@ class ConversationOrchestrator
       model: determine_model_for_conversation
     )
 
-    # Process tool intentions asynchronously via HA conversation agent
+    # Process dual tool execution: direct tools + HA agent delegation
     sync_results = {}
+    direct_tool_results = {}
+    memory_search_results = {}
+
+    # 1. Execute direct tool calls synchronously
+    if response.structured_output&.dig("direct_tool_calls")&.any?
+      direct_tool_results = execute_direct_tools(response.structured_output["direct_tool_calls"])
+      Rails.logger.info "🔧 Executed #{direct_tool_results.keys.length} direct tools"
+    end
+
+    # 2. Execute memory searches
+    if response.structured_output&.dig("search_memories")&.any?
+      memory_search_results = execute_memory_searches(response.structured_output["search_memories"])
+      Rails.logger.info "🧠 Executed #{memory_search_results.keys.length} memory searches"
+    end
+
+    # 3. Process tool intentions asynchronously via HA conversation agent
     if response.structured_output&.dig("tool_intents")&.any?
       Rails.logger.info "🏠 Found #{response.structured_output['tool_intents'].length} tool intentions, delegating to HA agent"
       delegate_to_ha_agent(response.structured_output["tool_intents"])
     end
 
-    # No direct tool analysis needed - everything goes through HA
+    # Combine all results for tool analysis
+    all_sync_results = sync_results.merge(direct_tool_results).merge(memory_search_results)
     tool_analysis = {
-      sync_tools: [],
-      async_tools: [],
-      query_tools: [],
-      action_tools: []
+      sync_tools: direct_tool_results.keys,
+      async_tools: response.structured_output&.dig("tool_intents")&.map { |intent| intent["tool"] } || [],
+      query_tools: memory_search_results.keys,
+      action_tools: direct_tool_results.keys.select { |tool| tool != "rag_search" }
     }
 
-    # Generate final AI response incorporating sync tool results
-    ai_response = generate_ai_response(prompt_data, response, sync_results)
+    # Generate final AI response incorporating all sync tool results
+    ai_response = generate_ai_response(prompt_data, response, all_sync_results)
 
-    # Store conversation log (no tool analysis needed)
-    store_conversation_log(@conversation, ai_response, sync_results, tool_analysis)
+    # Store conversation log with all results
+    store_conversation_log(@conversation, ai_response, all_sync_results, tool_analysis)
 
     # Return formatted response for Home Assistant
     format_response_for_hass(ai_response, tool_analysis)
@@ -680,5 +698,61 @@ class ConversationOrchestrator
 
     # Fallback: return original speech if amendment fails
     original_speech
+  end
+
+  def execute_direct_tools(direct_tool_calls)
+    results = {}
+    
+    direct_tool_calls.each do |tool_call|
+      tool_name = tool_call["tool_name"]
+      parameters = tool_call["parameters"] || {}
+      
+      begin
+        # Convert string keys to symbols for Ruby method calls
+        symbol_params = parameters.transform_keys(&:to_sym)
+        
+        # Execute the tool using the registry
+        result = Tools::Registry.execute_tool(tool_name, **symbol_params)
+        results[tool_name] = result
+        
+        Rails.logger.info "🔧 Direct tool executed: #{tool_name} - #{result[:success] ? 'SUCCESS' : 'FAILED'}"
+      rescue => e
+        Rails.logger.error "❌ Direct tool execution failed: #{tool_name} - #{e.message}"
+        results[tool_name] = { success: false, error: e.message, tool: tool_name }
+      end
+    end
+    
+    results
+  end
+
+  def execute_memory_searches(memory_searches)
+    results = {}
+    
+    memory_searches.each_with_index do |search_request, index|
+      query = search_request["query"]
+      type = search_request["type"] || "all"
+      limit = search_request["limit"] || 3
+      
+      begin
+        # Use the RAG search tool for consistency
+        search_result = Tools::Registry.execute_tool(
+          "rag_search",
+          query: query,
+          type: type,
+          limit: limit
+        )
+        
+        search_key = "memory_search_#{index + 1}"
+        results[search_key] = search_result
+        
+        Rails.logger.info "🧠 Memory search executed: #{query} (#{type}) - found #{search_result.dig(:total_results, 0)} results"
+      rescue => e
+        Rails.logger.error "❌ Memory search failed: #{query} - #{e.message}"
+        search_key = "memory_search_#{index + 1}"
+        results[search_key] = { success: false, error: e.message, query: query }
+      end
+    end
+    
+    results
   end
 end

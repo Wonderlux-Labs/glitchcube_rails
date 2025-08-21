@@ -23,7 +23,10 @@ class Tools::Registry
         "mode_control" => Tools::Modes::ModeControl,
 
         # Communication tools
-        "make_announcement" => Tools::Communication::Announcement
+        "make_announcement" => Tools::Communication::Announcement,
+
+        # Query tools
+        "rag_search" => Tools::Query::RagSearch
       }
     end
 
@@ -206,7 +209,10 @@ class Tools::Registry
         Tools::Effects::ControlEffects,
 
         # Communication
-        Tools::Communication::Announcement
+        Tools::Communication::Announcement,
+
+        # Query
+        Tools::Query::RagSearch
       ]
 
       case persona&.to_s&.downcase

@@ -187,9 +187,9 @@ class WorldStateUpdaters::ConversationSummarizerService
     response = LlmService.generate_text(
       prompt: prompt,
       system_prompt: build_system_prompt,
-      model: "google/gemini-2.5-flash",
-      temperature: 0.4,
-      max_tokens: 1500
+      model: Rails.configuration.summarizer_model,
+      temperature: 0.3,
+      max_tokens: 2000
     )
 
     parse_summary_response(response)
@@ -206,8 +206,10 @@ class WorldStateUpdaters::ConversationSummarizerService
       1. **important_questions** - Key questions that were asked or need follow-up
       2. **useful_thoughts** - Valuable insights, realizations, or patterns observed
       3. **goal_progress** - Did the persona make progress toward or complete their current goal? (completed, good_progress, some_progress, no_progress, goal_changed)
-      4. **people to remember** - Concise overview of what happened in this time period
-      5  **events past or present** - Events must have a description and and address and a d
+      4. **people** - People mentioned in the conversation with their relationship/context
+      5. **events** - Events discussed (past or future) with time/location when available
+      6. **topics** - Main topics or themes discussed
+      
       Return JSON format:
       {
         "general_mood": "excited and helpful",
@@ -220,10 +222,27 @@ class WorldStateUpdaters::ConversationSummarizerService
           "Strong interest in fire performances and art"
         ],
         "goal_progress": "good_progress",
+        "people": [
+          {
+            "name": "Sarah",
+            "description": "Friend from camp who knows about fire spinning",
+            "relationship": "campmate"
+          }
+        ],
+        "events": [
+          {
+            "title": "Temple Burn",
+            "description": "Final ceremony where the Temple is burned",
+            "time": "Sunday night",
+            "location": "Temple",
+            "importance": 9
+          }
+        ],
+        "topics": ["art installations", "fire performances", "playa survival"],
         "general_summary": "Active planning session for Burning Man activities, focusing on art and performances. User showed high engagement and excitement."
       }
 
-      Focus on actionable insights and emotional patterns. Keep it concise but meaningful.
+      Focus on actionable insights and emotional patterns. Extract people and events mentioned even if details are incomplete.
     PROMPT
   end
 
@@ -317,8 +336,115 @@ class WorldStateUpdaters::ConversationSummarizerService
       "general_mood" => "unable to determine",
       "important_questions" => [],
       "useful_thoughts" => [ "Failed to parse AI response" ],
+      "people" => [],
+      "events" => [],
+      "topics" => [],
       "general_summary" => response.truncate(200)
     }
+  end
+
+  def extract_people_from_summary(summary_data, session_ids)
+    return [] unless summary_data["people"]&.any?
+
+    extracted_people = []
+    
+    summary_data["people"].each do |person_data|
+      next unless person_data["name"].present?
+
+      begin
+        person = Person.find_or_update_person(
+          name: person_data["name"],
+          description: person_data["description"] || "Mentioned in conversation",
+          session_id: session_ids,
+          relationship: person_data["relationship"],
+          additional_metadata: {
+            extraction_source: "conversation_summarizer",
+            extracted_at: Time.current
+          }
+        )
+        extracted_people << person
+        Rails.logger.info "👤 Extracted person: #{person.name}"
+      rescue => e
+        Rails.logger.error "❌ Failed to extract person #{person_data["name"]}: #{e.message}"
+      end
+    end
+
+    extracted_people
+  end
+
+  def extract_events_from_summary(summary_data, session_ids, default_time)
+    return [] unless summary_data["events"]&.any?
+
+    extracted_events = []
+
+    summary_data["events"].each do |event_data|
+      next unless event_data["title"].present?
+
+      begin
+        # Parse event time or use default
+        event_time = parse_event_time(event_data["time"], default_time)
+        
+        event = Event.create!(
+          title: event_data["title"],
+          description: event_data["description"] || "Event mentioned in conversation",
+          event_time: event_time,
+          location: event_data["location"],
+          importance: event_data["importance"] || 5,
+          extracted_from_session: session_ids,
+          metadata: {
+            extraction_source: "conversation_summarizer",
+            extracted_at: Time.current,
+            original_time_text: event_data["time"]
+          }.to_json
+        )
+        extracted_events << event
+        Rails.logger.info "📅 Extracted event: #{event.title}"
+      rescue => e
+        Rails.logger.error "❌ Failed to extract event #{event_data["title"]}: #{e.message}"
+      end
+    end
+
+    extracted_events
+  end
+
+  def parse_event_time(time_text, default_time)
+    return default_time unless time_text.present?
+
+    # Try to parse various time formats
+    case time_text.downcase
+    when /sunday/i
+      # Next Sunday or this Sunday
+      Date.current.beginning_of_week + 6.days
+    when /monday/i
+      Date.current.beginning_of_week
+    when /tuesday/i
+      Date.current.beginning_of_week + 1.day
+    when /wednesday/i
+      Date.current.beginning_of_week + 2.days
+    when /thursday/i
+      Date.current.beginning_of_week + 3.days
+    when /friday/i
+      Date.current.beginning_of_week + 4.days
+    when /saturday/i
+      Date.current.beginning_of_week + 5.days
+    when /tonight/i
+      Date.current.end_of_day
+    when /tomorrow/i
+      1.day.from_now
+    when /next week/i
+      1.week.from_now
+    else
+      # Try to parse as a proper datetime
+      begin
+        Time.parse(time_text)
+      rescue ArgumentError
+        # Fall back to default time if parsing fails
+        default_time
+      end
+    end
+  rescue => e
+    Rails.logger.warn "Failed to parse event time '#{time_text}': #{e.message}"
+    default_time
   end
 
   def store_summary(summary_data, conversation_data)
@@ -326,6 +452,13 @@ class WorldStateUpdaters::ConversationSummarizerService
     start_time = conversation_data.map { |c| c[:started_at] }.compact.min
     end_time = conversation_data.map { |c| c[:ended_at] }.compact.max
     total_exchanges = conversation_data.sum { |c| c[:total_exchanges] }
+    session_ids = @conversation_ids.join(",")
+
+    # Extract and store people
+    extracted_people = extract_people_from_summary(summary_data, session_ids)
+    
+    # Extract and store events  
+    extracted_events = extract_events_from_summary(summary_data, session_ids, start_time)
 
     # Store in Summary model with hourly type
     Summary.create!(
@@ -339,6 +472,9 @@ class WorldStateUpdaters::ConversationSummarizerService
         important_questions: summary_data["important_questions"],
         useful_thoughts: summary_data["useful_thoughts"],
         goal_progress: summary_data["goal_progress"],
+        topics: summary_data["topics"] || [],
+        people_extracted: extracted_people.count,
+        events_extracted: extracted_events.count,
         conversation_ids: @conversation_ids,
         conversations_count: conversation_data.length
       }.to_json
@@ -357,6 +493,9 @@ class WorldStateUpdaters::ConversationSummarizerService
         important_questions: [],
         useful_thoughts: [],
         goal_progress: "no_progress",
+        topics: [],
+        people_extracted: 0,
+        events_extracted: 0,
         conversation_ids: @conversation_ids,
         conversations_count: 0
       }.to_json
@@ -397,6 +536,9 @@ class WorldStateUpdaters::ConversationSummarizerService
       "important_questions" => [],
       "useful_thoughts" => [],
       "goal_progress" => "no_progress",
+      "people" => [],
+      "events" => [],
+      "topics" => [],
       "general_summary" => "No conversations found in this time period."
     }
   end

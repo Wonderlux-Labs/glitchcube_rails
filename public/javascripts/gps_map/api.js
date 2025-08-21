@@ -4,7 +4,8 @@ window.GPSMap = window.GPSMap || {};
 GPSMap.API = {
   // Update location from API
   updateLocation: async function() {
-    const statusEl = document.getElementById('status');
+    const statusEl = document.getElementById('connectionStatus');
+    const dotEl = document.getElementById('connectionDot');
     
     try {
       const response = await fetch(window.APP_CONFIG.api.locationEndpoint);
@@ -17,62 +18,94 @@ GPSMap.API = {
         // Update info panels
         this.updateInfoPanels(data);
         
-        // Update landmark proximity
-        GPSMap.Landmarks.updateLandmarkProximity({ lat: data.lat, lng: data.lng });
-        
-        // Check for nearby landmarks
-        const nearbyLandmarks = GPSMap.Landmarks.getNearbyLandmarks(data.lat, data.lng);
-        this.updateProximityAlert(nearbyLandmarks);
+        // Update landmark proximity using data from API response
+        if (data.landmarks && data.landmarks.length > 0) {
+          this.updateProximityAlert(data.landmarks);
+          this.displayNearbyLandmarks(data.landmarks);
+        }
         
         // Add to route history
         GPSMap.Markers.addToRouteHistory(data.lat, data.lng, data.timestamp, data.address);
         
-        statusEl.textContent = `Last updated: ${new Date(data.timestamp).toLocaleTimeString()}`;
-        statusEl.className = 'status-display';
+        if (statusEl) {
+          statusEl.textContent = `Last updated: ${new Date(data.timestamp).toLocaleTimeString()}`;
+          statusEl.className = 'indicator-text connected';
+        }
+        if (dotEl) {
+          dotEl.className = 'indicator-dot connected';
+        }
       } else {
         throw new Error('Invalid location data');
       }
     } catch (error) {
       console.error('Error fetching location:', error);
-      statusEl.textContent = 'Connection lost - retrying...';
-      statusEl.className = 'status-display offline';
+      if (statusEl) {
+        statusEl.textContent = 'Connection lost - retrying...';
+        statusEl.className = 'indicator-text offline';
+      }
+      if (dotEl) {
+        dotEl.className = 'indicator-dot offline';
+      }
+      
+      // Update panel with offline status
+      this.updateInformationPanelOffline();
     }
   },
   
   // Update info panels with location data
   updateInfoPanels: function(data) {
+    console.log('updateInfoPanels called with data:', data);
+    
     const addressBar = document.getElementById('addressBar');
     const sectionBar = document.getElementById('sectionBar');
-    const distanceBar = document.getElementById('distanceBar');
+    // distanceBar no longer exists in new layout - info now in panel
     const coordinatesEl = document.getElementById('coordinates');
     const simModeIndicator = document.getElementById('simModeIndicator');
     
-    // Update address - prioritize street address over landmark name
-    let addressStr = '';
-    if (data.address) {
-      addressStr = data.address;
-      // Add landmark context if available
-      if (data.landmark_name && data.landmark_name !== data.address) {
-        addressStr += ` (Near ${data.landmark_name})`;
-      }
-    } else if (data.landmark_name) {
-      addressStr = data.landmark_name;
-    } else {
-      addressStr = 'Black Rock City';
+    // Get nearest landmark name from landmarks array
+    let nearestLandmark = null;
+    if (data.landmarks && data.landmarks.length > 0) {
+      nearestLandmark = data.landmarks[0]; // First landmark is nearest
     }
-    addressBar.textContent = addressStr;
     
-    // Update section and coordinates
-    sectionBar.textContent = data.section || '';
-    coordinatesEl.textContent = `${data.lat?.toFixed(6) ?? ''}, ${data.lng?.toFixed(6) ?? ''}`;
-    distanceBar.textContent = data.distance_from_man || '';
+    // Update address - show landmark name if very close (< 5 meters), otherwise show street address
+    let addressStr = '';
+    if (nearestLandmark && nearestLandmark.distance_meters < 5) {
+      addressStr = nearestLandmark.name;
+      if (data.address && data.address !== nearestLandmark.name) {
+        addressStr += ` (${data.address})`;
+      }
+    } else if (data.address) {
+      addressStr = data.address;
+      if (nearestLandmark && nearestLandmark.distance_meters < 50) {
+        addressStr += ` (Near ${nearestLandmark.name})`;
+      }
+    } else {
+      addressStr = nearestLandmark ? nearestLandmark.name : 'Black Rock City';
+    }
+    
+    console.log('Setting address to:', addressStr);
+    if (addressBar) addressBar.textContent = addressStr;
+    
+    // Update zone and coordinates
+    const zoneText = data.zone ? data.zone.toString().replace('_', ' ').toUpperCase() : '';
+    console.log('Setting zone to:', zoneText, 'from data.zone:', data.zone);
+    if (sectionBar) sectionBar.textContent = zoneText;
+    if (coordinatesEl) coordinatesEl.textContent = `${data.lat?.toFixed(6) ?? ''}, ${data.lng?.toFixed(6) ?? ''}`;
     
     // Show simulation mode indicator
-    if (data.source === 'simulation') {
-      simModeIndicator.textContent = 'SIMULATION MODE';
-    } else {
-      simModeIndicator.textContent = '';
+    if (simModeIndicator) {
+      if (data.source === 'simulation') {
+        simModeIndicator.textContent = 'SIMULATION MODE';
+      } else if (data.source === 'random_landmark') {
+        simModeIndicator.textContent = 'DEMO MODE';
+      } else {
+        simModeIndicator.textContent = '';
+      }
     }
+    
+    // Update information panel
+    this.updateInformationPanel(data);
   },
   
   // Update proximity alert
@@ -82,17 +115,128 @@ GPSMap.API = {
     
     if (nearbyLandmarks.length > 0) {
       const nearest = nearbyLandmarks[0];
-      const distance = Math.round(GPSMap.Utils.haversineDistance(
-        GPSMap.Markers.cubeMarker.getLatLng().lat,
-        GPSMap.Markers.cubeMarker.getLatLng().lng,
-        nearest.lat, nearest.lng
-      ));
+      const distance = Math.round(nearest.distance_meters || 0);
       
       const alertEl = document.createElement('div');
       alertEl.id = 'proximity-alert';
       alertEl.textContent = `⚠️ Near ${nearest.name} (${distance}m)`;
-      alertEl.style.cssText = 'color: #39ff14; font-size: 12px; margin-top: 5px; background: rgba(57, 255, 20, 0.1); padding: 3px; border-radius: 3px;';
+      alertEl.style.cssText = 'color: #00ffff; font-size: 12px; margin-top: 5px; background: rgba(0, 255, 255, 0.1); padding: 3px 6px; border-radius: 3px; border: 1px solid rgba(0, 255, 255, 0.3);';
       document.getElementById('addressBar').parentNode.appendChild(alertEl);
+    }
+  },
+  
+  // Display nearby landmarks list
+  displayNearbyLandmarks: function(landmarks) {
+    const existingList = document.getElementById('landmarks-list');
+    if (existingList) existingList.remove();
+    
+    if (landmarks.length > 1) {
+      const listEl = document.createElement('div');
+      listEl.id = 'landmarks-list';
+      listEl.style.cssText = 'position: absolute; top: 80px; right: 10px; background: rgba(0, 0, 0, 0.8); color: #00ffff; padding: 8px; border-radius: 4px; font-size: 11px; max-width: 200px; border: 1px solid rgba(0, 255, 255, 0.3);';
+      
+      let content = '<strong>📍 Nearby:</strong><br>';
+      landmarks.slice(0, 5).forEach(landmark => {
+        const distance = Math.round(landmark.distance_meters || 0);
+        content += `• ${landmark.name} (${distance}m)<br>`;
+      });
+      
+      listEl.innerHTML = content;
+      document.body.appendChild(listEl);
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        if (document.getElementById('landmarks-list')) {
+          document.getElementById('landmarks-list').remove();
+        }
+      }, 10000);
+    }
+  },
+  
+  // Update the information panel with location data
+  updateInformationPanel: function(data) {
+    // Update panel status elements
+    const panelZone = document.getElementById('panelZone');
+    const panelAddress = document.getElementById('panelAddress');
+    const panelCoords = document.getElementById('panelCoords');
+    const panelManDistance = document.getElementById('panelManDistance');
+    const panelLandmarks = document.getElementById('panelLandmarks');
+    const panelNearestPorto = document.getElementById('panelNearestPorto');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const connectionDot = document.getElementById('connectionDot');
+    const simModeIndicator = document.getElementById('simModeIndicator');
+    
+    if (panelZone) {
+      panelZone.textContent = data.zone ? data.zone.toString().replace('_', ' ').toUpperCase() : 'UNKNOWN';
+    }
+    
+    if (panelAddress) {
+      panelAddress.textContent = data.address || 'Unknown Location';
+    }
+    
+    if (panelCoords) {
+      panelCoords.textContent = data.lat && data.lng ? 
+        `${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}` : 'No Signal';
+    }
+    
+    if (panelManDistance) {
+      panelManDistance.textContent = data.distance_from_man || 'Unknown';
+    }
+    
+    // Update landmarks list
+    if (panelLandmarks) {
+      if (data.landmarks && data.landmarks.length > 0) {
+        panelLandmarks.innerHTML = '';
+        data.landmarks.slice(0, 5).forEach(landmark => {
+          const landmarkEl = document.createElement('div');
+          landmarkEl.className = 'landmark-item';
+          landmarkEl.innerHTML = `
+            <span class="landmark-name">${landmark.name}</span>
+            <span class="landmark-distance">${Math.round(landmark.distance_meters || 0)}m</span>
+          `;
+          panelLandmarks.appendChild(landmarkEl);
+        });
+      } else {
+        panelLandmarks.innerHTML = '<div class="no-data">No landmarks nearby</div>';
+      }
+    }
+    
+    // Update nearest porto
+    if (panelNearestPorto) {
+      if (data.nearest_porto) {
+        panelNearestPorto.textContent = `${data.nearest_porto.name} (${Math.round(data.nearest_porto.distance_meters || 0)}m)`;
+      } else {
+        panelNearestPorto.textContent = 'Not available';
+      }
+    }
+    
+    // Update connection status
+    if (connectionStatus && connectionDot) {
+      const now = new Date();
+      connectionStatus.textContent = `Online - ${now.toLocaleTimeString()}`;
+      connectionDot.className = 'indicator-dot';
+      
+      // Show simulation mode
+      if (simModeIndicator) {
+        if (data.source === 'simulation') {
+          simModeIndicator.textContent = 'SIMULATION MODE ACTIVE';
+        } else if (data.source === 'random_landmark') {
+          simModeIndicator.textContent = 'DEMO MODE ACTIVE';
+        } else {
+          simModeIndicator.textContent = '';
+        }
+      }
+    }
+  },
+  
+  // Update information panel for offline state
+  updateInformationPanelOffline: function() {
+    const connectionStatus = document.getElementById('connectionStatus');
+    const connectionDot = document.getElementById('connectionDot');
+    
+    if (connectionStatus && connectionDot) {
+      connectionStatus.textContent = 'Connection Lost - Retrying...';
+      connectionDot.className = 'indicator-dot offline';
     }
   },
   
@@ -131,30 +275,9 @@ GPSMap.API = {
       // Load city blocks first
       await this.loadCityBlocks();
       
-      // Inner Playa boundary data available for backend calculations
-      // Not displayed on map per requirements
-      try {
-        const zonesResponse = await fetch('/api/v1/gis/zones');
-        const zonesData = await zonesResponse.json();
-        
-        if (zonesData.features) {
-          // Store inner playa boundary data for backend use
-          // This is the 0.47 mi radius from The Man
-          zonesData.features.forEach(feature => {
-            if (feature.geometry.type === 'Polygon') {
-              // Store boundary data but don't display it
-              if (feature.properties.zone_type === 'inner_playa') {
-                // Available for backend zone calculations
-                console.log('Inner Playa boundary (0.47mi) loaded for backend use');
-              }
-            }
-          });
-          // Zone boundary data loaded for backend use only
-          console.log('Zone boundaries loaded for backend calculations');
-        }
-      } catch (zoneError) {
-        console.log('Zone boundaries not available:', zoneError);
-      }
+      // Zone boundaries are handled by the backend LocationContextService
+      // No need to fetch them separately in the frontend
+      console.log('Zone calculations handled by backend LocationContextService');
       
       const response = await fetch('/api/v1/gis/initial');
       const data = await response.json();
@@ -229,11 +352,21 @@ GPSMap.API = {
         const pos = GPSMap.Markers.cubeMarker.getLatLng();
         lat = pos.lat;
         lng = pos.lng;
-      } else {
+      } else if (GPSMap.MapSetup.map) {
         // Use map center
         const center = GPSMap.MapSetup.map.getCenter();
         lat = center.lat;
         lng = center.lng;
+      } else {
+        // Use default Black Rock City coordinates
+        lat = 40.78696345;
+        lng = -119.2030071;
+      }
+      
+      // Validate coordinates
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        console.error('Invalid coordinates for toilet loading:', { lat, lng });
+        return;
       }
       
       const params = new URLSearchParams({
@@ -258,14 +391,19 @@ GPSMap.API = {
         const toilets = data.landmarks.filter(l => l.type === 'toilet');
         
         toilets.forEach(toilet => {
-          L.marker([toilet.lat, toilet.lng], {
-            icon: L.divIcon({
-              className: 'toilet-marker',
-              html: '🚽',
-              iconSize: [20, 20]
-            })
-          }).addTo(GPSMap.MapSetup.layers.toilets)
-            .bindPopup(toilet.name || 'Portable Toilet');
+          // Validate toilet coordinates
+          if (toilet.lat && toilet.lng && !isNaN(toilet.lat) && !isNaN(toilet.lng)) {
+            L.marker([toilet.lat, toilet.lng], {
+              icon: L.divIcon({
+                className: 'toilet-marker',
+                html: '🚽',
+                iconSize: [20, 20]
+              })
+            }).addTo(GPSMap.MapSetup.layers.toilets)
+              .bindPopup(toilet.name || 'Portable Toilet');
+          } else {
+            console.warn('Invalid toilet coordinates:', toilet);
+          }
         });
         console.log(`Loaded ${toilets.length} nearby toilets`);
       }
@@ -278,13 +416,28 @@ GPSMap.API = {
   loadHomeLocation: async function() {
     try {
       const response = await fetch(window.APP_CONFIG.api.homeEndpoint);
-      const homeData = await response.json();
       
-      if (homeData.lat && homeData.lng) {
+      // Skip if server error
+      if (!response.ok) {
+        console.log('Home location endpoint returned error:', response.status);
+        return;
+      }
+      
+      // Try to parse as JSON, but catch any errors
+      let homeData;
+      try {
+        homeData = await response.json();
+      } catch (parseError) {
+        console.log('Home location endpoint returned non-JSON response');
+        return;
+      }
+      
+      if (homeData && homeData.lat && homeData.lng) {
         GPSMap.Markers.addHomeMarker(homeData.lat, homeData.lng, homeData.address);
+        console.log('✅ Home location loaded successfully');
       }
     } catch (error) {
-      console.error('Error loading home location:', error);
+      console.log('Home location not available:', error.message);
     }
   }
 };

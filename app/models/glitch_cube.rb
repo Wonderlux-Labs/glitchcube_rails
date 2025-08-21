@@ -22,5 +22,15 @@ class GlitchCube
 
       true
     end
+
+    # Get home camp coordinates (default to center of Black Rock City)
+    def home_camp_coordinates
+      {
+        lat: 40.7864,
+        lng: -119.2065,
+        address: "Center Camp Plaza",
+        name: "Glitch Cube Home Camp"
+      }
+    end
   end
 end

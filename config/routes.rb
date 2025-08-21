@@ -18,7 +18,6 @@ Rails.application.routes.draw do
       post "conversation/proactive", to: "conversation#proactive"
 
       namespace :home_assistant do
-        post "conversation/process", to: "home_assistant#conversation_process"
         get "health", to: "home_assistant#health"
         get "entities", to: "home_assistant#entities"
 
@@ -56,7 +55,6 @@ Rails.application.routes.draw do
   get "health", to: "health#show"
 
   # Shorter routes for direct Home Assistant access
-  post "ha/conversation", to: "home_assistant#conversation_process"
   get "ha/health", to: "home_assistant#health"
   get "ha/entities", to: "home_assistant#entities"
   post "ha/world_state/trigger", to: "home_assistant#trigger_world_state_service"
