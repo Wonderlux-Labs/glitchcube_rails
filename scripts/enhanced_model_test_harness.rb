@@ -57,15 +57,13 @@ class EnhancedModelTestHarness
   ].freeze
 
   NARRATIVE_MODELS = [
-    "openai/gpt-4o",
-    "anthropic/claude-3-5-sonnet",
-    "openai/gpt-4o-mini"
+    "openai/gpt-4o-mini",
+    "anthropic/claude-3.5-haiku"
   ].freeze
 
   TOOL_MODELS = [
     "openai/gpt-4o-mini",
-    "anthropic/claude-3-haiku",
-    "openai/gpt-4o"
+    "anthropic/claude-3.5-haiku"
   ].freeze
 
   # Test configurations
@@ -99,6 +97,23 @@ class EnhancedModelTestHarness
     log_summary
     log_detailed_metrics
     @log_file.close
+  end
+
+  def track_llm_call_start(call_id, data)
+    @llm_calls << {
+      id: call_id,
+      start_time: Time.current,
+      start_data: data,
+      end_data: nil
+    }
+  end
+
+  def track_llm_call_end(call_id, data)
+    call = @llm_calls.find { |c| c[:id] == call_id }
+    if call
+      call[:end_time] = Time.current
+      call[:end_data] = data
+    end
   end
 
   private
@@ -173,23 +188,6 @@ class EnhancedModelTestHarness
     end
 
     LlmService.singleton_class.prepend(tracker)
-  end
-
-  def track_llm_call_start(call_id, data)
-    @llm_calls << {
-      id: call_id,
-      start_time: Time.current,
-      start_data: data,
-      end_data: nil
-    }
-  end
-
-  def track_llm_call_end(call_id, data)
-    call = @llm_calls.find { |c| c[:id] == call_id }
-    if call
-      call[:end_time] = Time.current
-      call[:end_data] = data
-    end
   end
 
   def calculate_total_tests

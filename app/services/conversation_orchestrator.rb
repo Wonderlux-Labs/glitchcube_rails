@@ -9,6 +9,14 @@ class ConversationOrchestrator
   def call
     Rails.logger.info "🧠 Starting conversation orchestration for: #{@message}"
 
+    # Check if there's an active performance mode for this session
+    performance_service = PerformanceModeService.get_active_performance(@session_id)
+    if performance_service&.is_running?
+      Rails.logger.info "🎭 Performance mode active - interrupting for wake word"
+      performance_service.interrupt_for_wake_word
+      # Continue with normal conversation flow
+    end
+
     # Get or create conversation
     @conversation = find_or_create_conversation
 

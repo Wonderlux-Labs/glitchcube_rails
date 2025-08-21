@@ -9,9 +9,9 @@ class Schemas::NarrativeResponseSchema
              description: "What the character says out loud to the user"
 
       boolean :continue_conversation, required: true,
-              description: "Whether to keep the conversation active (stay listening)"
+              description: "Whether to keep the conversation active (stay listening automatically)"
 
-      string :inner_thoughts,
+      string :inner_thoughts, required: true,
              description: "Internal thoughts, memories, or observations to remember"
 
       string :current_mood,
@@ -20,7 +20,9 @@ class Schemas::NarrativeResponseSchema
       string :pressing_questions,
              description: "Questions the character has for the user or themselves"
 
-      # Tool intentions for HA agent delegation
+       string :goal_progress,
+             description: "Progress towards your current goal"
+
       array :tool_intents,
             description: "Actions to perform in the environment via Home Assistant agent" do
         object do

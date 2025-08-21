@@ -10,5 +10,17 @@
     "cost_per_success": 0.00031325,
     "narrative_model": "google/gemini-2.5-flash",
     "tool_model": "google/gemini-2.5-flash"
+  },
+  "openai/o3-mini-high+openai/o4-mini-high": {
+    "tests_run": 1,
+    "successes": 1,
+    "total_response_time": 8.466044000000693,
+    "total_cost": 0.007156,
+    "total_tokens": 3578,
+    "avg_response_time": 8.466044000000693,
+    "success_rate": 1.0,
+    "cost_per_success": 0.007156,
+    "narrative_model": "openai/o3-mini-high",
+    "tool_model": "openai/o4-mini-high"
   }
 }
