@@ -396,7 +396,7 @@ class PromptService
     all_context = [base_context]
     all_context.concat(context_parts) if context_parts.any?
     
-    "#{important}#{all_context.join("\n")}"
+    all_context.join("\n")
   end
 
   def inject_rag_context(user_message)
