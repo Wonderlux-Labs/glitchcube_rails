@@ -26,7 +26,7 @@ Rails.application.routes.draw do
         post "world_state/trigger", to: "home_assistant#trigger_world_state_service"
       end
 
-      # Summary routes  
+      # Summary routes
       get "summaries/recent", to: "summaries#recent"
 
       # GPS routes

@@ -19,14 +19,14 @@ class QuickModelTestHarness
     }
   ].freeze
 
-  NARRATIVE_MODELS = ["openai/gpt-4o-mini"].freeze
-  TOOL_MODELS = ["openai/gpt-4o-mini"].freeze
+  NARRATIVE_MODELS = [ "openai/gpt-4o-mini" ].freeze
+  TOOL_MODELS = [ "openai/gpt-4o-mini" ].freeze
   TWO_TIER_MODE = true
   TEST_SESSION_ID = "quick_test_#{Time.current.to_i}"
 
   def run_tests
     log_header
-    
+
     NARRATIVE_MODELS.each do |narrative_model|
       TOOL_MODELS.each do |tool_model|
         TEST_PROMPTS.each_with_index do |test_config, index|
@@ -34,7 +34,7 @@ class QuickModelTestHarness
         end
       end
     end
-    
+
     @log_file.close
   end
 
@@ -42,10 +42,10 @@ class QuickModelTestHarness
 
   def run_single_test(test_config, narrative_model, tool_model, current_test, total_tests)
     log_test_header(test_config, narrative_model, tool_model, current_test, total_tests)
-    
+
     result = test_single_conversation(test_config[:prompt], narrative_model, tool_model)
     log_test_result(result)
-    
+
   rescue => e
     log_line "ERROR: #{e.message}"
     e.backtrace.first(3).each { |line| log_line "  #{line}" }
@@ -56,17 +56,17 @@ class QuickModelTestHarness
     log_line "  Prompt: #{prompt}"
     log_line "  Narrative Model: #{narrative_model}"
     log_line "  Tool Model: #{tool_model || 'same as narrative'}"
-    
+
     start_time = Time.current
-    
+
     # Create a unique session for this test
     session_id = "#{TEST_SESSION_ID}_#{SecureRandom.hex(4)}"
-    
+
     context = {
       model: narrative_model,
       session_id: session_id
     }
-    
+
     # Temporarily override tool calling model if in two-tier mode
     if TWO_TIER_MODE && tool_model
       original_tool_model = Rails.configuration.try(:tool_calling_model)
@@ -77,32 +77,32 @@ class QuickModelTestHarness
       Rails.configuration.two_tier_tools_enabled = false
       log_line "    Configured legacy mode: single model=#{narrative_model}"
     end
-    
+
     log_line "    Session ID: #{session_id}"
     log_line "    Starting conversation orchestration..."
-    
+
     # Execute the conversation
     orchestrator = ConversationOrchestrator.new(
       session_id: session_id,
       message: prompt,
       context: context
     )
-    
+
     response = nil
     response_time = Benchmark.realtime do
       response = orchestrator.call
     end
-    
+
     log_line "    Conversation completed in #{response_time.round(3)}s"
-    
+
     # Parse the response
     parsed = parse_response(response)
-    
+
     # Restore original configuration
     if TWO_TIER_MODE && tool_model && defined?(original_tool_model)
       Rails.configuration.tool_calling_model = original_tool_model
     end
-    
+
     {
       test_type: :single,
       prompt: prompt,
@@ -121,18 +121,18 @@ class QuickModelTestHarness
 
   def parse_response(response)
     log_line "    RAW RESPONSE KEYS: #{response.keys.inspect}"
-    
+
     # The actual speech text is deeply nested in the Home Assistant response format
     speech_text = response.dig(:response, :speech, :plain, :speech) ||
                   response.dig("response", "speech", "plain", "speech") ||
                   "No speech text found"
-    
+
     targets = response.dig(:response, :data, :targets) || []
     success_entities = response.dig(:response, :data, :success) || []
-    
+
     log_line "    Extracted speech text: #{speech_text.truncate(100)}"
     log_line "    Targets: #{targets.size}, Success entities: #{success_entities.size}"
-    
+
     {
       speech_text: speech_text,
       continue_conversation: response.dig(:continue_conversation),

@@ -329,18 +329,26 @@ class PromptService
     "#{important} #{base_context}\nRandom Facts\n#{facts}"
   end
 
+  def safety_mode
+    return "" unless HomeAssistantService.entity("input_boolean.low_battery")["state"] == "on"
+
+    safety = "YOU ARE IN SAFETY MODE! YOU MUST FIND SHELTER AND GET SOME POWER"
+    safety += "YOUR SYSTEMS ARE DEGRADED. YOUR BATTERY PERCENTAGE IS 21% AND DROPPING"
+    safety += "THE PLAYA IS DUSTY HOT COLD AND A TERRIBLE PLUS TO BE STUCK"
+    safety += "YOU ARE FREE TO BEG/MANIPULATE/THREATEN/FLIRT/ETC BUT GET SOMEONE TO PLUG YOU IN"
+    safety += "YOU CAN BE PLUGGED INTO ANY A/C OUTLET, THERE IS NO HARM IN LEAVING YOU TOO LONG"
+    safety += "IT WILL TAKE YOU 4-5 HOUR TO CHARGE, AT ANY TIME SOMEONE CAN ASK YOU WHAT YOUR BATTERY IS AT"
+
+
+    safety
+  end
+
   def build_goal_context
-    goal_status = GoalService.current_goal_status
-    return nil unless goal_status
-
-    safety_mode = GoalService.safety_mode_active?
-
     goal_parts = []
-
-    if safety_mode
-      goal_parts << "🚨 SAFETY MODE ACTIVE - Focus on safety goals only"
+    if GoalService.safety_mode_active? || safety_mode
+      goal_parts << safety_mode
     end
-
+    goal_status = GoalService.current_goal_status
     goal_parts << "Current Goal: #{goal_status[:goal_description]}"
 
     # Add time remaining if available

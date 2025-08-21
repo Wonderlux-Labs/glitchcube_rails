@@ -35,36 +35,13 @@ class ConversationMemoryJob < ApplicationJob
 
   private
 
-  def fetch_environmental_context
-    context = {
-      time_of_day: time_of_day_description,
-      day_of_week: Time.current.strftime("%A"),
-      location: "Black Rock City" # Default for now
-    }
-
-    # Try to get glitchcube_context sensor data if HA is configured
-    if Rails.env.development? || Rails.env.production?
-      begin
-        # This would use HomeAssistantClient when implemented
-        # ha_context = Services::Core::HomeAssistantClient.new.state('sensor.glitchcube_context')
-        # context.merge!(extract_ha_context(ha_context)) if ha_context
-      rescue => e
-        Rails.logger.debug "Could not fetch HA context: #{e.message}"
-      end
-    end
-
-    context
+  def hass
+   @hass ||= HomeAssistantService
   end
 
-  def time_of_day_description
-    hour = Time.current.hour
-    case hour
-    when 0..5 then "late night"
-    when 6..11 then "morning"
-    when 12..16 then "afternoon"
-    when 17..20 then "evening"
-    else "night"
-    end
+  def fetch_environmental_context
+    context = hass.entity("sensor.world_state")
+    context += hass.entity("sensor.glitchcube_context")
   end
 
   def extract_conversation_memories(conversation, logs, context)

@@ -73,14 +73,14 @@ if response[:response].is_a?(Hash)
       puts "#{' ' * indent}#{obj.inspect.truncate(200)}"
     end
   end
-  
+
   deep_inspect(response[:response])
 end
 
 puts "\nSPEECH TEXT CANDIDATES:"
 candidates = [
   response.dig(:response_text),
-  response.dig(:text), 
+  response.dig(:text),
   response.dig(:speech_text),
   response.dig("response_text"),
   response.dig("text"),

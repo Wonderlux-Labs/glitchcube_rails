@@ -16,14 +16,14 @@ logs.each_with_index do |log, i|
   puts "Time: #{log.created_at}"
   puts "User: #{log.user_message[0..100]}#{'...' if log.user_message.length > 100}"
   puts "AI: #{log.ai_response[0..100]}#{'...' if log.ai_response.length > 100}"
-  
+
   begin
     metadata = JSON.parse(log.metadata)
     tool_results = JSON.parse(log.tool_results) if log.tool_results
-    
+
     puts "Model: #{metadata['model_used']}"
     puts "Tokens: #{metadata.dig('usage', 'total_tokens')}"
-    
+
     if tool_results
       puts "Tool Results:"
       tool_results.each do |tool_name, result|
@@ -32,15 +32,15 @@ logs.each_with_index do |log, i|
         puts "  #{tool_name}: #{success ? '✅' : '❌'} #{error}"
       end
     end
-    
+
     if metadata['sync_tools']&.any?
       puts "Sync Tools: #{metadata['sync_tools'].length}"
     end
-    
+
     if metadata['async_tools']&.any?
       puts "Async Tools: #{metadata['async_tools'].length}"
     end
-    
+
   rescue JSON::ParserError => e
     puts "Parse Error: #{e.message}"
   end

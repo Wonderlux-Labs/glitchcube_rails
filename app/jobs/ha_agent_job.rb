@@ -9,7 +9,7 @@ class HaAgentJob < ApplicationJob
     begin
       # Call Home Assistant's conversation.process API
       response = call_ha_conversation_agent(request)
-      
+
       Rails.logger.info "✅ HA agent response received"
       Rails.logger.info "📄 Response: #{response.inspect}"
 
@@ -45,7 +45,7 @@ class HaAgentJob < ApplicationJob
   def call_ha_conversation_agent(request)
     Rails.logger.info "🏠 Calling HA conversation agent"
     Rails.logger.info "📤 Sending: #{request}"
-    
+
     # Call actual Home Assistant conversation agent
     HomeAssistantService.new.conversation_process(
       text: request,
@@ -56,7 +56,7 @@ class HaAgentJob < ApplicationJob
   def store_ha_results(session_id:, conversation_id:, user_message:, tool_intents:, ha_response:, error: nil)
     # Store results in conversation metadata, not as conversation log entries
     # This avoids interrupting ongoing TTS/conversation
-    
+
     conversation = Conversation.find_by(id: conversation_id)
     return unless conversation
 
@@ -83,7 +83,7 @@ class HaAgentJob < ApplicationJob
     )
 
     conversation.update!(metadata_json: updated_metadata)
-    
+
     Rails.logger.info "💾 Stored HA results in conversation metadata (not as conversation log)"
   end
 end

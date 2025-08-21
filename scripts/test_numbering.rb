@@ -8,7 +8,7 @@ Dir.mkdir('logs/model_tests') unless Dir.exist?('logs/model_tests')
 def find_next_run_number(prefix = "test_run")
   existing_files = Dir.glob("logs/model_tests/#{prefix}_*.log")
   puts "Found existing files: #{existing_files.inspect}"
-  
+
   if existing_files.empty?
     1
   else

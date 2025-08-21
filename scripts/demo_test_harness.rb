@@ -20,45 +20,45 @@ puts "-" * 30
 begin
   # Create test session
   session_id = "demo_test_#{Time.current.to_i}_#{SecureRandom.hex(4)}"
-  
+
   # Configure for single model (legacy mode)
   Rails.configuration.two_tier_tools_enabled = false
-  
+
   context = {
     model: NARRATIVE_MODEL,
     session_id: session_id
   }
-  
+
   # Time the conversation
   start_time = Time.current
-  
+
   orchestrator = ConversationOrchestrator.new(
     session_id: session_id,
     message: TEST_PROMPT,
     context: context
   )
-  
+
   response_time = Benchmark.realtime do
     @response = orchestrator.call
   end
-  
+
   end_time = Time.current
-  
+
   # Display results
   puts "\n✅ SUCCESS!"
   puts "Response time: #{response_time.round(3)}s"
   puts "Response text: #{@response.dig(:response_text) || @response.dig(:text)}"
   puts "Continue conversation: #{@response.dig(:continue_conversation)}"
   puts "End conversation: #{@response.dig(:end_conversation)}"
-  
+
   if @response.dig(:success_entities)&.any?
     puts "Success entities: #{@response[:success_entities].size}"
   end
-  
+
   if @response.dig(:targets)&.any?
     puts "Targets: #{@response[:targets].size}"
   end
-  
+
   puts "\n🎉 System is working! Your test harnesses should run successfully."
   puts "\nNext steps:"
   puts "1. Run: ruby scripts/model_test_harness.rb"

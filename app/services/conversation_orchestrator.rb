@@ -165,17 +165,17 @@ class ConversationOrchestrator
 
   def delegate_to_ha_agent(tool_intents)
     Rails.logger.info "🏠 Delegating #{tool_intents.length} tool intentions to HA conversation agent"
-    
+
     # Format intentions for HA agent
     intent_descriptions = tool_intents.map do |intent|
       "#{intent['tool']}: #{intent['intent']}"
     end.join("; ")
-    
+
     # Create a request that includes context
     ha_request = "User asked: \"#{@message}\". Please execute: #{intent_descriptions}"
-    
+
     Rails.logger.info "🤖 Sending to HA agent: #{ha_request}"
-    
+
     # Send to HA conversation agent asynchronously
     HaAgentJob.perform_later(
       request: ha_request,
@@ -473,7 +473,7 @@ class ConversationOrchestrator
 
     pending_results = conversation.metadata_json["pending_ha_results"] || []
     unprocessed_results = pending_results.reject { |r| r["processed"] }
-    
+
     return [] if unprocessed_results.empty?
 
     Rails.logger.info "🏠 Found #{unprocessed_results.length} unprocessed HA results"
@@ -526,14 +526,14 @@ class ConversationOrchestrator
       else
         success_items = result.dig("ha_response", "response", "data", "success") || []
         failed_items = result.dig("ha_response", "response", "data", "failed") || []
-        
+
         success_summary = success_items.map { |item| item["name"] || item["entity_id"] }.join(", ")
         failed_summary = failed_items.map { |item| "#{item['name'] || item['entity_id']} (#{item['error']})" }.join(", ")
-        
+
         parts = []
         parts << "#{success_summary} completed" if success_summary.present?
         parts << "#{failed_summary} failed" if failed_summary.present?
-        
+
         result_text = "System note: You intended to #{format_tool_intents(result['tool_intents'])}. Result: #{parts.join(', ')}"
       end
 
@@ -544,14 +544,14 @@ class ConversationOrchestrator
 
       # Insert right before the current user message
       prompt_data[:messages].insert(-1, system_msg)
-      
+
       Rails.logger.info "🔄 Injected: #{result_text}"
     end
   end
 
   def format_tool_intents(tool_intents)
     return "unknown action" unless tool_intents.is_a?(Array)
-    
+
     tool_intents.map do |intent|
       "#{intent['intent']}"
     end.join(" and ")
@@ -648,10 +648,10 @@ class ConversationOrchestrator
     results_summary = query_results.map do |tool_name, result|
       success = HashUtils.get(result, "success")
       if success
-        message = HashUtils.get(result, "message") || HashUtils.get(result, "data") || 'completed'
+        message = HashUtils.get(result, "message") || HashUtils.get(result, "data") || "completed"
         "#{tool_name}: #{message}"
       else
-        error = HashUtils.get(result, "error") || 'failed'
+        error = HashUtils.get(result, "error") || "failed"
         "#{tool_name}: #{error}"
       end
     end.join(", ")

@@ -52,13 +52,13 @@ RSpec.describe Tools::Lights::SetEffect, type: :service do
       it "should handle string-keyed arguments" do
         # This reproduces the lower-level issue
         string_arguments = {
-          "entity_id" => "light.cube_voice_ring", 
+          "entity_id" => "light.cube_voice_ring",
           "effect" => "theater_chase_rainbow_fast"
         }
 
         # This should fail with "missing keywords" before our fix
         result = Tools::Registry.execute_tool('set_light_effect', **string_arguments)
-        
+
         expect(result).to be_a(Hash)
         expect(result[:error]).not_to include("missing keywords")
       end

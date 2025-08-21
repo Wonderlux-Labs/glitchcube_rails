@@ -119,7 +119,7 @@ class HomeAssistantService
     data = { text: text }
     data[:agent_id] = agent_id if agent_id
     data[:conversation_id] = conversation_id if conversation_id
-    
+
     post("/api/conversation/process", data)
   end
 

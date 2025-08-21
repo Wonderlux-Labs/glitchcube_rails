@@ -7,7 +7,7 @@ Dir.mkdir('logs/model_tests') unless Dir.exist?('logs/model_tests')
 def find_next_run_number(prefix = "test_run")
   existing_files = Dir.glob("logs/model_tests/#{prefix}_*.log")
   puts "Found existing files: #{existing_files.inspect}"
-  
+
   if existing_files.empty?
     1
   else
@@ -23,7 +23,7 @@ def find_next_run_number(prefix = "test_run")
         0
       end
     end.select { |n| n > 0 }
-    
+
     puts "  Valid numbers found: #{numbers.inspect}"
     numbers.empty? ? 1 : numbers.max + 1
   end

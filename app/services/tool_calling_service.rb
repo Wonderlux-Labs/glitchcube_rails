@@ -148,7 +148,7 @@ class ToolCallingService
       async = HashUtils.get(result, "async") || false
       success = HashUtils.get(result, "success") || false
       error = HashUtils.get(result, "error")
-      
+
       if async
         async_actions << humanize_tool_name(tool_name)
       elsif success
@@ -207,7 +207,7 @@ class ToolCallingService
 
     results.each do |tool_name, result|
       next unless result.is_a?(Hash)
-      
+
       # Use consistent string key access
       success = HashUtils.get(result, "success")
       error = HashUtils.get(result, "error")
@@ -216,9 +216,9 @@ class ToolCallingService
       available_modes = HashUtils.get(result, "available_modes")
       available_actions = HashUtils.get(result, "available_actions")
       available_lights = HashUtils.get(result, "available_lights")
-      
+
       next if success
-      
+
       # Handle control_effects validation errors specifically
       if tool_name == "control_effects" && error&.include?("Unknown effect:")
         validation_errors << {

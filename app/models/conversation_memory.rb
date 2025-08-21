@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class ConversationMemory < ApplicationRecord
+  vectorsearch
+
+  after_save :upsert_to_vectorsearch
+
   belongs_to :conversation, foreign_key: :session_id, primary_key: :session_id
 
   MEMORY_TYPES = %w[preference fact instruction context event].freeze

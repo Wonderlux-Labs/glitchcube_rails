@@ -69,7 +69,7 @@ TWO_TIER_MODE = true
 SHOW_RAW_RESPONSES = false
 VERBOSE_MODE = false
 DEBUG_MODEL_SELECTION = true  # Show exactly which models are selected
-TEST_SESSION_ID = "test_harness_#{Time.current.to_i}"
+TEST_SESSION_ID = "test_harness_#{Time.now.to_i}"
 
 # =============================================================================
 # END CONFIGURATION - Implementation below

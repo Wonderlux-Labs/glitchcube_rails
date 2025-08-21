@@ -2,7 +2,7 @@
 class Api::V1::SummariesController < Api::V1::BaseController
   def recent
     limit = params[:limit]&.to_i || 3
-    limit = [limit, 10].min # Cap at 10
+    limit = [ limit, 10 ].min # Cap at 10
 
     summaries = Summary.recent.limit(limit).map do |summary|
       {

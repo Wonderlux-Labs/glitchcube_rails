@@ -18,13 +18,13 @@ MODEL_SELECTION_MODE = :speed_focused  # Options: :speed_focused, :quality_focus
 # CUSTOM MODELS (when MODEL_SELECTION_MODE = :custom)
 CUSTOM_NARRATIVE_MODELS = [
   "google/gemini-2.5-flash",
-  "anthropic/claude-3.5-haiku", 
+  "anthropic/claude-3.5-haiku",
   "openai/gpt-5-mini"
 ].freeze
 
 CUSTOM_TOOL_MODELS = [
   "google/gemini-2.5-flash",
-  "anthropic/claude-3.5-haiku", 
+  "anthropic/claude-3.5-haiku",
   "z-ai/glm-4.5-air"
 ].freeze
 
@@ -38,13 +38,13 @@ EXPENSIVE_MODELS = [
   "anthropic/claude-opus-4", # $15/$75 per million tokens
   "anthropic/claude-3-opus", # $15/$75 per million tokens
   "openai/o1",               # $15/$60 per million tokens
-  "openai/gpt-4-turbo",      # $10/$30 per million tokens
+  "openai/gpt-4-turbo"      # $10/$30 per million tokens
 ].freeze
 
 UNRELIABLE_MODELS = [
   "perplexity/sonar-reasoning",      # Often slow, designed for search not tools
   "openai/gpt-4o-search-preview",   # Search-focused, not tool-focused
-  "x-ai/grok-vision-beta",          # Beta model, often unreliable
+  "x-ai/grok-vision-beta"          # Beta model, often unreliable
 ].freeze
 
 # PREFERRED MODEL POOLS (used by automatic selection modes)
@@ -54,10 +54,10 @@ SPEED_FOCUSED_MODELS = {
     "anthropic/claude-3.5-haiku", # Lightning fast
     "z-ai/glm-4.5-air"           # Very cheap and fast
   ].freeze,
-  
+
   tool: [
     "google/gemini-2.5-flash",    # Reliable function calling
-    "anthropic/claude-3.5-haiku", # Fast tool execution  
+    "anthropic/claude-3.5-haiku", # Fast tool execution
     "z-ai/glm-4.5-air",          # Budget-friendly
     "openai/gpt-5-mini"           # Good tool support
   ].freeze
@@ -69,7 +69,7 @@ QUALITY_FOCUSED_MODELS = {
     "google/gemini-2.5-pro",       # High quality
     "openai/gpt-5"                 # Premium tier
   ].freeze,
-  
+
   tool: [
     "anthropic/claude-3.5-sonnet", # Excellent function calling
     "openai/gpt-5",                # Premium tool support
@@ -84,7 +84,7 @@ BUDGET_FOCUSED_MODELS = {
     "z-ai/glm-4.5-air",           # Very cheap
     "anthropic/claude-3.5-haiku"  # Good price/performance
   ].freeze,
-  
+
   tool: [
     "z-ai/glm-4.5-air",           # Cheapest with function calling
     "google/gemini-2.5-flash",    # Good value
@@ -95,20 +95,20 @@ BUDGET_FOCUSED_MODELS = {
 # TEST CONFIGURATION
 TWO_TIER_MODE = true
 SHOW_RAW_RESPONSES = false
-VERBOSE_MODE = false  
+VERBOSE_MODE = false
 DEBUG_MODEL_SELECTION = true  # Show exactly which models are selected
 TEST_SESSION_ID = "test_harness_#{Time.current.to_i}"
 
 # QUICK TOOL-FOCUSED TESTS
 TOOL_FOCUSED_TESTS = [
   "Turn on the cube lights",
-  "Set all lights to red", 
+  "Set all lights to red",
   "Turn off the lights",
   "Set lights to blue at 50% brightness",
   "Turn on rainbow light effect",
   "Play some electronic music",
   "Display 'Hello World' on screen",
-  "Turn on strobe effects", 
+  "Turn on strobe effects",
   "Activate party mode",
   "Turn off all effects",
   "Show current time on display",
@@ -135,15 +135,15 @@ TOOL_FOCUSED_TESTS = [
 # Performance Tracker for model selection and historical data
 class ModelPerformanceTracker
   attr_reader :performance_data
-  
+
   def initialize(json_file: 'model_performance_scores.json')
     @json_file = json_file
     @performance_data = load_performance_data
   end
-  
+
   def track_test_result(narrative_model:, tool_model:, response_time:, success:, cost: nil, tokens: nil)
     key = "#{narrative_model}+#{tool_model}"
-    
+
     @performance_data[key] ||= {
       'tests_run' => 0,
       'successes' => 0,
@@ -156,25 +156,25 @@ class ModelPerformanceTracker
       'narrative_model' => narrative_model,
       'tool_model' => tool_model
     }
-    
+
     data = @performance_data[key]
     data['tests_run'] += 1
     data['successes'] += 1 if success
     data['total_response_time'] += response_time
     data['total_cost'] += cost if cost
     data['total_tokens'] += tokens if tokens
-    
+
     # Calculate running averages
     data['avg_response_time'] = data['total_response_time'] / data['tests_run']
     data['success_rate'] = data['successes'].to_f / data['tests_run']
     data['cost_per_success'] = data['successes'] > 0 ? data['total_cost'] / data['successes'] : 0.0
-    
+
     save_performance_data
   end
-  
+
   def get_best_models(optimize_for: :speed, min_tests: 3)
     eligible = @performance_data.select { |_, data| data['tests_run'] >= min_tests }
-    
+
     case optimize_for
     when :speed
       eligible.sort_by { |_, data| data['avg_response_time'] }
@@ -188,25 +188,25 @@ class ModelPerformanceTracker
       eligible.sort_by { |_, data| data['avg_response_time'] }
     end.first(10)
   end
-  
+
   def performance_summary
     return "No performance data available" if @performance_data.empty?
-    
+
     total_tests = @performance_data.values.sum { |data| data['tests_run'] }
     avg_success_rate = @performance_data.values.sum { |data| data['success_rate'] } / @performance_data.size
-    
+
     "Total tests: #{total_tests}, Models tested: #{@performance_data.size}, Avg success rate: #{(avg_success_rate * 100).round(1)}%"
   end
-  
+
   private
-  
+
   def load_performance_data
     return {} unless File.exist?(@json_file)
     JSON.parse(File.read(@json_file))
   rescue JSON::ParserError
     {}
   end
-  
+
   def save_performance_data
     File.write(@json_file, JSON.pretty_generate(@performance_data))
   end
@@ -217,7 +217,7 @@ class ModelSelector
   def self.get_models
     # All blacklisted models combined
     all_blacklisted = (EXPENSIVE_MODELS + UNRELIABLE_MODELS).freeze
-    
+
     case MODEL_SELECTION_MODE
     when :speed_focused
       {
@@ -247,7 +247,7 @@ class ModelSelector
       }
     end
   end
-  
+
   # Try using OpenRouter gem if available, fall back to configuration
   def self.get_models_with_openrouter_fallback
     begin
@@ -257,32 +257,32 @@ class ModelSelector
     rescue => e
       puts "⚠️ OpenRouter selection failed: #{e.message}" if DEBUG_MODEL_SELECTION
     end
-    
+
     # Fall back to configuration-based selection
     puts "📋 Using configuration-based model selection" if DEBUG_MODEL_SELECTION
     get_models
   end
-  
+
   private
-  
+
   def self.filter_available_models(models, blacklisted)
     # Remove blacklisted models and ensure we have at least one model
     filtered = models.reject { |model| blacklisted.any? { |blacklisted_model| model.include?(blacklisted_model) } }
-    filtered.empty? ? ["google/gemini-2.5-flash"] : filtered # Emergency fallback
+    filtered.empty? ? [ "google/gemini-2.5-flash" ] : filtered # Emergency fallback
   end
-  
+
   def self.attempt_openrouter_selection
     return nil unless defined?(OpenRouter::ModelSelector)
-    
+
     all_blacklisted = EXPENSIVE_MODELS + UNRELIABLE_MODELS
-    
+
     case MODEL_SELECTION_MODE
     when :speed_focused
       narrative_models = OpenRouter::ModelSelector.new
                                                   .optimize_for(:performance)
                                                   .avoid_patterns(*all_blacklisted)
                                                   .choose_with_fallbacks(limit: 3)
-      
+
       tool_models = OpenRouter::ModelSelector.new
                                              .require(:function_calling)
                                              .optimize_for(:performance)
@@ -294,7 +294,7 @@ class ModelSelector
                                                   .optimize_for(:quality)
                                                   .avoid_patterns(*all_blacklisted)
                                                   .choose_with_fallbacks(limit: 3)
-      
+
       tool_models = OpenRouter::ModelSelector.new
                                              .require(:function_calling)
                                              .prefer_providers("anthropic", "openai")
@@ -306,7 +306,7 @@ class ModelSelector
                                                   .optimize_for(:cost)
                                                   .avoid_patterns(*all_blacklisted)
                                                   .choose_with_fallbacks(limit: 3)
-      
+
       tool_models = OpenRouter::ModelSelector.new
                                              .require(:function_calling)
                                              .within_budget(max_cost: 0.01)
@@ -315,7 +315,7 @@ class ModelSelector
     else
       return nil # Use configuration for custom mode
     end
-    
+
     {
       narrative: narrative_models || [],
       tool: tool_models || []
@@ -337,7 +337,7 @@ class ModelTestHarness
     @run_number = find_next_run_number("test_run")
     @log_file = File.open("logs/model_tests/test_run_#{@run_number}.log", 'w')
     @log_file.sync = true
-    
+
     puts "📊 #{@performance_tracker.performance_summary}"
   end
 
@@ -371,9 +371,9 @@ class ModelTestHarness
     models = ModelSelector.get_models_with_openrouter_fallback
     narrative_models = models[:narrative]
     tool_models = models[:tool]
-    
+
     print_header(narrative_models, tool_models)
-    
+
     if DEBUG_MODEL_SELECTION
       puts "\n🔍 DEBUG: Model Selection Details:"
       puts "   Mode: #{MODEL_SELECTION_MODE}"
@@ -440,9 +440,9 @@ class ModelTestHarness
     # Track performance data
     if result && result[:success]
       response_time = result.dig(:timing, :total_response_time) || 0
-      tokens = extract_token_count(result) 
+      tokens = extract_token_count(result)
       cost = calculate_estimated_cost(result, tokens)
-      
+
       @performance_tracker.track_test_result(
         narrative_model: narrative_model,
         tool_model: tool_model,
@@ -464,7 +464,7 @@ class ModelTestHarness
       response_time: 0,
       success: false
     )
-    
+
     error_result = {
       test_type: test_config[:type],
       test_description: test_config[:description],

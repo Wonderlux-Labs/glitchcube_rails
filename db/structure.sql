@@ -52,6 +52,20 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology WITH SCHEMA topology;
 COMMENT ON EXTENSION postgis_topology IS 'PostGIS topology spatial types and functions';
 
 
+--
+-- Name: vector; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access methods';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -151,7 +165,8 @@ CREATE TABLE public.conversation_memories (
     importance integer NOT NULL,
     metadata text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    embedding public.vector(1536)
 );
 
 
@@ -263,7 +278,8 @@ CREATE TABLE public.facts (
     text text NOT NULL,
     metadata text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    embedding public.vector(1536)
 );
 
 
@@ -792,7 +808,8 @@ CREATE TABLE public.summaries (
     end_time timestamp(6) without time zone,
     metadata text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    embedding public.vector(1536)
 );
 
 
@@ -1650,6 +1667,10 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 SET search_path TO "$user", public, topology;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250820225502'),
+('20250820225450'),
+('20250820225426'),
+('20250820225425'),
 ('20250818195655'),
 ('20250818124806'),
 ('20250818034459'),

@@ -179,7 +179,7 @@ class ToolExecutor
       rescue OpenRouter::ToolCallError => e
         Rails.logger.error "❌ Malformed tool call from LLM: #{tool_call.name} - #{e.message}"
         # Return a failed ValidatedToolCall for malformed arguments
-        return ValidatedToolCall.new(tool_call.name, {}, nil, ["Malformed arguments: #{e.message}"])
+        return ValidatedToolCall.new(tool_call.name, {}, nil, [ "Malformed arguments: #{e.message}" ])
       end
     end
 

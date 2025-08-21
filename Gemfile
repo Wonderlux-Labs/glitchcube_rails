@@ -46,3 +46,11 @@ end
 gem "dotenv-rails", "~> 3.1"
 gem "open_router_enhanced", git: "https://www.github.com/estiens/open_router", branch: "dev"
 gem "geocoder"
+
+gem "langchainrb_rails", "~> 0.1.12"
+gem "neighbor"
+gem "ruby-openai"
+gem "neighbor"
+gem "ruby-openai"
+gem "neighbor"
+gem "ruby-openai"
