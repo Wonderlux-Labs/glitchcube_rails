@@ -1,14 +1,15 @@
 # app/services/prompt_service.rb
 class PromptService
-  def self.build_prompt_for(persona: nil, conversation:, extra_context: {})
-    new(persona: persona, conversation: conversation, extra_context: extra_context).build
+  def self.build_prompt_for(persona: nil, conversation:, extra_context: {}, user_message: nil)
+    new(persona: persona, conversation: conversation, extra_context: extra_context, user_message: user_message).build
   end
 
-  def initialize(persona:, conversation:, extra_context:)
+  def initialize(persona:, conversation:, extra_context:, user_message: nil)
     @persona_name = persona || CubePersona.current_persona
     @persona_instance = get_persona_instance(@persona_name)
     @conversation = conversation
     @extra_context = extra_context
+    @user_message = user_message
   end
 
   def build
@@ -351,14 +352,15 @@ class PromptService
     end
 
     # Add glitchcube_context sensor data if available
-    enhanced_context = inject_glitchcube_context(context_parts.join("\n"))
+    enhanced_context = inject_glitchcube_context(context_parts.join("\n"), @user_message)
 
     enhanced_context
   end
 
-  def inject_glitchcube_context(base_context)
-    # DISABLED: Memory injection is untested, don't use yet
-    # Just inject basic time context from Home Assistant sensor
+  def inject_glitchcube_context(base_context, user_message = nil)
+    context_parts = []
+    
+    # Add basic time context from Home Assistant sensor
     begin
       ha_service = HomeAssistantService.new
       context_sensor = ha_service.entity("sensor.glitchcube_context")
@@ -372,18 +374,136 @@ class PromptService
           time_context = "Current time context: It is #{time_of_day}"
           time_context += " on #{day_of_week}" if day_of_week
           time_context += " at #{location}" if location
-
+          context_parts << time_context
           Rails.logger.info "🕒 Injecting time context: #{time_context}"
-          return "#{base_context}\n#{time_context}"
         end
       end
     rescue => e
       Rails.logger.warn "Failed to inject time context: #{e.message}"
     end
-    important= "\n**\nVERY IMPORTANT BREAKING NEWS YOU MUST PAY ATTENTION TO: []\n**\n"
-    base_context
+
+    # Add RAG-based context if user message is available
+    if user_message.present?
+      rag_context = inject_rag_context(user_message)
+      context_parts << rag_context if rag_context.present?
+    end
+
+    # Add random facts
     facts = Fact.all.sample(3).join(", ")
-    "#{important} #{base_context} #{ha_service.entity("sensor.world_state")}"
+    context_parts << "Random Facts: #{facts}" if facts.present?
+
+    # Combine all context
+    all_context = [base_context]
+    all_context.concat(context_parts) if context_parts.any?
+    
+    all_context.join("\n")
+  end
+
+  def inject_rag_context(user_message)
+    context_parts = []
+    
+    begin
+      # ALWAYS inject upcoming high-priority events (proactive)
+      upcoming_context = inject_upcoming_events_context
+      context_parts << upcoming_context if upcoming_context.present?
+
+      # Search relevant summaries based on user message
+      relevant_summaries = Summary.similarity_search(user_message, limit: 3)
+      if relevant_summaries.any?
+        summary_context = format_summaries_for_context(relevant_summaries)
+        context_parts << "Recent relevant conversations:\n#{summary_context}"
+        Rails.logger.info "🧠 Found #{relevant_summaries.length} relevant summaries"
+      end
+
+      # Search relevant events based on user message
+      relevant_events = Event.similarity_search(user_message, limit: 2)
+      if relevant_events.any?
+        events_context = format_events_for_context(relevant_events)
+        context_parts << "Relevant events:\n#{events_context}"
+        Rails.logger.info "📅 Found #{relevant_events.length} relevant events"
+      end
+
+      # Search relevant people
+      relevant_people = Person.similarity_search(user_message, limit: 2)
+      if relevant_people.any?
+        people_context = format_people_for_context(relevant_people)
+        context_parts << "People mentioned previously:\n#{people_context}"
+        Rails.logger.info "👤 Found #{relevant_people.length} relevant people"
+      end
+
+    rescue => e
+      Rails.logger.error "❌ Failed to inject RAG context: #{e.message}"
+      return nil
+    end
+
+    return nil if context_parts.empty?
+    
+    "RELEVANT PAST CONTEXT:\n#{context_parts.join("\n\n")}"
+  end
+
+  def inject_upcoming_events_context
+    return nil unless defined?(Event)
+    
+    context_parts = []
+    
+    begin
+      # High-priority events in next 48 hours
+      high_priority_events = Event.upcoming.high_importance.within_hours(48).limit(3)
+      if high_priority_events.any?
+        high_priority_context = format_events_for_context(high_priority_events)
+        context_parts << "UPCOMING HIGH-PRIORITY EVENTS (next 48h):\n#{high_priority_context}"
+        Rails.logger.info "🎯 Found #{high_priority_events.length} high-priority upcoming events"
+      end
+
+      # Nearby events in next 24 hours (if location available)
+      current_location = get_current_location
+      if current_location.present?
+        nearby_events = Event.upcoming.by_location(current_location).within_hours(24).limit(2)
+        if nearby_events.any?
+          nearby_context = format_events_for_context(nearby_events)
+          context_parts << "UPCOMING NEARBY EVENTS (next 24h):\n#{nearby_context}"
+          Rails.logger.info "📍 Found #{nearby_events.length} nearby upcoming events"
+        end
+      end
+
+    rescue => e
+      Rails.logger.error "❌ Failed to inject upcoming events: #{e.message}"
+      return nil
+    end
+
+    return nil if context_parts.empty?
+    context_parts.join("\n\n")
+  end
+
+  def get_current_location
+    begin
+      ha_service = HomeAssistantService.new
+      context_sensor = ha_service.entity("sensor.glitchcube_context")
+      context_sensor&.dig("attributes", "current_location")
+    rescue => e
+      Rails.logger.warn "Failed to get current location: #{e.message}"
+      nil
+    end
+  end
+
+  def format_summaries_for_context(summaries)
+    summaries.map do |summary|
+      "- #{summary.summary_text.truncate(150)}"
+    end.join("\n")
+  end
+
+  def format_events_for_context(events)
+    events.map do |event|
+      time_info = event.upcoming? ? "upcoming #{event.formatted_time}" : "past event"
+      "- #{event.title}: #{event.description.truncate(100)} (#{time_info})"
+    end.join("\n")
+  end
+
+  def format_people_for_context(people)
+    people.map do |person|
+      relationship = person.relationship.present? ? " (#{person.relationship})" : ""
+      "- #{person.name}#{relationship}: #{person.description.truncate(100)}"
+    end.join("\n")
   end
 
   def safety_mode

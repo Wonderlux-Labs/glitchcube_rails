@@ -14,22 +14,85 @@
     </style>
 </head>
 <body>
-    <!-- Map container -->
-    <div id="map"></div>
-    
-    <!-- Info toolbar -->
-    <div class="info-toolbar" style="display: flex; gap: 20px; align-items: center;">
-      <div class="cube-title">🔥 GLITCH CUBE TRACKER</div>
-      <div class="location-display" id="addressBar">Loading...</div>
-      <div class="section-display" id="sectionBar"></div>
-      <div class="status-display" id="status">Initializing</div>
-      <span id="simModeIndicator" class="sim-muted" style="margin-left:auto; font-size:12px; color:#888;"></span>
+    <!-- Main layout container -->
+    <div class="app-container">
+        <!-- Map container - 2/3 width -->
+        <div class="map-section">
+            <div id="map"></div>
+        </div>
+        
+        <!-- Information panel - 1/3 width -->
+        <div class="info-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">🔥 GLITCH CUBE</h2>
+                <div class="panel-subtitle">BURNING MAN 2025</div>
+            </div>
+            
+            <div class="panel-content">
+                <!-- Location Status -->
+                <div class="info-section">
+                    <h3 class="section-title">LOCATION STATUS</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">ZONE:</span>
+                            <span class="status-value" id="panelZone">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">ADDRESS:</span>
+                            <span class="status-value" id="panelAddress">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">COORDINATES:</span>
+                            <span class="status-value" id="panelCoords">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">DISTANCE TO MAN:</span>
+                            <span class="status-value" id="panelManDistance">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Nearby Landmarks -->
+                <div class="info-section">
+                    <h3 class="section-title">NEARBY LANDMARKS</h3>
+                    <div class="landmarks-list" id="panelLandmarks">
+                        <div class="no-data">Scanning...</div>
+                    </div>
+                </div>
+                
+                <!-- Nearest Facilities -->
+                <div class="info-section">
+                    <h3 class="section-title">FACILITIES</h3>
+                    <div class="facilities-list" id="panelFacilities">
+                        <div class="facility-item">
+                            <span class="facility-type">NEAREST PORTO:</span>
+                            <span class="facility-info" id="panelNearestPorto">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Status -->
+                <div class="info-section">
+                    <h3 class="section-title">SYSTEM STATUS</h3>
+                    <div class="system-status">
+                        <div class="status-indicator">
+                            <span class="indicator-dot" id="connectionDot"></span>
+                            <span class="indicator-text" id="connectionStatus">Initializing</span>
+                        </div>
+                        <div class="sim-indicator" id="simModeIndicator"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <!-- Coordinates toolbar -->
-    <div class="coordinates-toolbar">
-      <div id="coordinates">Connecting...</div>
-      <div id="distanceBar"></div>
+    <!-- Compact toolbar overlay for map -->
+    <div class="map-toolbar">
+        <div class="quick-status">
+            <div class="location-display" id="addressBar">Loading...</div>
+            <div class="section-display" id="sectionBar"></div>
+            <div id="coordinates">Connecting...</div>
+        </div>
     </div>
     
     <!-- Controls toolbar -->
@@ -40,21 +103,6 @@
       <button class="control-button" id="centerToggle">Center Map</button>
     </div>
     
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color" style="background: #ff6b35;"></div>
-        <span>Streets</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #00ff00;"></div>
-        <span>Route History</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-marker" style="background: #ff6b35; border-radius: 50%; border: 2px solid white;"></div>
-        <span>Glitch Cube</span>
-      </div>
-    </div>
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

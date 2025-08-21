@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class Event < ApplicationRecord
+  vectorsearch
+
+  after_save :upsert_to_vectorsearch
+
   IMPORTANCE_RANGE = (1..10).freeze
 
   scope :for_address, -> { where("address ILIKE ?", "%?%") }
@@ -46,5 +50,21 @@ class Event < ApplicationRecord
   def formatted_time
     return "No time set" unless event_time
     event_time.strftime("%m/%d at %I:%M %p")
+  end
+
+  # Search content includes title, description, and location
+  def vectorsearch_fields_content
+    content_parts = [title, description]
+    content_parts << "at #{location}" if location.present?
+    content_parts << "on #{formatted_time}" if event_time.present?
+    content_parts.join(" ")
+  end
+
+  private
+
+  def vectorsearch_fields
+    {
+      content: vectorsearch_fields_content
+    }
   end
 end

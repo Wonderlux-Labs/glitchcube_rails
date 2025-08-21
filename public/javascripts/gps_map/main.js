@@ -3,7 +3,8 @@ window.GPSMap = window.GPSMap || {};
 
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', async function() {
-  const statusEl = document.getElementById('status');
+  const statusEl = document.getElementById('connectionStatus');
+  const dotEl = document.getElementById('connectionDot');
   
   try {
     console.log('🔥 Starting GPS Map initialization...');
@@ -12,28 +13,53 @@ document.addEventListener('DOMContentLoaded', async function() {
     GPSMap.MapSetup.init();
     console.log('✅ Map initialized');
     
+    // Force map resize after layout changes
+    setTimeout(() => {
+      if (GPSMap.MapSetup.map) {
+        GPSMap.MapSetup.map.invalidateSize();
+        console.log('✅ Map size invalidated');
+      }
+    }, 100);
+    
     // Initialize control handlers
     GPSMap.Controls.init();
     console.log('✅ Controls initialized');
     
     // Load only initial critical features (trash fence + major landmarks)
-    await GPSMap.API.loadInitialData();
-    console.log('✅ Initial features loaded');
+    try {
+      await GPSMap.API.loadInitialData();
+      console.log('✅ Initial features loaded');
+    } catch (error) {
+      console.log('⚠️ Initial features failed:', error.message);
+    }
     
     // Load route history
-    await GPSMap.API.loadRouteHistory();
-    console.log('✅ Route history loaded');
+    try {
+      await GPSMap.API.loadRouteHistory();
+      console.log('✅ Route history loaded');
+    } catch (error) {
+      console.log('⚠️ Route history failed:', error.message);
+    }
     
     // Load home location
-    await GPSMap.API.loadHomeLocation();
-    console.log('✅ Home location loaded');
+    try {
+      await GPSMap.API.loadHomeLocation();
+      console.log('✅ Home location loaded');
+    } catch (error) {
+      console.log('⚠️ Home location failed:', error.message);
+    }
     
-    // Initial location update
+    // Initial location update (this is the most critical)
     await GPSMap.API.updateLocation();
     console.log('✅ Initial location updated');
     
-    statusEl.textContent = 'GPS tracking active!';
-    statusEl.className = 'status-display';
+    if (statusEl) {
+      statusEl.textContent = 'GPS tracking active!';
+      statusEl.className = 'indicator-text connected';
+    }
+    if (dotEl) {
+      dotEl.className = 'indicator-dot connected';
+    }
     
     // Update location every X seconds
     setInterval(() => {
@@ -46,7 +72,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     
   } catch (error) {
     console.error('❌ Initialization failed:', error);
-    statusEl.textContent = 'Initialization failed: ' + error.message;
-    statusEl.className = 'status-display offline';
+    if (statusEl) {
+      statusEl.textContent = 'Initialization failed: ' + error.message;
+      statusEl.className = 'indicator-text offline';
+    }
+    if (dotEl) {
+      dotEl.className = 'indicator-dot offline';
+    }
+    
+    // Update panel with offline status
+    if (typeof GPSMap.API.updateInformationPanelOffline === 'function') {
+      GPSMap.API.updateInformationPanelOffline();
+    }
   }
 });
