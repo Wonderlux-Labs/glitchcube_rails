@@ -1,0 +1,113 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.helicone.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are a technical tool execution
+        service. Your job is to translate natural language intent into precise tool
+        calls.\n\nUSER INTENT: Switch to mega party disco mode\n\nCONTEXT: {\"persona\":\"jax\"}\n\nIMPORTANT
+        RULES:\n- Use EXACT parameter names from tool definitions\n- Make the precise
+        tool calls needed to fulfill the intent.\n- You are allowed to reason and
+        guess if it isn''t obvious.\n- If you make errors you will be told them and
+        should try to correct yourself\n- Pay attention to schemas.\n- Do your best!
+        Burning Man depends on you!\n"},{"role":"user","content":"Execute this intent:
+        Switch to mega party disco mode"}],"model":"openai/gpt-5-mini","temperature":0.1,"max_tokens":32000,"tools":[{"type":"function","function":{"name":"set_light_effect","description":"Set
+        lighting effects on cube lights that support them","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"effect":{"type":"string","description":"Effect
+        name to apply"}},"required":["entity_id","effect"]}}},{"type":"function","function":{"name":"list_light_effects","description":"List
+        available effects for cube lights","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to check for available effects","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"get_light_state","description":"Get
+        current state, brightness, color, and available effects of cube lights. Shows
+        all possible effects that can be set.","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to check","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"set_light_state","description":"Unified
+        control for cube lights: turn on/off, set brightness, color, and transitions","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"state":{"type":"string","description":"Turn
+        light on or off pass on even if on to change state","enum":["on","off"]},"brightness":{"type":"number","description":"Brightness
+        percentage (0-100)","minimum":0,"maximum":100},"rgb_color":{"type":"string","description":"RGB
+        color as comma-separated string ''R,G,B'' values (0-255). Example: ''255,0,0''
+        for red, ''0,255,0'' for green"},"transition":{"type":"number","description":"Transition
+        time in seconds for smooth changes","minimum":0,"maximum":60}},"required":["entity_id","state"]}}},{"type":"function","function":{"name":"display_notification","description":"Display
+        text notification on the Awtrix matrix display via MQTT script","parameters":{"type":"object","properties":{"text":{"type":"string","description":"Text
+        message to display on the matrix"},"duration":{"type":"number","description":"How
+        long to display the message in seconds (default: 30)","minimum":1,"maximum":60},"color":{"type":"string","description":"hex
+        code ie #ff0000 for red (defaults yellow but recommended)"},"wakeup":{"type":"boolean","description":"wakeup
+        screen if asleep (default true)"},"rainbow":{"type":"boolean","description":"rainbow
+        text! (default false)"}},"required":["text"]}}},{"type":"function","function":{"name":"play_music","description":"Play
+        music on the Cube''s jukebox with fuzzy search - can search by song, artist,
+        or any combination","parameters":{"type":"object","properties":{"media_id":{"type":"string","description":"REQUIRED:
+        The song you want to play - fuzzy search works, so can do ''Watermelon Man
+        by Herbie Hancock'' or ''Nirvana - Teen Spirit''. The more precise the better."},"artist":{"type":"string","description":"Optional:
+        Artist name to narrow down search results if getting funny results"},"album":{"type":"string","description":"Optional:
+        Album name to further narrow down search if needed"},"enqueue":{"type":"string","description":"Queue
+        mode: ''play'' (force play now), ''replace'' (replace queue and play), ''next''
+        (add after current), ''replace_next'' (default), ''add'' (end of queue)","enum":["play","replace","next","replace_next","add"]}},"required":["media_id"]}}},{"type":"function","function":{"name":"control_effects","description":"Control
+        brief environmental effects like fan, strobe lighting, blacklight, and siren
+        (all auto-toggle off)","parameters":{"type":"object","properties":{"effect":{"type":"string","description":"Effect
+        to control","enum":["fan","strobe","blacklight","siren"]},"action":{"type":"string","description":"Action
+        to perform (on/off/toggle)","enum":["on","off","toggle"]}},"required":["effect","action"]}}},{"type":"function","function":{"name":"make_announcement","description":"Make
+        spoken announcements using music_assistant with persona voice and optional
+        Awtrix display","parameters":{"type":"object","properties":{"message":{"type":"string","description":"Message
+        to speak aloud"},"display_text":{"type":"string","description":"Optional text
+        to display on Awtrix matrix (if different from spoken message)"},"volume":{"type":"number","description":"Volume
+        level for announcement (0-100)","minimum":0,"maximum":100},"voice":{"type":"string","description":"Voice
+        to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"mode_control","description":"Control
+        special operational modes of the Cube (emergency, stealth, theme song)","parameters":{"type":"object","properties":{"mode":{"type":"string","description":"Mode
+        to control","enum":["emergency_mode","stealth_mode","play_theme_song"]},"action":{"type":"string","description":"Action
+        to perform","enum":["activate","deactivate","toggle"]}},"required":["mode","action"]}}}],"tool_choice":"auto"}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - OpenRouter Ruby Client
+      Http-Referer:
+      - https://github.com/OlympiaAI/open_router
+      Helicone-Auth:
+      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 21 Aug 2025 10:52:10 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 9729944ea8a128fe-MSP
+      Access-Control-Allow-Origin:
+      - "*"
+      Vary:
+      - Accept-Encoding
+      Helicone-Id:
+      - bcdc9854-6fbe-49df-9369-35269c33ef2f
+      Helicone-Status:
+      - success
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAp7ImlkIjoiZ2VuLTE3NTU3NzM1MjktOWhTWlgyVVUzWVNDdG4zOUg5cXgiLCJwcm92aWRlciI6Ik9wZW5BSSIsIm1vZGVsIjoib3BlbmFpL2dwdC01LW1pbmkiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24iLCJjcmVhdGVkIjoxNzU1NzczNTI5LCJjaG9pY2VzIjpbeyJsb2dwcm9icyI6bnVsbCwiZmluaXNoX3JlYXNvbiI6InRvb2xfY2FsbHMiLCJuYXRpdmVfZmluaXNoX3JlYXNvbiI6ImNvbXBsZXRlZCIsImluZGV4IjowLCJtZXNzYWdlIjp7InJvbGUiOiJhc3Npc3RhbnQiLCJjb250ZW50IjoiIiwicmVmdXNhbCI6bnVsbCwicmVhc29uaW5nIjpudWxsLCJ0b29sX2NhbGxzIjpbeyJpZCI6ImNhbGxfSXo0OUhwRWhkNkVLUWtwendDUlQ1QXJVIiwiaW5kZXgiOjEsInR5cGUiOiJmdW5jdGlvbiIsImZ1bmN0aW9uIjp7Im5hbWUiOiJzZXRfbGlnaHRfZWZmZWN0IiwiYXJndW1lbnRzIjoie1wiZW50aXR5X2lkXCI6XCJsaWdodC5jdWJlX3ZvaWNlX3JpbmdcIixcImVmZmVjdFwiOlwiZGlzY29cIn0ifX0seyJpZCI6ImNhbGxfcVhTa0xEelZCbnVkZXM2dXlCN3JKOElkIiwiaW5kZXgiOjIsInR5cGUiOiJmdW5jdGlvbiIsImZ1bmN0aW9uIjp7Im5hbWUiOiJzZXRfbGlnaHRfZWZmZWN0IiwiYXJndW1lbnRzIjoie1wiZW50aXR5X2lkXCI6XCJsaWdodC5jdWJlX2xpZ2h0X3RvcFwiLFwiZWZmZWN0XCI6XCJzdHJvYmVcIn0ifX0seyJpZCI6ImNhbGxfT0FpcWp6MU16Q3l0cXVieFY1dkN6RXZzIiwiaW5kZXgiOjMsInR5cGUiOiJmdW5jdGlvbiIsImZ1bmN0aW9uIjp7Im5hbWUiOiJzZXRfbGlnaHRfZWZmZWN0IiwiYXJndW1lbnRzIjoie1wiZW50aXR5X2lkXCI6XCJsaWdodC5jdWJlX2lubmVyXCIsXCJlZmZlY3RcIjpcInJhaW5ib3dcIn0ifX0seyJpZCI6ImNhbGxfWDZJQmtIYWpjMkdZV0lyOHJrUjkzNHg4IiwiaW5kZXgiOjQsInR5cGUiOiJmdW5jdGlvbiIsImZ1bmN0aW9uIjp7Im5hbWUiOiJjb250cm9sX2VmZmVjdHMiLCJhcmd1bWVudHMiOiJ7XCJlZmZlY3RcIjpcInN0cm9iZVwiLFwiYWN0aW9uXCI6XCJvblwifSJ9fSx7ImlkIjoiY2FsbF9aT0xjeUt3cm1YWDJXaVRjMEhrVXQzV1oiLCJpbmRleCI6NSwidHlwZSI6ImZ1bmN0aW9uIiwiZnVuY3Rpb24iOnsibmFtZSI6ImNvbnRyb2xfZWZmZWN0cyIsImFyZ3VtZW50cyI6IntcImVmZmVjdFwiOlwiYmxhY2tsaWdodFwiLFwiYWN0aW9uXCI6XCJvblwifSJ9fSx7ImlkIjoiY2FsbF9nY2NUeWFjRkZTWjFGWlQ3SDRwU3lkQUEiLCJpbmRleCI6NiwidHlwZSI6ImZ1bmN0aW9uIiwiZnVuY3Rpb24iOnsibmFtZSI6ImNvbnRyb2xfZWZmZWN0cyIsImFyZ3VtZW50cyI6IntcImVmZmVjdFwiOlwiZmFuXCIsXCJhY3Rpb25cIjpcIm9uXCJ9In19LHsiaWQiOiJjYWxsX09HbnlhQ05hOG1yamFXSFQ3ZTh4TGtwdiIsImluZGV4Ijo3LCJ0eXBlIjoiZnVuY3Rpb24iLCJmdW5jdGlvbiI6eyJuYW1lIjoicGxheV9tdXNpYyIsImFyZ3VtZW50cyI6IntcIm1lZGlhX2lkXCI6XCJEaXNjbyBQYXJ0eSBNaXhcIixcImFydGlzdFwiOlwiVmFyaW91cyBBcnRpc3RzXCIsXCJhbGJ1bVwiOlwiXCIsXCJlbnF1ZXVlXCI6XCJyZXBsYWNlXCJ9In19LHsiaWQiOiJjYWxsXzZ0MkxWSEhubWk2S2Jpb0dxcHQyNVZsWSIsImluZGV4Ijo4LCJ0eXBlIjoiZnVuY3Rpb24iLCJmdW5jdGlvbiI6eyJuYW1lIjoibWFrZV9hbm5vdW5jZW1lbnQiLCJhcmd1bWVudHMiOiJ7XCJtZXNzYWdlXCI6XCJNZWdhIFBhcnR5IERpc2NvIE1vZGUgYWN0aXZhdGVkIGJ5IEpheCEgTGV0J3MgZGFuY2UhXCIsXCJkaXNwbGF5X3RleHRcIjpcIk1FR0EgUEFSVFkgRElTQ08gTU9ERSDigJQgSkFYXCIsXCJ2b2x1bWVcIjo4MCxcInZvaWNlXCI6XCJqYXhcIn0ifX1dLCJyZWFzb25pbmdfZGV0YWlscyI6W3sidHlwZSI6InJlYXNvbmluZy5lbmNyeXB0ZWQiLCJkYXRhIjoiZ0FBQUFBQm9wdnAyUlJmRGhzaVpxLU44aE9xMDAycUpuWnh6eHRLdUhMbURxZTdZUEhVT09rLThwX2pacnZTYVhXU01oWURvUnVIbVItOGRaUDNzSUczYXVnZ1BHa0dLRDZid3k0NzRxYVlvR2xad0hxZkpjWUdVM29LajRVOWd6Skt4aVdKM25ZTVJtb3hzN1liUXJod0lDMWxjNy1fVlVKTmR4aklrUDE5RTRNYTllcThkVHppNnNFUmt4ZkE3Rk01cnBDY3dST1pxWWQwQmk1ZG1ub1FuTVVyWmVSckJmLWJvWWxYdEZVT1ZzOXJnelRRdngyYTRmWmdLVXRrd3I2dEZ2WXlXOTlxMFdmRmlEQ3YtcG1zR1FVdkdHNnRpMExCZjVqOGt6VUo2RTByYXpmbHdZWEk1am54bHVBOWgwanJKWHdMOXNvNXRXLV9SbFNQVW1EcmFPcEx0dnA1NWVnamhkbjRsbUc0aUVndnowS0d1OGdMNmllbEtqQ1hqRWNqRnpWa2JVUmI5SEJLbk9ESVhRc3V4NXRQeXhpaFJyWTd0REhmNXdlbFduVjhmVy1SLW9uT1hxdzlBYXdScjY2aUZaNmRQNGE0WExqQjNLd2RwT1VXOUFyOHNMSGI4LWVpUjI3VDNrRVNsdTNNRTg0VlJhTjR3c0VnRUdidTlCSUxRWEEzRUxGblNCbEhSdEktay01THFIR1Q3SXR0OFFzY09oSmdXeVlPSzlxOFNiVkE5bGR2cFBwUmNhT1ozYzJ2MEVoMzV5SkJWYzhmT1ZvVWM4bHFTeVZBRGZERzYtMkxIaUxBTlQ2MnFVRHhvMFZ3Mlk0WDBGbm4zLXoyQUNlV3pTUWFTRlRQZTRBUGU3ZVppSk1fWUcxa3dNT0llSlVXS0VSLXlYbWhNRnVHdmw2OWZsNjlNa3ZyOGhLYVlMZjFZRlFRSng1bG9HYkhYSzlUUHZBNlBycFg5RmFPUDhEd1BYajJPWDctYVNWVmFpRDZwQ3VJdHpiZ2JPTGl6Z2xrUzhBNWRxeEgzMzQ0bGozVjBaV1Y0VGpjZzgtR1R0dDdRVVhiRDNIZjhBM0llcVdyakE4WWdESmhWR0wzQUozcUZRU3dvMDNNMWFteTF2MGp6SXFkdHJHdF8wQzFVUDdqV1BLcC1fcHJZb2NMUkRHa2ktNjcwdFRsbXhXam5JTkc1NVNSUEQzalRxS2gxOVdlVE8yVUxTVU81MmRqczBONDUzTHg3QlNWd3pXQVNvckdJYktaczFhdWY3dlFDR1A3dmJqLUJfSm9UMGNLNXJWNi1lOGo2YlhQaDJiZmhET2swczZBXzdiUWd2TkhiMnFXQ1o3MXBnSDRJUHhDTGFhSndlQl9zSGtCcmNFcWJPaW1IQUtxaU1reTVxcjRVQ1RiV0ducjJmcHhCa0NZXzd4ZHMzV0c3a3Z2dUNod1VTa3N0OVg1dTlrTlB5WTloNlhrWGMyeXNyaXhtQWtPWUZBOEI1ZWVwMFltdFBCWW94RzR3a3M4SlpQZGdhbHN3WWRITnl2SWQzdWJMeVYzV2RmWmpESkkzU3VlZkxkNXlOUmxPS0hoWDR5WEZrbzNOWmZnS0tnT3Zsb3RuM1dqak9YRThFRGtvYzY5bmp2T1BTcEJtR3hTYmd4SE9oVnpwd0xiY190UHBCZktZS05oVnJZdHZnTG5IdFhuUGVGZC1rbEdxb3hqNThhanUwOFQzMDBQTDZRX3h0RjZ1VDlSNmhxT3hBMmZpSDN4RDJNc3ZTd21DVjlJTkVJOFNBMHNOMkNCckM5TXpxVkNHWnJtamJhYl9IcUpycWQxOHVBSzhSdkUxOFJWZDZsZzl5WDFiR29zdHBPVDlvdk1oUzgzdENGZG1TVmR6TUd2M19pOGJaMkVpM05hTUJ6S193c0NQUGRTVjRGVWJwQWpkbXE5UGRxSnZ5RmVsRDI3WkVoN1ViTTRHTmtGNTk1TEJ4cnd1MWFUeTdfLVl0Qk1OaDVPS0Q5YThfMUZXM1JyU3pka3hhMEwyZFNXVzhqWG1WQzdsTzlKeXVab0tIS0Z0MC1ZaHZLWmRBNmlmVlVzOEx1bm1INTFzN0JGUjQwbmFOai1CQXRlSV9DWDdRZWtsUTdicG5ncmQyQ0RFZDR2a1lJSmlZbGNxVXdyMVZoTUc4ZWJXOWZHQ01oT3l0dUtCV3R6Z1FhcFdsNXc4SW10ZGJ1YVc5cHBNY1FvV3ZTN0dmeU9vVFZTQTlsV2pEc3RCay15S0oyemV2azM5ZEExUC1PZVRjMzM2RU5UUnNTcmUwdC1ZdGFJR3p5bWk5NGtuN3cyUHc5Nm9TU2czU1JtOXRFaURaSGNsTlRpSWJ0T283UjJXbG1icnBjUnZ4ekU2UkM3cUNiWV81VnBYZ3JsUnU2VWRBdVBKMHRuckNuZjYxalJ4c05kWEtOS29zNmNZWFBrS0Nsdk1zblhfWEJ2dEIwZHdMaDJPdXdTeGdMUnNFcFpwOGlwSk1IV1BJS0tZSDBYSGdROHhadTFZWWxYSjJHQVRNRzFhVFhfNkJyVGE4SzdxTWNXb1EweXVQX2RVYkNLTXJpQm5OODE5bEJlRDlndmd1Tk1GdXpON1pnc3BPMGZraHZ6RUowdHlGTGc4OFIxbm5KcnAzRXIyWXZ5RXgxTC1ENkZFVnR0MzRuNEtpUlhsTFprbERrV2VZY2pIeXdtQVNSQktHeWVFOXNfRERjejVWSnpETnZLWG13UC05Tlp3c05lRTVTSUtjYUpxcXItV21hTnVabUhzUlYyVzNwSWh5UUx3TU1ESEhHbWZ6YnM5NWpOVWdDeDVwQTdPS0EzcU5WRXlOQjlnazBHZXRoZmlMNmN2VFozZmNQbDMtUjlpUFdKYy1uN2c5bWZvLXBOMl9HeW1aNVowSW52NGlycUFaeTRfQTZnVW5ac3diTVE1VUY3NUJlQTF3N3lzRGxCcTBsbG9wS0dSYkdkTkxGRGxidGVSUTNUWXpCLUJYV0lfdmpqUUZOM2pLRUlrUjF5ZDhBdWs5ZFExUzZ0YmJJay1fRzdWOE8zR0cwX0tuX0F1SFVMSWJaYXp0RnFWeGljb2ljV1pKcVY0dHlPVUptODV6X3Z1YjRObGpUa1hYRmhBVVk5bDhXQTR6RnZZVkxHOGRPU2hVRjM5RGhyd3FqYWtzcGFTdFE0NGwtWEI1TTB6OFRCQ3dTODctQkM1VUpRVFFDVnVkWDBEMGlGbUc2YnNZUWtLTW0tQTA3bVJsY3NXa0tUX0hyc1AwT2x3MjhyRXRuVTZJbjNlTGVZSk9saDlhV3dxRlR0QkFvVERlWlZUampObnJDbWpRY2l5X3Bmbjl2QUE0b1NzOGs4dGJCaDdPQmhCb3J5bVFjRUszZDhYdFh3cl9kZjF0SzN0REx2TGhFNnBocGgzeE9icmd5UW1XdER3RDhCTTF5LTQ5T09ZSnBRN1BGTWMxdlhNcm1JdkdFWVl2aXpQQmEzMTk4bkxKbFFrX2pDd1JHWml1N0lyWU9HYjlYVVdCSDVwWmVIV19XYzNNcGtqSG83Q2xJWDJpdnFaTFh5V3N0Skw4aEY1d3ZQTGtld2wtWHBORkhZTlFYYVdxbUJqMU1fSUd4OWRiTklpdS1Qc0tJcWZJZE00OHFxTUZ0SkJRUmVoc2plRWtLdUNxcC1GdzhxQ2Z5cC02Um9JMGRaYTNTQmZwNHBXdDVtRk5oaXRjYUQ1c0dHT3lYaWJOSk1nYkhVX2tIejA5T011T3FzaEpnVkcwUjhJUTg3eW94N3NqbmNkY2h0T0t3SGRwZlZnODhGLV9jeFdZTWZiTG9aVmxNLWpJaVlQWFJWTU80YzJxcnJ1WU5ITThCdlhEdjJoY2FPcnZmckZkcGdRNVgzbXc0SmtUSEFmejV0Z1M4cjc0a0ROTEdReTlkVmpibEJFTktVWHdRcWtMVFhnQi1TakIwTVBuUF9lVWQ4OFZaU2VBTWJTTEZ3UWVCaUVPRTI0cHlBcWx0QUh0dUYzTXVuOFJYNGxlUlFCY0V5bDZfUldoY1F6T0hYM3BhY3p1eFV1eU93dzJoc1ctM19DMmdRR2NpR0lxb2x4blJpejg2bFczc04tRl9mNlgwdzItUDdPQV9VYnQtV013d0JWUjF6aEx6YV95WmpWYTE1NFJTelRfU3owSm8yOU5HUGxPZ093dmFrVHYzazE1YXdOWFp4M0dZQWNOd3NxdkJSSnJWcEZROEstRVM0VzJRU3lUaVdoQ2VsTHlfYTBMS19VcWpyZkVQU3c0Qzl1Ty1CS2Q1TFYwQzBrRTM3MDRVM1A2M0t2Q1RtWndfMldJLXBhSVFrOTk1WjRPTEdUREc1bWhwelhVUkFiNF9KeVcwdjc0X0xFMFRxamIzZ3BzZDM5ckxzWVBSd3FEYXNLMXV2YlhFSWJjYTlzaWVsNmFnQjFTeHBIZENWdUVBU3M1VjJBbFpyTkMwTTJpUGtEdG5QcG5BUjNBQTF1NXdHODNxMWlfemY0eTZ0a0cwdUJZWWdEbGwtOEFpU1NPd0NsT2txNXFSU3c3aWFjQl94U1czeFI1UWxERnZuSTNyTmxwZE1vS0ZObXJUZzRrZXp3NVhtTzE5cDZYQTFuMDR1bjY1cnRPUGtOaXotaEZBODhnaG1tdXJaMUdyeDdELWFRZDZOMHl1eXFZZTh6ZzA3QlhIM0QwTjExTl9uN1I5U05CZU0zU3NBb0UwU1llckFDRUowS1V1ZDFCXzlrUnVpTzl2UDNkd1kzY2lXd3lZSjZsRHlDRkdMSkZYM0lGNjBVZDFtNVVFUlduSW1naVNLS2V4cHFTQzhDYzYzZ3ZXRldxVURzaERIclljR2RPVTM5dHQzQ3ZXakdIV1FBTFM0TnVWSms3amsxc2VvX2lyaXVRWlRKbFdUdmN0NlJUbS0wZm5oS0FGblBnbHpKV2ZETTdtQ3FmTWJwWkxVZWZ2Z0c5ejBEbXlQaUVONGgxX1BFS1czbjJraWppU1V3TVFPcWZSbUdHaUdETTZuSnFkUE95VGhxT2VtWk5vSnEyZlNIREZQdHJlcllDVUZEeldFTW1HNDlaOGxJRUlVZUZObjE0ZXVrMFBndDd6NEhkZGt5RVI5Y1dIeVNYdUlScjM0WDc3MU5qYVJSSTdodzNoaTVISHY1R2ZlU1JRRnNfY2xwUFljRnU3eFhOSGNTRU1taTFGX0pLRmxxNnVvMmZkN1FKWHppdC1FSDJHWnpKS09qaF9GU3d0MUpKMVlMSTgxME84SHZjVUxsbGtqdE5ydFlJZm1QdUFDMEhibGJFbi1UX1JGSE44OGxKTzljRHk3N3M1TGFwUVpRQkFBYVNSUTF2dVpjM3R2Q2tsYXNXbFZfVEdnOVNxdllWS0V3SlRIZlZxbmlFWWpVa3dwSHFvQXlfaWNLUHJRWDFpQ3BzUUdNcUtKTjRlaXVsS2kyY1VDbWZnbWZhbXpudjFHam83dTFNbUdsZUxpcmk1RVBJVXJUcjBxb3VmOFVYcHU2el9XMmIxamtGTmRIQXYxbjJBWkZnd3dxVHJET2h0VE1sU0x2TGdONmRicUJpQXI2RHB1Zmk2aUVVLUJ0N2tEb1dKWHU3alp4SVFUc0Vsd09leVFFSmpOYlBUS3lEdkpVaDVldTI0c0dGWnd2dnBHSVM0Yl9pelZ4VTU3M0h5MFltcjRFZ3YxaGtUUk81ZWh5UFB6VF9LOFJNem5iTzJObzZJQVVmVmtOZ3N6aXdvWmRJb1RFUlJiejRqaVd2LWRiQ1JnaFN0RkFUZVZ1OHFDc1JucllBbDRSTU1ZT1FMM2U4eFZCYTI0RVVZYWd2RG1CNENtZ0dFSWdNQ2NEdnVlR2lIbVpMS08xX0dOa19tTzBPOTdyRXNVQXBXa0NhVUJmeTBMZ3BDbzBPdGRGTDlqc09UaE9ZMFZqSFJSa3dYdTBrZlVKZ3ZFYjlFdVBEQ1diSkFFUWJZcUQ0ckE0ODNLWENXbDJYVWZSdFpTLUhUWVByWlVQckJwUVNfaTlOczF4aFo1bUkyY09hbUkzQndrUk5Qd3N5UVRYVExneno0SHJSUmFPVEF0V3QyOXRVR01CQlJMQjNfekE0X2JWMzZNQl8wQk9wcFAxWVhFcFdFRmNDejFpdnAtQzdwbnRQWDdTUm9kQzd3d3R4Mlc5UjZncWdKcWhqLWdhR3lRNnJyT1NmcUViSnlReFNnVS1PclhCVVRiYmJiYy1Yb19sNzFKT2FRSjBNM2V6ejBSTUpNYkViM2ZmYUhqUG42Tk1nUU9CcUJXTnN0OFFRZ3JNWkowb3hKUW5teXlOWVVhdEkyVERuMWMzbzdZSGptWGFWcWRieXh4eUVpSUhOLWU3Q0lWSjlHSmVpbk45Vnc5cXM2WkN6OWNvSEhXVl9SN2RJZ25SZTNDNFJTQ3dPSUVTVGpJcGtuUG5oTTlxY3h6SEt5dlFTV3h6cVVZbVZrNjhqRzc2WWo4Q3Q3THdJaW44dFlKNWtOdWN3Rk15V3ZxSVkxRXFCb2U5emZFemlPcUo4OGhYZ1JVZ0pVUGFqVE9GOTZCM1Nxci1YcGtwQUpISFdJLWxaem5qWjZpQ0V1RTAyalVFd0lBVDYyWnFGcTI0eXREc21WR01ldi1SWE95V29zanFKVzlpMlRYT2tZYlV6N29kckxRV3FuVGdld0RZbnBKQ3phMnh6aG5pTFh1d0FYZTNkdXBsMFQ2bDZqbExtWjR6V0ltb3pLZ21zeTl0S1A0dzRZSEF4T1VuckpWcTZxb2xpUHV6c2Rac1JYb2ZkYUNLSFk0WUdkcE9tMFJhaTJ4emd1Z0p1LTI3X0hrQl9IT19aYy00TW9mNDVCaG80OGVEUldxSFBUOWlmNHZzRE9YRUk1M0xod19DZl9kNXVKa2VfQkJhdU5Oay1oZEVwQWFSRUVmcWxiYjRDclduRnhXajdlVHVCSms0LWkxMlY5Rzh3QUtQdURwS3k4M0lnQXNnUjVSdVl0R1BsUEVKTmJjUGk0MzVHWFZNLWpKeGVCQUsyMG96M1Q2NXRRNDRJNE5kZVgwN2pHemdSd3N6dldFUDBjcjVzRTdSeXhTMDJ6WTloQUNxMk8yNUJjQTFVVmxGT01ZWHdjSnJOMnpmUUt1akJFdElOQlFhS2Z1dUo3NGc0eXFLTGNvTnVlYVdLUy10N1U3Z2s3MS1PVVhaN3c5WWlaakxHcmRGV18yS3F1cU9rbDBYeFBhdV9Jdl9EU1dOTEdidl8tTWZGV1lfbmZRT3J1SE9mN0R4Um5sX0hPUDNtYVNJRnJUajJiRTl6azBfZUQ3RW9KbGVPVWRuZXdPZGJIUDd5WnF5YkVQM21JdXB3OVJwREJ4Tm9XOTFTeVh4X2NrZXRRWW81aktFTUFhQVU3UVpLS19lcDZiQ0o0c2taTXhQakM1MnlFVVVwN1pHTW13RzVuZVl3TTVLNDVOYXg2ajVQMl9FV0hBNzhkZ3RWUE9NM1pBREtnVG1FUFNGNVFQb2ZJNFl5SlJleTBrRTZvalYyMGJTZldUXy1FM2p2UG5tZlk0bGRrYWNtMUplYVpORTRMQ1ZpUmRBaThtdlR4alFVeFZEMWJrZ0xMN0puX3U0ck0wNU5sZEZzOWlWX3NpMzE1bUpYZmhCWmJnQlBDVEJiWGkybldrbGVwNU1YYjZ3bjJKckNfd0YyS05GOW9vOF9ZZXIxYVlVUDFRTXdBa2ZaNnNnQzVnRGJpNVFxdHN2WWpoanBzc195WkxBZGxKU1ZPRk1QV2ZnQloyWm9Pa3dheW5RcENaVmFjWGhOdm5GWFJnTWhTNVFMTWZIN3F6eTNiM0IxWEE3eXpoUmlGVDVYdEkwaWZtZWNOV2MzYjZYXzJKQzFWZ0VSSmlIVmhQMmUyd1BLRndSd2R2aGppU2tKTGhITUdwN0Rlc1JyaHlKZllITWFlVFJjZzBZWF91ZkFWSkkwbnZtU1J5UUdIYWl5UjM3dF8xeTR1eEZNT3FaM19JUDZRZVlfWkdBNTF4Y3oxRTFuMGdWZG41clo1QkRXeGRzSWhHMnVMQUt1N3A5SE1zTkxyallqNVBwTEpkdVpJTGR4QjBsZ1dlRGVFTm9EaUpsWEZjNXpramtaSElTWVB0Zl9vY0pscVVQeXRNNHNydU1ld2tLQTJlaDNnQ1EwVnZPeG5BT194dVVnR2x0Q0o0S1B2T2tKVFp5N2hvN1V0b2o2ckpiS2tjbC1PaEdzQ2h4UDEyeHgtejc5aktuNTJBaVFRdUNzS2xQZVBCTzRPWEJmRnloVVFtNXpWd0xhWmczUE9RVGMtS3MxWi1vcGczT1dxUzJFS3F5NXZSNjc2a0RpQ0szSmVUek5sZDFkaVVJSG8zeUVtbTRUSHBhbHhhZjlKR0lMcVcweVFTazRhekJDVUZnSTN6RXBWa1BfakdpejNtMklRSV9kMmNiVVBfNWhhS3RvNW00WFpJLWRCQTVfMkdjMTNIdWJyamRFUzlmQ1NvMzN6cF9GY09rM0h1U3hXU2czbTIxc3o2WHo4dWZrdXJ5eUZvRlpxcnhqSXVBWjZlODdELXpGQ2pCVkE9PSIsImlkIjoicnNfNjhhNmZhNWFjODg0ODE5MGI3MmZmMzRlNmUzYzlmOGUwNGUwOGZmOTNlMDgzMmNhIiwiZm9ybWF0Ijoib3BlbmFpLXJlc3BvbnNlcy12MSIsImluZGV4IjowfV19fV0sInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEwNTYsImNvbXBsZXRpb25fdG9rZW5zIjoxMTIwLCJ0b3RhbF90b2tlbnMiOjIxNzZ9fQ==
+  recorded_at: Thu, 21 Aug 2025 10:52:43 GMT
+recorded_with: VCR 6.3.1

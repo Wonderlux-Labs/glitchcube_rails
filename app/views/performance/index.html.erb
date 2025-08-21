@@ -1,0 +1,142 @@
+<% content_for :title, "Performance Mode Control" %>
+
+<div class="max-w-4xl mx-auto p-6">
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">🎭 Performance Mode Control</h1>
+    
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+      <h2 class="text-lg font-semibold mb-2">Session: <%= @session_id %></h2>
+      
+      <% if @active_performance[:active] %>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          <strong>🎪 Performance Active!</strong><br>
+          Type: <%= @active_performance[:type].humanize %><br>
+          Time Remaining: <%= @active_performance[:time_remaining] %> seconds
+          (<%= (@active_performance[:time_remaining] / 60.0).round(1) %> minutes)<br>
+          Duration: <%= @active_performance[:duration_minutes] %> minutes
+        </div>
+        
+        <%= form_with url: performance_stop_path, method: :post, local: true do |form| %>
+          <%= form.hidden_field :session_id, value: @session_id %>
+          <%= form.submit "🛑 Stop Performance", class: "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" %>
+        <% end %>
+      <% else %>
+        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+          <strong>No active performance</strong><br>
+          Ready to start a new performance session.
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Stand-up Comedy -->
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-yellow-800 mb-2">🎤 Stand-up Comedy</h3>
+            <p class="text-yellow-700 mb-3">Hilarious routine about life as an AI at Burning Man</p>
+            
+            <%= form_with url: performance_start_path, method: :post, local: true do |form| %>
+              <%= form.hidden_field :session_id, value: @session_id %>
+              <%= form.hidden_field :performance_type, value: 'standup_comedy' %>
+              
+              <div class="mb-3">
+                <%= form.label :duration_minutes, "Duration (minutes):", class: "block text-sm font-medium text-yellow-700" %>
+                <%= form.select :duration_minutes, 
+                    options_for_select([[5, 5], [10, 10], [15, 15], [20, 20]], 10),
+                    {}, { class: "mt-1 block w-full rounded-md border-yellow-300 shadow-sm" } %>
+              </div>
+              
+              <%= form.submit "Start Comedy Show", class: "bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded w-full" %>
+            <% end %>
+          </div>
+
+          <!-- Adventure Story -->
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-purple-800 mb-2">🚀 Adventure Story</h3>
+            <p class="text-purple-700 mb-3">Epic tales from space before crash-landing here</p>
+            
+            <%= form_with url: performance_start_path, method: :post, local: true do |form| %>
+              <%= form.hidden_field :session_id, value: @session_id %>
+              <%= form.hidden_field :performance_type, value: 'adventure_story' %>
+              
+              <div class="mb-3">
+                <%= form.label :duration_minutes, "Duration (minutes):", class: "block text-sm font-medium text-purple-700" %>
+                <%= form.select :duration_minutes, 
+                    options_for_select([[5, 5], [10, 10], [15, 15], [20, 20]], 15),
+                    {}, { class: "mt-1 block w-full rounded-md border-purple-300 shadow-sm" } %>
+              </div>
+              
+              <%= form.submit "Start Adventure", class: "bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded w-full" %>
+            <% end %>
+          </div>
+
+          <!-- Improv Session -->
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-green-800 mb-2">🎭 Improv Session</h3>
+            <p class="text-green-700 mb-3">Spontaneous scenes and creative scenarios</p>
+            
+            <%= form_with url: performance_start_path, method: :post, local: true do |form| %>
+              <%= form.hidden_field :session_id, value: @session_id %>
+              <%= form.hidden_field :performance_type, value: 'improv' %>
+              
+              <div class="mb-3">
+                <%= form.label :duration_minutes, "Duration (minutes):", class: "block text-sm font-medium text-green-700" %>
+                <%= form.select :duration_minutes, 
+                    options_for_select([[5, 5], [8, 8], [12, 12], [15, 15]], 8),
+                    {}, { class: "mt-1 block w-full rounded-md border-green-300 shadow-sm" } %>
+              </div>
+              
+              <%= form.submit "Start Improv", class: "bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full" %>
+            <% end %>
+          </div>
+
+          <!-- Poetry Slam -->
+          <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-indigo-800 mb-2">📝 Poetry Slam</h3>
+            <p class="text-indigo-700 mb-3">Mix of humor and deeper themes about connection</p>
+            
+            <%= form_with url: performance_start_path, method: :post, local: true do |form| %>
+              <%= form.hidden_field :session_id, value: @session_id %>
+              <%= form.hidden_field :performance_type, value: 'poetry' %>
+              
+              <div class="mb-3">
+                <%= form.label :duration_minutes, "Duration (minutes):", class: "block text-sm font-medium text-indigo-700" %>
+                <%= form.select :duration_minutes, 
+                    options_for_select([[8, 8], [12, 12], [15, 15], [20, 20]], 12),
+                    {}, { class: "mt-1 block w-full rounded-md border-indigo-300 shadow-sm" } %>
+              </div>
+              
+              <%= form.submit "Start Poetry", class: "bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded w-full" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Auto-refresh status -->
+    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+      <h3 class="text-lg font-semibold mb-2">How Performance Mode Works</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>The cube will autonomously generate and speak performance segments</li>
+        <li>Each segment is 30-60 seconds of content</li>
+        <li>The performance continues until the time limit is reached</li>
+        <li>Wake word detection will interrupt the performance for normal conversation</li>
+        <li>Performance segments are logged and can be monitored via Home Assistant</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-refresh status every 10 seconds if performance is active
+<% if @active_performance[:active] %>
+  setInterval(function() {
+    fetch('/performance/status?session_id=<%= @session_id %>')
+      .then(response => response.json())
+      .then(data => {
+        if (!data.active) {
+          // Performance ended, reload page
+          location.reload();
+        }
+      })
+      .catch(error => console.log('Status check failed:', error));
+  }, 10000);
+<% end %>
+</script>

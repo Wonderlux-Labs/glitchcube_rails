@@ -17,6 +17,10 @@ class GlitchCube
       Services::Gps::GPSTrackingService.new.set_location(coords: "#{lat}, #{lng}")
     end
 
+    def home_camp_coordinates
+      {}
+    end
+
     def gps_spoofing_allowed?
       return false unless Rails.env.development?
 
