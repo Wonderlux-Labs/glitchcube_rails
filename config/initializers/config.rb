@@ -22,5 +22,6 @@ Rails.application.configure do
 
   config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "qwen/qwen3-30b-a3b-instruct-2507"
   config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "openai/gpt-5-mini"
+  config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "openai/gpt-oss-120b"
   config.two_tier_tools_enabled = ENV["TWO_TIER_TOOLS"] == "true"
 end

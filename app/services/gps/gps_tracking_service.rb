@@ -81,22 +81,27 @@ module Services
         begin
           # Get current cached location
           current_data = Rails.cache.fetch("gps_current_location") do
-            fetch_from_home_assistant
+            fetch_from_home_assistant || random_landmark_location
           end
 
           destination_data = Rails.cache.read("cube_destination")
           destination = if destination_data
                           JSON.parse(destination_data, symbolize_names: true)
-          else
+                        elsif landmark
                           {
                             lat: landmark.latitude.to_f,
                             lng: landmark.longitude.to_f,
                             name: landmark.name
                           }
-          end
+                        else
+                          # Pick a random destination if none specified
+                          pick_random_destination
+                        end
+          
           Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
           puts "Current #{current_data}"
           puts "Dest #{destination}"
+          
           # Check if we've reached the destination
           if reached_destination?(current_data, destination)
             Rails.cache.delete("cube_destination") # Clear destination
@@ -109,8 +114,10 @@ module Services
 
           distance = calculate_distance(current_data[:lat], current_data[:lng], destination[:lat], destination[:lng])
           puts "Moving toward #{destination[:name]} (#{distance.round}m remaining)"
+          
+          # Continue movement simulation
           sleep(5)
-          simulate_movement!(landmark: landmark)
+          simulate_movement!
         rescue StandardError => e
           puts e.inspect
           puts e.backtrace.inspect

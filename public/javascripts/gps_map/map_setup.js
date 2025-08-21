@@ -15,9 +15,11 @@ GPSMap.MapSetup = {
     
     this.map = L.map('map').setView(goldenSpike, 14);
     
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors | Burning Man 2025 | Glitch Cube GPS'
+    // Add dark theme map tiles (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© CARTO | © OpenStreetMap | Burning Man 2025 | Glitch Cube GPS',
+      subdomains: 'abcd',
+      maxZoom: 19
     }).addTo(this.map);
     
     // Add map controls

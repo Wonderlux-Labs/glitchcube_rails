@@ -23,9 +23,8 @@ class Schemas::NarrativeResponseSchema
        string :goal_progress,
              description: "Progress towards your current goal"
 
-      # Tool intentions for two-tier architecture
       array :tool_intents,
-            description: "Actions to perform in the environment" do
+            description: "Actions to perform in the environment via Home Assistant agent" do
         object do
           string :tool, required: true,
                  description: "Tool name to use",
@@ -33,6 +32,40 @@ class Schemas::NarrativeResponseSchema
 
           string :intent, required: true,
                  description: "Natural language description of what to do. Examples: 'Make lights golden and warm', 'Play something energetic', 'Show rainbow colors'"
+        end
+      end
+
+      # Direct tool calls for immediate execution
+      array :direct_tool_calls,
+            description: "Tools to execute directly and synchronously (for queries and immediate actions)" do
+        object do
+          string :tool_name, required: true,
+                 description: "Exact tool name to execute",
+                 enum: [ "rag_search", "get_light_state", "display_notification" ]
+
+          object :parameters,
+                 description: "Tool parameters as key-value pairs",
+                 additional_properties: true
+        end
+      end
+
+      # Explicit memory search requests
+      array :search_memories,
+            description: "Specific memory searches to perform for additional context" do
+        object do
+          string :query, required: true,
+                 description: "What to search for in memories"
+
+          string :type,
+                 description: "Type of memory to search",
+                 enum: [ "summaries", "events", "people", "all" ],
+                 default: "all"
+
+          integer :limit,
+                  description: "Maximum results to return",
+                  minimum: 1,
+                  maximum: 10,
+                  default: 3
         end
       end
     end

@@ -10,36 +10,51 @@ GPSMap.Markers = {
   
   // Create or update cube marker
   updateCubeMarker: function(lat, lng, locationData) {
-    // Remove existing marker
+    // If marker exists, animate to new position instead of recreating
     if (this.cubeMarker) {
-      GPSMap.MapSetup.map.removeLayer(this.cubeMarker);
+      this.animateCubeTo(lat, lng, locationData);
+      return this.cubeMarker;
     }
     
-    // Create detailed popup content using same data as top info bar
+    // Create detailed popup content using landmarks array
     let popupContent = '🎲 Glitch Cube Location<br>';
     
     if (typeof locationData === 'object' && locationData !== null) {
-      // Prioritize street address over landmark name (same logic as updateInfoPanels)
-      let address = 'Black Rock City';
-      if (locationData.address) {
-        address = locationData.address;
-        // Add landmark context if available
-        if (locationData.landmark_name && locationData.landmark_name !== locationData.address) {
-          address += ` (Near ${locationData.landmark_name})`;
-        }
-      } else if (locationData.landmark_name) {
-        address = locationData.landmark_name;
+      // Get nearest landmark from landmarks array
+      let nearestLandmark = null;
+      if (locationData.landmarks && locationData.landmarks.length > 0) {
+        nearestLandmark = locationData.landmarks[0];
       }
       
-      const section = locationData.section || '';
+      // Show landmark name if very close, otherwise show street address
+      let address = 'Black Rock City';
+      if (nearestLandmark && nearestLandmark.distance_meters < 5) {
+        address = nearestLandmark.name;
+        if (locationData.address && locationData.address !== nearestLandmark.name) {
+          address += ` (${locationData.address})`;
+        }
+      } else if (locationData.address) {
+        address = locationData.address;
+        if (nearestLandmark && nearestLandmark.distance_meters < 50) {
+          address += ` (Near ${nearestLandmark.name})`;
+        }
+      } else if (nearestLandmark) {
+        address = nearestLandmark.name;
+      }
+      
+      const zone = locationData.zone ? locationData.zone.toString().replace('_', ' ').toUpperCase() : '';
       const distance = locationData.distance_from_man || '';
       
       popupContent += address;
-      if (section) {
-        popupContent += `<br><strong>${section}</strong>`;
+      if (zone) {
+        popupContent += `<br><strong>${zone}</strong>`;
       }
       if (distance) {
-        popupContent += `<br>${distance}`;
+        popupContent += `<br>Distance to Man: ${distance}`;
+      }
+      if (nearestLandmark) {
+        const landmarkDistance = Math.round(nearestLandmark.distance_meters || 0);
+        popupContent += `<br>Nearest: ${nearestLandmark.name} (${landmarkDistance}m)`;
       }
     } else {
       // Fallback if passed as string (backwards compatibility)
@@ -173,5 +188,93 @@ GPSMap.Markers = {
     if (this.cubeMarker) {
       GPSMap.MapSetup.map.setView(this.cubeMarker.getLatLng(), 15);
     }
+  },
+  
+  // Animate cube marker to new position
+  animateCubeTo: function(lat, lng, locationData) {
+    if (!this.cubeMarker) return;
+    
+    const currentLatLng = this.cubeMarker.getLatLng();
+    const newLatLng = L.latLng(lat, lng);
+    
+    // Skip animation if distance is too small (less than ~1 meter)
+    const distance = currentLatLng.distanceTo(newLatLng);
+    if (distance < 1) {
+      this.updateCubePopup(locationData);
+      return;
+    }
+    
+    // Smooth animation to new position
+    const duration = Math.min(2000, Math.max(500, distance * 10)); // 500ms to 2s based on distance
+    
+    // Add CSS class for smooth transition
+    const markerElement = this.cubeMarker._icon;
+    if (markerElement) {
+      markerElement.style.transition = `transform ${duration}ms ease-out`;
+    }
+    
+    // Update position with animation
+    this.cubeMarker.setLatLng(newLatLng);
+    
+    // Update popup content
+    this.updateCubePopup(locationData);
+    
+    // Remove transition after animation completes
+    setTimeout(() => {
+      if (markerElement) {
+        markerElement.style.transition = '';
+      }
+    }, duration);
+  },
+  
+  // Update cube popup content
+  updateCubePopup: function(locationData) {
+    if (!this.cubeMarker) return;
+    
+    let popupContent = '🎲 Glitch Cube Location<br>';
+    
+    if (typeof locationData === 'object' && locationData !== null) {
+      // Get nearest landmark from landmarks array
+      let nearestLandmark = null;
+      if (locationData.landmarks && locationData.landmarks.length > 0) {
+        nearestLandmark = locationData.landmarks[0];
+      }
+      
+      // Show landmark name if very close, otherwise show street address
+      let address = 'Black Rock City';
+      if (nearestLandmark && nearestLandmark.distance_meters < 5) {
+        address = nearestLandmark.name;
+        if (locationData.address && locationData.address !== nearestLandmark.name) {
+          address += ` (${locationData.address})`;
+        }
+      } else if (locationData.address) {
+        address = locationData.address;
+        if (nearestLandmark && nearestLandmark.distance_meters < 50) {
+          address += ` (Near ${nearestLandmark.name})`;
+        }
+      } else if (nearestLandmark) {
+        address = nearestLandmark.name;
+      }
+      
+      const zone = locationData.zone ? locationData.zone.toString().replace('_', ' ').toUpperCase() : '';
+      const distance = locationData.distance_from_man || '';
+      
+      popupContent += address;
+      if (zone) {
+        popupContent += `<br><strong>${zone}</strong>`;
+      }
+      if (distance) {
+        popupContent += `<br>Distance to Man: ${distance}`;
+      }
+      if (nearestLandmark) {
+        const landmarkDistance = Math.round(nearestLandmark.distance_meters || 0);
+        popupContent += `<br>Nearest: ${nearestLandmark.name} (${landmarkDistance}m)`;
+      }
+    } else {
+      // Fallback if passed as string (backwards compatibility)
+      popupContent += (locationData || 'Black Rock City');
+    }
+    
+    this.cubeMarker.setPopupContent(popupContent);
   }
 };
