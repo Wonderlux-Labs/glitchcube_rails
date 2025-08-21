@@ -753,7 +753,7 @@ class ConversationOrchestrator
         search_key = "memory_search_#{index + 1}"
         results[search_key] = search_result
         
-        Rails.logger.info "🧠 Memory search executed: #{query} (#{type}) - found #{search_result.dig(:total_results, 0)} results"
+        Rails.logger.info "🧠 Memory search executed: #{query} (#{type}) - found #{search_result[:total_results] || 0} results"
       rescue => e
         Rails.logger.error "❌ Memory search failed: #{query} - #{e.message}"
         search_key = "memory_search_#{index + 1}"
