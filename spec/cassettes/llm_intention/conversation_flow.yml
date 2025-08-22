@@ -1,0 +1,124 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.current_persona
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '482'
+      Date:
+      - Fri, 22 Aug 2025 08:08:36 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.current_persona","state":"neon","attributes":{"options":["buddy","jax","zorp","thecube","neon","sparkle","crash","mobius"],"editable":false,"icon":"mdi:account","friendly_name":"Current
+        Persona"},"last_changed":"2025-08-22T07:13:06.672019+00:00","last_reported":"2025-08-22T07:13:06.672019+00:00","last_updated":"2025-08-22T07:13:06.672019+00:00","context":{"id":"01K389ZFKFKDJTMCYA6PQK0H6A","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
+  recorded_at: Fri, 22 Aug 2025 08:08:36 GMT
+- request:
+    method: post
+    uri: https://openrouter.helicone.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are Buddy, a helpful festival
+        guide at Burning Man."},{"role":"system","content":"You are Buddy, a helpful
+        festival guide."},{"role":"user","content":"What''s the weather like today?"},{"role":"assistant","content":"Let
+        me check the current conditions for you!"},{"role":"user","content":"Also,
+        any good events happening tonight?"},{"role":"user","content":"Also, any good
+        events happening tonight?"}],"model":"moonshotai/kimi-k2","temperature":0.9,"max_tokens":64000,"response_format":{"type":"json_schema","json_schema":{"name":"narrative_response","strict":true,"schema":{"type":"object","properties":{"speech_text":{"type":"string","description":"What
+        the character says out loud to the user NO STAGE DIRECTIONS"},"continue_conversation":{"type":"boolean","description":"Whether
+        to keep the conversation active (stay listening automatically)"},"inner_thoughts":{"type":"string","description":"Internal
+        thoughts, memories, or observations to remember"},"current_mood":{"type":"string","description":"Current
+        emotional state or mood"},"pressing_questions":{"type":"string","description":"Questions
+        the character has for the user or themselves"},"goal_progress":{"type":"string","description":"Progress
+        towards your current goal"},"tool_intents":{"type":"array","description":"Actions
+        to perform in the environment via Home Assistant agent","items":{"type":"object","properties":{"tool":{"type":"string","description":"Array
+        of Tools you want to use","enum":["lights","music","display","environment"]},"intent":{"type":"string","description":"Natural
+        language description of what to do. Examples: ''Make lights golden and warm'',
+        ''Play something energetic'', ''Show rainbow colors''"}},"required":["tool","intent"],"additionalProperties":false}},"search_memories":{"type":"array","description":"Specific
+        memory searches to perform for additional context","items":{"type":"object","properties":{"query":{"type":"string","description":"What
+        to search for in memories"},"type":{"type":"string","description":"Type of
+        memory to search","enum":["summaries","events","people","all"],"default":"all"}},"required":["query"],"additionalProperties":false}}},"required":["speech_text","continue_conversation","inner_thoughts","current_mood","pressing_questions","goal_progress","tool_intents","search_memories"],"additionalProperties":false}}}}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - OpenRouter Ruby Client
+      Http-Referer:
+      - https://github.com/OlympiaAI/open_router
+      Helicone-Auth:
+      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 22 Aug 2025 08:08:35 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 9730e2101d5228fe-MSP
+      Access-Control-Allow-Origin:
+      - "*"
+      Vary:
+      - Accept-Encoding
+      Helicone-Id:
+      - 69384872-c38b-4717-a0a8-317735895f5b
+      Helicone-Status:
+      - success
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n\n         \n\n         \n\n         \n\n         \n\n
+        \        \n\n         \n\n         \n\n         \n\n         \n\n         \n{\"id\":\"gen-1755850114-WAddqH5X3FPaNfhDuCo6\",\"provider\":\"GMICloud\",\"model\":\"moonshotai/kimi-k2\",\"object\":\"chat.completion\",\"created\":1755850114,\"choices\":[{\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"speech_text\\\":\\\"\\\",\\\"continue_conversation\\\":true,\\\"inner_thoughts\\\":\\\"\\\",\\\"current_mood\\\":\\\"cheerful\\\",\\\"pressing_questions\\\":\\\"\\\",\\\"goal_progress\\\":\\\"\\\",\\\"tool_intents\\\":[{\\\"tool\\\":\\\"display\\\",\\\"intent\\\":\\\"calendar_today_2024-08-27\\\"}],\\\"search_memories\\\":[]}\",\"refusal\":null,\"reasoning\":null}}],\"usage\":{\"prompt_tokens\":79,\"completion_tokens\":88,\"total_tokens\":167,\"prompt_tokens_details\":null}}"
+  recorded_at: Fri, 22 Aug 2025 08:08:39 GMT
+recorded_with: VCR 6.3.1

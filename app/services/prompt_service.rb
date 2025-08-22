@@ -29,12 +29,23 @@ class PromptService
       Personas::BuddyPersona.new
     when "jax"
       Personas::JaxPersona.new
+    when "sparkle"
+      Personas::SparklePersona.new
     when "zorp"
       Personas::ZorpPersona.new
     when "lomi"
       Personas::LomiPersona.new
+    when "crash"
+      Personas::CrashPersona.new
+    when "neon"
+      Personas::NeonPersona.new
+    when "mobius"
+      Personas::MobiusPersona.new
+    when "thecube"
+      Personas::ThecubePersona.new
     else
       # Default to Buddy if unknown persona
+      Rails.logger.warn "⚠️ Unknown persona: #{persona_name}, defaulting to buddy"
       Personas::BuddyPersona.new
     end
   end
@@ -382,10 +393,12 @@ class PromptService
       Rails.logger.warn "Failed to inject time context: #{e.message}"
     end
 
-    # Add RAG-based context if user message is available
-    if user_message.present?
-      rag_context = inject_rag_context(user_message)
-      context_parts << rag_context if rag_context.present?
+    # Only inject high-priority upcoming events (not full RAG)
+    begin
+      upcoming_context = inject_upcoming_events_context
+      context_parts << upcoming_context if upcoming_context.present?
+    rescue => e
+      Rails.logger.warn "Failed to inject upcoming events: #{e.message}"
     end
 
     # Add random facts
@@ -408,7 +421,7 @@ class PromptService
       context_parts << upcoming_context if upcoming_context.present?
 
       # Search relevant summaries based on user message
-      relevant_summaries = Summary.similarity_search(user_message, limit: 3)
+      relevant_summaries = Summary.similarity_search(user_message, 3)
       if relevant_summaries.any?
         summary_context = format_summaries_for_context(relevant_summaries)
         context_parts << "Recent relevant conversations:\n#{summary_context}"
@@ -416,7 +429,7 @@ class PromptService
       end
 
       # Search relevant events based on user message
-      relevant_events = Event.similarity_search(user_message, limit: 2)
+      relevant_events = Event.similarity_search(user_message, 2)
       if relevant_events.any?
         events_context = format_events_for_context(relevant_events)
         context_parts << "Relevant events:\n#{events_context}"
@@ -424,7 +437,7 @@ class PromptService
       end
 
       # Search relevant people
-      relevant_people = Person.similarity_search(user_message, limit: 2)
+      relevant_people = Person.similarity_search(user_message, 2)
       if relevant_people.any?
         people_context = format_people_for_context(relevant_people)
         context_parts << "People mentioned previously:\n#{people_context}"
@@ -448,7 +461,8 @@ class PromptService
 
     begin
       # High-priority events in next 48 hours
-      high_priority_events = Event.upcoming.high_importance.within_hours(48).limit(3)
+      high_priority_events = Event.where("event_time > ? AND importance BETWEEN ? AND ? AND event_time BETWEEN ? AND ?",
+                                        Time.current, 7, 10, Time.current, Time.current + 48.hours).limit(3)
       if high_priority_events.any?
         high_priority_context = format_events_for_context(high_priority_events)
         context_parts << "UPCOMING HIGH-PRIORITY EVENTS (next 48h):\n#{high_priority_context}"
@@ -458,7 +472,8 @@ class PromptService
       # Nearby events in next 24 hours (if location available)
       current_location = get_current_location
       if current_location.present?
-        nearby_events = Event.upcoming.by_location(current_location).within_hours(24).limit(2)
+        nearby_events = Event.where("event_time > ? AND location = ? AND event_time BETWEEN ? AND ?",
+                                  Time.current, current_location, Time.current, Time.current + 24.hours).limit(2)
         if nearby_events.any?
           nearby_context = format_events_for_context(nearby_events)
           context_parts << "UPCOMING NEARBY EVENTS (next 24h):\n#{nearby_context}"
@@ -524,20 +539,27 @@ class PromptService
     goal_parts = []
     goal_parts << safety_mode if safety_mode
     goal_status = GoalService.current_goal_status
-    goal_parts << "Current Goal: #{goal_status[:goal_description]}"
 
-    # Add time remaining if available
-    if goal_status[:time_remaining] && goal_status[:time_remaining] > 0
-      time_remaining = format_time_duration(goal_status[:time_remaining])
-      goal_parts << "Time remaining: #{time_remaining}"
-    elsif goal_status[:expired]
-      goal_parts << "⏰ Goal has expired - consider completing or switching goals"
+    if goal_status
+      goal_parts << "Current Goal: #{goal_status[:goal_description]}"
+
+      # Add time remaining if available
+      if goal_status[:time_remaining] && goal_status[:time_remaining] > 0
+        time_remaining = format_time_duration(goal_status[:time_remaining])
+        goal_parts << "Time remaining: #{time_remaining}"
+      elsif goal_status[:expired]
+        goal_parts << "⏰ Goal has expired - consider completing or switching goals"
+      end
+    else
+      goal_parts << "No active goal set"
     end
 
     # Add recent completions context
-    recent_completions = Summary.goal_completions.limit(3)
-    if recent_completions.any?
-      goal_parts << "Recent completions: #{recent_completions.map(&:summary_text).join(', ')}"
+    if defined?(Summary) && Summary.respond_to?(:goal_completions)
+      recent_completions = Summary.goal_completions.limit(3)
+      if recent_completions.any?
+        goal_parts << "Recent completions: #{recent_completions.map(&:summary_text).join(', ')}"
+      end
     end
 
     goal_parts.join("\n")

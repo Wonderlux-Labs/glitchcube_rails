@@ -6,7 +6,7 @@ class Schemas::NarrativeResponseSchema
   def self.schema
     OpenRouter::Schema.define("narrative_response") do
       string :speech_text, required: true,
-             description: "What the character says out loud to the user"
+             description: "What the character says out loud to the user NO STAGE DIRECTIONS"
 
       boolean :continue_conversation, required: true,
               description: "Whether to keep the conversation active (stay listening automatically)"
@@ -27,7 +27,7 @@ class Schemas::NarrativeResponseSchema
             description: "Actions to perform in the environment via Home Assistant agent" do
         object do
           string :tool, required: true,
-                 description: "Tool name to use",
+                 description: "Array of Tools you want to use",
                  enum: [ "lights", "music", "display", "environment" ]
 
           string :intent, required: true,
@@ -35,18 +35,18 @@ class Schemas::NarrativeResponseSchema
         end
       end
 
-      # Direct tool calls for immediate execution
-      array :direct_tool_calls,
-            description: "Tools to execute directly and synchronously (for queries and immediate actions)" do
-        object do
-          string :tool_name, required: true,
-                 description: "Exact tool name to execute",
-                 enum: [ "rag_search", "get_light_state", "display_notification" ]
+      #       # Direct tool calls for immediate execution
+      #       array :direct_tool_calls,
+      #             description: "Tools to execute directly and synchronously (for queries and immediate actions)" do
+      #         object do
+      #           string :tool_name, required: true,
+      #                  description: "Exact tool name to execute",
+      #                  enum: [ "rag_search", "get_light_state", "display_notification" ]
 
-          object :parameters,
-                 description: "Tool parameters as key-value pairs"
-        end
-      end
+      #           object :parameters,
+      #                  description: "Tool parameters as key-value pairs"
+      #         end
+      #       end
 
       # Explicit memory search requests
       array :search_memories,
@@ -59,12 +59,6 @@ class Schemas::NarrativeResponseSchema
                  description: "Type of memory to search",
                  enum: [ "summaries", "events", "people", "all" ],
                  default: "all"
-
-          integer :limit,
-                  description: "Maximum results to return",
-                  minimum: 1,
-                  maximum: 10,
-                  default: 3
         end
       end
     end

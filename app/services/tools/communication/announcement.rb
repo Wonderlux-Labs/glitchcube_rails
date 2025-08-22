@@ -50,7 +50,9 @@ class Tools::Communication::Announcement < Tools::BaseTool
       announce_data[:volume_level] = volume / 100.0 if volume.present?
       announce_data[:voice] = voice if voice.present?
 
-      # Call music_assistant announce service
+      # Call music_assistant announce service targeting square_voice media player
+      announce_data[:entity_id] = "media_player.square_voice"
+
       speech_result = HomeAssistantService.call_service(
         "music_assistant",
         "announce",

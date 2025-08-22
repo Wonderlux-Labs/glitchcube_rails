@@ -79,10 +79,20 @@ class LlmService
         response
 
       rescue StandardError => e
-        Rails.logger.error "❌ LLM call failed: #{e.message}"
-        Rails.logger.error "❌ Error class: #{e.class}"
-        Rails.logger.error "❌ Error details: #{e.inspect}"
-        Rails.logger.error e.backtrace.join("\n")
+
+        # ====================================================================
+        # ERROR: LLM tool call failed
+        # ====================================================================
+
+        Rails.logger.error ""
+        Rails.logger.error "=" * 70
+        Rails.logger.error "❌ ERROR: LLM tool call failed with #{model_to_use}"
+        Rails.logger.error "   Error: #{e.message}"
+        Rails.logger.error "   Class: #{e.class}"
+        Rails.logger.error "   Details: #{e.inspect}"
+        Rails.logger.error "   Backtrace: #{e.backtrace.first(5).join("\n")}"
+        Rails.logger.error "=" * 70
+        Rails.logger.error ""
 
         # Return error response that mimics OpenRouter::Response interface
         OpenStruct.new(
@@ -98,6 +108,7 @@ class LlmService
 
     # Main conversation call with structured output (no tools)
     def call_with_structured_output(messages:, response_format:, model: nil, **options)
+      # model = [ "meta-llama/llama-3.3-70b-instruct", "qwen/qwen3-30b-a3b", "mistralai/mistral-medium-3.1" ].sample
       model_to_use = model || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
@@ -109,7 +120,7 @@ class LlmService
         # Prepare extras with OpenRouter-specific parameters
         extras = {
           temperature: options[:temperature] || 0.9,
-          max_tokens: options[:max_tokens] || 32000
+          max_tokens: options[:max_tokens] || 64_000
         }.merge(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
@@ -136,8 +147,55 @@ class LlmService
         response
 
       rescue StandardError => e
-        Rails.logger.error "❌ LLM call failed: #{e.message}"
-        Rails.logger.error "🔍 Backtrace: #{e.backtrace.first(3).join("\n")}"
+
+        # ====================================================================
+        # ERROR: LLM structured output call failed - trying fallback models
+        # ====================================================================
+
+        Rails.logger.error ""
+        Rails.logger.error "=" * 70
+        Rails.logger.error "❌ ERROR: LLM structured output call failed with #{model_to_use}"
+        Rails.logger.error "   Error: #{e.message}"
+        Rails.logger.error "   Class: #{e.class}"
+        Rails.logger.error "   Backtrace: #{e.backtrace.first(3).join("\n")}"
+        Rails.logger.error "=" * 70
+        Rails.logger.error ""
+
+        # Try fallback models
+        fallback_models = Rails.configuration.fallback_models || []
+        if fallback_models.any?
+          Rails.logger.warn "🔄 Trying #{fallback_models.length} fallback models..."
+
+          fallback_models.shuffle.each do |fallback_model|
+            begin
+              Rails.logger.info "🔄 Attempting fallback model: #{fallback_model}"
+
+              response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
+
+              Rails.logger.info ""
+              Rails.logger.info "=" * 70
+              Rails.logger.info "✅ SUCCESS: Fallback model #{fallback_model} worked!"
+              Rails.logger.info "=" * 70
+              Rails.logger.info ""
+
+              return response
+
+            rescue => fallback_error
+              Rails.logger.warn "❌ Fallback model #{fallback_model} failed: #{fallback_error.message}"
+              next
+            end
+          end
+        end
+
+        # All models failed - return fallback response
+
+        Rails.logger.error ""
+        Rails.logger.error "=" * 70
+        Rails.logger.error "💥 CRITICAL: All LLM models failed - returning fallback response"
+        Rails.logger.error "   Primary: #{model_to_use} - #{e.message}"
+        Rails.logger.error "   Fallbacks tried: #{fallback_models.join(', ')}"
+        Rails.logger.error "=" * 70
+        Rails.logger.error ""
 
         # Return a mock response with error info
         OpenStruct.new(
@@ -149,6 +207,33 @@ class LlmService
         )
       end
     end
+
+    private
+
+    def attempt_structured_output_call(messages, response_format, model, extras)
+      client = OpenRouter::Client.new
+
+      Rails.logger.info "🚀 OpenRouter Structured Output Request:"
+      Rails.logger.info "   Model: #{model}"
+      Rails.logger.info "   Response format: #{response_format.name}"
+      Rails.logger.info "   Extras: #{extras.inspect}"
+
+      response = client.complete(
+        messages,
+        model: model,
+        response_format: response_format,
+        extras: extras
+      )
+
+      Rails.logger.info "📥 OpenRouter Response:"
+      Rails.logger.info "   Content: #{response.content&.truncate(200)}"
+      Rails.logger.info "   Model: #{response.model}"
+      Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
+
+      response
+    end
+
+    public
 
     # Background LLM calls for various purposes (no tools)
     def background_call(prompt:, context: {}, model: nil, **options)
@@ -211,6 +296,7 @@ class LlmService
 
 
     def transform_openrouter_response(response, model)
+      Rails.logger.info "Transforming OpenRouter response: #{response&.inspect}"
       return nil unless response
 
       choice = response.dig("choices", 0)
@@ -239,6 +325,7 @@ class LlmService
     end
 
     def parse_tool_arguments(arguments_string)
+      Rails.logger.info("tool args are #{arguments_string}")
       return {} unless arguments_string
 
       JSON.parse(arguments_string)

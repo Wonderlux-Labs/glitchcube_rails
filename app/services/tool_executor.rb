@@ -254,6 +254,13 @@ class ToolExecutor
 
       Rails.logger.info "✅ Tool #{validated_tool_call.name} completed in #{duration_ms.round(2)}ms"
 
+      # Log to conversation logger
+      ConversationLogger.tool_execution(
+        validated_tool_call.name,
+        validated_tool_call.arguments,
+        result
+      )
+
       result
 
     rescue StandardError => e
@@ -269,12 +276,21 @@ class ToolExecutor
       Rails.logger.error "❌ Tool execution failed: #{validated_tool_call.name} - #{e.message}"
       Rails.logger.error "🔍 Backtrace: #{e.backtrace.first(5).join("\n")}"
 
-      {
+      error_result = {
         success: false,
         error: e.message,
         tool: validated_tool_call.name,
         execution_time_ms: duration_ms.round(2)
       }
+
+      # Log to conversation logger
+      ConversationLogger.tool_execution(
+        validated_tool_call.name,
+        validated_tool_call.arguments,
+        error_result
+      )
+
+      error_result
     end
   end
 end
