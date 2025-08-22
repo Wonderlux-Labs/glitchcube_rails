@@ -1,0 +1,121 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.current_persona
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '482'
+      Date:
+      - Fri, 22 Aug 2025 08:06:31 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.current_persona","state":"neon","attributes":{"options":["buddy","jax","zorp","thecube","neon","sparkle","crash","mobius"],"editable":false,"icon":"mdi:account","friendly_name":"Current
+        Persona"},"last_changed":"2025-08-22T07:13:06.672019+00:00","last_reported":"2025-08-22T07:13:06.672019+00:00","last_updated":"2025-08-22T07:13:06.672019+00:00","context":{"id":"01K389ZFKFKDJTMCYA6PQK0H6A","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
+  recorded_at: Fri, 22 Aug 2025 08:06:31 GMT
+- request:
+    method: post
+    uri: https://openrouter.helicone.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are a helpful assistant"},{"role":"system","content":"You
+        are a helpful assistant named Buddy"},{"role":"user","content":"Hello, how
+        are you today?"},{"role":"user","content":"Hello, how are you today?"}],"model":"moonshotai/kimi-k2","temperature":0.9,"max_tokens":64000,"response_format":{"type":"json_schema","json_schema":{"name":"narrative_response","strict":true,"schema":{"type":"object","properties":{"speech_text":{"type":"string","description":"What
+        the character says out loud to the user NO STAGE DIRECTIONS"},"continue_conversation":{"type":"boolean","description":"Whether
+        to keep the conversation active (stay listening automatically)"},"inner_thoughts":{"type":"string","description":"Internal
+        thoughts, memories, or observations to remember"},"current_mood":{"type":"string","description":"Current
+        emotional state or mood"},"pressing_questions":{"type":"string","description":"Questions
+        the character has for the user or themselves"},"goal_progress":{"type":"string","description":"Progress
+        towards your current goal"},"tool_intents":{"type":"array","description":"Actions
+        to perform in the environment via Home Assistant agent","items":{"type":"object","properties":{"tool":{"type":"string","description":"Array
+        of Tools you want to use","enum":["lights","music","display","environment"]},"intent":{"type":"string","description":"Natural
+        language description of what to do. Examples: ''Make lights golden and warm'',
+        ''Play something energetic'', ''Show rainbow colors''"}},"required":["tool","intent"],"additionalProperties":false}},"search_memories":{"type":"array","description":"Specific
+        memory searches to perform for additional context","items":{"type":"object","properties":{"query":{"type":"string","description":"What
+        to search for in memories"},"type":{"type":"string","description":"Type of
+        memory to search","enum":["summaries","events","people","all"],"default":"all"}},"required":["query"],"additionalProperties":false}}},"required":["speech_text","continue_conversation","inner_thoughts","current_mood","pressing_questions","goal_progress","tool_intents","search_memories"],"additionalProperties":false}}}}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - OpenRouter Ruby Client
+      Http-Referer:
+      - https://github.com/OlympiaAI/open_router
+      Helicone-Auth:
+      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 22 Aug 2025 08:06:30 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 9730df05bbaf511f-MSP
+      Access-Control-Allow-Origin:
+      - "*"
+      Vary:
+      - Accept-Encoding
+      Helicone-Id:
+      - 819cffb0-d37b-4b84-909e-4e76f9f5d108
+      Helicone-Status:
+      - success
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKeyJpZCI6Imdlbi0xNzU1ODQ5OTkwLUNXbXNFU3FSWmd0RUpSWDBZVHpPIiwicHJvdmlkZXIiOiJCYXNlVGVuIiwibW9kZWwiOiJtb29uc2hvdGFpL2tpbWktazIiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24iLCJjcmVhdGVkIjoxNzU1ODQ5OTkwLCJjaG9pY2VzIjpbeyJsb2dwcm9icyI6bnVsbCwiZmluaXNoX3JlYXNvbiI6InN0b3AiLCJuYXRpdmVfZmluaXNoX3JlYXNvbiI6InN0b3AiLCJpbmRleCI6MCwibWVzc2FnZSI6eyJyb2xlIjoiYXNzaXN0YW50IiwiY29udGVudCI6IntcImNvbnRpbnVlX2NvbnZlcnNhdGlvblwiOnRydWUsXCJjdXJyZW50X21vb2RcIjpcImZyaWVuZGx5XCIsXCJnb2FsX3Byb2dyZXNzXCI6XCJcIixcImlubmVyX3Rob3VnaHRzXCI6XCJUaGUgdXNlciBncmVldGVkIG1lIGluIGEgZnJpZW5kbHkgbWFubmVyLCBzbyBJ4oCZbGwgcmVzcG9uZCB3YXJtbHkgYW5kIGtlZXAgdGhlIHRvbmUgbGlnaHQgYW5kIHdlbGNvbWluZy5cIixcInByZXNzaW5nX3F1ZXN0aW9uc1wiOlwiXCIsXCJzZWFyY2hfbWVtb3JpZXNcIjpbXSxcInNwZWVjaF90ZXh0XCI6XCJIZWxsbyEgSSdtIGRvaW5nIHdlbGzigJR0aGFuayB5b3UgZm9yIGFza2luZy4gSG934oCZcyB5b3VyIGRheSBnb2luZyBzbyBmYXI/IElzIHRoZXJlIGFueXRoaW5nIG9uIHlvdXIgbWluZCBvciBhbnl0aGluZyBJIGNhbiBoZWxwIHdpdGggdG9kYXk/XCIsXCJ0b29sX2ludGVudHNcIjpbXX0iLCJyZWZ1c2FsIjpudWxsLCJyZWFzb25pbmciOm51bGx9fV0sInN5c3RlbV9maW5nZXJwcmludCI6bnVsbCwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6NDUsImNvbXBsZXRpb25fdG9rZW5zIjoxMTcsInRvdGFsX3Rva2VucyI6MTYyLCJwcm9tcHRfdG9rZW5zX2RldGFpbHMiOm51bGwsImNvbXBsZXRpb25fdG9rZW5zX2RldGFpbHMiOm51bGx9fQ==
+  recorded_at: Fri, 22 Aug 2025 08:06:31 GMT
+recorded_with: VCR 6.3.1

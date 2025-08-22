@@ -6,6 +6,9 @@ class PersonaSwitchService
     def handle_persona_switch(new_persona_id, previous_persona_id = nil)
       Rails.logger.info "🎭 Persona switching from #{previous_persona_id || 'unknown'} to #{new_persona_id}"
 
+      # Make announcement about persona switch
+      announce_persona_switch(new_persona_id, previous_persona_id)
+
       # Get current goal status
       current_goal = GoalService.current_goal_status
 
@@ -21,6 +24,71 @@ class PersonaSwitchService
     end
 
     private
+
+    # Make TTS announcement about persona switch
+    def announce_persona_switch(new_persona_id, previous_persona_id)
+      begin
+        announcement_message = build_persona_announcement(new_persona_id, previous_persona_id)
+        persona_voice = get_persona_voice(new_persona_id)
+
+        Rails.logger.info "🔊 Announcing persona switch: #{announcement_message}"
+
+        # Use music_assistant announce service targeting square_voice media player
+        HomeAssistantService.call_service(
+          "music_assistant",
+          "announce",
+          {
+            message: announcement_message,
+            voice: persona_voice,
+            entity_id: "media_player.square_voice"
+          }
+        )
+
+      rescue StandardError => e
+        Rails.logger.error "❌ Failed to announce persona switch: #{e.message}"
+        # Don't fail the whole switch if announcement fails
+      end
+    end
+
+    # Build concise announcement message for persona switch
+    def build_persona_announcement(new_persona_id, previous_persona_id)
+      case new_persona_id.to_sym
+      when :buddy
+        "Hello there! Buddy here, ready to help!"
+      when :jax
+        "Jax is in the house! Let's turn this place up!"
+      when :neon
+        "S-s-serving you realness! Neon's here, hunty!"
+      when :sparkle
+        "Ooh, sparkles! I'm here and ready to dazzle!"
+      when :zorp
+        "Greetings, humans. This is Zorp."
+      when :lomi
+        "Aloha, friends. Lomi is with you now."
+      when :crash
+        "Systems rebooted! Crash online and operational."
+      when :mobius
+        "The infinite loop begins again. Mobius speaking."
+      when :thecube
+        "I am The Cube. The eternal observer returns."
+      else
+        "A new voice emerges from the cube."
+      end
+    end
+
+    # Get persona voice ID from config
+    def get_persona_voice(persona_id)
+      begin
+        config_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id}.yml")
+        if File.exist?(config_path)
+          config = YAML.load_file(config_path)
+          config["voice_id"]
+        end
+      rescue StandardError => e
+        Rails.logger.warn "Failed to load voice for #{persona_id}: #{e.message}"
+        nil
+      end
+    end
 
     # Notify persona about existing goal and let them decide
     def notify_persona_with_goal(persona_id, current_goal, previous_persona_id)

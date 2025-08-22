@@ -40,6 +40,6 @@ class ConversationLog < ApplicationRecord
     # Perform HA sync in background to avoid blocking the main thread
     WorldStateUpdaters::NarrativeConversationSyncJob.perform_later(id)
   rescue StandardError => e
-    Rails.logger.error "Failed to queue narrative sync job for conversation_log #{id}: #{e.message}"
+    Rails.logger.error "Failed to queue narrative sync job for conversation_log #{id}: #{e&.message}"
   end
 end

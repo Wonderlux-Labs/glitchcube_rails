@@ -23,43 +23,24 @@ RSpec.describe PromptService do
       expect(subject).to have_key(:context)
     end
 
-    context 'when two-tier mode is disabled' do
-      before do
-        Rails.configuration.two_tier_tools_enabled = false
-      end
+    context 'when structured output mode is active' do
+      # Note: The code now always uses structured output mode with tool intentions
+      # rather than having separate legacy/two-tier modes
 
-      it 'includes tool definitions in system prompt' do
-        pending "TODO: Fix tool definitions inclusion in system prompt - Tools::Registry may not be returning proper tool formatting"
-        expect(subject[:system_prompt]).to include('AVAILABLE TOOLS:')
-      end
-
-      it 'returns full tool definitions for persona' do
-        tools = subject[:tools]
-        expect(tools).to be_an(Array)
-        expect(tools).not_to be_empty
-        expect(tools.first).to respond_to(:name)
-      end
-    end
-
-    context 'when two-tier mode is enabled' do
-      before do
-        Rails.configuration.two_tier_tools_enabled = true
-      end
-
-      it 'includes two-tier mode instructions instead of tool definitions' do
-        expect(subject[:system_prompt]).to include('TWO-TIER MODE:')
-        expect(subject[:system_prompt]).to include('Instead of calling tools directly')
+      it 'includes structured output instructions with tool intentions' do
+        expect(subject[:system_prompt]).to include('STRUCTURED OUTPUT WITH TOOL INTENTIONS:')
+        expect(subject[:system_prompt]).to include('Tool intentions should be natural language')
+        expect(subject[:system_prompt]).to include('AVAILABLE TOOL CATEGORIES:')
         expect(subject[:system_prompt]).not_to include('AVAILABLE TOOLS:')
       end
 
-      it 'includes structured output instructions with real tool categories' do
-        expect(subject[:system_prompt]).to include('Tool intentions should be natural language')
+      it 'includes real tool categories from registry' do
         expect(subject[:system_prompt]).to include('AVAILABLE TOOL CATEGORIES:')
         # Should include actual tool categories from our real tools
         expect(subject[:system_prompt]).to include('lights')
       end
 
-      it 'returns actual tool definitions for technical LLM' do
+      it 'returns tool definitions for backend execution' do
         tools = subject[:tools]
         expect(tools).to be_an(Array)
         expect(tools).not_to be_empty
@@ -73,8 +54,8 @@ RSpec.describe PromptService do
 
     subject { service.send(:build_structured_output_instructions) }
 
-    it 'includes two-tier mode explanation' do
-      expect(subject).to include('TWO-TIER MODE')
+    it 'includes structured output explanation' do
+      expect(subject).to include('STRUCTURED OUTPUT WITH TOOL INTENTIONS')
       expect(subject).to include('Instead of calling tools directly')
     end
 
@@ -85,12 +66,12 @@ RSpec.describe PromptService do
     end
 
     it 'provides example tool intentions' do
-      expect(subject).to include('Make the lights warm and golden')
+      expect(subject).to include('Make lights golden and warm')
       expect(subject).to include('Play something energetic')
     end
 
-    it 'explains the two-tier architecture' do
-      expect(subject).to include('separate technical AI will execute')
+    it 'explains the background execution' do
+      expect(subject).to include('Home Assistant\'s conversation agent will execute')
     end
   end
 
@@ -101,33 +82,22 @@ RSpec.describe PromptService do
     before do
       allow(service).to receive(:load_base_system_prompt).and_return("Base system rules")
       allow(service).to receive(:build_current_context).and_return("Current context")
+      allow(service).to receive(:build_structured_output_instructions).and_return("Structured instructions")
     end
 
-    context 'when two-tier mode is disabled' do
-      before do
-        allow(Tools::Registry).to receive(:two_tier_mode_enabled?).and_return(false)
-        allow(service).to receive(:format_tools_for_prompt).and_return("Tool list")
-      end
-
-      it 'includes traditional tool definitions' do
-        result = service.send(:enhance_prompt_with_context, base_prompt)
-        expect(result).to include("AVAILABLE TOOLS:")
-        expect(result).to include("Tool list")
-      end
+    it 'includes structured output instructions' do
+      result = service.send(:enhance_prompt_with_context, base_prompt)
+      expect(result).to include("STRUCTURED OUTPUT WITH TOOL INTENTIONS:")
+      expect(result).to include("Structured instructions")
+      expect(result).to include("CURRENT CONTEXT:")
+      expect(result).to include("Current context")
     end
 
-    context 'when two-tier mode is enabled' do
-      before do
-        allow(Tools::Registry).to receive(:two_tier_mode_enabled?).and_return(true)
-        allow(service).to receive(:build_structured_output_instructions).and_return("Structured instructions")
-      end
+    it 'combines all prompt components in correct order' do
+      result = service.send(:enhance_prompt_with_context, base_prompt)
 
-      it 'includes structured output instructions instead' do
-        result = service.send(:enhance_prompt_with_context, base_prompt)
-        expect(result).to include("TWO-TIER MODE:")
-        expect(result).to include("Structured instructions")
-        expect(result).not_to include("AVAILABLE TOOLS:")
-      end
+      # Check order
+      expect(result).to match(/You are a test character.*Base system rules.*STRUCTURED OUTPUT.*CURRENT CONTEXT/m)
     end
   end
 
@@ -141,19 +111,18 @@ RSpec.describe PromptService do
           goal_description: 'Have meaningful conversations with visitors',
           category: 'social_goals',
           started_at: 10.minutes.ago,
-          time_remaining: 20.minutes,
+          time_remaining: 1200, # 20 minutes in seconds
           expired: false
         }
       end
 
       before do
         allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
-        allow(GoalService).to receive(:safety_mode_active?).and_return(false)
-        allow(Summary).to receive(:goal_completions).and_return([])
+        allow(service).to receive(:safety_mode).and_return("")
+        allow(Summary).to receive(:goal_completions).and_return(double(limit: []))
       end
 
-      it 'includes goal description and time remaining' do
-        pending "TODO: Fix goal context building - GoalService mocking may not be working properly with time formatting"
+      it 'includes goal description and formatted time remaining' do
         context = service.send(:build_goal_context)
 
         expect(context).to include('Current Goal: Have meaningful conversations with visitors')
@@ -168,22 +137,21 @@ RSpec.describe PromptService do
           goal_description: 'Find nearest power source',
           category: 'safety_goals',
           started_at: 5.minutes.ago,
-          time_remaining: 25.minutes,
+          time_remaining: 1500, # 25 minutes in seconds
           expired: false
         }
       end
 
       before do
         allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
-        allow(GoalService).to receive(:safety_mode_active?).and_return(true)
-        allow(Summary).to receive(:goal_completions).and_return([])
+        allow(service).to receive(:safety_mode).and_return("YOU ARE IN SAFETY MODE! YOU MUST FIND SHELTER AND GET SOME POWER")
+        allow(Summary).to receive(:goal_completions).and_return(double(limit: []))
       end
 
-      it 'includes safety mode warning' do
-        pending "TODO: Fix safety mode context building - safety mode warning text may not be matching expected format"
+      it 'includes safety mode warning when active' do
         context = service.send(:build_goal_context)
 
-        expect(context).to include('🚨 SAFETY MODE ACTIVE - Focus on safety goals only')
+        expect(context).to include('YOU ARE IN SAFETY MODE!')
         expect(context).to include('Current Goal: Find nearest power source')
       end
     end
@@ -202,12 +170,11 @@ RSpec.describe PromptService do
 
       before do
         allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
-        allow(GoalService).to receive(:safety_mode_active?).and_return(false)
-        allow(Summary).to receive(:goal_completions).and_return([])
+        allow(service).to receive(:safety_mode).and_return("")
+        allow(Summary).to receive(:goal_completions).and_return(double(limit: []))
       end
 
-      it 'shows goal expiration warning' do
-        pending "TODO: Fix goal expiration warning text - expiration warning format may not match expected string"
+      it 'shows goal expiration warning with correct formatting' do
         context = service.send(:build_goal_context)
 
         expect(context).to include('⏰ Goal has expired - consider completing or switching goals')
@@ -221,7 +188,7 @@ RSpec.describe PromptService do
           goal_description: 'Make people laugh',
           category: 'social_goals',
           started_at: 5.minutes.ago,
-          time_remaining: 25.minutes,
+          time_remaining: 1500, # 25 minutes in seconds
           expired: false
         }
       end
@@ -235,7 +202,7 @@ RSpec.describe PromptService do
 
       before do
         allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
-        allow(GoalService).to receive(:safety_mode_active?).and_return(false)
+        allow(service).to receive(:safety_mode).and_return("")
         allow(Summary).to receive(:goal_completions).and_return(double(limit: mock_completions))
       end
 

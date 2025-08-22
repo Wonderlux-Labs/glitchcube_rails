@@ -20,8 +20,10 @@ Rails.application.configure do
   # config.service_name_api_key = ENV['SERVICE_NAME_API_KEY']
 
 
-  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "qwen/qwen3-30b-a3b-instruct-2507"
+  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "moonshotai/kimi-k2"
   config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "openai/gpt-5-mini"
   config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "openai/gpt-oss-120b"
+  config.fallback_models = [ "google/gemini-2.5-flash" ]
   config.two_tier_tools_enabled = ENV["TWO_TIER_TOOLS"] == "true"
+  config.use_new_orchestrator = true
 end

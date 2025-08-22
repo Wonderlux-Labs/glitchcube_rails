@@ -3,7 +3,7 @@
 
 rest_command:
   cube_proactive_conversation:
-    url: "http://localhost:4567/api/v1/conversation/proactive"
+    url: "http://{{ states('input_text.glitchcube_host') | default('localhost') }}:{{ states('input_text.glitchcube_port') | default('4567') }}/api/v1/conversation/proactive"
     method: POST
     headers:
       Content-Type: application/json
