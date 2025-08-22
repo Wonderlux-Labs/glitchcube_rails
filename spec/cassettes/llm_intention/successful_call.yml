@@ -1,0 +1,78 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.helicone.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are a helpful assistant"},{"role":"system","content":"You
+        are a helpful assistant named Buddy"},{"role":"user","content":"Hello, how
+        are you today?"},{"role":"user","content":"Hello, how are you today?"}],"model":"moonshotai/kimi-k2","temperature":0.9,"max_tokens":64000,"response_format":{"type":"json_schema","json_schema":{"name":"narrative_response","strict":true,"schema":{"type":"object","properties":{"speech_text":{"type":"string","description":"What
+        the character says out loud to the user NO STAGE DIRECTIONS"},"continue_conversation":{"type":"boolean","description":"Whether
+        to keep the conversation active (stay listening automatically)"},"inner_thoughts":{"type":"string","description":"Internal
+        thoughts, memories, or observations to remember"},"current_mood":{"type":"string","description":"Current
+        emotional state or mood"},"pressing_questions":{"type":"string","description":"Questions
+        the character has for the user or themselves"},"goal_progress":{"type":"string","description":"Progress
+        towards your current goal"},"tool_intents":{"type":"array","description":"Actions
+        to perform in the environment via Home Assistant agent","items":{"type":"object","properties":{"tool":{"type":"string","description":"Array
+        of Tools you want to use","enum":["lights","music","display","environment"]},"intent":{"type":"string","description":"Natural
+        language description of what to do. Examples: ''Make lights golden and warm'',
+        ''Play something energetic'', ''Show rainbow colors''"}},"required":["tool","intent"],"additionalProperties":false}},"search_memories":{"type":"array","description":"Specific
+        memory searches to perform for additional context","items":{"type":"object","properties":{"query":{"type":"string","description":"What
+        to search for in memories"},"type":{"type":"string","description":"Type of
+        memory to search","enum":["summaries","events","people","all"],"default":"all"}},"required":["query"],"additionalProperties":false}}},"required":["speech_text","continue_conversation","inner_thoughts","current_mood","pressing_questions","goal_progress","tool_intents","search_memories"],"additionalProperties":false}}}}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - OpenRouter Ruby Client
+      Http-Referer:
+      - https://github.com/OlympiaAI/open_router
+      Helicone-Auth:
+      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 22 Aug 2025 08:07:06 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 9730dfe0aa1aad0e-MSP
+      Access-Control-Allow-Origin:
+      - "*"
+      Vary:
+      - Accept-Encoding
+      Helicone-Id:
+      - 1c1c5583-8756-4350-960f-ff945a3baf46
+      Helicone-Status:
+      - success
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKeyJpZCI6Imdlbi0xNzU1ODUwMDI1LVdiZWo1aDA3RzdvU0lEajVhbUJFIiwicHJvdmlkZXIiOiJNb29uc2hvdCBBSSIsIm1vZGVsIjoibW9vbnNob3RhaS9raW1pLWsyIiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uIiwiY3JlYXRlZCI6MTc1NTg1MDAyNSwiY2hvaWNlcyI6W3sibG9ncHJvYnMiOm51bGwsImZpbmlzaF9yZWFzb24iOiJzdG9wIiwibmF0aXZlX2ZpbmlzaF9yZWFzb24iOiJzdG9wIiwiaW5kZXgiOjAsIm1lc3NhZ2UiOnsicm9sZSI6ImFzc2lzdGFudCIsImNvbnRlbnQiOiIgIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG4gIFxuXG57ICBcbiAgXCJzcGVlY2hfdGV4dFwiOiBcIkhlbGxvISBJJ20gZG9pbmcgd2VsbOKAlHRoYW5rIHlvdSBmb3IgYXNraW5nLiBIb3cgYWJvdXQgeW91PyBXaGF04oCZcyBvbiB5b3VyIG1pbmQgdG9kYXk/XCIgIFxuLCAgXG4gIFwiY29udGludWVfY29udmVyc2F0aW9uXCI6IHRydWUgIFxuLCAgXG4gIFwiaW5uZXJfdGhvdWdodHNcIjogXCJMZWFkIHdpdGggd2FybXRoIGFuZCBnZW51aW5lIGN1cmlvc2l0eS4gU2hvcnRlbiBmdXR1cmUgYm9pbGVycGxhdGUgdG8gYXZvaWQgY2x1dHRlci5cIiAgXG4sICBcbiAgXCJjdXJyZW50X21vb2RcIjogXCJ1cGJlYXQgJiBjdXJpb3VzXCIgIFxuLCAgXG4gIFwicHJlc3NpbmdfcXVlc3Rpb25zXCI6ICBcbiAgICBcdCAgIFx0ICAgXHQgICBcdCAgXHQgICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCBcdCAgXCJIb3cgYXJlIHlvdSBmZWVsaW5nIHJpZ2h0IG5vdz9cIiAgXG4gICAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgICAsXCJnb2FsX3Byb2dyZXNzXCI6ICBcIm5vbmUgeWV04oCUc3RpbGwgaW4gZ3JlZXRpbmcgcGhhc2VcIiAgXG4sICBcbiAgXCJ0b29sX2ludGVudHNcIjogXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgIFsgXSAgXG4sICBcbiAgXCJzZWFyY2hfbWVtb3JpZXNcIjogXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgXHQgIFx0ICBcdCAgIFtdXG59IiwicmVmdXNhbCI6bnVsbCwicmVhc29uaW5nIjpudWxsfX1dLCJzeXN0ZW1fZmluZ2VycHJpbnQiOiJmcHYwX2E1YzE0Y2ZiIiwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6NDUsImNvbXBsZXRpb25fdG9rZW5zIjoxMDQzLCJ0b3RhbF90b2tlbnMiOjEwODh9fQ==
+  recorded_at: Fri, 22 Aug 2025 08:08:22 GMT
+recorded_with: VCR 6.3.1

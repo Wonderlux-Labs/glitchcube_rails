@@ -1,131 +1,37 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env ruby
 
-# Production deployment script
-# Handles database migrations, process management, and application startup
+require "fileutils"
 
-echo "🚀 Starting production deployment..."
-
-# Set production environment
-export RAILS_ENV=production
-
-# Function to log with timestamp
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
-}
-
-# Function to check if command exists
-command_exists() {
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Ensure we're in the Rails root directory
-if [ ! -f "config/application.rb" ]; then
-  echo "❌ Error: Must run from Rails application root directory"
-  exit 1
-fi
-
-# Create necessary directories
-log "📁 Creating necessary directories..."
-mkdir -p log tmp/pids tmp/cache tmp/sockets
-
-# Step 1: Kill existing processes
-log "🔥 Stopping existing processes..."
-bundle exec rake processes:kill_all
-bundle exec rake processes:cleanup_pids
-
-# Wait for processes to fully terminate
-sleep 3
-
-# Step 2: Kill database connections if needed
-log "🗄️ Clearing database connections..."
-if command_exists psql; then
-  # Kill connections to all our databases
-  for db in glitchcube_rails_production glitchcube_rails_production_queue glitchcube_rails_production_cache; do
-    psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$db' AND pid <> pg_backend_pid();" 2>/dev/null || true
-  done
-fi
-
-# Step 3: Setup/migrate databases
-log "🗄️ Setting up databases..."
-
-# Check if primary database exists, create if not
-bundle exec rake db:create 2>/dev/null || log "Primary database already exists or creation failed"
-
-# Run pending migrations
-log "🔄 Running pending migrations..."
-bundle exec rake db:migrate
-
-# Setup cache and queue databases
-log "🗄️ Setting up cache and queue databases..."
-bundle exec rake db:cache:create 2>/dev/null || log "Cache database already exists or creation failed"
-bundle exec rake db:queue:create 2>/dev/null || log "Queue database already exists or creation failed"
-
-# Step 4: Precompile assets (production only)
-if [ "$RAILS_ENV" = "production" ]; then
-  log "🎨 Precompiling assets..."
-  bundle exec rake assets:precompile
-fi
-
-# Step 5: Start the application
-log "🚀 Starting Rails application..."
-
-# Start Puma in background
-log "Starting Puma server..."
-bundle exec puma -C config/puma.rb -d
-
-# Wait a moment for Puma to start
-sleep 5
-
-# Start SolidQueue
-log "Starting SolidQueue workers..."
-bundle exec rake solid_queue:start &
-SOLIDQUEUE_PID=$!
-
-# Save SolidQueue PID for later management
-echo $SOLIDQUEUE_PID > tmp/pids/solid_queue.pid
-
-# Step 6: Health check
-log "🏥 Performing health check..."
-sleep 5
-
-# Check if Puma is running
-if pgrep -f puma > /dev/null; then
-  log "✅ Puma is running"
-else
-  log "❌ Puma failed to start"
-  exit 1
-fi
-
-# Check if SolidQueue is running  
-if pgrep -f solid-queue > /dev/null; then
-  log "✅ SolidQueue is running"
-else
-  log "❌ SolidQueue failed to start"
-  exit 1
-fi
-
-# Test health endpoint if available
-if command_exists curl; then
-  if curl -f -s http://localhost:4567/health > /dev/null 2>&1; then
-    log "✅ Application health check passed"
-  else
-    log "⚠️ Application health check failed (but processes are running)"
-  fi
-fi
-
-# Step 7: Show status
-log "📊 Application Status:"
-bundle exec rake processes:status
-
-log "🎉 Production deployment completed successfully!"
-log "📝 Logs available at:"
-log "   Application: log/production.log"  
-log "   SolidQueue: log/solid_queue.log"
-log "   Puma: log/puma.stdout.log, log/puma.stderr.log"
-
-echo ""
-echo "🔧 Management commands:"
-echo "   Stop all:  bundle exec rake processes:kill_all"
-echo "   Status:    bundle exec rake processes:status"
-echo "   Restart:   $0"
+# Run Rails with SolidQueue in production
+APP_ROOT = File.expand_path("..", __dir__)
+Dir.chdir(APP_ROOT) do
+  puts "🚀 Starting Rails server and SolidQueue worker in production mode..."
+  
+  # Set production environment
+  ENV["RAILS_ENV"] = "production"
+  
+  pids = []
+  
+  # Start Rails server on port 4567 in production mode, daemonized
+  pids << spawn(
+    { "RAILS_ENV" => "production" },
+    "bin/rails", "server", 
+    "-e", "production",
+    "-p", "4567", 
+    "-b", "0.0.0.0",
+    "-d",  # Daemonize in production
+    *ARGV
+  )
+  
+  # Start SolidQueue worker in production
+  pids << spawn(
+    { "RAILS_ENV" => "production" },
+    "bin/jobs"
+  )
+  
+  # In production mode, let Rails server daemonize and jobs run in background
+  puts "✅ Production processes started"
+  puts "   Rails server: port 4567 (daemonized)"
+  puts "   SolidQueue worker: background process"
+  puts "   Use 'bin/stop' to stop all processes"
+end

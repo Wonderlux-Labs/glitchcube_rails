@@ -13,6 +13,10 @@ class CubePersona
     name.to_sym
   end
 
+  def self.set_random
+    set_current_persona(PERSONAS.sample)
+  end
+
   def self.set_current_persona(persona)
     return unless PERSONAS.include? persona&.to_sym
 

@@ -11,7 +11,14 @@ class Api::V1::ConversationController < Api::V1::BaseController
     Rails.logger.info "📋 Session ID: #{session_id}"
     Rails.logger.info "🔍 Context: #{context}"
 
-    result = ConversationOrchestrator.new(
+    # Choose orchestrator based on feature flag
+    orchestrator_class = Rails.configuration.use_new_orchestrator ?
+                         ConversationNewOrchestrator :
+                         ConversationOrchestrator
+
+    Rails.logger.info "🔧 Using orchestrator: #{orchestrator_class.name}"
+
+    result = orchestrator_class.new(
       session_id: session_id,
       message: message,
       context: context
@@ -64,11 +71,19 @@ class Api::V1::ConversationController < Api::V1::BaseController
       context: context
     }
 
-    result = ConversationOrchestrator.new(
+    # Choose orchestrator based on feature flag
+    orchestrator_class = Rails.configuration.use_new_orchestrator ?
+                         ConversationNewOrchestrator :
+                         ConversationOrchestrator
+
+    result = orchestrator_class.new(
       session_id: session_id,
       message: proactive_message,
       context: proactive_context
     ).call
+
+    # Let Home Assistant handle TTS and conversation flow for proactive conversations
+    # No need to trigger speech manually - the conversation agent will handle it
 
     # Format response in the structure that HASS expects
     formatted_response = format_response_for_hass(result)
@@ -147,15 +162,11 @@ class Api::V1::ConversationController < Api::V1::BaseController
     # Format in the structure that HASS conversation agent expects
     return error_response("Invalid orchestrator result") unless orchestrator_result.is_a?(Hash)
 
-    response_data = orchestrator_result[:response] || {}
-    return error_response("Invalid response data") unless response_data.is_a?(Hash)
-
-    speech_data = response_data[:speech] || {}
-    speech_text = if speech_data.is_a?(Hash)
-      speech_data.dig(:plain, :speech) || "I understand."
-    else
-      "I understand."
-    end
+    # Handle new direct response structure from orchestrator
+    speech_text = orchestrator_result.dig(:response, :speech, :plain, :speech) ||
+                  orchestrator_result[:text] ||
+                  orchestrator_result[:speech_text] ||
+                  "I understand."
 
     {
       success: true,
@@ -165,7 +176,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
         speech_text: speech_text,
         continue_conversation: orchestrator_result[:continue_conversation] || false,
         # Include metadata for debugging
-        metadata: (speech_data.is_a?(Hash) ? speech_data.dig(:plain, :extra_data) : nil) || {}
+        metadata: {}
       }
     }
   end
@@ -183,20 +194,9 @@ class Api::V1::ConversationController < Api::V1::BaseController
   end
 
   def determine_response_type(orchestrator_result)
-    # Check if async tools were queued
-    return "normal" unless orchestrator_result.is_a?(Hash)
-    return "normal" unless orchestrator_result[:response].is_a?(Hash)
-
-    metadata = orchestrator_result.dig(:response, :speech, :plain, :extra_data) || {}
-    return "normal" unless metadata.is_a?(Hash)
-
-    async_tools = metadata[:async_tools_queued] || []
-
-    if async_tools.any?
-      "immediate_speech_with_background_tools"
-    else
-      "normal"
-    end
+    # For now, always return normal since we're handling async tools differently
+    # TODO: Implement proper response type detection for new architecture
+    "normal"
   end
 
   def default_session_id

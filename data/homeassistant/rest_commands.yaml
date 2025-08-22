@@ -74,7 +74,7 @@ check_glitchcube_health:
 
 # Proactive behavior commands
 glitchcube_proactive:
-  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/proactive/conversation"
+  url: "http://{{ states('input_text.glitchcube_host') | default('localhost') }}:4567/api/v1/conversation/proactive"
   method: POST
   headers:
     Content-Type: application/json

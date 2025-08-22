@@ -23,6 +23,14 @@ class ConversationOrchestrator
     # Build prompt with tools for current persona (check live, don't use stored)
     current_persona = determine_persona
 
+    # Log conversation start
+    ConversationLogger.conversation_started(
+      @session_id,
+      @message,
+      current_persona,
+      @context || {}
+    )
+
     # Add session_id to context for memory retrieval
     enhanced_context = @context.merge(session_id: @session_id)
 
@@ -51,16 +59,28 @@ class ConversationOrchestrator
     messages << { role: "user", content: @message }
 
     # Call LLM with structured output (no direct tool calls)
+    model = determine_model_for_conversation
+    ConversationLogger.llm_request(model, @message, Schemas::NarrativeResponseSchema.schema)
+
     response = LlmService.call_with_structured_output(
       messages: messages,
       response_format: Schemas::NarrativeResponseSchema.schema,
-      model: determine_model_for_conversation
+      model: model
+    )
+
+    ConversationLogger.llm_response(
+      response.model || model,
+      response.content,
+      [],
+      { usage: response.usage }
     )
 
     # Process dual tool execution: direct tools + HA agent delegation
     sync_results = {}
     direct_tool_results = {}
     memory_search_results = {}
+
+    Rails.logger.info("STRUCURED OUTPUT IS #{response.structured_output}")
 
     # 1. Execute direct tool calls synchronously
     if response.structured_output&.dig("direct_tool_calls")&.any?
@@ -77,6 +97,15 @@ class ConversationOrchestrator
     # 3. Process tool intentions asynchronously via HA conversation agent
     if response.structured_output&.dig("tool_intents")&.any?
       Rails.logger.info "🏠 Found #{response.structured_output['tool_intents'].length} tool intentions, delegating to HA agent"
+
+      # Safely log tool intentions with error handling
+      begin
+        ConversationLogger.tool_intentions(response.structured_output["tool_intents"])
+      rescue => e
+        Rails.logger.error "❌ Error logging tool intentions: #{e.message}"
+        Rails.logger.error "Tool intents data: #{response.structured_output['tool_intents'].inspect}"
+      end
+
       delegate_to_ha_agent(response.structured_output["tool_intents"])
     end
 
@@ -88,12 +117,21 @@ class ConversationOrchestrator
       query_tools: memory_search_results.keys,
       action_tools: direct_tool_results.keys.select { |tool| tool != "rag_search" }
     }
+    Rails.logger.info(tool_analysis.inspect)
 
     # Generate final AI response incorporating all sync tool results
     ai_response = generate_ai_response(prompt_data, response, all_sync_results)
-
+    Rails.logger.info(ai_response.inspect)
     # Store conversation log with all results
     store_conversation_log(@conversation, ai_response, all_sync_results, tool_analysis)
+
+    # Log conversation end
+    ConversationLogger.conversation_ended(
+      @session_id,
+      ai_response[:speech_text],
+      ai_response[:continue_conversation],
+      tool_analysis
+    )
 
     # Return formatted response for Home Assistant
     format_response_for_hass(ai_response, tool_analysis)
@@ -311,7 +349,17 @@ class ConversationOrchestrator
         inner_thoughts: structured_data["inner_thoughts"],
         current_mood: structured_data["current_mood"],
         pressing_questions: structured_data["pressing_questions"],
+        goal_progress: structured_data["goal_progress"],
         speech_text: speech_text
+      }
+
+      # Store narrative metadata for logging
+      @narrative_metadata = {
+        inner_thoughts: structured_data["inner_thoughts"],
+        current_mood: structured_data["current_mood"],
+        pressing_questions: structured_data["pressing_questions"],
+        continue_conversation_from_llm: continue_conversation,
+        goal_progress: structured_data["goal_progress"]
       }
     else
       # Legacy mode: extract from content markers
@@ -347,6 +395,7 @@ class ConversationOrchestrator
       inner_thoughts: narrative[:inner_thoughts],
       current_mood: narrative[:current_mood],
       pressing_questions: narrative[:pressing_questions],
+      goal_progress: narrative[:goal_progress],
       model: openrouter_response.model,
       usage: openrouter_response.usage,
       success: true,
@@ -392,12 +441,6 @@ class ConversationOrchestrator
       ai_response: ai_response[:text],
       tool_results: sync_results.to_json,
       metadata: metadata.to_json
-    )
-
-    # Update conversation totals
-    conversation.update!(
-      message_count: conversation.conversation_logs.count,
-      continue_conversation: tool_analysis[:async_tools].any?
     )
   end
 
@@ -449,8 +492,11 @@ class ConversationOrchestrator
       inner_thoughts: ai_response[:inner_thoughts],
       current_mood: ai_response[:current_mood],
       pressing_questions: ai_response[:pressing_questions],
-      continue_conversation_from_llm: ai_response[:continue_conversation]
+      continue_conversation_from_llm: ai_response[:continue_conversation],
+      goal_progress: ai_response[:goal_progress]
     }
+
+    Rails.logger.info "📊 Storing narrative metadata: #{@narrative_metadata.inspect}"
   end
 
   private
@@ -625,12 +671,18 @@ class ConversationOrchestrator
   def build_success_entities(tool_analysis)
     # For async tools, assume they will succeed (they execute in background)
     tool_analysis[:async_tools].map do |tool_call|
-      tool_name = tool_call.respond_to?(:name) ? tool_call.name : tool_call["name"]
-      arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call["arguments"]
+      # Handle string tool names (from tool_intents)
+      if tool_call.is_a?(String)
+        tool_name = tool_call
+        arguments = nil
+      else
+        tool_name = tool_call.respond_to?(:name) ? tool_call.name : tool_call["name"]
+        arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call["arguments"]
+      end
 
       {
-        entity_id: arguments["entity_id"] || tool_name,
-        name: tool_name.humanize,
+        entity_id: arguments.present? ? arguments["entity_id"] : tool_name,
+        name: tool_name&.humanize,
         state: "pending" # Will be updated when async job completes
       }
     end
@@ -641,9 +693,16 @@ class ConversationOrchestrator
     all_tools = (tool_analysis[:sync_tools] + tool_analysis[:async_tools])
 
     all_tools.map do |tool_call|
-      arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call["arguments"]
-      entity_id = arguments["entity_id"]
+      # Skip if it's just a string (tool name without arguments)
+      next if tool_call.is_a?(String)
 
+      Rails.logger.info(tool_call.inspect)
+      arguments = tool_call.respond_to?(:arguments) ? tool_call.arguments : tool_call["arguments"]
+
+      # Skip if no arguments or arguments is nil
+      next unless arguments.is_a?(Hash)
+
+      entity_id = arguments["entity_id"]
       next unless entity_id
 
       {
@@ -739,7 +798,8 @@ class ConversationOrchestrator
     memory_searches.each_with_index do |search_request, index|
       query = search_request["query"]
       type = search_request["type"] || "all"
-      limit = search_request["limit"] || 3
+      # Use fixed limit instead of LLM-provided limit
+      limit = 3
 
       begin
         # Use the RAG search tool for consistency
