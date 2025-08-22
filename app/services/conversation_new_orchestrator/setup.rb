@@ -20,7 +20,8 @@ class ConversationNewOrchestrator::Setup
     conversation = find_or_create_conversation
 
     # Update conversation with current persona if it's new
-    conversation.update!(persona: persona) if conversation.new_record? || conversation.persona.blank?
+    # Update conversation with current persona if persona is blank
+    conversation.update!(persona: persona) if conversation.persona.blank?
 
     ServiceResult.success({
       conversation: conversation,
