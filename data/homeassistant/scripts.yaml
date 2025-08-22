@@ -61,7 +61,7 @@ play_music_on_jukebox:
       artist: '{{ artist }}'
       album: '{{ album }}'
     target:
-      entity_id: media_player.cube_music
+      entity_id: media_player.cube_jukebox
   - if:
     - condition: state
       entity_id: media_player.cube_music
@@ -124,15 +124,56 @@ play_music_on_jukebox:
         play next but not interrupt a song if playing) - use play to force now - use
         add if youa re queing up songs for a party or running a whole damn jukebox
       default: replace_next
-alien_news:
+notification:
+  alias: notification
+  description: send to marquee screen
+  fields:
+    text:
+      selector:
+        text:
+      name: text
+      description: text to display
+      required: true
+    duration:
+      selector:
+        number:
+          min: 1
+          max: 100
+          mode: box
+      name: duration
+      description: duration seconds to display
+    wakeup:
+      selector:
+        boolean:
+      name: wakeup
+      description: wakeup screen if asleep
+    rainbow:
+      selector:
+        boolean:
+      name: rainbow
+      description: add animated rainbow colors to text
+    color:
+      selector:
+        text:
+      name: color
+      description: 'hex color code (e.g. #ff0000 for red)'
   sequence:
-  - action: ai_task.generate_data
+  - action: awtrix.notification
+    metadata: {}
     data:
-      task_name: news report
-      instructions: Generate an absurd clip of intercepted radio transmission from
-        two bumbling aliens who lost a glitch cube - no stage directions or names,
-        just dialogue, NSFW is fine
-      entity_id: ai_task.venice_uncensored_free
-    response_variable: alien_news
-  alias: Alien News
+      device: ac07cb1bceee39dce3af75aa6c6d784c
+      wakeup: '{{ wakeup | default(true) }}'
+      text: '{{ text }}'
+      duration: '{{ duration | default(30) }}'
+      color: '{{ color | default(''#d6b135'') }}'
+      rainbow: '{{ rainbow | default(false) }}'
+glitchcube_tts_queued_ui_duplicate:
+  sequence:
+  - data:
+      entity_id: media_player.square_voice
+      message: '{{ message }}'
+    action: tts.speak
+  alias: GlitchCube TTS Queued - UI (Duplicate)
+  mode: queued
+  max: 10
   description: ''

@@ -26,7 +26,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       let!(:important_event) do
         create(:event,
-               title: "Temple Burn Ceremony", 
+               title: "Temple Burn Ceremony",
                description: "Sacred burning of the Temple structure",
                event_time: 8.hours.from_now,
                importance: 9,
@@ -49,12 +49,12 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
         allow(ha_service).to receive(:entity).and_return(nil)
 
         context = prompt_service.send(:inject_upcoming_events_context)
-        
+
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Emergency Weather Alert")
         expect(context).to include("Temple Burn Ceremony")
         expect(context).not_to include("Art Walk") # Only importance >= 7
-        
+
         # Verify timing information is included
         expect(context).to include("2 hours")
         expect(context).to include("8 hours")
@@ -62,7 +62,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       it "formats high-priority events with proper urgency indicators", vcr: { cassette_name: "proactive_events/urgency_formatting" } do
         context = prompt_service.send(:inject_upcoming_events_context)
-        
+
         expect(context).to include("next 48h")
         expect(context).to include("Severe dust storm approaching")
         expect(context).to include("Sacred burning")
@@ -82,7 +82,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
       let!(:distant_event) do
         create(:event,
                title: "Deep Playa Sound Bath",
-               description: "Meditative sound experience in the deep desert", 
+               description: "Meditative sound experience in the deep desert",
                event_time: 4.hours.from_now,
                importance: 6,
                location: "Deep Playa")
@@ -92,7 +92,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
         before do
           ha_service = double("HomeAssistantService")
           allow(HomeAssistantService).to receive(:new).and_return(ha_service)
-          
+
           context_sensor = {
             "attributes" => {
               "current_location" => "Center Camp"
@@ -103,11 +103,11 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
         it "injects nearby events based on current location", vcr: { cassette_name: "proactive_events/nearby_location_injection" } do
           context = prompt_service.send(:inject_upcoming_events_context)
-          
+
           expect(context).to include("UPCOMING NEARBY EVENTS")
           expect(context).to include("Camp Sunrise Pancake Breakfast")
           expect(context).not_to include("Deep Playa Sound Bath")
-          
+
           expect(context).to include("next 24h")
           expect(context).to include("Center Camp")
         end
@@ -120,7 +120,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
                  event_time: 3.hours.from_now)
 
           context = prompt_service.send(:inject_upcoming_events_context)
-          
+
           expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
           expect(context).to include("UPCOMING NEARBY EVENTS")
           expect(context).to include("Critical Safety Briefing")
@@ -137,7 +137,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
         it "only includes high-priority events without location filtering", vcr: { cassette_name: "proactive_events/no_location_available" } do
           context = prompt_service.send(:inject_upcoming_events_context)
-          
+
           expect(context).not_to include("UPCOMING NEARBY EVENTS")
           # Should not include medium-importance events when no location available
           expect(context).not_to include("Camp Sunrise Pancake Breakfast")
@@ -151,7 +151,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
         it "continues gracefully without location-based events", vcr: { cassette_name: "proactive_events/ha_service_failure" } do
           expect { prompt_service.send(:inject_upcoming_events_context) }.not_to raise_error
-          
+
           context = prompt_service.send(:inject_upcoming_events_context)
           expect(context).not_to include("UPCOMING NEARBY EVENTS")
         end
@@ -179,14 +179,14 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       before do
         # Mock similarity search for RAG
-        allow(Summary).to receive(:similarity_search).and_return([relevant_summary])
+        allow(Summary).to receive(:similarity_search).and_return([ relevant_summary ])
         allow(Event).to receive(:similarity_search).and_return([])
         allow(Person).to receive(:similarity_search).and_return([])
       end
 
       it "includes both proactive events and RAG results in context", vcr: { cassette_name: "proactive_events/full_rag_integration" } do
         context = prompt_service.send(:inject_rag_context, "When should I leave?")
-        
+
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Exodus Traffic Advisory")
         expect(context).to include("Recent relevant conversations")
@@ -196,10 +196,10 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
       it "prioritizes proactive events before RAG results", vcr: { cassette_name: "proactive_events/event_priority_order" } do
         context = prompt_service.send(:inject_rag_context, "tell me about events")
         lines = context.split("\n")
-        
+
         high_priority_line = lines.find_index { |line| line.include?("HIGH-PRIORITY EVENTS") }
         conversation_line = lines.find_index { |line| line.include?("Recent relevant") }
-        
+
         expect(high_priority_line).to be < conversation_line
       end
     end
@@ -208,7 +208,7 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
       let!(:imminent_event) do
         create(:event,
                title: "Gate Closure Warning",
-               description: "Gate closing in 4 hours - last chance to enter/exit", 
+               description: "Gate closing in 4 hours - last chance to enter/exit",
                event_time: 4.hours.from_now,
                importance: 10)
       end
@@ -216,11 +216,11 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
       it "includes proactive events in complete prompt context", vcr: { cassette_name: "proactive_events/full_prompt_integration" } do
         prompt_data = prompt_service.build
         context = prompt_data[:context]
-        
+
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Gate Closure Warning")
         expect(context).to include("4 hours")
-        
+
         # Should also include other context elements
         expect(context).to include("VERY IMPORTANT BREAKING NEWS")
         expect(context).to include("Random Facts")
@@ -228,12 +228,12 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       it "maintains context structure with proactive events", vcr: { cassette_name: "proactive_events/context_structure" } do
         prompt_data = prompt_service.build
-        
+
         expect(prompt_data).to have_key(:system_prompt)
-        expect(prompt_data).to have_key(:messages) 
+        expect(prompt_data).to have_key(:messages)
         expect(prompt_data).to have_key(:context)
         expect(prompt_data).to have_key(:tools)
-        
+
         context = prompt_data[:context]
         expect(context).to be_a(String)
         expect(context.length).to be > 100 # Should have substantial content
@@ -248,8 +248,8 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       it "only includes events within 48-hour window", vcr: { cassette_name: "proactive_events/time_window_filtering" } do
         context = prompt_service.send(:inject_upcoming_events_context)
-        
-        expect(context).to include("1 hour")      # immediate_event 
+
+        expect(context).to include("1 hour")      # immediate_event
         expect(context).to include("24 hours")    # near_future_event
         expect(context).not_to include("3 days")  # far_future_event (outside window)
         expect(context).not_to include("2 hours ago") # past_event (already happened)
@@ -264,10 +264,10 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       it "only includes high importance events (>= 7)", vcr: { cassette_name: "proactive_events/importance_filtering" } do
         context = prompt_service.send(:inject_upcoming_events_context)
-        
+
         # Should include importance >= 7
         expect(context.scan(/\d+ hours/).length).to eq(2) # critical_event and high_event
-        
+
         # Verify it's not just counting - check it includes the high importance ones
         expect(context).to include("6 hours")  # critical_event
         expect(context).to include("8 hours")  # high_event
@@ -279,14 +279,14 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
         # Only create low-priority events
         create(:event, event_time: 2.hours.from_now, importance: 3)
         create(:event, event_time: 4.hours.from_now, importance: 5)
-        
+
         context = prompt_service.send(:inject_upcoming_events_context)
         expect(context).to be_nil
       end
 
       it "handles empty event database gracefully", vcr: { cassette_name: "proactive_events/empty_database" } do
         Event.destroy_all
-        
+
         expect { prompt_service.send(:inject_upcoming_events_context) }.not_to raise_error
         context = prompt_service.send(:inject_upcoming_events_context)
         expect(context).to be_nil

@@ -1,0 +1,138 @@
+# AWTRIX Custom Apps via MQTT
+# AWTRIX Light uses MQTT to display custom apps
+# Send JSON payloads to: awtrix_[device_id]/custom/[app_name]
+
+# Example MQTT services for AWTRIX custom apps
+# These can be called from automations or scripts
+
+# Persona Status App
+persona_status_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/persona"
+    payload: |
+      {
+        "text": "{{ states('input_select.current_persona').upper() }}",
+        "icon": {% if states('input_select.current_persona') == 'buddy' %}2022{% elif states('input_select.current_persona') == 'jax' %}7956{% elif states('input_select.current_persona') == 'lomi' %}7919{% elif states('input_select.current_persona') == 'zorp' %}7982{% else %}7786{% endif %},
+        "color": {% if states('input_select.current_persona') == 'buddy' %}[0, 200, 255]{% elif states('input_select.current_persona') == 'jax' %}[255, 100, 0]{% elif states('input_select.current_persona') == 'lomi' %}[255, 0, 200]{% elif states('input_select.current_persona') == 'zorp' %}[100, 255, 0]{% else %}[255, 255, 255]{% endif %},
+        "duration": 5
+      }
+
+# Battery Status App
+battery_status_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/battery"
+    payload: |
+      {
+        "text": "BAT {{ states('sensor.battery_level') | default('??') }}%",
+        "icon": {% if states('binary_sensor.low_battery') == 'on' %}184{% else %}183{% endif %},
+        "color": {% if states('binary_sensor.low_battery') == 'on' %}[255, 0, 0]{% else %}[0, 255, 0]{% endif %},
+        "pushIcon": 2,
+        "duration": 8
+      }
+
+# Conversation Counter App  
+conversation_counter_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/conversations"
+    payload: |
+      {
+        "text": "CHATS {{ states('counter.daily_conversations') }}",
+        "icon": 7929,
+        "color": [0, 255, 200],
+        "duration": 6
+      }
+
+# Health Status App
+health_status_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/health"
+    payload: |
+      {
+        "text": "{{ states('sensor.backend_health_check').upper() }}",
+        "icon": {% if states('sensor.backend_health_check') == 'healthy' %}4687{% else %}4688{% endif %},
+        "color": {% if states('sensor.backend_health_check') == 'healthy' %}[0, 255, 0]{% elif states('sensor.backend_health_check') == 'degraded' %}[255, 255, 0]{% else %}[255, 0, 0]{% endif %},
+        "duration": 5
+      }
+
+# Motion Alert App
+motion_alert_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/motion"
+    payload: |
+      {
+        "text": "MOTION",
+        "icon": 7876,
+        "color": [255, 165, 0],
+        "effect": "BlinkyRainbow",
+        "duration": 3
+      }
+
+# Weather Display App
+weather_display_app:
+  service: mqtt.publish  
+  data:
+    topic: "marquee/custom/weather"
+    payload: |
+      {
+        "text": "{{ states('sensor.temperature') | round(0) }}°F",
+        "icon": {{ states('sensor.weather_icon') | default('7786') }},
+        "color": {% if states('sensor.temperature') | int < 60 %}[100, 200, 255]{% elif states('sensor.temperature') | int > 85 %}[255, 100, 0]{% else %}[0, 255, 0]{% endif %},
+        "duration": 7
+      }
+
+# Location Status App
+location_status_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/location"  
+    payload: |
+      {
+        "text": "{{ states('input_text.current_location')[:8] }}",
+        "icon": 7953,
+        "color": [200, 100, 255],
+        "scrollSpeed": 50,
+        "duration": 8
+      }
+
+# System Busy App
+system_busy_app:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom/busy"
+    payload: |
+      {
+        "text": "BUSY",
+        "icon": 7786,
+        "color": [255, 165, 0],
+        "effect": "ColorWipe",
+        "duration": 10
+      }
+
+# Clear All Apps
+clear_all_apps:
+  service: mqtt.publish
+  data:
+    topic: "marquee/custom"
+    payload: "{}"
+
+# MQTT AWTRIX Icon Reference:
+# 183: Battery Full, 184: Battery Low
+# 2022: Buddy face, 7956: Jax, 7919: Lomi, 7982: Zorp
+# 4687: Check mark, 4688: X mark  
+# 7876: Motion sensor, 7953: Location pin
+# 7929: Chat bubble, 7786: Gear/settings
+# Weather icons vary based on conditions
+
+# Available Effects:
+# BlinkyRainbow, ColorWipe, TheaterChase, Fireworks, Rain, Snake
+
+# Usage in Automations:
+# - Use these services in automations to show contextual information
+# - Apps automatically cycle through the display
+# - Use "clear_all_apps" to reset display
+# - Adjust duration based on importance (1-10 seconds typical)

@@ -87,21 +87,21 @@ module Services
           destination_data = Rails.cache.read("cube_destination")
           destination = if destination_data
                           JSON.parse(destination_data, symbolize_names: true)
-                        elsif landmark
+          elsif landmark
                           {
                             lat: landmark.latitude.to_f,
                             lng: landmark.longitude.to_f,
                             name: landmark.name
                           }
-                        else
+          else
                           # Pick a random destination if none specified
                           pick_random_destination
-                        end
-          
+          end
+
           Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
           puts "Current #{current_data}"
           puts "Dest #{destination}"
-          
+
           # Check if we've reached the destination
           if reached_destination?(current_data, destination)
             Rails.cache.delete("cube_destination") # Clear destination
@@ -114,7 +114,7 @@ module Services
 
           distance = calculate_distance(current_data[:lat], current_data[:lng], destination[:lat], destination[:lng])
           puts "Moving toward #{destination[:name]} (#{distance.round}m remaining)"
-          
+
           # Continue movement simulation
           sleep(5)
           simulate_movement!

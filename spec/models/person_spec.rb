@@ -42,7 +42,7 @@ RSpec.describe Person, type: :model do
     it "handles JSON metadata" do
       person.metadata_json = { "source" => "conversation", "confidence" => 0.9 }
       person.save!
-      
+
       expect(person.metadata_json["source"]).to eq("conversation")
       expect(person.metadata_json["confidence"]).to eq(0.9)
     end
@@ -56,8 +56,8 @@ RSpec.describe Person, type: :model do
   describe ".find_or_update_person" do
     context "when person exists" do
       let!(:existing_person) do
-        create(:person, 
-               name: "Alice", 
+        create(:person,
+               name: "Alice",
                description: "Original description",
                relationship: "friend")
       end
@@ -85,7 +85,7 @@ RSpec.describe Person, type: :model do
             description: "Updated",
             session_id: "session_123"
           )
-          
+
           expect(result.last_seen_at).to be_within(1.second).of(Time.current)
         end
       end
@@ -129,7 +129,7 @@ RSpec.describe Person, type: :model do
 
   describe "associations" do
     let(:person) { create(:person, extracted_from_session: "session_123") }
-    let!(:related_summary) { create(:summary, metadata: { conversation_ids: ["session_123"] }.to_json) }
+    let!(:related_summary) { create(:summary, metadata: { conversation_ids: [ "session_123" ] }.to_json) }
     let!(:related_event) { create(:event, extracted_from_session: "session_123") }
 
     describe "#related_summaries" do

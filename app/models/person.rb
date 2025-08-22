@@ -15,7 +15,7 @@ class Person < ApplicationRecord
 
   # Associations with summaries and events via extracted_from_session
   def related_summaries
-    Summary.where("metadata @> ?", {conversation_ids: [extracted_from_session]}.to_json)
+    Summary.where("metadata @> ?", { conversation_ids: [ extracted_from_session ] }.to_json)
   end
 
   def related_events
@@ -45,18 +45,18 @@ class Person < ApplicationRecord
   def self.find_or_update_person(name:, description:, session_id:, relationship: nil, additional_metadata: {})
     # First try exact name match
     person = find_by(name: name)
-    
+
     if person
       # Update existing person with new information
-      person.description = [person.description, description].compact.join(" | ").truncate(1000)
+      person.description = [ person.description, description ].compact.join(" | ").truncate(1000)
       person.relationship = relationship if relationship.present?
       person.last_seen_at = Time.current
       person.extracted_from_session = session_id
-      
+
       # Merge metadata
       current_metadata = person.metadata_json
       person.metadata_json = current_metadata.merge(additional_metadata)
-      
+
       person.save!
     else
       # Create new person

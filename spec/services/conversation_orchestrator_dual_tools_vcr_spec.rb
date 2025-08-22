@@ -13,14 +13,14 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
     end
 
     let!(:existing_event) do
-      create(:event, 
+      create(:event,
              title: "Fire Performance Workshop",
              description: "Learn fire spinning techniques with experts",
              event_time: 2.hours.from_now,
              importance: 8)
     end
 
-    let!(:existing_person) do 
+    let!(:existing_person) do
       create(:person,
              name: "Maya",
              description: "Expert fire spinner and teacher",
@@ -29,8 +29,8 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
 
     before do
       # Mock vectorsearch to return our test data
-      allow(Event).to receive(:similarity_search).and_return([existing_event])
-      allow(Person).to receive(:similarity_search).and_return([existing_person])
+      allow(Event).to receive(:similarity_search).and_return([ existing_event ])
+      allow(Person).to receive(:similarity_search).and_return([ existing_person ])
       allow(Summary).to receive(:similarity_search).and_return([])
     end
 
@@ -38,9 +38,9 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
       it "generates structured output with direct_tool_calls and search_memories", vcr: { cassette_name: "dual_tools/structured_output_with_new_fields" } do
         # Mock HA delegation to avoid external calls
         allow(orchestrator).to receive(:delegate_to_ha_agent)
-        
+
         response = orchestrator.call
-        
+
         expect(response).to have_key(:speech)
         expect(Rails.logger).to have_received(:info).with(/🔧 Executed .* direct tools/)
       end
@@ -54,7 +54,7 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
         )
 
         allow(complex_orchestrator).to receive(:delegate_to_ha_agent)
-        
+
         response = complex_orchestrator.call
         expect(response).to be_present
       end
@@ -217,7 +217,7 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
         expect(PromptService).to receive(:build_prompt_for) do |args|
           # Verify the prompt service is called with user_message for RAG context
           expect(args[:user_message]).to eq(orchestrator.instance_variable_get(:@message))
-          
+
           # Return mock prompt data that would include our proactive event
           {
             system_prompt: "Test system prompt with proactive events included",
@@ -268,10 +268,10 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
         )
 
         allow(LlmService).to receive(:call_with_structured_output).and_return(mock_structured_output)
-        
+
         # Mock HA delegation to fail
         allow(orchestrator).to receive(:delegate_to_ha_agent).and_raise(StandardError.new("HA failed"))
-        
+
         allow(orchestrator).to receive(:generate_ai_response).and_return("Partial success")
         allow(orchestrator).to receive(:store_conversation_log)
         allow(orchestrator).to receive(:format_response_for_hass).and_return({ speech: "Response" })
@@ -320,10 +320,10 @@ RSpec.describe ConversationOrchestrator, "dual tool execution with VCR", type: :
       )
 
       allow(LlmService).to receive(:call_with_structured_output).and_return(mock_structured_output)
-      
+
       # Mock direct tool execution to return our results
       allow(orchestrator).to receive(:execute_direct_tools).and_return(mock_tool_results)
-      
+
       # Expect generate_ai_response to receive the tool results
       expect(orchestrator).to receive(:generate_ai_response) do |prompt_data, response, all_results|
         expect(all_results).to include("rag_search")

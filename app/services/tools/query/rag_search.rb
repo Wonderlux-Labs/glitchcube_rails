@@ -15,7 +15,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
             },
             type: {
               type: "string",
-              enum: ["all", "summaries", "events", "people"],
+              enum: [ "all", "summaries", "events", "people" ],
               description: "What type of data to search (default: all)"
             },
             limit: {
@@ -25,7 +25,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
               description: "Maximum number of results to return (default: 5)"
             }
           },
-          required: ["query"]
+          required: [ "query" ]
         }
       }
     }
@@ -45,7 +45,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
 
   def call(query:, type: "all", limit: 5, **_args)
     return error_response("Query cannot be empty") if query.blank?
-    
+
     limit = limit.clamp(1, 10)
     results = {}
 
@@ -59,14 +59,14 @@ class Tools::Query::RagSearch < Tools::BaseTool
         results[:people] = search_people(query, limit)
       else # "all"
         # Split limit across all types
-        per_type = [limit / 3, 1].max
+        per_type = [ limit / 3, 1 ].max
         results[:summaries] = search_summaries(query, per_type)
         results[:events] = search_events(query, per_type)
         results[:people] = search_people(query, per_type)
       end
 
       total_results = results.values.sum(&:count)
-      
+
       if total_results == 0
         return success_response(
           "No results found for '#{query}'",
@@ -76,11 +76,11 @@ class Tools::Query::RagSearch < Tools::BaseTool
 
       success_response(
         "Found #{total_results} results for '#{query}'",
-        { 
+        {
           query: query,
           type: type,
           total_results: total_results,
-          results: results 
+          results: results
         }
       )
 
@@ -94,7 +94,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
 
   def search_summaries(query, limit)
     return [] unless defined?(Summary) && Summary.respond_to?(:similarity_search)
-    
+
     summaries = Summary.similarity_search(query, limit: limit)
     summaries.map do |summary|
       metadata = summary.metadata_json
@@ -113,7 +113,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
 
   def search_events(query, limit)
     return [] unless defined?(Event) && Event.respond_to?(:similarity_search)
-    
+
     events = Event.similarity_search(query, limit: limit)
     events.map do |event|
       {
@@ -132,16 +132,16 @@ class Tools::Query::RagSearch < Tools::BaseTool
 
   def search_people(query, limit)
     return [] unless defined?(Person) && Person.respond_to?(:similarity_search)
-    
+
     people = Person.similarity_search(query, limit: limit)
     people.map do |person|
       {
         id: person.id,
-        type: "person", 
+        type: "person",
         name: person.name,
         description: person.description,
         relationship: person.relationship,
-        last_seen: person.last_seen_at&.strftime('%m/%d/%Y'),
+        last_seen: person.last_seen_at&.strftime("%m/%d/%Y"),
         created_at: person.created_at
       }
     end

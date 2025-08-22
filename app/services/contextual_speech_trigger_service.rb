@@ -190,7 +190,7 @@ class ContextualSpeechTriggerService
       Consider:
       - Any final thoughts about this area?
       - Did you accomplish what you wanted here?
-      - Anticipation for where you're going next?
+      - Anticipation for where youre going next?
       - Farewell gestures or environmental changes?
     PROMPT
   end

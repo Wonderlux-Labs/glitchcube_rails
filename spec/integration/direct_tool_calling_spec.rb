@@ -39,10 +39,10 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
   before do
     # Mock the LLM service to return our structured response
     allow(LlmService).to receive(:call_with_structured_output).and_return(structured_response)
-    
+
     # Mock the HA agent delegation
     allow(conversation_orchestrator).to receive(:delegate_to_ha_agent)
-    
+
     # Mock the final response generation
     allow(conversation_orchestrator).to receive(:generate_ai_response).and_return("Mocked AI response")
     allow(conversation_orchestrator).to receive(:store_conversation_log)
@@ -63,7 +63,7 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
       ]
 
       results = conversation_orchestrator.send(:execute_direct_tools, direct_tool_calls)
-      
+
       expect(results).to have_key("rag_search")
       expect(results["rag_search"]).to have_key(:success)
     end
@@ -77,7 +77,7 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
       ]
 
       results = conversation_orchestrator.send(:execute_direct_tools, direct_tool_calls)
-      
+
       expect(results).to have_key("nonexistent_tool")
       expect(results["nonexistent_tool"][:success]).to be false
       expect(results["nonexistent_tool"][:error]).to be_present
@@ -101,7 +101,7 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
 
     it "executes multiple memory searches" do
       results = conversation_orchestrator.send(:execute_memory_searches, memory_searches)
-      
+
       expect(results).to have_key("memory_search_1")
       expect(results).to have_key("memory_search_2")
     end
@@ -126,9 +126,9 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
 
     it "handles memory search errors gracefully" do
       allow(Tools::Registry).to receive(:execute_tool).and_raise(StandardError.new("Search failed"))
-      
+
       results = conversation_orchestrator.send(:execute_memory_searches, memory_searches)
-      
+
       expect(results["memory_search_1"][:success]).to be false
       expect(results["memory_search_1"][:error]).to eq("Search failed")
     end
@@ -136,10 +136,10 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
 
   describe "full dual tool execution flow" do
     let!(:event) { create(:event, title: "Fire Show", description: "Amazing fire spinning") }
-    
+
     before do
       # Mock the similarity search to return our event
-      allow(Event).to receive(:similarity_search).and_return([event])
+      allow(Event).to receive(:similarity_search).and_return([ event ])
       allow(Summary).to receive(:similarity_search).and_return([])
       allow(Person).to receive(:similarity_search).and_return([])
     end
@@ -208,7 +208,7 @@ RSpec.describe "Direct Tool Calling Integration", type: :integration do
 
     it "logs direct tool failures appropriately" do
       conversation_orchestrator.call
-      
+
       expect(Rails.logger).to have_received(:error).with(/❌ Direct tool execution failed/)
     end
   end

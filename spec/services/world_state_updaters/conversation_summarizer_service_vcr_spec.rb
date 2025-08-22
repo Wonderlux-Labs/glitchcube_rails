@@ -24,13 +24,13 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
 
     describe "with real API call to enhanced model" do
       it "extracts people and events using configured summarizer model", vcr: { cassette_name: "enhanced_conversation_summarizer/extract_people_and_events" } do
-        service = described_class.new([conversation.id])
-        
+        service = described_class.new([ conversation.id ])
+
         expect {
           summary = service.call
           expect(summary).to be_persisted
           expect(summary.summary_type).to eq("hourly")
-          
+
           # Verify enhanced extraction
           metadata = summary.metadata_json
           expect(metadata["people_extracted"]).to be > 0
@@ -40,30 +40,30 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
       end
 
       it "creates Person records from extracted data", vcr: { cassette_name: "enhanced_conversation_summarizer/create_person_records" } do
-        service = described_class.new([conversation.id])
-        
+        service = described_class.new([ conversation.id ])
+
         expect {
           service.call
         }.to change(Person, :count).by_at_least(1)
-        
+
         sarah = Person.find_by(name: "Sarah")
         expect(sarah).to be_present
         expect(sarah.description).to include("fire spinning")
-        expect(sarah.extracted_from_session).to eq([conversation.id].join(","))
+        expect(sarah.extracted_from_session).to eq([ conversation.id ].join(","))
       end
 
       it "creates Event records from extracted data", vcr: { cassette_name: "enhanced_conversation_summarizer/create_event_records" } do
-        service = described_class.new([conversation.id])
-        
+        service = described_class.new([ conversation.id ])
+
         expect {
           service.call
         }.to change(Event, :count).by_at_least(1)
-        
+
         temple_burn = Event.find_by("title ILIKE ?", "%temple%burn%")
         expect(temple_burn).to be_present
         expect(temple_burn.description).to include("ceremony")
         expect(temple_burn.importance).to eq(9) # Should extract 9/10 -> 9
-        expect(temple_burn.extracted_from_session).to eq([conversation.id].join(","))
+        expect(temple_burn.extracted_from_session).to eq([ conversation.id ].join(","))
       end
     end
 
@@ -81,9 +81,9 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
       end
 
       it "handles technical conversations appropriately", vcr: { cassette_name: "enhanced_conversation_summarizer/technical_conversation" } do
-        service = described_class.new([tech_conversation.id])
+        service = described_class.new([ tech_conversation.id ])
         summary = service.call
-        
+
         expect(summary.summary_text).to include("debug")
         expect(summary.metadata_json["topics"]).to include("technical")
       end
@@ -96,10 +96,10 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
       end
 
       it "handles API errors gracefully", vcr: { cassette_name: "enhanced_conversation_summarizer/api_error_handling" } do
-        service = described_class.new([conversation.id])
-        
+        service = described_class.new([ conversation.id ])
+
         expect { service.call }.not_to raise_error
-        
+
         summary = Summary.last
         expect(summary.summary_text).to include("Failed to parse")
       end
@@ -108,13 +108,13 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
     describe "model configuration" do
       it "uses the configured summarizer model" do
         expect(Rails.configuration.summarizer_model).to eq("openai/gpt-oss-120b")
-        
-        service = described_class.new([conversation.id])
-        
+
+        service = described_class.new([ conversation.id ])
+
         expect(LlmService).to receive(:generate_text).with(
           hash_including(model: "openai/gpt-oss-120b")
         ).and_call_original
-        
+
         service.call
       end
     end
@@ -133,9 +133,9 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
       end
 
       it "parses various time formats from extracted events", vcr: { cassette_name: "enhanced_conversation_summarizer/time_parsing" } do
-        service = described_class.new([time_conversation.id])
+        service = described_class.new([ time_conversation.id ])
         service.call
-        
+
         yoga_event = Event.find_by("title ILIKE ?", "%yoga%")
         if yoga_event
           expect(yoga_event.event_time).to be_present
@@ -148,25 +148,25 @@ RSpec.describe WorldStateUpdaters::ConversationSummarizerService, type: :service
   describe "batch processing with VCR" do
     let!(:conversation1) { create(:conversation, session_id: "batch_1") }
     let!(:conversation2) { create(:conversation, session_id: "batch_2") }
-    
+
     before do
-      create(:conversation_log, conversation: conversation1, 
-             user_message: "Going to art walk with Alice", 
+      create(:conversation_log, conversation: conversation1,
+             user_message: "Going to art walk with Alice",
              ai_response: "Have fun exploring!")
-      create(:conversation_log, conversation: conversation2, 
-             user_message: "Meeting Bob for dinner at 7 PM", 
+      create(:conversation_log, conversation: conversation2,
+             user_message: "Meeting Bob for dinner at 7 PM",
              ai_response: "Enjoy your meal!")
-      
+
       conversation1.update!(ended_at: Time.current)
       conversation2.update!(ended_at: Time.current)
     end
 
     it "processes multiple conversations in one API call", vcr: { cassette_name: "enhanced_conversation_summarizer/batch_processing" } do
-      service = described_class.new([conversation1.id, conversation2.id])
-      
+      service = described_class.new([ conversation1.id, conversation2.id ])
+
       expect {
         summary = service.call
-        
+
         # Should create multiple people and events from batch
         metadata = summary.metadata_json
         expect(metadata["people_extracted"]).to be >= 2  # Alice and Bob

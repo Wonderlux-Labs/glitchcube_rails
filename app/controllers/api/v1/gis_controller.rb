@@ -3,10 +3,42 @@
 class Api::V1::GisController < Api::V1::BaseController
       def streets
         begin
-          # For now, return empty GeoJSON - will need to implement GisCacheService
-          render json: { type: "FeatureCollection", features: [], error: "Streets data not yet implemented" }
+          streets = Street.active
+          features = []
+
+          streets.each do |street|
+            coordinates = street.coordinates
+            next if coordinates.empty?
+
+            features << {
+              type: "Feature",
+              geometry: {
+                type: "LineString",
+                coordinates: coordinates
+              },
+              properties: {
+                id: "street-#{street.id}",
+                name: street.name,
+                width: street.width || 3,
+                type: street.street_type,
+                feature_type: "street"
+              }
+            }
+          end
+
+          render json: {
+            type: "FeatureCollection",
+            features: features,
+            count: features.length,
+            source: "database"
+          }
         rescue StandardError => e
-          render json: { type: "FeatureCollection", features: [], error: "Streets data unavailable" }
+          Rails.logger.error "Error loading streets: #{e.message}"
+          render json: {
+            type: "FeatureCollection",
+            features: [],
+            error: "Streets data unavailable: #{e.message}"
+          }
         end
       end
 

@@ -1,0 +1,651 @@
+- alias: Cube Voice - Scene Creator
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    from: idle
+    to: listening
+  actions:
+  - action: scene.create
+    data:
+      scene_id: cube_voice_restore
+      snapshot_entities:
+      - light.cube_light_top
+      - light.cube_inner
+  id: a7612198293a4638a9a4bfd867361f8e
+- id: e3e94119c906442b87993accb955a681
+  alias: Cube Voice - Listening
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: listening
+  actions:
+  - action: awtrix.notification
+    data:
+      device: ac07cb1bceee39dce3af75aa6c6d784c
+      text: LISTENING
+      duration: 10
+      rainbow: true
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_light_top
+    data:
+      rgb_color:
+      - 10
+      - 250
+      - 10
+      effect: Happy Blinker
+- id: bf933227de44481a82be0e6bc48781a9
+  alias: Cube Voice - Processing
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: processing
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_light_top
+    data:
+      rgb_color:
+      - 10
+      - 50
+      - 250
+      effect: Mysterious
+- id: 224bc31d91254e57ad8d93e8549be334
+  alias: Cube Voice - Speaking
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: processing
+  actions:
+  - action: light.turn_on
+    data:
+      effect: 'Music: Vibrate'
+    target:
+      entity_id: light.cube_voice_ring
+- id: speakandrestore123948
+  alias: Cube Voice - Speaking and Restore
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.square_voice
+    to: idle
+    id: restore
+  actions:
+  - action: scene.turn_on
+    target:
+      entity_id: scene.cube_voice_restore
+- id: '1755313710558'
+  alias: Persona Switcher
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.current_persona
+    from:
+    to:
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: jax
+      sequence:
+      - action: select.select_option
+        data:
+          option: JAX
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: buddy
+      sequence:
+      - action: select.select_option
+        data:
+          option: BUDDY
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: lomi
+      sequence:
+      - action: select.select_option
+        data:
+          option: LOMI
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: zorp
+      sequence:
+      - action: select.select_option
+        data:
+          option: ZORP
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+  mode: single
+- id: '1755332428238'
+  alias: Siren - Auto Off
+  description: Auto turn off siren after 20 seconds
+  triggers:
+  - trigger: state
+    entity_id:
+    - siren.small_siren
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 20
+  conditions: []
+  actions:
+  - action: siren.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: siren.small_siren
+  mode: single
+- id: '1755332428239'
+  alias: Fan - Auto Off
+  description: Auto turn off fan after 1 minute
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.fan_switch
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.fan_switch
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.fan_cooldown
+  mode: single
+- id: '1755332428240'
+  alias: Strobe - Auto Off
+  description: Auto turn off strobe after 30 seconds
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.strobe_switch
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.strobe_switch
+  mode: single
+- id: '1755332428241'
+  alias: Blacklight - Auto Off
+  description: Auto turn off blacklight after 30 seconds
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.blacklight_switch
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.blacklight_switch
+  mode: single
+- id: '1755332428242'
+  alias: Fan Cooldown Clear
+  description: Clear fan cooldown after 1 hour
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.fan_cooldown
+    to: 'on'
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.fan_cooldown
+  mode: single
+- id: '1755333596935'
+  alias: Health - Lights Red
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.backend_health_check
+    to: unavailable
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+  - trigger: state
+    entity_id:
+    - sensor.backend_health_check
+    to: unknown
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data:
+      rgb_color:
+      - 99
+      - 0
+      - 0
+      flash: long
+    target:
+      entity_id: light.cube_voice_ring
+  - action: light.turn_on
+    metadata: {}
+    data:
+      rgb_color:
+      - 86
+      - 0
+      - 0
+      effect: Breathe
+    target:
+      entity_id: light.cube_light_top
+  mode: single
+- id: '1755333757049'
+  alias: Health Healthy
+  description: Health Healthy
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.backend_health_check
+    to: healthy
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+    from: unavailable
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data:
+      rgb_color:
+      - 0
+      - 200
+      - 0
+      flash: long
+    target:
+      entity_id: light.cube_voice_ring
+  - action: light.turn_on
+    metadata: {}
+    data:
+      effect: twinkle
+    target:
+      entity_id: light.cube_light_top
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - action: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 100
+      rgb_color:
+      - 116
+      - 0
+      - 100
+    target:
+      entity_id: light.cube_light_top
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - action: light.turn_on
+    metadata: {}
+    data:
+      effect: none
+    target:
+      entity_id:
+      - light.cube_inner
+      - light.cube_light_top
+  mode: single
+- id: cycle_persona_automation
+  alias: Current Persona GLITCH
+  description: hange current persona
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.current_persona
+  conditions: []
+  actions:
+  - action: siren.turn_on
+    target:
+      entity_id: siren.small_siren
+    data: {}
+  - action: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 100
+      effect: Acid
+    target:
+      entity_id: light.cube_light_top
+  - action: assist_satellite.announce
+    metadata: {}
+    data:
+      message: TIME FOR A GLITCH TIME FOR A GLITCH IT'S TIME FOR A GLITCH
+      preannounce: true
+    target:
+      entity_id: assist_satellite.square_voice
+  - action: music_assistant.play_media
+    metadata: {}
+    data:
+      media_type: track
+      media_id: glitch cube theme song!
+      enqueue: play
+    target:
+      entity_id: media_player.cube_jukebox
+  mode: single
+- id: motion_auto_reset
+  alias: Motion Auto Reset
+  description: Automatically reset motion detection after 30 seconds
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.motion_detected
+    to: 'on'
+    for:
+      seconds: 30
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.motion_detected
+  mode: restart
+- id: persona_change_flash
+  alias: Persona Change Flash
+  description: Flash all lights when persona changes
+  triggers:
+  - trigger: state
+    entity_id: input_select.current_persona
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.from_state.state != trigger.to_state.state }}'
+  actions:
+  - action: scene.create
+    data:
+      scene_id: persona_flash_restore
+      snapshot_entities:
+      - light.cube_light
+      - light.cube_voice_ring
+      - light.cart_light
+  - action: light.turn_on
+    target:
+      entity_id:
+      - light.cube_light_top
+    data:
+      flash: short
+      brightness_pct: 100
+      effect: ACID
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - action: scene.turn_on
+    target:
+      entity_id: scene.persona_flash_restore
+    data: {}
+  - action: music_assistant.play_media
+    metadata: {}
+    data:
+      media_id: glitchcube theme
+      media_type: track
+      enqueue: play
+    target:
+      entity_id:
+      - media_player.cube_jukebox
+  mode: restart
+- id: low_battery_alert
+  alias: Low Battery Alert
+  description: Alert when low battery is detected
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.low_battery
+    to: 'on'
+  conditions: []
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_voice_ring
+    data:
+      rgb_color:
+      - 255
+      - 0
+      - 0
+      flash: long
+  - action: persistent_notification.create
+    data:
+      title: Low Battery Warning
+      message: System battery is low. Consider finding power.
+      notification_id: low_battery_alert
+  mode: single
+- id: cube_busy_visual
+  alias: Cube Busy Visual
+  description: Show visual indicator when cube is busy
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.cube_busy
+    to: 'on'
+  - trigger: state
+    entity_id: input_boolean.cube_busy
+    to: 'off'
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.cube_busy
+        state: 'on'
+      sequence:
+      - action: light.turn_on
+        data:
+          effect: Happy Blinker
+          brightness_pct: 50
+        target:
+          entity_id:
+          - light.cube_light_top
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.cube_busy
+        state: 'off'
+      sequence:
+      - action: light.turn_on
+        data:
+          effect: '{{ state_attr("light.cube_light_top", "effect_list") | random }}'
+        target:
+          entity_id: light.cube_light_top
+  mode: restart
+- id: awtrix_persona_change
+  alias: AWTRIX Persona Display
+  description: Show persona change on AWTRIX display
+  triggers:
+  - trigger: state
+    entity_id: input_select.current_persona
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: awtrix/custom/persona
+      payload: "{\n  \"text\": \"{{ states('input_select.current_persona').upper()
+        }}\",\n  \"icon\": {% if states('input_select.current_persona') == 'buddy'
+        %}2022{% elif states('input_select.current_persona') == 'jax' %}7956{% elif
+        states('input_select.current_persona') == 'lomi' %}7919{% elif states('input_select.current_persona')
+        == 'zorp' %}7982{% else %}7786{% endif %},\n  \"color\": {% if states('input_select.current_persona')
+        == 'buddy' %}[0, 200, 255]{% elif states('input_select.current_persona') ==
+        'jax' %}[255, 100, 0]{% elif states('input_select.current_persona') == 'lomi'
+        %}[255, 0, 200]{% elif states('input_select.current_persona') == 'zorp' %}[100,
+        255, 0]{% else %}[255, 255, 255]{% endif %},\n  \"duration\": 8\n}\n"
+  mode: single
+- id: awtrix_battery_alert
+  alias: AWTRIX Battery Alert
+  description: Show battery status on AWTRIX
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.low_battery
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: awtrix/custom/battery
+      payload: "{\n  \"text\": \"{% if states('input_boolean.low_battery') == 'on'
+        %}LOW BAT{% else %}BAT OK{% endif %}\",\n  \"icon\": {% if states('input_boolean.low_battery')
+        == 'on' %}184{% else %}183{% endif %},\n  \"color\": {% if states('input_boolean.low_battery')
+        == 'on' %}[255, 0, 0]{% else %}[0, 255, 0]{% endif %},\n  \"effect\": \"{%
+        if states('input_boolean.low_battery') == 'on' %}BlinkyRainbow{% endif %}\",\n
+        \ \"duration\": 10\n}\n"
+  mode: single
+- id: awtrix_motion_alert
+  alias: AWTRIX Motion Alert
+  description: Show motion detection on AWTRIX
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.motion_detected
+    to: 'on'
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: awtrix/custom/motion
+      payload: "{\n  \"text\": \"MOTION\",\n  \"icon\": 7876,\n  \"color\": [255,
+        165, 0],\n  \"effect\": \"ColorWipe\",\n  \"duration\": 5\n}\n"
+  mode: single
+- id: awtrix_health_status
+  alias: AWTRIX Health Status
+  description: Show system health on AWTRIX
+  triggers:
+  - trigger: state
+    entity_id: sensor.backend_health_check
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: awtrix/custom/health
+      payload: "{\n  \"text\": \"{{ trigger.to_state.state.upper() }}\",\n  \"icon\":
+        {% if trigger.to_state.state == 'healthy' %}4687{% else %}4688{% endif %},\n
+        \ \"color\": {% if trigger.to_state.state == 'healthy' %}[0, 255, 0]{% elif
+        trigger.to_state.state == 'degraded' %}[255, 255, 0]{% else %}[255, 0, 0]{%
+        endif %},\n  \"duration\": 8\n}\n"
+  mode: single
+- id: awtrix_conversation_counter
+  alias: AWTRIX Conversation Update
+  description: Show conversation count on AWTRIX
+  triggers:
+  - trigger: state
+    entity_id: counter.daily_conversations
+  conditions: []
+  actions:
+  - service: mqtt.publish
+    data:
+      topic: awtrix/custom/conversations
+      payload: "{\n  \"text\": \"CHATS {{ states('counter.daily_conversations') }}\",\n
+        \ \"icon\": 7929,\n  \"color\": [0, 255, 200],\n  \"duration\": 6\n}\n"
+  mode: single
+- id: '1755536429534'
+  alias: Speak Weather
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.world_state
+    attribute: weather_updated_at
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 1
+  conditions:
+  - condition: state
+    entity_id: media_player.square_voice
+    state: idle
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  actions:
+  - action: tts.cloud_say
+    metadata: {}
+    data:
+      cache: false
+      entity_id: media_player.square_voice
+      message: '  {{ state_attr(''sensor.world_state'',''weather_conditions'') }} '
+      language: ga-IE
+  mode: single
+- id: '1755758825522'
+  alias: LOW BATTERY ON
+  description: 'Trigger low battery mode when cube battery drops below 12.2V'
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.cube_battery_volts
+    below: 12.2
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.low_battery_mode
+  mode: single
+- id: '1755760732184'
+  alias: 'Awtrix: Now Playing'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - media_player.cube_jukebox
+    to: playing
+  conditions: []
+  actions:
+  - action: awtrix.notification
+    data:
+      device: ac07cb1bceee39dce3af75aa6c6d784c
+      text: 'Now playing: {{ state_attr(''media_player.cube_jukebox'', ''media_title'')
+        }} -- {{ state_attr(''media_player.cube_jukebox'', ''media_artist'') }}'
+      duration: 30
+      icon: '39264'
+      rainbow: false
+      pushIcon: '1'
+      repeat: -1
+      wakeup: true
+  mode: single

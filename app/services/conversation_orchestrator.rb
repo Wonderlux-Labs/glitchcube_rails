@@ -710,37 +710,37 @@ class ConversationOrchestrator
 
   def execute_direct_tools(direct_tool_calls)
     results = {}
-    
+
     direct_tool_calls.each do |tool_call|
       tool_name = tool_call["tool_name"]
       parameters = tool_call["parameters"] || {}
-      
+
       begin
         # Convert string keys to symbols for Ruby method calls
         symbol_params = parameters.transform_keys(&:to_sym)
-        
+
         # Execute the tool using the registry
         result = Tools::Registry.execute_tool(tool_name, **symbol_params)
         results[tool_name] = result
-        
+
         Rails.logger.info "🔧 Direct tool executed: #{tool_name} - #{result[:success] ? 'SUCCESS' : 'FAILED'}"
       rescue => e
         Rails.logger.error "❌ Direct tool execution failed: #{tool_name} - #{e.message}"
         results[tool_name] = { success: false, error: e.message, tool: tool_name }
       end
     end
-    
+
     results
   end
 
   def execute_memory_searches(memory_searches)
     results = {}
-    
+
     memory_searches.each_with_index do |search_request, index|
       query = search_request["query"]
       type = search_request["type"] || "all"
       limit = search_request["limit"] || 3
-      
+
       begin
         # Use the RAG search tool for consistency
         search_result = Tools::Registry.execute_tool(
@@ -749,10 +749,10 @@ class ConversationOrchestrator
           type: type,
           limit: limit
         )
-        
+
         search_key = "memory_search_#{index + 1}"
         results[search_key] = search_result
-        
+
         Rails.logger.info "🧠 Memory search executed: #{query} (#{type}) - found #{search_result[:total_results] || 0} results"
       rescue => e
         Rails.logger.error "❌ Memory search failed: #{query} - #{e.message}"
@@ -760,7 +760,7 @@ class ConversationOrchestrator
         results[search_key] = { success: false, error: e.message, query: query }
       end
     end
-    
+
     results
   end
 end

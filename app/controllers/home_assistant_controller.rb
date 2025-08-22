@@ -57,5 +57,4 @@ class HomeAssistantController < ApplicationController
       render json: { error: "Unauthorized" }, status: 401
     end
   end
-
 end

@@ -1,0 +1,403 @@
+================================================================================
+ENHANCED MODEL TEST HARNESS
+Started: 2025-08-21 18:45:42 -0700
+Two-tier mode: true
+Narrative models: openai/gpt-4o-mini, anthropic/claude-3.5-haiku
+Tool models: openai/gpt-4o-mini, anthropic/claude-3.5-haiku
+Test scenarios: 5
+================================================================================
+
+Starting 20 total tests
+-----------------------
+
+------------------------------------------------------------
+TEST 1/20: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Action + Query test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 2/20: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Query + Action test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 3/20: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Pure conversation test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 4/20: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Multiple actions test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 5/20: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o-mini
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: openai/gpt-4o-mini
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 6/20: Action + Query test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Action + Query test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 7/20: Query + Action test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Query + Action test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 8/20: Pure conversation test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Pure conversation test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 9/20: Multiple actions test
+Type: SINGLE
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Multiple actions test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 10/20: Multi-turn with context
+Type: MULTI
+Narrative: openai/gpt-4o-mini
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: openai/gpt-4o-mini
+  Tool Model: anthropic/claude-3.5-haiku
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 11/20: Action + Query test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Action + Query test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 12/20: Query + Action test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Query + Action test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 13/20: Pure conversation test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Pure conversation test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 14/20: Multiple actions test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: openai/gpt-4o-mini
+
+ERROR:
+  Test: Multiple actions test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 15/20: Multi-turn with context
+Type: MULTI
+Narrative: anthropic/claude-3.5-haiku
+Tool: openai/gpt-4o-mini
+------------------------------------------------------------
+Testing: Multi-turn with context
+  Turns: 3
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: openai/gpt-4o-mini
+  Turn 1: Turn on the lights in the kitchen
+
+ERROR:
+  Test: Multi-turn with context
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 16/20: Action + Query test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Action + Query test
+  Prompt: Turn on the living room lights and tell me the current temperature
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Action + Query test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 17/20: Query + Action test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Query + Action test
+  Prompt: What's the weather like? Also change the music to something chill
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Query + Action test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 18/20: Pure conversation test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Pure conversation test
+  Prompt: Hello! How are you doing today?
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: anthropic/claude-3.5-haiku
+
+ERROR:
+  Test: Pure conversation test
+  Message: unknown keyword: :additional_properties
+  Backtrace:
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:196:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:46:in `block (3 levels) in schema'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `instance_eval'
+    /Users/estiens/.rbenv/versions/3.3.9/lib/ruby/gems/3.3.0/bundler/gems/open_router-8cb154dbdc8b/lib/open_router/schema.rb:273:in `object'
+    /Users/estiens/code/glitchcube-main/glitchcube_rails/app/services/schemas/narrative_response_schema.rb:41:in `block (2 levels) in schema'
+
+------------------------------------------------------------
+TEST 19/20: Multiple actions test
+Type: SINGLE
+Narrative: anthropic/claude-3.5-haiku
+Tool: anthropic/claude-3.5-haiku
+------------------------------------------------------------
+Testing: Multiple actions test
+  Prompt: Set all lights to 50% brightness and play jazz music
+  Narrative Model: anthropic/claude-3.5-haiku
+  Tool Model: anthropic/claude-3.5-haiku

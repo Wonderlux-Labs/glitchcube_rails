@@ -54,7 +54,7 @@ class Event < ApplicationRecord
 
   # Search content includes title, description, and location
   def vectorsearch_fields_content
-    content_parts = [title, description]
+    content_parts = [ title, description ]
     content_parts << "at #{location}" if location.present?
     content_parts << "on #{formatted_time}" if event_time.present?
     content_parts.join(" ")
