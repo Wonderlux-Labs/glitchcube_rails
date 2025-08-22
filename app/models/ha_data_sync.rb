@@ -2,28 +2,28 @@
 
 class HaDataSync
   include ActiveModel::Model
-  
+
   # Core System Health & Status
   def self.update_backend_health(status, startup_time = nil)
     # Replaces: config/application.rb:52
     # Target: input_text.backend_health_status
     call_ha_service(
       "input_text",
-      "set_value", 
+      "set_value",
       "input_text.backend_health_status",
       { value: "#{status} at #{startup_time || Time.current}" }
     )
     Rails.logger.info "🏥 Backend health updated: #{status}"
   end
-  
+
   def self.update_deployment_status(current_commit, remote_commit, update_pending)
-    # Future sensor: sensor.glitchcube_deployment_status  
+    # Future sensor: sensor.glitchcube_deployment_status
     # Attributes: current_commit, remote_commit, needs_update
     call_ha_service(
-      "sensor", 
+      "sensor",
       "set_state",
       "sensor.glitchcube_deployment_status",
-      { 
+      {
         state: update_pending ? "update_available" : "up_to_date",
         attributes: {
           current_commit: current_commit,
@@ -34,7 +34,7 @@ class HaDataSync
     )
     Rails.logger.info "🚀 Deployment status updated"
   end
-  
+
   # Conversation & Memory System
   def self.update_conversation_status(session_id, status, message_count, tools_used = [])
     # New sensor: sensor.glitchcube_conversation_status
@@ -55,13 +55,13 @@ class HaDataSync
     )
     Rails.logger.info "💬 Conversation status updated: #{session_id} - #{status}"
   end
-  
+
   def self.update_memory_stats(total_memories, recent_extractions, last_extraction_time)
     # New sensor: sensor.glitchcube_memory_stats
     # Attributes: total_count, recent_extractions, last_extraction
     call_ha_service(
       "sensor",
-      "set_state", 
+      "set_state",
       "sensor.glitchcube_memory_stats",
       {
         state: total_memories,
@@ -74,7 +74,7 @@ class HaDataSync
     )
     Rails.logger.info "🧠 Memory stats updated: #{total_memories} total"
   end
-  
+
   # World State & Context (currently in world_state_updaters/)
   def self.update_world_state(weather_conditions, location_summary, upcoming_events)
     # Replaces: app/services/world_state_updaters/weather_forecast_summarizer_service.rb:208
@@ -95,7 +95,7 @@ class HaDataSync
     )
     Rails.logger.info "🌍 World state updated"
   end
-  
+
   def self.update_glitchcube_context(time_of_day, location, weather_summary, current_needs = nil)
     # Enhances: data/homeassistant/template/glitchcube_context.yaml
     # Target: sensor.glitchcube_context
@@ -116,15 +116,15 @@ class HaDataSync
     )
     Rails.logger.info "🎯 Context updated: #{time_of_day} at #{location}"
   end
-  
-  # Goals & Persona Management  
+
+  # Goals & Persona Management
   def self.update_current_goal(goal_text, importance, deadline = nil, progress = nil)
     # Replaces: app/services/goal_service.rb:227,255
     # Target: sensor.glitchcube_current_goal
     call_ha_service(
       "sensor",
       "set_state",
-      "sensor.glitchcube_current_goal", 
+      "sensor.glitchcube_current_goal",
       {
         state: goal_text.truncate(50),
         attributes: {
@@ -138,7 +138,7 @@ class HaDataSync
     )
     Rails.logger.info "🎯 Goal updated: #{goal_text.truncate(50)}"
   end
-  
+
   def self.update_persona(persona_name, capabilities = [], restrictions = [])
     # Replaces: app/models/cube_persona.rb:22
     # Target: input_select.current_persona + sensor.persona_details
@@ -148,10 +148,10 @@ class HaDataSync
       "input_select.current_persona",
       { option: persona_name }
     )
-    
+
     call_ha_service(
       "sensor",
-      "set_state", 
+      "set_state",
       "sensor.persona_details",
       {
         state: persona_name,
@@ -164,7 +164,7 @@ class HaDataSync
     )
     Rails.logger.info "🎭 Persona updated: #{persona_name}"
   end
-  
+
   # GPS & Location (currently in gps_controller/services)
   def self.update_location(lat, lng, location_name, accuracy = nil)
     # New sensor: sensor.glitchcube_location
@@ -186,12 +186,12 @@ class HaDataSync
     )
     Rails.logger.info "📍 Location updated: #{location_name}"
   end
-  
+
   def self.update_proximity(nearby_landmarks, distance_to_landmarks = {})
     # New sensor: sensor.glitchcube_proximity
     # Attributes: nearby_landmarks, distances, closest_landmark
     closest = distance_to_landmarks.min_by { |_, distance| distance }
-    
+
     call_ha_service(
       "sensor",
       "set_state",
@@ -209,7 +209,7 @@ class HaDataSync
     )
     Rails.logger.info "🎯 Proximity updated: #{nearby_landmarks.count} landmarks"
   end
-  
+
   # Tool & Action Tracking
   def self.update_last_tool_execution(tool_name, success, execution_time, parameters = {})
     # New sensor: sensor.glitchcube_last_tool
@@ -231,13 +231,13 @@ class HaDataSync
     )
     Rails.logger.info "🔧 Tool execution logged: #{tool_name} - #{success ? 'SUCCESS' : 'FAILED'}"
   end
-  
+
   # Health & Monitoring
   def self.update_api_health(endpoint, response_time, status_code, last_success)
     # Enhances: data/homeassistant/sensors/api_health.yaml
     # Target: sensor.glitchcube_api_health
     status = status_code.to_i.between?(200, 299) ? "healthy" : "error"
-    
+
     call_ha_service(
       "sensor",
       "set_state",
@@ -265,12 +265,12 @@ class HaDataSync
       "input_text.glitchcube_breaking_news",
       { value: message }
     )
-    
+
     # If expiration is set, schedule a clear job
     if expires_at
       ClearBreakingNewsJob.set(wait_until: expires_at).perform_later
     end
-    
+
     Rails.logger.info "📢 Breaking news updated: #{message.truncate(50)}"
   end
 
@@ -278,7 +278,7 @@ class HaDataSync
     # Try cache first for speed
     cached = Rails.cache.read("breaking_news")
     return cached if cached.present?
-    
+
     # Fall back to Home Assistant
     news_sensor = HomeAssistantService.entity("input_text.glitchcube_breaking_news")
     news_sensor&.dig("state")&.strip
@@ -286,7 +286,7 @@ class HaDataSync
 
   def self.clear_breaking_news
     call_ha_service(
-      "input_text", 
+      "input_text",
       "set_value",
       "input_text.glitchcube_breaking_news",
       { value: "[]" }
@@ -299,7 +299,7 @@ class HaDataSync
     call_ha_service(
       "sensor",
       "set_state",
-      "sensor.glitchcube_summary_stats", 
+      "sensor.glitchcube_summary_stats",
       {
         state: total_summaries,
         attributes: {
@@ -313,8 +313,55 @@ class HaDataSync
     Rails.logger.info "📊 Summary stats updated: #{total_summaries} summaries"
   end
 
+  # Mode Management
+  def self.update_cube_mode(mode, trigger_source = nil)
+    # Get current mode before updating
+    previous_mode = get_current_mode
+
+    # Update the mode in HA
+    call_ha_service(
+      "input_select",
+      "select_option",
+      "input_select.cube_mode",
+      { option: mode }
+    )
+
+    # Track mode change metadata
+    call_ha_service(
+      "sensor",
+      "set_state",
+      "sensor.cube_mode_info",
+      {
+        state: mode,
+        attributes: {
+          mode: mode,
+          changed_by: trigger_source,
+          changed_at: Time.current.iso8601,
+          previous_mode: previous_mode
+        }
+      }
+    )
+    Rails.logger.info "🎭 Cube mode changed to: #{mode} (via #{trigger_source})"
+  end
+
+  def self.get_current_mode
+    HomeAssistantService.entity("input_select.cube_mode")&.dig("state") || "conversation"
+  end
+
+  def self.low_power_mode?
+    get_current_mode == "low_power"
+  end
+
+  def self.enter_low_power_mode(trigger_source = "battery_low")
+    update_cube_mode("low_power", trigger_source)
+  end
+
+  def self.exit_low_power_mode(trigger_source = "battery_restored")
+    update_cube_mode("conversation", trigger_source)
+  end
+
   private
-  
+
   def self.call_ha_service(domain, service, entity_id, attributes = {})
     HomeAssistantService.call_service(domain, service, { entity_id: entity_id }.merge(attributes))
   rescue => e

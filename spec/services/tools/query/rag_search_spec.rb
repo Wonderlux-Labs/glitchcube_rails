@@ -6,10 +6,10 @@ RSpec.describe Tools::Query::RagSearch do
   describe ".definition" do
     it "returns proper tool definition" do
       definition = described_class.definition
-      
+
       expect(definition[:type]).to eq("function")
       expect(definition[:function][:name]).to eq("rag_search")
-      expect(definition[:function][:parameters][:required]).to eq(["query"])
+      expect(definition[:function][:parameters][:required]).to eq([ "query" ])
     end
   end
 
@@ -32,7 +32,7 @@ RSpec.describe Tools::Query::RagSearch do
     context "with empty query" do
       it "returns error response" do
         result = tool.call(query: "")
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("empty")
       end
@@ -45,15 +45,15 @@ RSpec.describe Tools::Query::RagSearch do
 
       before do
         # Mock the similarity_search methods
-        allow(Summary).to receive(:similarity_search).and_return([summary])
-        allow(Event).to receive(:similarity_search).and_return([event])
-        allow(Person).to receive(:similarity_search).and_return([person])
+        allow(Summary).to receive(:similarity_search).and_return([ summary ])
+        allow(Event).to receive(:similarity_search).and_return([ event ])
+        allow(Person).to receive(:similarity_search).and_return([ person ])
       end
 
       context "searching all types" do
         it "searches summaries, events, and people" do
           result = tool.call(query: "fire spinning")
-          
+
           expect(result[:success]).to be true
           expect(result[:results][:summaries]).to be_present
           expect(result[:results][:events]).to be_present
@@ -62,15 +62,15 @@ RSpec.describe Tools::Query::RagSearch do
 
         it "formats results correctly" do
           result = tool.call(query: "fire spinning")
-          
+
           summary_result = result[:results][:summaries].first
           expect(summary_result[:type]).to eq("summary")
           expect(summary_result[:text]).to eq(summary.summary_text)
-          
+
           event_result = result[:results][:events].first
           expect(event_result[:type]).to eq("event")
           expect(event_result[:title]).to eq(event.title)
-          
+
           person_result = result[:results][:people].first
           expect(person_result[:type]).to eq("person")
           expect(person_result[:name]).to eq(person.name)
@@ -80,7 +80,7 @@ RSpec.describe Tools::Query::RagSearch do
       context "searching specific type" do
         it "searches only summaries" do
           result = tool.call(query: "fire spinning", type: "summaries")
-          
+
           expect(result[:results][:summaries]).to be_present
           expect(result[:results][:events]).to be_empty
           expect(result[:results][:people]).to be_empty
@@ -88,7 +88,7 @@ RSpec.describe Tools::Query::RagSearch do
 
         it "searches only events" do
           result = tool.call(query: "fire spinning", type: "events")
-          
+
           expect(result[:results][:summaries]).to be_empty
           expect(result[:results][:events]).to be_present
           expect(result[:results][:people]).to be_empty
@@ -96,7 +96,7 @@ RSpec.describe Tools::Query::RagSearch do
 
         it "searches only people" do
           result = tool.call(query: "fire spinning", type: "people")
-          
+
           expect(result[:results][:summaries]).to be_empty
           expect(result[:results][:events]).to be_empty
           expect(result[:results][:people]).to be_present
@@ -106,7 +106,7 @@ RSpec.describe Tools::Query::RagSearch do
       context "with limit parameter" do
         it "respects limit parameter" do
           result = tool.call(query: "fire spinning", limit: 2)
-          
+
           expect(Summary).to have_received(:similarity_search).with("fire spinning", limit: 1)
           expect(Event).to have_received(:similarity_search).with("fire spinning", limit: 1)
           expect(Person).to have_received(:similarity_search).with("fire spinning", limit: 1)
@@ -115,7 +115,7 @@ RSpec.describe Tools::Query::RagSearch do
         it "clamps limit between 1 and 10" do
           tool.call(query: "test", limit: 0)
           expect(Summary).to have_received(:similarity_search).with("test", limit: 1)
-          
+
           tool.call(query: "test", limit: 20)
           expect(Summary).to have_received(:similarity_search).with("test", limit: 1)
         end
@@ -130,7 +130,7 @@ RSpec.describe Tools::Query::RagSearch do
 
         it "returns no results message" do
           result = tool.call(query: "nonexistent")
-          
+
           expect(result[:success]).to be true
           expect(result[:message]).to include("No results found")
           expect(result[:total_results]).to eq(0)
@@ -144,7 +144,7 @@ RSpec.describe Tools::Query::RagSearch do
 
         it "handles errors gracefully" do
           result = tool.call(query: "failing search")
-          
+
           expect(result[:success]).to be false
           expect(result[:error]).to include("Search failed")
         end
@@ -161,13 +161,13 @@ RSpec.describe Tools::Query::RagSearch do
 
     describe "summary formatting" do
       it "includes metadata from summary" do
-        summaries = [summary]
+        summaries = [ summary ]
         results = tool.send(:search_summaries, "test", 5)
-        
+
         # Mock the similarity_search to return our summary
         allow(Summary).to receive(:similarity_search).and_return(summaries)
         results = tool.send(:search_summaries, "test", 5)
-        
+
         result = results.first
         expect(result[:text]).to eq(summary.summary_text)
         expect(result[:message_count]).to eq(5)
@@ -176,12 +176,12 @@ RSpec.describe Tools::Query::RagSearch do
 
     describe "event formatting" do
       it "indicates upcoming vs past events" do
-        allow(Event).to receive(:similarity_search).and_return([upcoming_event, past_event])
+        allow(Event).to receive(:similarity_search).and_return([ upcoming_event, past_event ])
         results = tool.send(:search_events, "test", 5)
-        
+
         upcoming_result = results.find { |r| r[:id] == upcoming_event.id }
         past_result = results.find { |r| r[:id] == past_event.id }
-        
+
         expect(upcoming_result[:upcoming]).to be true
         expect(past_result[:upcoming]).to be false
       end
@@ -189,9 +189,9 @@ RSpec.describe Tools::Query::RagSearch do
 
     describe "person formatting" do
       it "formats last seen date" do
-        allow(Person).to receive(:similarity_search).and_return([person])
+        allow(Person).to receive(:similarity_search).and_return([ person ])
         results = tool.send(:search_people, "test", 5)
-        
+
         result = results.first
         expect(result[:last_seen]).to match(/\d{2}\/\d{2}\/\d{4}/)
         expect(result[:relationship]).to eq("friend")

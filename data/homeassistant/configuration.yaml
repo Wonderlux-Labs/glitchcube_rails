@@ -14,7 +14,8 @@ frontend:
 
 # Enable configuration panel
 config:
-
+automation manual: !include_dir_merge_list automations
+automation ui: !include automations.yaml
 # Lovelace dashboard configuration
 lovelace:
   mode: storage
@@ -84,11 +85,7 @@ system_health:
 # Enable diagnostics
 diagnostics:
 
-# Include separate configuration files
-# UI automations are saved in automations.yaml
-# YAML automations are in packages
-# AWTRIX custom apps are in awtrix_custom_apps.yaml
-automation: !include_dir_merge_list automations/
+
 
 # UI scripts are saved in scripts.yaml
 # YAML scripts are in packages  
@@ -141,6 +138,10 @@ input_boolean:
     name: "Cube Busy"
     icon: mdi:cog-sync
     initial: false
+  low_battery_mode:
+    name: "Low Battery Mode"
+    icon: mdi:battery-alert
+    initial: false
 
 input_text:
   memory_query:
@@ -157,10 +158,24 @@ input_text:
 
   glitchcube_host:
     name: "Glitch Cube Host IP"
-    initial: "100.88.239.104"  # Default fallback IP
+    initial: "192.168.0.56"  # Current IP from git status
     min: 7                   # Minimum length for IP (x.x.x.x)
     max: 15                  # Maximum length for IP (xxx.xxx.xxx.xxx)
     icon: mdi:cube-outline
+    mode: text
+    
+  backend_health_status:
+    name: "Backend Health Status"
+    initial: "unknown"
+    max: 255
+    icon: mdi:heart
+    mode: text
+    
+  glitchcube_breaking_news:
+    name: "Breaking News"
+    initial: "[]"
+    max: 255
+    icon: mdi:newspaper
     mode: text
 
 input_select:
@@ -170,15 +185,26 @@ input_select:
     options:
       - buddy
       - jax
-      - lomi
       - zorp
-      - guide_mode
-      - demo_mode
-      - maintenance_mode
-      - party_mode
-      - chill_mode
-      - explorer_mode
+      - thecube
+      - neon
+      - sparkle
+      - crash
+      - mobius
     initial: buddy
+
+  cube_mode:
+    name: "Cube Operating Mode"
+    icon: mdi:shape-cube
+    options:
+      - conversation  # Normal chat mode
+      - jukebox      # Music-focused, Jax persona
+      - performance  # Extended monologues
+      - guide        # Tour guide for zones
+      - party        # High energy mode
+      - ambient      # Minimal interaction
+      - low_power    # Battery conservation mode
+    initial: conversation
 
 input_number:
   memory_query_limit:

@@ -16,8 +16,13 @@ GPSMap.Markers = {
       return this.cubeMarker;
     }
     
+<<<<<<< Updated upstream
     // Create detailed popup content using landmarks array
     let popupContent = '🎲 Glitch Cube Location<br>';
+=======
+    // Create detailed popup content using same data as top info bar
+    let popupContent = '🎲 Gl1tchCuBe 🎲 <br>';
+>>>>>>> Stashed changes
     
     if (typeof locationData === 'object' && locationData !== null) {
       // Get nearest landmark from landmarks array

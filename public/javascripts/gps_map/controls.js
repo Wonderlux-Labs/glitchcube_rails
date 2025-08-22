@@ -7,6 +7,7 @@ GPSMap.Controls = {
   showLandmarks: true, // Everything loaded by default except toilets
   showToilets: false,
   
+  
   // Initialize control handlers
   init: function() {
     this.initRouteToggle();

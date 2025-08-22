@@ -209,7 +209,7 @@ class WorldStateUpdaters::ConversationSummarizerService
       4. **people** - People mentioned in the conversation with their relationship/context
       5. **events** - Events discussed (past or future) with time/location when available
       6. **topics** - Main topics or themes discussed
-      
+
       Return JSON format:
       {
         "general_mood": "excited and helpful",
@@ -347,7 +347,7 @@ class WorldStateUpdaters::ConversationSummarizerService
     return [] unless summary_data["people"]&.any?
 
     extracted_people = []
-    
+
     summary_data["people"].each do |person_data|
       next unless person_data["name"].present?
 
@@ -383,7 +383,7 @@ class WorldStateUpdaters::ConversationSummarizerService
       begin
         # Parse event time or use default
         event_time = parse_event_time(event_data["time"], default_time)
-        
+
         event = Event.create!(
           title: event_data["title"],
           description: event_data["description"] || "Event mentioned in conversation",
@@ -456,8 +456,8 @@ class WorldStateUpdaters::ConversationSummarizerService
 
     # Extract and store people
     extracted_people = extract_people_from_summary(summary_data, session_ids)
-    
-    # Extract and store events  
+
+    # Extract and store events
     extracted_events = extract_events_from_summary(summary_data, session_ids, start_time)
 
     # Store in Summary model with hourly type

@@ -20,7 +20,7 @@ class Schemas::NarrativeResponseSchema
       string :pressing_questions,
              description: "Questions the character has for the user or themselves"
 
-       string :goal_progress,
+      string :goal_progress,
              description: "Progress towards your current goal"
 
       array :tool_intents,
@@ -44,8 +44,7 @@ class Schemas::NarrativeResponseSchema
                  enum: [ "rag_search", "get_light_state", "display_notification" ]
 
           object :parameters,
-                 description: "Tool parameters as key-value pairs",
-                 additional_properties: true
+                 description: "Tool parameters as key-value pairs"
         end
       end
 

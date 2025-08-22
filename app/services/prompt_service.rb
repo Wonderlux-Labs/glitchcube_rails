@@ -359,7 +359,7 @@ class PromptService
 
   def inject_glitchcube_context(base_context, user_message = nil)
     context_parts = []
-    
+
     # Add basic time context from Home Assistant sensor
     begin
       ha_service = HomeAssistantService.new
@@ -393,15 +393,15 @@ class PromptService
     context_parts << "Random Facts: #{facts}" if facts.present?
 
     # Combine all context
-    all_context = [base_context]
+    all_context = [ base_context ]
     all_context.concat(context_parts) if context_parts.any?
-    
+
     all_context.join("\n")
   end
 
   def inject_rag_context(user_message)
     context_parts = []
-    
+
     begin
       # ALWAYS inject upcoming high-priority events (proactive)
       upcoming_context = inject_upcoming_events_context
@@ -437,15 +437,15 @@ class PromptService
     end
 
     return nil if context_parts.empty?
-    
+
     "RELEVANT PAST CONTEXT:\n#{context_parts.join("\n\n")}"
   end
 
   def inject_upcoming_events_context
     return nil unless defined?(Event)
-    
+
     context_parts = []
-    
+
     begin
       # High-priority events in next 48 hours
       high_priority_events = Event.upcoming.high_importance.within_hours(48).limit(3)
@@ -507,7 +507,7 @@ class PromptService
   end
 
   def safety_mode
-    return "" unless HomeAssistantService.entity("input_boolean.low_battery")["state"] == "on"
+    return "" unless HaDataSync.low_power_mode?
 
     safety = "YOU ARE IN SAFETY MODE! YOU MUST FIND SHELTER AND GET SOME POWER"
     safety += "YOUR SYSTEMS ARE DEGRADED. YOUR BATTERY PERCENTAGE IS 21% AND DROPPING"
@@ -522,9 +522,7 @@ class PromptService
 
   def build_goal_context
     goal_parts = []
-    if GoalService.safety_mode_active? || safety_mode
-      goal_parts << safety_mode
-    end
+    goal_parts << safety_mode if safety_mode
     goal_status = GoalService.current_goal_status
     goal_parts << "Current Goal: #{goal_status[:goal_description]}"
 

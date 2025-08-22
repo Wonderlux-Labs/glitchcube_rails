@@ -1,0 +1,151 @@
+# Rails-Managed Sensors
+# These sensors are created and updated by the Rails HaDataSync class
+# They start as dummy sensors and get real data when Rails updates them
+
+# Backend Health Status (input_text managed by Rails)
+- platform: template
+  sensors:
+    backend_health_status:
+      friendly_name: "Backend Health Status"
+      value_template: "{{ states('input_text.backend_health_status') }}"
+      icon_template: >
+        {% if 'healthy' in states('input_text.backend_health_status') %}
+          mdi:heart
+        {% else %}
+          mdi:heart-broken
+        {% endif %}
+
+# Breaking News (input_text managed by Rails)  
+- platform: template
+  sensors:
+    glitchcube_breaking_news:
+      friendly_name: "Breaking News"
+      value_template: "{{ states('input_text.glitchcube_breaking_news') }}"
+      icon_template: mdi:newspaper
+
+# Sensors that Rails will create via REST API calls
+# Initial dummy sensors - Rails will set real state via HomeAssistantService
+- platform: template
+  sensors:
+    glitchcube_conversation_status:
+      friendly_name: "Conversation Status"
+      value_template: "idle"
+      icon_template: mdi:chat
+      attribute_templates:
+        session_id: "none"
+        message_count: 0
+        tools_used: "[]"
+        last_updated: "{{ now().isoformat() }}"
+        
+    glitchcube_memory_stats:
+      friendly_name: "Memory Statistics"
+      value_template: "0"
+      icon_template: mdi:brain
+      attribute_templates:
+        total_count: 0
+        recent_extractions: 0
+        last_extraction: "unknown"
+        
+    glitchcube_context:
+      friendly_name: "Glitch Cube Context"
+      value_template: "active"
+      icon_template: mdi:cube-outline
+      attribute_templates:
+        time_of_day: "{{ now().strftime('%H:%M') }}"
+        current_location: "{{ states('input_text.current_location') }}"
+        weather_summary: "unknown"
+        current_needs: "none"
+        last_updated: "{{ now().isoformat() }}"
+        
+    glitchcube_current_goal:
+      friendly_name: "Current Goal"
+      value_template: "none"
+      icon_template: mdi:target
+      attribute_templates:
+        goal_text: "none"
+        importance: 0
+        deadline: "none"
+        progress: "none"
+        last_updated: "{{ now().isoformat() }}"
+        
+    persona_details:
+      friendly_name: "Persona Details"
+      value_template: "{{ states('input_select.current_persona') }}"
+      icon_template: mdi:account
+      attribute_templates:
+        capabilities: "[]"
+        restrictions: "[]"
+        last_updated: "{{ now().isoformat() }}"
+        
+    glitchcube_location:
+      friendly_name: "Glitch Cube Location"
+      value_template: "{{ states('input_text.current_location') }}"
+      icon_template: mdi:map-marker
+      attribute_templates:
+        latitude: "unknown"
+        longitude: "unknown"
+        location_name: "{{ states('input_text.current_location') }}"
+        accuracy: "unknown"
+        last_updated: "{{ now().isoformat() }}"
+        
+    glitchcube_proximity:
+      friendly_name: "Proximity"
+      value_template: "unknown"
+      icon_template: mdi:map-marker-distance
+      attribute_templates:
+        nearby_landmarks: "[]"
+        distances: "{}"
+        closest_landmark: "unknown"
+        closest_distance: "unknown"
+        last_updated: "{{ now().isoformat() }}"
+        
+    glitchcube_last_tool:
+      friendly_name: "Last Tool Execution"
+      value_template: "none"
+      icon_template: mdi:tools
+      attribute_templates:
+        tool_name: "none"
+        success: "unknown"
+        execution_time: "unknown"
+        parameters: "{}"
+        timestamp: "{{ now().isoformat() }}"
+        
+    glitchcube_api_health:
+      friendly_name: "API Health"
+      value_template: "unknown"
+      icon_template: mdi:api
+      attribute_templates:
+        endpoint: "unknown"
+        response_time: "unknown"
+        status_code: "unknown"
+        last_success: "unknown"
+        last_checked: "{{ now().isoformat() }}"
+        
+    glitchcube_deployment_status:
+      friendly_name: "Deployment Status"
+      value_template: "unknown"
+      icon_template: mdi:rocket
+      attribute_templates:
+        current_commit: "unknown"
+        remote_commit: "unknown"
+        needs_update: false
+        
+    glitchcube_summary_stats:
+      friendly_name: "Summary Statistics"
+      value_template: "0"
+      icon_template: mdi:chart-line
+      attribute_templates:
+        total_summaries: 0
+        people_extracted: 0
+        events_extracted: 0
+        last_updated: "{{ now().isoformat() }}"
+        
+    cube_mode_info:
+      friendly_name: "Cube Mode Info"
+      value_template: "{{ states('input_select.cube_mode') }}"
+      icon_template: mdi:shape-cube
+      attribute_templates:
+        mode: "{{ states('input_select.cube_mode') }}"
+        changed_by: "unknown"
+        changed_at: "{{ now().isoformat() }}"
+        previous_mode: "unknown"

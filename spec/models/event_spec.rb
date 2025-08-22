@@ -81,7 +81,7 @@ RSpec.describe Event, type: :model do
     it "handles JSON metadata" do
       event.metadata_json = { "organizer" => "Burning Man", "capacity" => 100 }
       event.save!
-      
+
       expect(event.metadata_json["organizer"]).to eq("Burning Man")
       expect(event.metadata_json["capacity"]).to eq(100)
     end
@@ -166,7 +166,7 @@ RSpec.describe Event, type: :model do
 
   describe "vectorsearch integration" do
     let(:event) do
-      create(:event, 
+      create(:event,
              title: "Temple Burn",
              description: "Sacred fire ceremony at the Temple",
              location: "Temple",

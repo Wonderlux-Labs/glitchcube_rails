@@ -10,6 +10,29 @@ class GoalService
     GOAL_TIME_LIMIT_KEY = "current_goal_max_time_limit"
     LAST_CATEGORY_KEY = "last_goal_category"
 
+    # Check if safety mode is currently active
+    def safety_mode_active?
+      ha_service = HomeAssistantService.new
+
+      # Check explicit safety mode toggle
+      safety_mode = ha_service.entity("input_boolean.safety_mode")
+      return true if safety_mode&.dig("state") == "on"
+
+      # Check battery level for critical status
+      battery_level_critical?
+    rescue StandardError => e
+      Rails.logger.error "Failed to check safety mode: #{e.message}"
+      false
+    end
+
+    # Check if battery level is critical
+    def battery_level_critical?
+      HaDataSync.low_power_mode?
+    rescue StandardError => e
+      Rails.logger.error "Failed to check battery level: #{e.message}"
+      false
+    end
+
     # Load all goals from YAML
     def load_goals
       return {} unless File.exist?(GOALS_FILE)
@@ -29,8 +52,18 @@ class GoalService
       # Get last category to avoid repeating
       last_category = Rails.cache.read(LAST_CATEGORY_KEY)
 
-      # Get available categories excluding the last one used
-      available_categories = goals_data.keys
+      # Determine which categories are appropriate based on safety mode
+      if safety_mode_active?
+        # In safety mode, prioritize safety goals
+        available_categories = goals_data.keys.select { |key| key.include?("safety") }
+        available_categories = goals_data.keys if available_categories.empty? # Fallback
+      else
+        # Normal mode - prefer non-safety goals
+        available_categories = goals_data.keys.reject { |key| key.include?("safety") }
+        available_categories = goals_data.keys if available_categories.empty? # Fallback
+      end
+
+      # Exclude the last category used if we have multiple options
       available_categories = available_categories.reject { |cat| cat == last_category } if last_category && available_categories.size > 1
 
       # Select random category from available ones

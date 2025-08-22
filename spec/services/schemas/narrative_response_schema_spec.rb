@@ -88,7 +88,7 @@ RSpec.describe Schemas::NarrativeResponseSchema do
         direct_tool_calls.each do |tool_call|
           expect(tool_call).to have_key("tool_name")
           expect(tool_call).to have_key("parameters")
-          expect(["rag_search", "get_light_state", "display_notification"]).to include(tool_call["tool_name"])
+          expect([ "rag_search", "get_light_state", "display_notification" ]).to include(tool_call["tool_name"])
         end
       end
 
@@ -98,7 +98,7 @@ RSpec.describe Schemas::NarrativeResponseSchema do
 
         search_memories.each do |search|
           expect(search).to have_key("query")
-          expect(search["type"]).to be_in(["summaries", "events", "people", "all"]) if search["type"]
+          expect(search["type"]).to be_in([ "summaries", "events", "people", "all" ]) if search["type"]
           expect(search["limit"]).to be_between(1, 10) if search["limit"]
         end
       end

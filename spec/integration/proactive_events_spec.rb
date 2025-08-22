@@ -35,7 +35,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
 
         it "injects high-priority events regardless of user query" do
           context = prompt_service.send(:inject_upcoming_events_context)
-          
+
           expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
           expect(context).to include("Temple Burn")
           expect(context).not_to include("Art Walk")  # Only importance >= 7
@@ -43,7 +43,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
 
         it "formats event context properly" do
           context = prompt_service.send(:inject_upcoming_events_context)
-          
+
           expect(context).to include("Sacred ceremony at the Temple")
           expect(context).to match(/upcoming.*\d{2}\/\d{2} at \d{2}:\d{2} [AP]M/)
         end
@@ -72,7 +72,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
           # Mock current location as Black Rock City
           ha_service = double("HomeAssistantService")
           allow(HomeAssistantService).to receive(:new).and_return(ha_service)
-          
+
           context_sensor = {
             "attributes" => {
               "current_location" => "Black Rock City"
@@ -83,7 +83,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
 
         it "injects nearby events when location is available" do
           context = prompt_service.send(:inject_upcoming_events_context)
-          
+
           expect(context).to include("UPCOMING NEARBY EVENTS")
           expect(context).to include("Camp Party")
           expect(context).not_to include("Reno Event")
@@ -128,14 +128,14 @@ RSpec.describe "Proactive Events Integration", type: :integration do
 
       before do
         # Mock similarity search to return relevant summary
-        allow(Summary).to receive(:similarity_search).and_return([relevant_summary])
+        allow(Summary).to receive(:similarity_search).and_return([ relevant_summary ])
         allow(Event).to receive(:similarity_search).and_return([])
         allow(Person).to receive(:similarity_search).and_return([])
       end
 
       it "includes both proactive events and RAG results" do
         context = prompt_service.send(:inject_rag_context, "What events are coming up?")
-        
+
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Main Event")
         expect(context).to include("Recent relevant conversations")
@@ -145,10 +145,10 @@ RSpec.describe "Proactive Events Integration", type: :integration do
       it "prioritizes proactive events by placing them first" do
         context = prompt_service.send(:inject_rag_context, "Tell me about events")
         lines = context.split("\n")
-        
+
         high_priority_line = lines.find_index { |line| line.include?("HIGH-PRIORITY EVENTS") }
         conversation_line = lines.find_index { |line| line.include?("Recent relevant") }
-        
+
         expect(high_priority_line).to be < conversation_line
       end
     end
@@ -165,7 +165,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
       it "includes proactive events in full prompt context" do
         prompt_data = prompt_service.build
         context = prompt_data[:context]
-        
+
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Emergency Exodus")
         expect(context).to include("30 minutes")
@@ -174,7 +174,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
       it "maintains other context elements alongside proactive events" do
         prompt_data = prompt_service.build
         context = prompt_data[:context]
-        
+
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("VERY IMPORTANT BREAKING NEWS")
         expect(context).to include("Random Facts")
@@ -190,7 +190,7 @@ RSpec.describe "Proactive Events Integration", type: :integration do
 
     it "only includes upcoming high-importance events within time window" do
       high_priority_events = Event.upcoming.high_importance.within_hours(48).limit(3)
-      
+
       expect(high_priority_events).to include(future_high_event)
       expect(high_priority_events).not_to include(past_high_event)        # Past
       expect(high_priority_events).not_to include(future_low_event)       # Low importance
@@ -200,9 +200,9 @@ RSpec.describe "Proactive Events Integration", type: :integration do
     it "respects location filtering for nearby events" do
       camp_event = create(:event, event_time: 2.hours.from_now, location: "Camp Area", importance: 5)
       playa_event = create(:event, event_time: 2.hours.from_now, location: "Deep Playa", importance: 5)
-      
+
       nearby_events = Event.upcoming.by_location("Camp Area").within_hours(24).limit(2)
-      
+
       expect(nearby_events).to include(camp_event)
       expect(nearby_events).not_to include(playa_event)
     end

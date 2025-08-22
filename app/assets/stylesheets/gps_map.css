@@ -389,6 +389,32 @@ body::before {
   border: 1px solid rgba(0, 255, 255, 0.3);
 }
 
+<<<<<<< Updated upstream
+=======
+/* Coordinates Toolbar - Bottom Bar */
+.coordinates-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.85);
+    color: #ff8c42;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    padding: 6px 15px;
+    z-index: 1001;
+    display: flex;
+    gap: 20px;
+}
+
+.coordinates-display {
+    font-size: 20px;
+    color: #888;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* Control Buttons */
+>>>>>>> Stashed changes
 .control-button {
   background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
   color: var(--neon-cyan);

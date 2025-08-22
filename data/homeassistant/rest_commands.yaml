@@ -74,11 +74,11 @@ check_glitchcube_health:
 
 # Proactive behavior commands
 glitchcube_proactive:
-  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/proactive/{{ endpoint }}"
+  url: "http://{{ states('input_text.glitchcube_host') }}:4567/api/v1/proactive/conversation"
   method: POST
   headers:
     Content-Type: application/json
-  payload: '{{ data | to_json }}'
+  payload: '{"trigger": "{{ trigger }}", "context": "{{ context | default("n/a") }}"}'
 
 
 # Cycle through personas
