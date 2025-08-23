@@ -1,0 +1,178 @@
+# Common proactive conversation triggers for Home Assistant
+# Add these to your automations.yaml or in packages/
+
+automation:
+  # Motion detected after period of inactivity
+  - id: cube_proactive_motion_check
+    alias: "Cube: Motion After Quiet Period"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.living_room_motion
+        to: "on"
+    condition:
+      # Only if no conversation in the last 30 minutes
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(states.sensor.cube_last_conversation_time | default(0))) > 1800 }}
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "motion_after_quiet"
+          context: "Motion detected in living room after {{ ((as_timestamp(now()) - as_timestamp(states.sensor.cube_last_conversation_time | default(0))) / 60) | round }} minutes of quiet"
+
+  # Daily check-in when arriving home
+  - id: cube_proactive_arrival_checkin
+    alias: "Cube: Arrival Check-in"
+    trigger:
+      - platform: state
+        entity_id: person.user
+        to: "home"
+    condition:
+      # Only if away for more than 2 hours
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) > 7200 }}
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "arrival_home"
+          context: "User just arrived home after being away for {{ ((as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) / 3600) | round(1) }} hours"
+
+  # Weather alerts for significant changes
+  - id: cube_proactive_weather_alert
+    alias: "Cube: Weather Change Alert"
+    trigger:
+      - platform: state
+        entity_id: weather.home
+        attribute: condition
+    condition:
+      # Only for significant weather changes
+      - condition: template
+        value_template: >
+          {{ trigger.to_state.attributes.condition in ['rainy', 'snowy', 'stormy', 'windy'] and 
+             trigger.from_state.attributes.condition not in ['rainy', 'snowy', 'stormy', 'windy'] }}
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "weather_change"
+          context: "Weather changed from {{ trigger.from_state.attributes.condition }} to {{ trigger.to_state.attributes.condition }}"
+
+  # Evening wind-down suggestion
+  - id: cube_proactive_evening_checkin
+    alias: "Cube: Evening Check-in"
+    trigger:
+      - platform: time
+        at: "21:00:00"
+    condition:
+      - condition: state
+        entity_id: person.user
+        state: "home"
+      # Only if no conversation in the last hour
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(states.sensor.cube_last_conversation_time | default(0))) > 3600 }}
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "evening_checkin"
+          context: "It's evening (9 PM) and user has been home without interaction for {{ ((as_timestamp(now()) - as_timestamp(states.sensor.cube_last_conversation_time | default(0))) / 60) | round }} minutes"
+
+  # Morning energy report
+  - id: cube_proactive_morning_energy
+    alias: "Cube: Morning Energy Report"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    condition:
+      - condition: state
+        entity_id: person.user
+        state: "home"
+      - condition: state
+        entity_id: binary_sensor.workday_sensor
+        state: "on"
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "morning_energy_report"
+          context: "Good morning! It's a workday. Current energy usage: {{ states('sensor.home_energy_consumption') }}kW. Weather: {{ states('weather.home') }}"
+
+  # Device offline alerts
+  - id: cube_proactive_device_offline
+    alias: "Cube: Important Device Offline"
+    trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.internet_connection
+          - binary_sensor.nas_online
+          - binary_sensor.security_system
+        to: "off"
+        for: "00:05:00"
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "device_offline_alert"
+          context: "Important device {{ trigger.entity_id }} has been offline for 5 minutes"
+
+  # Loneliness check for extended isolation
+  - id: cube_proactive_loneliness_check
+    alias: "Cube: Extended Isolation Check"
+    trigger:
+      - platform: time_pattern
+        hours: "/4"  # Every 4 hours
+    condition:
+      - condition: state
+        entity_id: person.user
+        state: "home"
+      # No conversation for more than 4 hours
+      - condition: template
+        value_template: >
+          {{ (as_timestamp(now()) - as_timestamp(states.sensor.cube_last_conversation_time | default(0))) > 14400 }}
+      # Only during reasonable hours (8 AM to 10 PM)
+      - condition: time
+        after: "08:00:00"
+        before: "22:00:00"
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "loneliness_check"
+          context: "User has been home for {{ ((as_timestamp(now()) - as_timestamp(states.sensor.cube_last_conversation_time | default(0))) / 3600) | round(1) }} hours without interaction. Checking in to see how they're doing"
+
+  # High energy usage alert
+  - id: cube_proactive_energy_spike
+    alias: "Cube: High Energy Usage Alert"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.home_energy_consumption
+        above: 5.0  # Adjust threshold as needed
+        for: "00:10:00"
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "high_energy_usage"
+          context: "Energy consumption has been high ({{ states('sensor.home_energy_consumption') }}kW) for 10 minutes. Current time: {{ now().strftime('%H:%M') }}"
+
+  # Security event proactive response
+  - id: cube_proactive_security_event
+    alias: "Cube: Security Event Response"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.front_door
+        to: "on"
+      - platform: state
+        entity_id: binary_sensor.back_door
+        to: "on"
+    condition:
+      # Only when nobody should be home or during night hours
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: person.user
+            state: "not_home"
+          - condition: time
+            after: "23:00:00"
+            before: "06:00:00"
+    action:
+      - service: rest_command.glitchcube_proactive
+        data:
+          trigger: "security_event"
+          context: "{{ trigger.entity_id }} opened at {{ now().strftime('%H:%M') }} when user status is {{ states('person.user') }}"

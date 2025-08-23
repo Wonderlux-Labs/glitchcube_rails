@@ -9,6 +9,6 @@ RSpec.describe Fact, type: :model do
   end
 
   it 'includes vectorsearch functionality' do
-    expect(Fact.ancestors.map(&:to_s)).to include('Vectorsearch')
+    expect(Fact).to respond_to(:similarity_search)
   end
 end

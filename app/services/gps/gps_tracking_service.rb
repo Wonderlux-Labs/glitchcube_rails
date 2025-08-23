@@ -2,37 +2,39 @@
 
 # Simple service to get GPS coordinates from Home Assistant
 # All location context comes from LocationContextService
-module Services
-  module Gps
-    class GPSTrackingService
+module Gps
+  class GPSTrackingService
+      def self.current_location
+        new.current_location
+      end
+
       def initialize
         @ha_service = HomeAssistantService.new
+        @current_location = nil
       end
 
       # Get current GPS coordinates with full location context
       def current_location
-        # Use cached location if available (5 minute cache)
-        cached = Rails.cache.fetch("gps_current_location", expires_in: 5.minutes) do
-          random_landmark_location
+        @current_location = Rails.cache.fetch(:gps_current_location, expires_in: 5.minutes) do
+          # Try to get real GPS data from Home Assistant first
+          gps_data = fetch_from_home_assistant
+
+          # Fall back to random landmark if GPS unavailable
+          gps_data || random_landmark_location
         end
 
-        return nil unless cached && cached[:lat] && cached[:lng]
-
-        # Get full context from LocationContextService (this is also cached)
-        context = LocationContextService.full_context(cached[:lat], cached[:lng])
-
-        # Merge GPS metadata with location context
-        cached.merge(context)
+        context = Gps::LocationContextService.full_context(@current_location[:lat], @current_location[:lng])
+        @current_location.merge(context)
       end
 
       def set_random_location
-        land = Landmark.all.sample
+        land = Landmark.where.not(landmark_type: "toilet").sample
         set_location(coords: "#{land.latitude}, #{land.longitude}")
       end
 
       # Get proximity data for map reactions using LocationContextService
       def proximity_data(lat, lng)
-        context = LocationContextService.full_context(lat, lng)
+        context = Gps::LocationContextService.full_context(lat, lng)
         landmarks = context[:landmarks] || []
 
         {
@@ -45,7 +47,7 @@ module Services
 
       # Deprecated method for backward compatibility
       def brc_address_from_coordinates(lat, lng)
-        context = LocationContextService.full_context(lat, lng)
+        context = Gps::LocationContextService.full_context(lat, lng)
         context[:address]
       end
 
@@ -76,14 +78,8 @@ module Services
 
       # Simulate cube movement - walk toward a landmark and stop when reached
       def simulate_movement!(landmark: nil)
-        return unless GlitchCube.gps_spoofing_allowed?
-
+        current_data = @current_location
         begin
-          # Get current cached location
-          current_data = Rails.cache.fetch("gps_current_location") do
-            fetch_from_home_assistant || random_landmark_location
-          end
-
           destination_data = Rails.cache.read("cube_destination")
           destination = if destination_data
                           JSON.parse(destination_data, symbolize_names: true)
@@ -99,8 +95,6 @@ module Services
           end
 
           Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
-          puts "Current #{current_data}"
-          puts "Dest #{destination}"
 
           # Check if we've reached the destination
           if reached_destination?(current_data, destination)
@@ -266,7 +260,6 @@ module Services
           uptime: nil,
           source: "random_landmark"
         }
-      end
     end
   end
 end

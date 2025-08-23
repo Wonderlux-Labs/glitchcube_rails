@@ -46,7 +46,7 @@ class LocationEventHandler
 
   def initialize
     @speech_service = ContextualSpeechTriggerService.new
-    @gps_service = Services::Gps::GPSTrackingService.new
+    @gps_service = Gps::GPSTrackingService.new
   end
 
   # Handle movement between specific locations

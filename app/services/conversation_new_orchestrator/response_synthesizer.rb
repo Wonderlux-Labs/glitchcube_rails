@@ -42,10 +42,12 @@ class ConversationNewOrchestrator::ResponseSynthesizer
       speech_text = "I understand."
     end
 
-    # SPEECH AMENDMENT: If we have query tool results, call LLM again to amend speech
+    # DEFERRED QUERY RESULTS: Store query tool results for next conversation turn
+    # This prevents blocking TTS with synchronous LLM calls
     query_results = filter_query_tool_results(@action_results[:sync_results] || {})
     if query_results.any?
-      speech_text = amend_speech_with_query_results(speech_text, query_results, @prompt_data)
+      store_query_results_for_next_turn(query_results)
+      Rails.logger.info "🔄 Stored #{query_results.keys.count} query results for next conversation turn"
     end
 
     # Fallback for completely empty speech
@@ -79,8 +81,12 @@ class ConversationNewOrchestrator::ResponseSynthesizer
     query_results
   end
 
-  def amend_speech_with_query_results(original_speech, query_results, prompt_data)
-    # Build query results summary with safe key access
+  def store_query_results_for_next_turn(query_results)
+    # Store query results in conversation metadata for the next turn
+    # This way the LLM gets the context without blocking current response
+    return unless @prompt_data[:conversation]
+
+    # Build a summary of the query results
     results_summary = query_results.map do |tool_name, result|
       success = result["success"] || result[:success]
       if success
@@ -92,36 +98,23 @@ class ConversationNewOrchestrator::ResponseSynthesizer
       end
     end.join(", ")
 
-    # Call LLM to amend the speech naturally
-    # Sanitize inputs to prevent injection attacks
-    sanitized_speech = original_speech.to_s.gsub(/["\n\r]/, ' ').truncate(Rails.configuration.llm_input_max_speech_length)
-    sanitized_results = results_summary.to_s.gsub(/["\n\r]/, ' ').truncate(Rails.configuration.llm_input_max_results_length)
-    
-    amendment_messages = [
-      { role: "system", content: prompt_data[:system_prompt] },
-      {
-        role: "user",
-        content: "Please amend this response to naturally include the tool results: \"#{sanitized_speech}\"\n\nTool results: #{sanitized_results}\n\nReturn only the amended speech, staying in character."
-      }
-    ]
+    # Store in conversation metadata for next turn injection
+    conversation = @prompt_data[:conversation]
+    metadata = conversation.metadata_json || {}
+    metadata["pending_query_results"] = {
+      timestamp: Time.current.iso8601,
+      results_summary: results_summary,
+      tool_count: query_results.keys.count
+    }
 
     begin
-      # Add timeout protection to prevent resource exhaustion
-      amendment_response = Timeout::timeout(Rails.configuration.llm_amendment_timeout) do
-        LlmService.call_with_tools(
-          messages: amendment_messages,
-          tools: [], # No tools for amendment call
-          model: Rails.configuration.default_ai_model
-        )
-      end
-
-      amended_speech = amendment_response.content&.strip
-      return amended_speech if amended_speech.present?
+      conversation.update!(metadata_json: metadata)
     rescue => e
-      Rails.logger.warn "Failed to amend speech: #{e.message}"
+      Rails.logger.warn "Failed to store query results for next turn: #{e.message}"
     end
-
-    # Fallback: return original speech if amendment fails
-    original_speech
   end
+
+  # REMOVED: amend_speech_with_query_results method
+  # Query results are now stored for the next conversation turn instead of
+  # blocking the current response with synchronous LLM calls
 end

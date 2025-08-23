@@ -5,6 +5,7 @@ class LlmService
   class << self
     # Main conversation call with tool support
     def call_with_tools(messages:, tools: [], model: nil, **options)
+      model = [ "deepseek/deepseek-r1-0528", "mistralai/mistral-medium-3.1", "openai/gpt-5-mini", "minimax/minimax-01", "ai21/jamba-large-1.7" ].sample
       model_to_use = model || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with tools: #{model_to_use}"
@@ -78,6 +79,48 @@ class LlmService
         # Return the actual OpenRouter response object
         response
 
+      rescue Net::TimeoutError, Net::ReadTimeout, Timeout::Error => e
+
+        # ====================================================================
+        # TIMEOUT: LLM tool call timed out - trying faster models
+        # ====================================================================
+
+        Rails.logger.error ""
+        Rails.logger.error "=" * 70
+        Rails.logger.error "⏰ TIMEOUT: LLM tool call timed out with #{model_to_use} (45s limit)"
+        Rails.logger.error "   Error: #{e.message}"
+        Rails.logger.error "   Class: #{e.class}"
+        Rails.logger.error "=" * 70
+        Rails.logger.error ""
+
+        # Try faster models for tool calls on timeout
+        fast_models = [ "openai/gpt-5-mini", "google/gemini-2.5-flash" ]
+        Rails.logger.warn "🚀 Trying #{fast_models.length} fast models for tool call timeout..."
+
+        fast_models.each do |fast_model|
+          begin
+            Rails.logger.info "⚡ Attempting fast model: #{fast_model}"
+
+            client = OpenRouter::Client.new
+            response = client.complete(
+              messages,
+              model: fast_model,
+              tools: tools,
+              tool_choice: tools.any? ? "auto" : nil,
+              extras: extras
+            )
+
+            Rails.logger.info "✅ SUCCESS: Fast model #{fast_model} worked for tool call after timeout!"
+            return response
+
+          rescue => fallback_error
+            Rails.logger.warn "❌ Fast model #{fast_model} failed: #{fallback_error.message}"
+            next
+          end
+        end
+
+        Rails.logger.error "💥 All fast models failed for tool call timeout"
+
       rescue StandardError => e
 
         # ====================================================================
@@ -108,7 +151,6 @@ class LlmService
 
     # Main conversation call with structured output (no tools)
     def call_with_structured_output(messages:, response_format:, model: nil, **options)
-      # model = [ "meta-llama/llama-3.3-70b-instruct", "qwen/qwen3-30b-a3b", "mistralai/mistral-medium-3.1" ].sample
       model_to_use = model || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
@@ -145,6 +187,48 @@ class LlmService
         Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
 
         response
+
+      rescue Net::TimeoutError, Net::ReadTimeout, Timeout::Error => e
+
+        # ====================================================================
+        # TIMEOUT: LLM call timed out - trying faster fallback models
+        # ====================================================================
+
+        Rails.logger.error ""
+        Rails.logger.error "=" * 70
+        Rails.logger.error "⏰ TIMEOUT: LLM call timed out with #{model_to_use} (45s limit)"
+        Rails.logger.error "   Error: #{e.message}"
+        Rails.logger.error "   Class: #{e.class}"
+        Rails.logger.error "   This prevents 151+ second delays like we saw before"
+        Rails.logger.error "=" * 70
+        Rails.logger.error ""
+
+        # Try faster fallback models for timeouts
+        fast_fallback_models = [ "openai/gpt-5-mini", "google/gemini-2.5-flash" ]
+        Rails.logger.warn "🚀 Trying #{fast_fallback_models.length} fast fallback models for timeout..."
+
+        fast_fallback_models.each do |fallback_model|
+          begin
+            Rails.logger.info "⚡ Attempting fast fallback model: #{fallback_model}"
+
+            response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
+
+            Rails.logger.info ""
+            Rails.logger.info "=" * 70
+            Rails.logger.info "✅ SUCCESS: Fast fallback model #{fallback_model} worked after timeout!"
+            Rails.logger.info "=" * 70
+            Rails.logger.info ""
+
+            return response
+
+          rescue => fallback_error
+            Rails.logger.warn "❌ Fast fallback model #{fallback_model} failed: #{fallback_error.message}"
+            next
+          end
+        end
+
+        # If fast fallbacks fail, fall through to regular error handling
+        Rails.logger.error "💥 All fast fallback models failed after timeout"
 
       rescue StandardError => e
 

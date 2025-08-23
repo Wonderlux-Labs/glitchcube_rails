@@ -11,14 +11,9 @@ class Api::V1::ConversationController < Api::V1::BaseController
     Rails.logger.info "📋 Session ID: #{session_id}"
     Rails.logger.info "🔍 Context: #{context}"
 
-    # Choose orchestrator based on feature flag
-    orchestrator_class = Rails.configuration.use_new_orchestrator ?
-                         ConversationNewOrchestrator :
-                         ConversationOrchestrator
+    Rails.logger.info "🔧 Using ConversationNewOrchestrator"
 
-    Rails.logger.info "🔧 Using orchestrator: #{orchestrator_class.name}"
-
-    result = orchestrator_class.new(
+    result = ConversationNewOrchestrator.new(
       session_id: session_id,
       message: message,
       context: context
@@ -50,46 +45,44 @@ class Api::V1::ConversationController < Api::V1::BaseController
     # Extract simple trigger and context strings
     trigger = params[:trigger] || "unknown_trigger"
     context = params[:context] || "no additional context provided"
+    satellite_entity = params[:satellite_entity] || "assist_satellite.square_voice"
 
-    # Create a proactive message for the orchestrator
+    # Create a proactive message for the HA conversation pipeline
     proactive_message = "[PROACTIVE] #{trigger}: #{context}"
 
-    Rails.logger.info "🤖 Processing proactive conversation: #{proactive_message}"
+    Rails.logger.info "🤖 Starting proactive conversation via HA satellite: #{proactive_message}"
 
-    # Use a default session_id for proactive conversations
-    session_id = extract_session_id_from_payload || default_proactive_session_id
+    begin
+      # Call assist_satellite.start_conversation to trigger proper TTS flow
+      ha_response = HomeAssistantService.call_service(
+        "assist_satellite",
+        "start_conversation",
+        {
+          entity_id: satellite_entity,
+          start_message: proactive_message,
+          extra_system_prompt: "You are responding to a proactive trigger. Be engaging and helpful."
+        }
+      )
 
-    # Build context for proactive conversation
-    proactive_context = {
-      conversation_id: "proactive_#{SecureRandom.hex(8)}",
-      device_id: "cube_proactive_system",
-      language: "en",
-      voice_interaction: false,
-      timestamp: Time.current.iso8601,
-      source: "proactive_trigger",
-      trigger: trigger,
-      context: context
-    }
+      Rails.logger.info "✅ Proactive conversation started successfully via #{satellite_entity}"
 
-    # Choose orchestrator based on feature flag
-    orchestrator_class = Rails.configuration.use_new_orchestrator ?
-                         ConversationNewOrchestrator :
-                         ConversationOrchestrator
+      render json: {
+        success: true
+      }
 
-    result = orchestrator_class.new(
-      session_id: session_id,
-      message: proactive_message,
-      context: proactive_context
-    ).call
+    rescue HomeAssistantService::Error => e
+      Rails.logger.error "❌ Failed to start proactive conversation: #{e.message}"
 
-    # Let Home Assistant handle TTS and conversation flow for proactive conversations
-    # No need to trigger speech manually - the conversation agent will handle it
-
-    # Format response in the structure that HASS expects
-    formatted_response = format_response_for_hass(result)
-
-    Rails.logger.info "🤖 Proactive response completed: #{trigger}"
-    render json: formatted_response
+      render json: {
+        success: false,
+        error: "Failed to start conversation: #{e.message}",
+        data: {
+          response_type: "error",
+          satellite_entity: satellite_entity,
+          message: proactive_message
+        }
+      }
+    end
 
   rescue StandardError => e
     Rails.logger.error "ProactiveConversationController failed: #{e.message}"
@@ -162,23 +155,41 @@ class Api::V1::ConversationController < Api::V1::BaseController
     # Format in the structure that HASS conversation agent expects
     return error_response("Invalid orchestrator result") unless orchestrator_result.is_a?(Hash)
 
+    Rails.logger.info "🔍 Formatting orchestrator result: #{orchestrator_result.inspect}"
+
     # Handle new direct response structure from orchestrator
+    # The orchestrator returns a HASS response object directly
     speech_text = orchestrator_result.dig(:response, :speech, :plain, :speech) ||
+                  orchestrator_result.dig(:hass_response, :response) ||
                   orchestrator_result[:text] ||
                   orchestrator_result[:speech_text] ||
                   "I understand."
 
-    {
+    Rails.logger.info "📢 Extracted speech text for HA: '#{speech_text}'"
+
+    # Extract continue_conversation from the HASS response structure
+    continue_conversation = orchestrator_result[:continue_conversation] ||
+                           !orchestrator_result[:end_conversation] ||
+                           false
+
+    response = {
       success: true,
       data: {
         response_type: determine_response_type(orchestrator_result),
         response: speech_text,
         speech_text: speech_text,
-        continue_conversation: orchestrator_result[:continue_conversation] || false,
+        continue_conversation: continue_conversation,
+        end_conversation: !continue_conversation,
         # Include metadata for debugging
-        metadata: {}
+        metadata: {
+          orchestrator_keys: orchestrator_result.keys,
+          response_extraction_path: "checking multiple paths for speech text"
+        }
       }
     }
+
+    Rails.logger.info "📤 Final HASS response: #{response}"
+    response
   end
 
   def error_response(message)
@@ -194,8 +205,12 @@ class Api::V1::ConversationController < Api::V1::BaseController
   end
 
   def determine_response_type(orchestrator_result)
-    # For now, always return normal since we're handling async tools differently
-    # TODO: Implement proper response type detection for new architecture
+    # Check if this is a proactive conversation that should trigger immediate speech
+    return "immediate_speech_with_background_tools" if @context&.dig(:source) == "proactive_trigger"
+
+    # Check if orchestrator indicates async tools are running
+    return "immediate_speech_with_background_tools" if orchestrator_result&.dig(:async_tools_pending)
+
     "normal"
   end
 

@@ -1,6 +1,8 @@
 # app/jobs/goal_monitor_job.rb
 
-class GoalMonitorJob < ApplicationJob
+module Recurring
+  module Persona
+    class GoalMonitorJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -8,13 +10,7 @@ class GoalMonitorJob < ApplicationJob
 
     Rails.logger.info "🎯 GoalMonitorJob starting"
 
-    # Check if we need to switch to safety goals
-    check_safety_conditions
-
-    # Check if current goal has expired
     check_goal_expiration
-
-    # Auto-complete goals if the persona has indicated completion
     check_for_goal_completion
 
     Rails.logger.info "✅ GoalMonitorJob completed successfully"
@@ -25,22 +21,6 @@ class GoalMonitorJob < ApplicationJob
 
   private
 
-  def check_safety_conditions
-    safety_active = GoalService.safety_mode_active?
-    current_goal = GoalService.current_goal_status
-
-    return unless current_goal
-
-    # If safety mode is active but we don't have a safety goal, switch
-    if safety_active && !current_goal[:category].include?("safety")
-      Rails.logger.info "⚠️ Safety mode active - switching to safety goal"
-      GoalService.request_new_goal(reason: "safety_mode_activated")
-    # If safety mode is off but we have a safety goal, switch to regular goal
-    elsif !safety_active && current_goal[:category].include?("safety")
-      Rails.logger.info "✅ Safety mode deactivated - switching to regular goal"
-      GoalService.request_new_goal(reason: "safety_mode_deactivated")
-    end
-  end
 
   def check_goal_expiration
     return unless GoalService.goal_expired?
@@ -76,6 +56,8 @@ class GoalMonitorJob < ApplicationJob
         GoalService.select_goal # Select new goal
         break # Only process one completion per run
       end
+    end
+  end
     end
   end
 end

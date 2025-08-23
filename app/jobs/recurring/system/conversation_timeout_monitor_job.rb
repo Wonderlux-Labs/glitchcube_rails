@@ -1,6 +1,8 @@
 # app/jobs/conversation_timeout_monitor_job.rb
 
-class ConversationTimeoutMonitorJob < ApplicationJob
+module Recurring
+  module System
+    class ConversationTimeoutMonitorJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -26,5 +28,7 @@ class ConversationTimeoutMonitorJob < ApplicationJob
   rescue StandardError => e
     Rails.logger.error "❌ ConversationTimeoutMonitorJob failed: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
+  end
+    end
   end
 end

@@ -2,7 +2,9 @@
 
 # Background job to update Home Assistant with current GPS location
 # Runs every 5 minutes to keep the sensor data fresh
-class GpsSensorUpdateJob < ApplicationJob
+module Recurring
+  module System
+    class GpsSensorUpdateJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -10,7 +12,7 @@ class GpsSensorUpdateJob < ApplicationJob
 
     begin
       # Get current location from GPS service
-      gps_service = Services::Gps::GPSTrackingService.new
+      gps_service = Gps::GPSTrackingService.new
       location_data = gps_service.current_location
       Rails.logger.info("***LOCATION #{location_data}***")
       return unless location_data && location_data[:lat] && location_data[:lng]
@@ -57,6 +59,8 @@ class GpsSensorUpdateJob < ApplicationJob
     rescue StandardError => e
       Rails.logger.error "GPS sensor update failed: #{e.message}"
       # Don't re-raise - we don't want to break the job queue
+    end
+  end
     end
   end
 end

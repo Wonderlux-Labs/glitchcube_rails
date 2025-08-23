@@ -10,26 +10,25 @@ GPSMap.Controls = {
   
   // Initialize control handlers
   init: function() {
-    this.initRouteToggle();
-    this.initLandmarksToggle();
-    this.initToiletsToggle();
     this.initCenterButton();
+    this.initLandmarksToggle();
+    this.initStreetsToggle();
+    this.initCompassButton();
   },
   
-  initRouteToggle: function() {
-    const btn = document.getElementById('routeToggle');
+  initCenterButton: function() {
+    const btn = document.getElementById('center-button');
     if (!btn) return;
     
     btn.addEventListener('click', () => {
-      this.showRoute = !this.showRoute;
-      const showing = GPSMap.Markers.toggleRouteHistory();
-      btn.classList.toggle('active', showing);
-      btn.textContent = showing ? 'HIDE route' : 'SHOW route';
+      if (GPSMap.Markers && GPSMap.Markers.centerOnCube) {
+        GPSMap.Markers.centerOnCube();
+      }
     });
   },
   
   initLandmarksToggle: function() {
-    const btn = document.getElementById('landmarksToggle');
+    const btn = document.getElementById('landmarks-toggle');
     if (!btn) return;
     
     // Set initial state - landmarks shown by default
@@ -38,7 +37,6 @@ GPSMap.Controls = {
     btn.addEventListener('click', () => {
       this.showLandmarks = !this.showLandmarks;
       btn.classList.toggle('active', this.showLandmarks);
-      btn.textContent = this.showLandmarks ? 'HIDE landmarks' : 'SHOW landmarks';
       
       if (this.showLandmarks) {
         GPSMap.MapSetup.layers.landmarks.addTo(GPSMap.MapSetup.map);
@@ -48,37 +46,22 @@ GPSMap.Controls = {
     });
   },
   
-  initToiletsToggle: function() {
-    const btn = document.getElementById('portosToggle');
-    if (!btn) return;
-    
-    btn.addEventListener('click', async () => {
-      this.showToilets = !this.showToilets;
-      btn.classList.toggle('active', this.showToilets);
-      btn.textContent = this.showToilets ? 'HIDE toilets' : 'SHOW toilets';
-      
-      if (this.showToilets) {
-        // Load toilets on demand
-        btn.textContent = 'Loading...';
-        await GPSMap.API.loadToiletsNearby();
-        btn.textContent = 'HIDE toilets';
-        if (GPSMap.MapSetup.layers.toilets) {
-          GPSMap.MapSetup.layers.toilets.addTo(GPSMap.MapSetup.map);
-        }
-      } else {
-        if (GPSMap.MapSetup.layers.toilets) {
-          GPSMap.MapSetup.map.removeLayer(GPSMap.MapSetup.layers.toilets);
-        }
-      }
-    });
-  },
-  
-  initCenterButton: function() {
-    const btn = document.getElementById('centerToggle');
+  initStreetsToggle: function() {
+    const btn = document.getElementById('streets-toggle');
     if (!btn) return;
     
     btn.addEventListener('click', () => {
-      GPSMap.Markers.centerOnCube();
+      // Streets are disabled - this button doesn't do anything
+      console.log('Streets are disabled - fragments only in database');
+    });
+  },
+  
+  initCompassButton: function() {
+    const btn = document.getElementById('compass-button');
+    if (!btn) return;
+    
+    btn.addEventListener('click', () => {
+      GPSMap.MapSetup.centerOnGoldenSpike();
     });
   }
 };

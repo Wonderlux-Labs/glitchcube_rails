@@ -24,7 +24,10 @@ class CubePersona
     previous_persona = current_persona
 
     HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
-    Rails.cache.write("current_persona", persona.to_s, expires_in: 10.minutes)
+    # Extended cache expiration for stability
+    Rails.cache.write("current_persona", persona.to_s, expires_in: 30.minutes)
+
+    Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona}"
 
     # Handle persona switching with goal awareness
     if previous_persona != persona.to_sym

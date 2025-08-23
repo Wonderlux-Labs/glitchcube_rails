@@ -293,6 +293,14 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         except Exception as e:
             _LOGGER.error("💥 Immediate TTS failed: %s", str(e))
         
+        # Add delay before returning to prevent rapid triggering
+        delay_seconds = conversation_data.get("continue_delay", 3)  # Default 3 seconds  
+        _LOGGER.info("⏰ Adding %s second delay for background tools before re-enabling conversation", delay_seconds)
+        await asyncio.sleep(delay_seconds)
+        
+        # Play sound alert when listening resumes after background tools
+        await self._play_listening_resume_sound()
+        
         # Return minimal result to keep session alive for follow-up
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(" ")  # Empty to prevent double-speak
@@ -328,6 +336,15 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         
         continue_conversation = conversation_data.get("continue_conversation", False)
         
+        # Add configurable delay if continuing conversation to prevent rapid triggering
+        if continue_conversation:
+            delay_seconds = conversation_data.get("continue_delay", 3)  # Default 3 seconds
+            _LOGGER.info("⏰ Adding %s second delay before re-enabling conversation to prevent rapid triggering", delay_seconds)
+            await asyncio.sleep(delay_seconds)
+            
+            # Play sound alert when listening resumes
+            await self._play_listening_resume_sound()
+        
         _LOGGER.info("📢 Normal response: %s...", response_text[:50])
         _LOGGER.info("Continue conversation: %s", continue_conversation)
         
@@ -336,6 +353,24 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
             response=intent_response,
             continue_conversation=continue_conversation
         )
+
+    async def _play_listening_resume_sound(self):
+        """Play a sound alert to indicate listening has resumed."""
+        try:
+            # Play a subtle chime sound to indicate listening is active
+            await self.hass.services.async_call(
+                'media_player',
+                'play_media',
+                {
+                    'entity_id': 'media_player.square_voice',
+                    'media_content_id': '/media/sounds/listening_resume.wav',  # Add this sound file
+                    'media_content_type': 'audio/wav',
+                },
+                blocking=False
+            )
+            _LOGGER.info("🔔 Listening resume sound triggered")
+        except Exception as e:
+            _LOGGER.warning("⚠️ Could not play listening resume sound: %s", str(e))
 
     def _create_error_response(
         self, 

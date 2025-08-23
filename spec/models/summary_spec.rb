@@ -3,6 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe Summary, type: :model do
+  # Mock vectorsearch to prevent OpenAI API calls in unit tests
+  before do
+    allow_any_instance_of(Summary).to receive(:upsert_to_vectorsearch)
+  end
   describe 'validations' do
     it { should validate_presence_of(:summary_text) }
     it { should validate_presence_of(:summary_type) }

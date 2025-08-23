@@ -16,7 +16,7 @@ class WorldStateUpdaters::WeatherForecastSummarizerService
     return handle_no_weather_data if weather_data.empty?
 
     summary = generate_weather_summary(weather_data)
-    final = "ALERT! WEATHER BOT IN WITH ANOTHER ARR-EEE-PORT: #{summary}"
+    final = "ALERT! WEATHER BOT IN WITH ANOTHER REPORT!"
     update_world_state_sensor(final)
 
     Rails.logger.info "✅ Weather forecast summary updated successfully"

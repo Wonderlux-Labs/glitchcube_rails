@@ -22,7 +22,8 @@ class ConversationNewOrchestrator::PromptBuilder
 
     # Check for and inject any pending results from a previous turn
     inject_previous_ha_results(prompt_data)
-
+    inject_previous_query_results(prompt_data)
+    Rails.logger.info("**#{prompt_data.inspect}**")
     ServiceResult.success(prompt_data)
   rescue => e
     ServiceResult.failure("Prompt building failed: #{e.message}")
@@ -92,5 +93,38 @@ class ConversationNewOrchestrator::PromptBuilder
   def format_tool_intents(tool_intents)
     return "unknown action" unless tool_intents.is_a?(Array)
     tool_intents.map { |intent| "#{intent['intent']}" }.join(" and ")
+  end
+
+  def inject_previous_query_results(prompt_data)
+    return unless @conversation.metadata_json
+
+    query_results = @conversation.metadata_json["pending_query_results"]
+    return unless query_results && query_results["results_summary"]
+
+    Rails.logger.info "🔍 Injecting query results from previous turn: #{query_results['tool_count']} tools"
+
+    # Create a system message with the query results
+    result_text = "System note: Previous query results from your last response: #{query_results['results_summary']}"
+    system_msg = { role: "system", content: result_text }
+
+    # Insert right before the current user message in the history
+    prompt_data[:messages].insert(-1, system_msg)
+    Rails.logger.info "🔄 Injected query results: #{result_text}"
+
+    # Clear the pending query results now that we've injected them
+    clear_query_results
+  end
+
+  def clear_query_results
+    return unless @conversation.metadata_json
+
+    metadata = @conversation.metadata_json.dup
+    metadata.delete("pending_query_results")
+
+    begin
+      @conversation.update!(metadata_json: metadata)
+    rescue => e
+      Rails.logger.warn "Failed to clear query results: #{e.message}"
+    end
   end
 end

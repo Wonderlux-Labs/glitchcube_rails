@@ -15,7 +15,8 @@ class Person < ApplicationRecord
 
   # Associations with summaries and events via extracted_from_session
   def related_summaries
-    Summary.where("metadata @> ?", { conversation_ids: [ extracted_from_session ] }.to_json)
+    # Since metadata is stored as text, not JSON, we need to search within the text
+    Summary.where("metadata LIKE ?", "%#{extracted_from_session}%")
   end
 
   def related_events

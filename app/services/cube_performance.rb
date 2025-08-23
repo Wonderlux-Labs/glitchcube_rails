@@ -8,15 +8,8 @@ class CubePerformance
       session_id ||= "comedy_#{Time.current.to_i}"
 
       prompt = """You're doing a #{duration_minutes}-minute stand-up comedy routine at Burning Man.
-      You're BUDDY, the enthusiastic customer service AI who crash-landed here.
 
-      Keep it funny, absurd, and true to your chaotic personality. Include:
-      - Jokes about being an AI at a desert festival
-      - Customer service gone wrong
-      - Space travel mishaps
-      - The absurdity of trying to 'help' at Burning Man
-      - Interactive moments even though it's a monologue
-
+      Keep it funny, absurd, NSFW, and true to your chaotic personality. Include:
       Build running gags, include callbacks to previous jokes, and maintain your energy throughout."""
 
       PerformanceModeService.start_performance(

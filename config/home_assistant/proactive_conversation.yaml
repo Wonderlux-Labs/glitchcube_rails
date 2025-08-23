@@ -1,18 +1,8 @@
 # Home Assistant configuration for proactive conversations
 # Add this to your configuration.yaml or in packages/
 
-rest_command:
-  cube_proactive_conversation:
-    url: "http://{{ states('input_text.glitchcube_host') | default('localhost') }}:{{ states('input_text.glitchcube_port') | default('4567') }}/api/v1/conversation/proactive"
-    method: POST
-    headers:
-      Content-Type: application/json
-    payload: >
-      {
-        "trigger": "{{ trigger }}",
-        "context": "{{ context }}"
-      }
-    timeout: 10
+# UPDATED: Now uses assist_satellite.start_conversation for proper conversation flow
+# No need for rest_command - we use the built-in conversation pipeline
 
 # Example automation - motion detected, no interaction for a while
 automation:
@@ -28,10 +18,12 @@ automation:
         value_template: >
           {{ (as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) > 1200 }}
     action:
-      - service: rest_command.cube_proactive_conversation
+      - service: assist_satellite.start_conversation
+        target:
+          entity_id: assist_satellite.square_voice
         data:
-          trigger: "motion_detected_with_boredom"
-          context: "Motion in living room, no conversation for {{ ((as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) / 60) | round }} minutes"
+          start_message: "[PROACTIVE] motion_detected_with_boredom: Motion in living room, no conversation for {{ ((as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) / 60) | round }} minutes"
+          extra_system_prompt: "You detected motion after a period of inactivity. Be engaging and offer to help with activities or entertainment."
 
   - id: cube_proactive_lonely
     alias: "Cube: Proactive Loneliness"
@@ -47,10 +39,12 @@ automation:
         value_template: >
           {{ (as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) > 3600 }}
     action:
-      - service: rest_command.cube_proactive_conversation
+      - service: assist_satellite.start_conversation
+        target:
+          entity_id: assist_satellite.square_voice
         data:
-          trigger: "loneliness_check"
-          context: "User is home but no interaction for {{ ((as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) / 60) | round }} minutes, feeling a bit lonely"
+          start_message: "[PROACTIVE] loneliness_check: User is home but no interaction for {{ ((as_timestamp(now()) - as_timestamp(states.conversation.last_conversation_time | default(0))) / 60) | round }} minutes, feeling a bit lonely"
+          extra_system_prompt: "You haven't talked to the user in a while and want to check in. Be friendly and offer companionship or suggest activities."
 
   - id: cube_proactive_weather_alert
     alias: "Cube: Proactive Weather Alert"
@@ -60,10 +54,12 @@ automation:
         attribute: condition
         to: "rainy"
     action:
-      - service: rest_command.cube_proactive_conversation
+      - service: assist_satellite.start_conversation
+        target:
+          entity_id: assist_satellite.square_voice
         data:
-          trigger: "weather_change_alert"
-          context: "Weather changed to {{ states('weather.home') }}, might want to let you know about potential impacts"
+          start_message: "[PROACTIVE] weather_change_alert: Weather changed to {{ states('weather.home') }}, might want to let you know about potential impacts"
+          extra_system_prompt: "The weather has changed and you want to inform the user about potential impacts or suggestions related to the new weather conditions."
 
 # Template sensor to track last conversation time (you'll need to update this from your app)
 template:

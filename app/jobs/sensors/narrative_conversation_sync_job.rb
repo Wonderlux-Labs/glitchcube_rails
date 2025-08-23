@@ -1,6 +1,7 @@
 # app/jobs/world_state_updaters/narrative_conversation_sync_job.rb
 
-class WorldStateUpdaters::NarrativeConversationSyncJob < ApplicationJob
+module Sensors
+  class NarrativeConversationSyncJob < ApplicationJob
   queue_as :default
 
   retry_on StandardError, wait: :exponentially_longer, attempts: 3
@@ -13,5 +14,6 @@ class WorldStateUpdaters::NarrativeConversationSyncJob < ApplicationJob
   rescue StandardError => e
     Rails.logger.error "Failed to sync conversation #{conversation_log_id} to HA: #{e.message}"
     raise e # Re-raise to trigger retry
+  end
   end
 end

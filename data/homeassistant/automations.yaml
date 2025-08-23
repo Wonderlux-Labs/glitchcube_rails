@@ -112,11 +112,11 @@
     - conditions:
       - condition: state
         entity_id: input_select.current_persona
-        state: lomi
+        state: sparkle
       sequence:
       - action: select.select_option
         data:
-          option: LOMI
+          option: SPARKLE
         target:
           entity_id:
           - select.home_assistant_voice_09739d_assistant
@@ -133,6 +133,68 @@
           entity_id:
           - select.home_assistant_voice_09739d_assistant
           - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: neon
+      sequence:
+      - action: select.select_option
+        data:
+          option: NEON
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: crash
+      sequence:
+      - action: select.select_option
+        data:
+          option: CRASH
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: thecube
+      sequence:
+      - action: select.select_option
+        data:
+          option: THECUBE
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: mobius
+      sequence:
+      - action: select.select_option
+        data:
+          option: MOBIUS
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions:
+      - condition: state
+        entity_id: input_select.current_persona
+        state: NEON
+      sequence:
+      - action: select.select_option
+        data:
+          option: NEON
+        target:
+          entity_id:
+          - select.home_assistant_voice_09739d_assistant
+          - select.esp32_s3_box_3_52b3dc_assistant
+    - conditions: []
+      sequence: []
   mode: single
 - id: '1755332428238'
   alias: Siren - Auto Off
@@ -362,19 +424,12 @@
       effect: Acid
     target:
       entity_id: light.cube_light_top
-  - action: assist_satellite.announce
-    metadata: {}
-    data:
-      message: TIME FOR A GLITCH TIME FOR A GLITCH IT'S TIME FOR A GLITCH
-      preannounce: true
-    target:
-      entity_id: assist_satellite.square_voice
   - action: music_assistant.play_media
     metadata: {}
     data:
       media_type: track
       media_id: glitch cube theme song!
-      enqueue: play
+      enqueue: replace
     target:
       entity_id: media_player.cube_jukebox
   mode: single
@@ -392,50 +447,6 @@
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.motion_detected
-  mode: restart
-- id: persona_change_flash
-  alias: Persona Change Flash
-  description: Flash all lights when persona changes
-  triggers:
-  - trigger: state
-    entity_id: input_select.current_persona
-  conditions:
-  - condition: template
-    value_template: '{{ trigger.from_state.state != trigger.to_state.state }}'
-  actions:
-  - action: scene.create
-    data:
-      scene_id: persona_flash_restore
-      snapshot_entities:
-      - light.cube_light
-      - light.cube_voice_ring
-      - light.cart_light
-  - action: light.turn_on
-    target:
-      entity_id:
-      - light.cube_light_top
-    data:
-      flash: short
-      brightness_pct: 100
-      effect: ACID
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: scene.turn_on
-    target:
-      entity_id: scene.persona_flash_restore
-    data: {}
-  - action: music_assistant.play_media
-    metadata: {}
-    data:
-      media_id: glitchcube theme
-      media_type: track
-      enqueue: play
-    target:
-      entity_id:
-      - media_player.cube_jukebox
   mode: restart
 - id: low_battery_alert
   alias: Low Battery Alert
@@ -608,12 +619,12 @@
     data:
       cache: false
       entity_id: media_player.square_voice
-      message: '  {{ state_attr(''sensor.world_state'',''weather_conditions'') }} '
-      language: ga-IE
+      message: '{{ state_attr(''sensor.world_state'',''weather_conditions'') }}'
+      language: en-US
   mode: single
 - id: '1755758825522'
   alias: LOW BATTERY ON
-  description: 'Trigger low battery mode when cube battery drops below 12.2V'
+  description: Trigger low battery mode when cube battery drops below 12.2V
   triggers:
   - trigger: numeric_state
     entity_id:
@@ -648,4 +659,50 @@
       pushIcon: '1'
       repeat: -1
       wakeup: true
+  mode: single
+- id: '1755841067280'
+  alias: Analyze Camera
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.camera_motion_alarm
+    to: 'on'
+  conditions: []
+  actions:
+  - action: script.main_cam_analyze_detail
+    metadata: {}
+    data: {}
+  mode: single
+- id: '1755864373097'
+  alias: keylights
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data:
+      effect: '{{ state_attr("light.esphome_web_510674_key_rgb_matrix", "effect_list")
+        | random }}'
+    target:
+      entity_id: light.esphome_web_510674_key_rgb_matrix
+  mode: single
+- id: '1755864517367'
+  alias: siren
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.esphome_web_510674_right_encoder_button
+    to: 'on'
+  conditions: []
+  actions:
+  - action: siren.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: siren.small_siren
   mode: single

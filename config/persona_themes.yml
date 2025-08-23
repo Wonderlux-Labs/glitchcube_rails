@@ -1,0 +1,112 @@
+# Persona Theme Configuration
+# Defines theme music, light effects, and timing for persona switching
+
+# Default configuration applied to all personas unless overridden
+defaults:
+  theme_duration: 30  # seconds
+  light_transition_duration: 5  # seconds for light effects
+  announcement_delay: 5  # seconds before LLM announcement
+  post_announcement_effects: 10  # seconds of random effects after announcement
+
+# Persona-specific configurations
+personas:
+  buddy:
+    name: "Buddy"
+    theme_song: "/media/themes/buddy_theme.mp3"
+    color_palette: ["#00C8FF", "#0080FF", "#4080FF"]  # Blue tones
+    light_effects:
+      entrance: "Rainbow"
+      during_theme: "Solid"
+      post_announcement: ["Breathe", "Twinkle", "Wipe"]
+    sound_effects:
+      entrance_chime: "/media/sounds/buddy_chime.wav"
+      
+  jax:
+    name: "Jax"
+    theme_song: "/media/themes/jax_theme.mp3"
+    color_palette: ["#FF6400", "#FF8000", "#FF4000"]  # Orange/red tones
+    light_effects:
+      entrance: "Fire"
+      during_theme: "Strobe"
+      post_announcement: ["Fire", "Meteor", "Lightning"]
+    sound_effects:
+      entrance_chime: "/media/sounds/jax_chime.wav"
+      
+  neon:
+    name: "Neon"
+    theme_song: "/media/themes/neon_theme.mp3"
+    color_palette: ["#FF00C8", "#C800FF", "#FF0080"]  # Pink/magenta tones
+    light_effects:
+      entrance: "Colorwipe"
+      during_theme: "Theater"
+      post_announcement: ["Twinkle", "Sparkle", "Glitter"]
+    sound_effects:
+      entrance_chime: "/media/sounds/neon_chime.wav"
+      
+  sparkle:
+    name: "Sparkle"
+    theme_song: "/media/themes/sparkle_theme.mp3"
+    color_palette: ["#FFFF00", "#FFD700", "#FFF000"]  # Gold/yellow tones
+    light_effects:
+      entrance: "Twinkle"
+      during_theme: "Sparkle"
+      post_announcement: ["Glitter", "Twinkle", "Rainbow"]
+    sound_effects:
+      entrance_chime: "/media/sounds/sparkle_chime.wav"
+      
+  zorp:
+    name: "Zorp"
+    theme_song: "/media/themes/zorp_theme.mp3"
+    color_palette: ["#64FF00", "#80FF00", "#40FF00"]  # Green tones
+    light_effects:
+      entrance: "Scanner"
+      during_theme: "Solid"
+      post_announcement: ["Scanner", "Wipe", "Larson Scanner"]
+    sound_effects:
+      entrance_chime: "/media/sounds/zorp_chime.wav"
+      
+  crash:
+    name: "Crash"
+    theme_song: "/media/themes/crash_theme.mp3"
+    color_palette: ["#FF0000", "#FF4000", "#FF2000"]  # Red tones
+    light_effects:
+      entrance: "Strobe"
+      during_theme: "Theater"
+      post_announcement: ["Strobe", "Fire", "Lightning"]
+    sound_effects:
+      entrance_chime: "/media/sounds/crash_chime.wav"
+      
+  mobius:
+    name: "Mobius"
+    theme_song: "/media/themes/mobius_theme.mp3"
+    color_palette: ["#8000FF", "#4000FF", "#C000FF"]  # Purple tones
+    light_effects:
+      entrance: "Wipe"
+      during_theme: "Breathe"
+      post_announcement: ["Wipe", "Breathe", "Fade"]
+    sound_effects:
+      entrance_chime: "/media/sounds/mobius_chime.wav"
+      
+  thecube:
+    name: "The Cube"
+    theme_song: "/media/themes/thecube_theme.mp3"
+    color_palette: ["#FFFFFF", "#C0C0C0", "#808080"]  # White/silver tones
+    light_effects:
+      entrance: "Solid"
+      during_theme: "Breathe"
+      post_announcement: ["Solid", "Breathe", "Fade"]
+    sound_effects:
+      entrance_chime: "/media/sounds/thecube_chime.wav"
+
+# Light entity mappings
+light_entities:
+  cube_top: "light.cube_light_top"
+  cube_inner: "light.cube_inner"
+  
+# Media player for theme music
+media_player: "media_player.square_voice"
+
+# TTS settings for announcements
+tts:
+  service: "music_assistant.announce"
+  default_voice: "en_US_neural_female_1"

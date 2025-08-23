@@ -177,3 +177,79 @@ glitchcube_tts_queued_ui_duplicate:
   mode: queued
   max: 10
   description: ''
+cam_analyze_tablet:
+  sequence:
+  - action: llmvision.stream_analyzer
+    data:
+      remember: true
+      use_memory: true
+      message: description of whats going on - include identifiable objects, num people,
+        objects, and clothing items even
+      image_entity:
+      - camera.tablet
+      provider: 01K21T5563YK72553SX49G9WK3
+      model: google/gemini-2.5-flash-lite
+      duration: 3
+      max_frames: 2
+      generate_title: true
+    response_variable: tablet_camera_desc
+  alias: Cam Analyze(tablet)
+  description: ''
+cam_analyze_tablet_duplicate:
+  sequence:
+  - action: llmvision.stream_analyzer
+    data:
+      remember: true
+      use_memory: true
+      image_entity:
+      - camera.tablet
+      provider: 01K21T5563YK72553SX49G9WK3
+      model: google/gemini-2.5-flash-lite
+      duration: 5
+      max_frames: 3
+      generate_title: true
+      max_tokens: 300
+      message: intricate description of all identifiable objects, clothes, vehicles
+        overall scene etc - if humans are in frame focus on them
+    response_variable: tablet_camera_desc_detail
+  alias: Cam Analyze(tablet) (Duplicate)
+  description: ''
+main_cam_analyze_detail:
+  sequence:
+  - action: llmvision.stream_analyzer
+    data:
+      remember: true
+      use_memory: true
+      image_entity:
+      - camera.camera
+      provider: 01K21T5563YK72553SX49G9WK3
+      model: google/gemini-2.5-flash-lite
+      duration: 5
+      max_frames: 3
+      max_tokens: 2000
+      message: intricate description of all identifiable objects, clothes, vehicles
+        overall scene etc - if humans are in frame focus on them
+    response_variable: main_camera_desc_detail
+  alias: Main Cam Analyze (detail)
+  description: ''
+search_jukebox:
+  fields:
+    query:
+      selector:
+        text:
+      name: query
+      description: fuzzy search tracks/artists/albums - for example "Coltrane Blue",
+        "Phish - Divided Sky", or "Techno")
+      required: true
+  sequence:
+  - action: music_assistant.search
+    metadata: {}
+    data:
+      name: '{{ query }}'
+      media_type: track
+      library_only: false
+      config_entry_id: 01K1VK4MYJ75WNGJR5ESSAC2WY
+      limit: 10
+    response_variable: music_query}}
+  alias: Search Jukebox
+  description: ''

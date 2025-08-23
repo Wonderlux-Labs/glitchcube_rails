@@ -1,6 +1,8 @@
 # app/jobs/weather_forecast_summarizer_job.rb
 
-class WeatherForecastSummarizerJob < ApplicationJob
+module Recurring
+  module Content
+    class WeatherForecastSummarizerJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -14,5 +16,7 @@ class WeatherForecastSummarizerJob < ApplicationJob
   rescue StandardError => e
     Rails.logger.error "❌ WeatherForecastSummarizerJob failed: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
+  end
+    end
   end
 end

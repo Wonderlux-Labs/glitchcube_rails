@@ -9,12 +9,12 @@ class GlitchCube
     end
 
     def set_random_location
-      Services::Gps::GPSTrackingService.new.set_location
+      Gps::GPSTrackingService.new.set_location
     end
 
     # Set current location for testing/spoofing (console use)
     def set_current_location(lat:, lng:)
-      Services::Gps::GPSTrackingService.new.set_location(coords: "#{lat}, #{lng}")
+      Gps::GPSTrackingService.new.set_location(coords: "#{lat}, #{lng}")
     end
 
     def home_camp_coordinates

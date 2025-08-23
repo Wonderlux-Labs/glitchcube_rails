@@ -156,9 +156,9 @@ GPSMap.Icons = {
     });
   },
 
-  // Create simple landmark icon
+  // Create simple landmark icon  
   createLandmarkIcon: function(type, size) {
-    size = size || 24;
+    size = size || 16; // Smaller default size
     const icons = {
       'center': '🔥',
       'sacred': '🏛️', 
@@ -166,18 +166,18 @@ GPSMap.Icons = {
       'toilet': '🚻',
       'art': '🎨',
       'service': '⚙️',
-      'gathering': '🏕️',
+      'gathering': '●', // Simple dot instead of tent
       'plaza': '🏛️',
-      'poi': '📍',
+      'poi': '●', // Simple dot instead of red pin
       'transport': '🚌',
       'ranger': '👮'
     };
     
-    const emoji = icons[type] || '🏕️'; // Use tent instead of red pin
+    const emoji = icons[type] || '●'; // Use simple dot as default
     
     return L.divIcon({
       className: 'landmark-icon',
-      html: `<div style="font-size: ${Math.floor(size * 0.8)}px; text-align: center; filter: sepia(1) hue-rotate(30deg) saturate(0.8);">${emoji}</div>`,
+      html: `<div style="font-size: ${Math.floor(size * 0.7)}px; text-align: center; color: #666; text-shadow: 1px 1px 1px rgba(255,255,255,0.8);">${emoji}</div>`,
       iconSize: [size, size],
       iconAnchor: [size/2, size/2]
     });

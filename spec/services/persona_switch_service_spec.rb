@@ -3,6 +3,26 @@
 require 'rails_helper'
 
 RSpec.describe PersonaSwitchService, type: :service do
+  # Mock Home Assistant and LLM services to prevent external API calls
+  before do
+    allow(HomeAssistantService).to receive(:call_service)
+    allow(HomeAssistantService).to receive(:entity).and_return({ "state" => "off" })
+    allow(LlmService).to receive(:call_with_tools).and_return({
+      "choices" => [ { "message" => { "content" => "Test response" } } ]
+    })
+    allow(Rails.logger).to receive(:info)
+    allow(Rails.logger).to receive(:debug)
+    allow(Rails.logger).to receive(:warn)
+    allow(Rails.logger).to receive(:error)
+
+    # Mock Thread.new to prevent actual async execution in tests
+    allow(Thread).to receive(:new) do |&block|
+      # Don't actually execute the block to avoid delays
+      double('Thread').tap do |thread|
+        allow(thread).to receive(:join)
+      end
+    end
+  end
   describe '.handle_persona_switch' do
     let(:new_persona_id) { :sparkle }
     let(:previous_persona_id) { :buddy }
@@ -122,6 +142,158 @@ RSpec.describe PersonaSwitchService, type: :service do
         end
 
         PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
+      end
+    end
+  end
+
+  describe 'theatrical sequence execution' do
+    let(:new_persona_id) { :sparkle }
+    let(:previous_persona_id) { :buddy }
+    let(:mock_persona_config) do
+      {
+        "theme_song" => "/media/themes/sparkle.mp3",
+        "sound_effects" => {
+          "entrance_chime" => "/media/chimes/sparkle.wav"
+        },
+        "light_effects" => {
+          "entrance" => "twinkle",
+          "during_theme" => "rainbow"
+        },
+        "color_palette" => [ "#FF69B4", "#FFB6C1" ]
+      }
+    end
+    let(:mock_theme_config) do
+      {
+        "defaults" => { "theme_duration" => 30 },
+        "personas" => { "sparkle" => mock_persona_config }
+      }
+    end
+
+    before do
+      allow(PersonaSwitchService).to receive(:load_persona_themes).and_return(mock_theme_config)
+      allow(GoalService).to receive(:current_goal_status).and_return(nil)
+      allow(GoalService).to receive(:select_goal)
+    end
+
+    it 'executes entrance chime sequence' do
+      expect(HomeAssistantService).to receive(:call_service).with(
+        "media_player",
+        "play_media",
+        {
+          entity_id: "media_player.square_voice",
+          media_content_id: "/media/chimes/sparkle.wav",
+          media_content_type: "audio/wav"
+        }
+      )
+
+      PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
+    end
+
+    it 'executes entrance light effects' do
+      [ "light.cube_light_top", "light.cube_inner" ].each do |entity_id|
+        expect(HomeAssistantService).to receive(:call_service).with(
+          "light",
+          "turn_on",
+          {
+            entity_id: entity_id,
+            effect: "twinkle",
+            rgb_color: [ 255, 105, 180 ], # #FF69B4 in RGB
+            brightness: 255
+          }
+        )
+      end
+
+      PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
+    end
+
+    it 'executes theme music sequence' do
+      expect(HomeAssistantService).to receive(:call_service).with(
+        "media_player",
+        "play_media",
+        {
+          entity_id: "media_player.square_voice",
+          media_content_id: "/media/themes/sparkle.mp3",
+          media_content_type: "music"
+        }
+      )
+
+      PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
+    end
+
+    it 'executes theme light show' do
+      expect(HomeAssistantService).to receive(:call_service).with(
+        "light",
+        "turn_on",
+        {
+          entity_id: "light.cube_light_top",
+          effect: "rainbow",
+          rgb_color: [ 255, 105, 180 ],
+          brightness: 200
+        }
+      )
+
+      PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id)
+    end
+
+    it 'handles configuration loading errors gracefully' do
+      allow(PersonaSwitchService).to receive(:load_persona_themes)
+        .and_return({ "defaults" => {}, "personas" => {} })
+
+      expect { PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id) }.not_to raise_error
+    end
+
+    it 'handles Home Assistant service errors gracefully' do
+      allow(HomeAssistantService).to receive(:call_service).and_raise(StandardError.new("Service offline"))
+
+      expect(Rails.logger).to receive(:warn).at_least(:once)
+      expect { PersonaSwitchService.handle_persona_switch(new_persona_id, previous_persona_id) }.not_to raise_error
+    end
+  end
+
+  describe 'configuration loading and validation' do
+    describe '.load_persona_themes' do
+      let(:config_path) { Rails.root.join("config", "persona_themes.yml") }
+      let(:valid_config) do
+        {
+          "defaults" => { "theme_duration" => 30 },
+          "personas" => {
+            "sparkle" => { "theme_song" => "/media/sparkle.mp3" }
+          }
+        }
+      end
+
+      it 'loads configuration from YAML file' do
+        allow(File).to receive(:exist?).with(config_path).and_return(true)
+        allow(YAML).to receive(:load_file).with(config_path).and_return(valid_config)
+
+        result = PersonaSwitchService.send(:load_persona_themes)
+        expect(result).to eq(valid_config)
+      end
+
+      it 'returns default config if file loading fails' do
+        allow(YAML).to receive(:load_file).and_raise(StandardError.new("File not found"))
+
+        expect(Rails.logger).to receive(:error).with(/Failed to load persona themes/)
+        result = PersonaSwitchService.send(:load_persona_themes)
+        expect(result).to eq({ "defaults" => {}, "personas" => {} })
+      end
+    end
+
+    describe 'hex color conversion' do
+      it 'converts hex colors to RGB arrays' do
+        result = PersonaSwitchService.send(:hex_to_rgb, "#FF69B4")
+        expect(result).to eq([ 255, 105, 180 ])
+
+        result = PersonaSwitchService.send(:hex_to_rgb, "FF69B4") # Without #
+        expect(result).to eq([ 255, 105, 180 ])
+      end
+
+      it 'handles full 6-digit hex codes' do
+        result = PersonaSwitchService.send(:hex_to_rgb, "#000000")
+        expect(result).to eq([ 0, 0, 0 ])
+
+        result = PersonaSwitchService.send(:hex_to_rgb, "#FFFFFF")
+        expect(result).to eq([ 255, 255, 255 ])
       end
     end
   end

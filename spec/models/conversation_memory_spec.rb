@@ -3,6 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe ConversationMemory, type: :model do
+  # Mock vectorsearch to prevent OpenAI API calls in unit tests
+  before do
+    allow_any_instance_of(ConversationMemory).to receive(:upsert_to_vectorsearch)
+  end
   describe 'validations' do
     it { should validate_presence_of(:session_id) }
     it { should validate_presence_of(:summary) }

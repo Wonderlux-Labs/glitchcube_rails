@@ -1,5 +1,5 @@
 /* Glitch Cube GPS Tracker - Burning Man 2025 */
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400&family=Orbitron:wght@400;700&display=swap');
+/* Using system fonts for better compatibility */
 
 :root {
   /* Dark Fresh Color Palette */
@@ -27,8 +27,8 @@
 
 body {
   font-family: 'Share Tech Mono', 'SF Mono', Monaco, monospace;
-  background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
-  color: var(--neon-cyan);
+  background: #000;
+  color: #fff;
   overflow: hidden;
   position: relative;
   margin: 0;
@@ -37,20 +37,9 @@ body {
   width: 100vw;
 }
 
-/* Subtle grid overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
-  pointer-events: none;
-  z-index: -1;
+/* Clean background - no grid overlay needed for clean theme */
+.leaflet-container {
+  background: #f8f8f8;
 }
 
 /* Old layout system removed - using clean flexbox system below */
@@ -89,15 +78,15 @@ body::before {
   display: flex;
   gap: 10px;
   align-items: center;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(12px);
-  padding: 6px 10px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 255, 255, 0.4);
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-  font-size: 11px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #333;
+  font-size: 12px;
   pointer-events: auto;
   max-width: fit-content;
+  max-width: 300px;
 }
 
 /* Updated toolbar item styles for compact design */
@@ -376,70 +365,50 @@ body::before {
 /* Controls toolbar */
 .controls-toolbar {
   position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 10px;
+  right: 10px;
   z-index: 1000;
   display: flex;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 255, 255, 0.3);
+  flex-direction: column;
+  gap: 5px;
 }
 
-<<<<<<< Updated upstream
-=======
-/* Coordinates Toolbar - Bottom Bar */
-.coordinates-toolbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    background: rgba(0, 0, 0, 0.85);
-    color: #ff8c42;
-    font-family: 'SF Mono', Monaco, monospace;
-    font-size: 12px;
-    padding: 6px 15px;
-    z-index: 1001;
-    display: flex;
-    gap: 20px;
-}
-
-.coordinates-display {
-    font-size: 20px;
-    color: #888;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-}
-
-/* Control Buttons */
->>>>>>> Stashed changes
 .control-button {
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
-  color: var(--neon-cyan);
-  border: 1px solid rgba(0, 255, 255, 0.4);
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px;
+  display: block;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 5px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #333;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 14px;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-align: center;
+  line-height: 32px;
+  text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .control-button:hover {
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(0, 128, 255, 0.2) 100%);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-  transform: translateY(-1px);
+  background: rgba(50, 50, 50, 0.9);
 }
 
 .control-button.active {
-  background: linear-gradient(135deg, rgba(255, 0, 255, 0.2) 0%, rgba(255, 0, 64, 0.2) 100%);
-  color: var(--neon-magenta);
-  border-color: var(--neon-magenta);
-  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+  background: rgba(0, 100, 200, 0.8);
+}
+
+/* Static banner like the example */
+.static-banner {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 1000;
+  background: rgba(0, 50, 100, 0.8);
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #ccc;
 }
 
 /* Legend */
@@ -697,7 +666,7 @@ body {
 .map-section {
   flex: 0 0 67%;
   height: 100vh;
-  background: var(--darker-bg);
+  background: #f8f8f8;
   position: relative;
 }
 

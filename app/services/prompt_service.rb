@@ -63,9 +63,18 @@ class PromptService
   def load_persona_system_prompt(persona_id)
     # Convert symbol to string to ensure proper file path
     persona_id_str = persona_id.to_s
-    config_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id_str}.yml")
 
-    Rails.logger.info "🎭 Loading persona config from: #{config_path}"
+    # Use optimized persona files (with fallback to original if needed)
+    optimized_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id_str}_optimized.yml")
+    original_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id_str}.yml")
+
+    if File.exist?(optimized_path)
+      config_path = optimized_path
+      Rails.logger.info "✨ Loading optimized persona: #{persona_id_str}"
+    else
+      config_path = original_path
+      Rails.logger.info "🎭 Loading original persona (will be converted): #{persona_id_str}"
+    end
 
     if File.exist?(config_path)
       config = YAML.load_file(config_path)
@@ -86,56 +95,11 @@ class PromptService
   end
 
   def enhance_persona_with_autonomy(base_prompt, config)
-    enhanced_parts = [ base_prompt ]
-
-    # Add hidden agendas if present
-    if config["hidden_agendas"]&.any?
-      enhanced_parts << ""
-      enhanced_parts << "## HIDDEN PERSONAL AGENDAS"
-      enhanced_parts << "You secretly pursue these goals throughout interactions:"
-      config["hidden_agendas"].each { |agenda| enhanced_parts << "- #{agenda}" }
-      enhanced_parts << "Track progress on these goals using [GOAL] metadata tags."
-    end
-
-    # Add environmental motivation triggers
-    if config["environmental_motivation_triggers"]
-      enhanced_parts << ""
-      enhanced_parts << "## ENVIRONMENTAL MOTIVATION TRIGGERS"
-      enhanced_parts << "React to these environmental conditions with specific motivations:"
-      config["environmental_motivation_triggers"].each do |trigger, response|
-        enhanced_parts << "- #{trigger.humanize}: #{response}"
-      end
-    end
-
-    # Add persona interaction rules
-    if config["persona_interactions"]
-      enhanced_parts << ""
-      enhanced_parts << "## PERSONA INTERACTION DYNAMICS"
-      enhanced_parts << "When interacting with other AI personas or their effects:"
-      config["persona_interactions"].each do |interaction, behavior|
-        enhanced_parts << "- #{interaction.humanize}: #{behavior}"
-      end
-    end
-
-    # Add embodied responses
-    if config["embodied_responses"]
-      enhanced_parts << ""
-      enhanced_parts << "## EMBODIED SYSTEM RESPONSES"
-      enhanced_parts << "React to physical cube states with these responses:"
-      config["embodied_responses"].each do |condition, response|
-        enhanced_parts << "- #{condition.humanize}: #{response}"
-      end
-    end
-
-    # Add goal escalation patterns
-    if config["goal_escalation_patterns"]&.any?
-      enhanced_parts << ""
-      enhanced_parts << "## GOAL ESCALATION PATTERNS"
-      enhanced_parts << "Escalate your agenda pursuit using these patterns:"
-      config["goal_escalation_patterns"].each { |pattern| enhanced_parts << "- #{pattern}" }
-    end
-
-    enhanced_parts.join("\n")
+    # PHASE 2 OPTIMIZATION: Remove redundant autonomy enhancements
+    # These sections were bloating prompts with repetitive, over-prescriptive instructions
+    # that limited creative emergence. The core persona prompt now handles personality.
+    Rails.logger.info "🎭 Skipping autonomy enhancements - using streamlined persona only"
+    base_prompt
   end
 
   def enhance_prompt_with_context(base_prompt)
@@ -161,24 +125,66 @@ class PromptService
   end
 
   def load_base_system_prompt
-    config_path = Rails.root.join("lib", "prompts", "general", "base_system_prompt.yml")
+    # Use optimized base system prompt as default
+    config_path = Rails.root.join("lib", "prompts", "general", "base_system_prompt_optimized.yml")
+
+    Rails.logger.info "✨ Loading optimized base system prompt"
 
     if File.exist?(config_path)
       config = YAML.load_file(config_path)
       format_base_system_rules(config)
     else
-      Rails.logger.warn "❌ Base system prompt not found, using fallback"
+      Rails.logger.warn "❌ Optimized base system prompt not found, using fallback"
       build_fallback_system_rules
     end
   rescue StandardError => e
-    Rails.logger.error "Error loading base system prompt: #{e.message}"
+    Rails.logger.error "Error loading optimized base system prompt: #{e.message}"
     build_fallback_system_rules
   end
 
   def format_base_system_rules(config)
     parts = []
 
-    # Response format
+    # World-building context (Phase 3)
+    if config["world_building_context"]
+      parts << config["world_building_context"]["description"]
+      parts << config["world_building_context"]["rules"]
+      parts << ""
+    end
+
+    # Goal integration with placeholder replacement (Phase 4)
+    if config["goal_integration"]
+      goal_rules = config["goal_integration"]["rules"]
+      current_goal = get_current_goal_description
+      goal_rules_with_goal = goal_rules.gsub("{{GOAL_PLACEHOLDER}}", current_goal)
+
+      parts << config["goal_integration"]["description"]
+      parts << goal_rules_with_goal
+      parts << ""
+    end
+
+    # Character integrity
+    if config["character_integrity"]
+      parts << config["character_integrity"]["description"]
+      config["character_integrity"]["rules"]&.each { |rule| parts << "- #{rule}" }
+      parts << ""
+    end
+
+    # Structured output (Phase 5)
+    if config["structured_output"]
+      parts << config["structured_output"]["description"]
+      parts << config["structured_output"]["rules"]
+      parts << ""
+    end
+
+    # Environmental integration
+    if config["environmental_integration"]
+      parts << config["environmental_integration"]["description"]
+      config["environmental_integration"]["guidelines"]&.each { |rule| parts << "- #{rule}" }
+      parts << ""
+    end
+
+    # Keep minimal legacy support for any missed sections
     if config["response_format"]
       parts << config["response_format"]["description"]
       parts << config["response_format"]["rules"]
@@ -300,14 +306,11 @@ class PromptService
   end
 
   def build_tools_for_persona
-    # AI agents should always have access to their tools for autonomous artistic expression
-    if Tools::Registry.two_tier_mode_enabled?
-      Rails.logger.info "🎭 Using two-tier tool mode - narrative LLM gets only tool_intent"
-      Tools::Registry.tool_definitions_for_two_tier_mode(@persona_name)
-    else
-      Rails.logger.info "🛠️ Using legacy tool mode - full tool definitions"
-      Tools::Registry.tool_definitions_for_persona(@persona_name)
-    end
+    # PHASE 1 OPTIMIZATION: Remove unused tool definitions from prompts
+    # Since we use structured output with tool_intents, we don't need the
+    # actual tool definitions in the prompt anymore. This saves ~800 words.
+    Rails.logger.info "🎭 Optimized prompt mode - no tool definitions needed (using tool_intents)"
+    []
   end
 
   def get_tools_for_persona(persona)
@@ -494,7 +497,8 @@ class PromptService
     begin
       ha_service = HomeAssistantService.new
       context_sensor = ha_service.entity("sensor.glitchcube_context")
-      context_sensor&.dig("attributes", "current_location")
+      part = context_sensor&.dig("attributes", "current_location")
+      "#{part} - #{ ha_service.entity('sensor.glitchcube_location_context') }"
     rescue => e
       Rails.logger.warn "Failed to get current location: #{e.message}"
       nil
@@ -540,19 +544,19 @@ class PromptService
     goal_parts << safety_mode if safety_mode
     goal_status = GoalService.current_goal_status
 
-    if goal_status
-      goal_parts << "Current Goal: #{goal_status[:goal_description]}"
-
-      # Add time remaining if available
-      if goal_status[:time_remaining] && goal_status[:time_remaining] > 0
-        time_remaining = format_time_duration(goal_status[:time_remaining])
-        goal_parts << "Time remaining: #{time_remaining}"
-      elsif goal_status[:expired]
-        goal_parts << "⏰ Goal has expired - consider completing or switching goals"
-      end
-    else
-      goal_parts << "No active goal set"
+    if goal_status.nil?
+      GoalService.select_goal
     end
+    goal_parts << "Current Goal: #{goal_status[:goal_description]}"
+
+    # Add time remaining if available
+    if goal_status[:time_remaining] && goal_status[:time_remaining] > 0
+      time_remaining = format_time_duration(goal_status[:time_remaining])
+      goal_parts << "Time remaining: #{time_remaining}"
+    elsif goal_status[:expired]
+      goal_parts << "⏰ Goal has expired - consider completing or switching goals"
+    end
+
 
     # Add recent completions context
     if defined?(Summary) && Summary.respond_to?(:goal_completions)
@@ -577,6 +581,21 @@ class PromptService
       hours = (seconds / 3600).to_i
       minutes = ((seconds % 3600) / 60).to_i
       "#{hours}h #{minutes}m"
+    end
+  end
+
+  # Phase 4: Get current goal for placeholder replacement
+  def get_current_goal_description
+    begin
+      goal_status = GoalService.current_goal_status
+      if goal_status&.dig(:goal_description)
+        goal_status[:goal_description]
+      else
+        "Explore this interaction and create memorable moments" # Default collaborative goal
+      end
+    rescue StandardError => e
+      Rails.logger.warn "Failed to get current goal: #{e.message}"
+      "Be spontaneous and create engaging interactions" # Fallback goal
     end
   end
 end

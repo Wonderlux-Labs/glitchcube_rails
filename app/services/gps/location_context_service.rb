@@ -2,9 +2,8 @@
 
 # DONT CHANGE THIS IMPLMENTATION JUST USE IT OR EXTEND IT MUCH BETTER NOW
 
-module Services
-  module Gps
-    class LocationContextService
+module Gps
+  class LocationContextService
       attr_reader :lat, :lng, :lat_lng
 
       def self.full_context(lat, lng)
@@ -23,7 +22,7 @@ module Services
         cache_key = "location_context:#{lat.round(6)},#{lng.round(6)}"
 
         # Try cache first using Rails.cache
-        cached_result = Rails.cache.fetch(cache_key, expires_in: 5.minutes) do
+        cached_result = Rails.cache.fetch(cache_key, expires_in: 60.minutes) do
           compute_full_context
         end
 
@@ -80,7 +79,8 @@ module Services
 
       # Landmark methods
       def nearby_landmarks(limit = 10)
-        landmarks = Landmark.nearest(lat: lat, lng: lng, limit: limit)
+        landmarks = Landmark.nearest(lat: lat, lng: lng, limit: limit).uniq
+        landmarks.reject! { |l| l.landmark_type == "toilet" }
         landmarks.map do |lm|
           {
             name: lm.name,
@@ -103,9 +103,7 @@ module Services
       # Distance calculations - now using clean PostGIS helpers
       def distance_from_man
         the_man = Landmark.the_man
-        return "Unknown" unless the_man
-
-        distance_meters = the_man.distance_from(lat, lng)
+        distance_meters = distance_to_landmark(the_man.name)
         format_distance(distance_meters)
       end
 
@@ -144,14 +142,14 @@ module Services
       end
 
       def format_distance(distance_meters)
-        distance_miles = distance_meters / 1609.34
+        puts distance_meters
+        distance_miles = distance_meters.to_f / 1609.34
 
         if distance_miles < 0.1
           "#{(distance_miles * 5280).round} feet"
         else
           "#{distance_miles.round(2)} miles"
         end
-      end
     end
   end
 end

@@ -43,6 +43,12 @@ class ConversationNewOrchestrator::Finalizer
   end
 
   def store_conversation_log(tool_analysis)
+    # Check if database is available before attempting to create log
+    unless ActiveRecord::Base.connected?
+      Rails.logger.warn "🗄️ Database not connected - skipping conversation log creation"
+      return
+    end
+
     metadata = {
       sync_tools: tool_analysis[:sync_tools],
       async_tools: tool_analysis[:async_tools],
@@ -60,13 +66,21 @@ class ConversationNewOrchestrator::Finalizer
       })
     end
 
-    ConversationLog.create!(
-      session_id: @state[:session_id],
-      user_message: @user_message,
-      ai_response: @state[:ai_response][:text],
-      tool_results: (@state.dig(:action_results, :sync_results) || {}).to_json,
-      metadata: metadata.to_json
-    )
+    begin
+      ConversationLog.create!(
+        session_id: @state[:session_id],
+        user_message: @user_message,
+        ai_response: @state[:ai_response][:text],
+        tool_results: (@state.dig(:action_results, :sync_results) || {}).to_json,
+        metadata: metadata.to_json
+      )
+      Rails.logger.info "📝 ConversationLog created for session: #{@state[:session_id]}"
+    rescue ActiveRecord::ConnectionNotEstablished => e
+      Rails.logger.warn "🗄️ Database connection issue - conversation log not saved: #{e.message}"
+    rescue => e
+      Rails.logger.error "❌ Failed to create conversation log: #{e.message}"
+      # Don't re-raise - conversation should continue even if logging fails
+    end
   end
 
   def continue_conversation?(tool_analysis)
@@ -75,9 +89,21 @@ class ConversationNewOrchestrator::Finalizer
 
   def end_conversation_if_needed(tool_analysis)
     return if continue_conversation?(tool_analysis)
+
     conversation = @state[:conversation]
-    conversation.end! if conversation&.active?
-    Rails.logger.info "🧠 Ended conversation: #{@state[:session_id]}"
+    return unless conversation&.respond_to?(:active?) && conversation&.respond_to?(:end!)
+
+    begin
+      if conversation.active?
+        conversation.end!
+        Rails.logger.info "🧠 Ended conversation: #{@state[:session_id]}"
+      end
+    rescue ActiveRecord::ConnectionNotEstablished => e
+      Rails.logger.warn "🗄️ Database connection issue - conversation not ended: #{e.message}"
+    rescue => e
+      Rails.logger.error "❌ Failed to end conversation: #{e.message}"
+      # Don't re-raise - finalization should continue
+    end
   end
 
   def format_for_hass(tool_analysis)

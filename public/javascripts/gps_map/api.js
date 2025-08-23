@@ -13,7 +13,11 @@ GPSMap.API = {
       
       if (data.lat && data.lng) {
         // Update cube marker with full location context
-        GPSMap.Markers.updateCubeMarker(data.lat, data.lng, data);
+        if (GPSMap.Markers && typeof GPSMap.Markers.updateCubeMarker === 'function') {
+          GPSMap.Markers.updateCubeMarker(data.lat, data.lng, data);
+        } else {
+          console.warn('GPSMap.Markers not available, skipping cube marker update');
+        }
         
         // Update info panels
         this.updateInfoPanels(data);
@@ -22,10 +26,18 @@ GPSMap.API = {
         if (data.landmarks && data.landmarks.length > 0) {
           this.updateProximityAlert(data.landmarks);
           this.displayNearbyLandmarks(data.landmarks);
+        } else {
+          // Clear landmarks display if no landmarks nearby
+          const existingAlert = document.getElementById('proximity-alert');
+          const existingList = document.getElementById('landmarks-list');
+          if (existingAlert) existingAlert.remove();
+          if (existingList) existingList.remove();
         }
         
         // Add to route history
-        GPSMap.Markers.addToRouteHistory(data.lat, data.lng, data.timestamp, data.address);
+        if (GPSMap.Markers && typeof GPSMap.Markers.addToRouteHistory === 'function') {
+          GPSMap.Markers.addToRouteHistory(data.lat, data.lng, data.timestamp, data.address);
+        }
         
         if (statusEl) {
           statusEl.textContent = `Last updated: ${new Date(data.timestamp).toLocaleTimeString()}`;
@@ -127,29 +139,45 @@ GPSMap.API = {
   
   // Display nearby landmarks list
   displayNearbyLandmarks: function(landmarks) {
-    const existingList = document.getElementById('landmarks-list');
-    if (existingList) existingList.remove();
+    let existingList = document.getElementById('landmarks-list');
     
-    if (landmarks.length > 1) {
+    // Only show list if there are multiple landmarks
+    if (landmarks.length <= 1) {
+      if (existingList) existingList.remove();
+      return;
+    }
+    
+    // Generate current landmarks content
+    let content = '<strong>📍 Nearby:</strong><br>';
+    landmarks.slice(0, 5).forEach(landmark => {
+      const distance = Math.round(landmark.distance_meters || 0);
+      content += `• ${landmark.name} (${distance}m)<br>`;
+    });
+    
+    // If list doesn't exist, create it
+    if (!existingList) {
       const listEl = document.createElement('div');
       listEl.id = 'landmarks-list';
-      listEl.style.cssText = 'position: absolute; top: 80px; right: 10px; background: rgba(0, 0, 0, 0.8); color: #00ffff; padding: 8px; border-radius: 4px; font-size: 11px; max-width: 200px; border: 1px solid rgba(0, 255, 255, 0.3);';
+      listEl.style.cssText = 'position: absolute; top: 80px; right: 10px; background: rgba(0, 0, 0, 0.8); color: #00ffff; padding: 8px; border-radius: 4px; font-size: 11px; max-width: 200px; border: 1px solid rgba(0, 255, 255, 0.3); z-index: 1000;';
       
-      let content = '<strong>📍 Nearby:</strong><br>';
-      landmarks.slice(0, 5).forEach(landmark => {
-        const distance = Math.round(landmark.distance_meters || 0);
-        content += `• ${landmark.name} (${distance}m)<br>`;
-      });
+      // Add close button
+      const closeBtn = document.createElement('span');
+      closeBtn.innerHTML = '×';
+      closeBtn.style.cssText = 'position: absolute; top: 2px; right: 5px; cursor: pointer; color: #ff6b6b; font-weight: bold; font-size: 14px;';
+      closeBtn.onclick = () => listEl.remove();
       
-      listEl.innerHTML = content;
+      listEl.appendChild(closeBtn);
+      listEl.innerHTML = content + listEl.innerHTML;
       document.body.appendChild(listEl);
+      existingList = listEl;
+    } else {
+      // Update existing list content only if it has changed
+      const currentContent = existingList.innerHTML;
+      const newContentWithClose = content + '<span style="position: absolute; top: 2px; right: 5px; cursor: pointer; color: #ff6b6b; font-weight: bold; font-size: 14px;" onclick="this.parentElement.remove()">×</span>';
       
-      // Auto-hide after 10 seconds
-      setTimeout(() => {
-        if (document.getElementById('landmarks-list')) {
-          document.getElementById('landmarks-list').remove();
-        }
-      }, 10000);
+      if (!currentContent.includes(content.substring(0, 50))) { // Check if content is significantly different
+        existingList.innerHTML = newContentWithClose;
+      }
     }
   },
   
@@ -247,14 +275,18 @@ GPSMap.API = {
       const data = await response.json();
       
       if (data.history && data.history.length > 0) {
-        GPSMap.Markers.routeHistory = data.history.map(point => ({
-          lat: point.lat,
-          lng: point.lng,
-          timestamp: point.timestamp,
-          address: point.address
-        }));
-        
-        console.log(`Loaded ${GPSMap.Markers.routeHistory.length} route points`);
+        if (GPSMap.Markers) {
+          GPSMap.Markers.routeHistory = data.history.map(point => ({
+            lat: point.lat,
+            lng: point.lng,
+            timestamp: point.timestamp,
+            address: point.address
+          }));
+          
+          console.log(`Loaded ${GPSMap.Markers.routeHistory.length} route points`);
+        } else {
+          console.warn('GPSMap.Markers not available for route history');
+        }
       }
     } catch (error) {
       console.error('Error loading route history:', error);
@@ -433,8 +465,12 @@ GPSMap.API = {
       }
       
       if (homeData && homeData.lat && homeData.lng) {
-        GPSMap.Markers.addHomeMarker(homeData.lat, homeData.lng, homeData.address);
-        console.log('✅ Home location loaded successfully');
+        if (GPSMap.Markers && typeof GPSMap.Markers.addHomeMarker === 'function') {
+          GPSMap.Markers.addHomeMarker(homeData.lat, homeData.lng, homeData.address);
+          console.log('✅ Home location loaded successfully');
+        } else {
+          console.warn('GPSMap.Markers not available for home marker');
+        }
       }
     } catch (error) {
       console.log('Home location not available:', error.message);

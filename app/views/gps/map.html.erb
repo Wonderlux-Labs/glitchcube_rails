@@ -95,14 +95,18 @@
         </div>
     </div>
     
-    <!-- Controls toolbar -->
+    <!-- Map controls -->
     <div class="controls-toolbar">
-      <button class="control-button" id="routeToggle">SHOW route</button>
-      <button class="control-button" id="landmarksToggle">HIDE landmarks</button>
-      <button class="control-button" id="portosToggle">SHOW toilets</button>
-      <button class="control-button" id="centerToggle">Center Map</button>
+        <button class="control-button" id="center-button" title="Center on Cube">📍</button>
+        <button class="control-button" id="landmarks-toggle" title="Toggle Landmarks">🏛️</button>
+        <button class="control-button" id="streets-toggle" title="Toggle Streets">🛣️</button>
+        <button class="control-button" id="compass-button" title="Center on Man">🧭</button>
     </div>
     
+    <!-- Static mode banner -->
+    <div class="static-banner">
+        📡 Live GPS Tracking - Glitch Cube Location
+    </div>
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

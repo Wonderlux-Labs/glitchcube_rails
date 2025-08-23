@@ -1,6 +1,9 @@
-# app/jobs/conversation_summarizer_job.rb
+# app/jobs/summaries/conversation_summarizer_job.rb
 
-class ConversationSummarizerJob < ApplicationJob
+module Recurring
+  module System
+    module Summaries
+    class ConversationSummarizerJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -15,9 +18,8 @@ class ConversationSummarizerJob < ApplicationJob
       Rails.logger.info "📊 Found #{unsummarized_conversation_ids.count} conversations to summarize"
       WorldStateUpdaters::ConversationSummarizerService.call(unsummarized_conversation_ids)
     else
-      Rails.logger.info "😴 No unsummarized conversations found"
-      # Still create an empty summary for record keeping
-      WorldStateUpdaters::ConversationSummarizerService.call([])
+      Rails.logger.info "😴 No unsummarized conversations found - skipping empty summary"
+      return
     end
 
     Rails.logger.info "✅ ConversationSummarizerJob completed successfully"
@@ -41,5 +43,8 @@ class ConversationSummarizerJob < ApplicationJob
 
     # Get all conversation IDs that aren't in the summarized list
     Conversation.where.not(id: summarized_ids.uniq).pluck(:id)
+  end
+    end
+    end
   end
 end

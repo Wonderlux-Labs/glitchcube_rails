@@ -57,7 +57,7 @@ class Api::V1::GisController < Api::V1::BaseController
 
         if lat && lng
           # Use location context service for consistency
-          context = Services::Gps::LocationContextService.full_context(lat, lng)
+          context = Gps::LocationContextService.full_context(lat, lng)
           render json: {
             landmarks: context[:landmarks] || [],
             count: (context[:landmarks] || []).length,

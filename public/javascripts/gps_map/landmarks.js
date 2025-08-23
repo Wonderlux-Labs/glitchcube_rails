@@ -22,14 +22,14 @@ GPSMap.Landmarks = {
   // Add landmarks to map
   addLandmarksToMap: function() {
     this.landmarks.forEach(landmark => {
-      // Use custom icons for special landmarks, emoji for others
+      // Use custom icons for special landmarks, small dots for others
       let landmarkIcon;
       if (landmark.type === 'center') {
-        landmarkIcon = GPSMap.Icons.createCustomIcon('man', 24);
+        landmarkIcon = GPSMap.Icons.createCustomIcon('man', 20);
       } else if (landmark.type === 'sacred') {
-        landmarkIcon = GPSMap.Icons.createCustomIcon('temple', 24);
+        landmarkIcon = GPSMap.Icons.createCustomIcon('temple', 20);
       } else {
-        landmarkIcon = GPSMap.Icons.createLandmarkIcon(landmark.type, 24);
+        landmarkIcon = GPSMap.Icons.createLandmarkIcon(landmark.type, 14);
       }
       
       landmark.marker = L.marker([landmark.lat, landmark.lng], {
@@ -109,22 +109,22 @@ GPSMap.Landmarks = {
         if (distance <= GPSMap.Utils.PROXIMITY_THRESHOLD_METERS) {
           let proximityIcon;
           if (landmark.type === 'center') {
-            proximityIcon = GPSMap.Icons.createCustomIcon('man', 28);
+            proximityIcon = GPSMap.Icons.createCustomIcon('man', 24);
           } else if (landmark.type === 'sacred') {
-            proximityIcon = GPSMap.Icons.createCustomIcon('temple', 28);
+            proximityIcon = GPSMap.Icons.createCustomIcon('temple', 24);
           } else {
-            proximityIcon = GPSMap.Icons.createLandmarkIcon(landmark.type, 28);
+            proximityIcon = GPSMap.Icons.createLandmarkIcon(landmark.type, 18);
           }
           proximityIcon.options.className += ' proximity-highlight';
           landmark.marker.setIcon(proximityIcon);
         } else {
           let normalIcon;
           if (landmark.type === 'center') {
-            normalIcon = GPSMap.Icons.createCustomIcon('man', 24);
+            normalIcon = GPSMap.Icons.createCustomIcon('man', 20);
           } else if (landmark.type === 'sacred') {
-            normalIcon = GPSMap.Icons.createCustomIcon('temple', 24);
+            normalIcon = GPSMap.Icons.createCustomIcon('temple', 20);
           } else {
-            normalIcon = GPSMap.Icons.createLandmarkIcon(landmark.type, 24);
+            normalIcon = GPSMap.Icons.createLandmarkIcon(landmark.type, 14);
           }
           landmark.marker.setIcon(normalIcon);
         }

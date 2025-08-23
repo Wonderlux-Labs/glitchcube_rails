@@ -15,10 +15,10 @@ GPSMap.MapSetup = {
     
     this.map = L.map('map').setView(goldenSpike, 14);
     
-    // Add dark theme map tiles (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© CARTO | © OpenStreetMap | Burning Man 2025 | Glitch Cube GPS',
-      subdomains: 'abcd',
+    // Clean light map tiles like the example - using OpenStreetMap for maximum visibility
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap | Burning Man 2025 | Glitch Cube GPS',
+      subdomains: 'abc',
       maxZoom: 19
     }).addTo(this.map);
     
@@ -28,8 +28,8 @@ GPSMap.MapSetup = {
     // Create layer groups
     this.createLayerGroups();
     
-    // Load streets data
-    this.loadStreets();
+    // Streets disabled - database contains fragmented segments, not complete streets
+    // this.loadStreets();
     
     // Trash fence loaded from database via API
     
@@ -67,54 +67,20 @@ GPSMap.MapSetup = {
     this.layers.zones = L.layerGroup(); // Zone boundaries (not shown by default)
     this.layers.boundaries = L.layerGroup().addTo(this.map); // Always show boundaries (trash fence)
     this.layers.cityBlocks = L.layerGroup(); // City blocks - available but not shown
-    this.layers.streets = L.layerGroup().addTo(this.map); // Load streets by default
+    this.layers.streets = L.layerGroup(); // Streets disabled - fragments only
     this.layers.landmarks = L.layerGroup().addTo(this.map); // Show landmarks by default
     this.layers.toilets = L.layerGroup(); // Load on-demand
     this.layers.proximity = L.layerGroup().addTo(this.map);
     this.layers.plazas = L.layerGroup(); // Deprecated - part of landmarks now
   },
   
-  // Load streets GeoJSON data
+  // Streets disabled - database contains fragmented segments only
   loadStreets: function() {
-    console.log('Loading streets from API...');
+    console.log('Streets loading disabled - fragments only in database');
+    return; // Early return to prevent loading
     
-    fetch('/api/v1/gis/streets')
-      .then(response => {
-        console.log('Streets API response status:', response.status);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Streets data loaded successfully:', data);
-        console.log('Number of features:', data.features ? data.features.length : 'No features');
-        
-        if (data.features && data.features.length > 0) {
-          const geoLayer = L.geoJSON(data, {
-            style: function(feature) {
-              return {
-                color: '#FF6600',  // Orange color
-                weight: feature.properties.width || 3,
-                opacity: 0.8,
-                fillOpacity: 0
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              if (feature.properties && feature.properties.name) {
-                layer.bindPopup(`<strong>${feature.properties.name}</strong><br>Type: ${feature.properties.type || 'Unknown'}`);
-              }
-            }
-          }).addTo(this.layers.streets);
-          
-          console.log('Streets added to map layer');
-        } else {
-          console.warn('No street features found in API response');
-        }
-      })
-      .catch(error => {
-        console.error('Error loading streets from API:', error);
-      });
+    // Original code commented out:
+    // fetch('/api/v1/gis/streets')...
   },
 
   // Center map on Golden Spike

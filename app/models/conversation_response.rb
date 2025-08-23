@@ -127,8 +127,9 @@ class ConversationResponse
   # Generate AI response for Home Assistant queries
   def self.generate_for_home_assistant(user_query, context: {}, **ai_options)
     system_message = build_system_message(context)
-
+    puts system_message
     prompt = build_prompt(user_query, context)
+    puts prompt
 
     ai_generate(
       prompt,

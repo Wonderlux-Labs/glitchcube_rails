@@ -2,7 +2,9 @@
 
 # Job to register this server's IP with Home Assistant
 # Runs every 5 minutes to ensure registration stays current
-class HostRegistrationJob < ApplicationJob
+module Recurring
+  module System
+    class HostRegistrationJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -90,5 +92,7 @@ class HostRegistrationJob < ApplicationJob
     end
 
     nil
+  end
+    end
   end
 end

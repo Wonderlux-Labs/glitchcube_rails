@@ -1,0 +1,186 @@
+esphome:
+  name: esphome-web-510674
+  friendly_name: makropad
+  min_version: 2025.5.0
+  name_add_mac_suffix: false
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+wifi:
+  ssid: justacube
+  password: nothingtosee1821
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+# Encoders working correctly
+sensor:
+  - platform: rotary_encoder
+    name: "Left Encoder"
+    pin_a: GPIO25
+    pin_b: GPIO26
+    id: left_encoder
+    restore_mode: ALWAYS_ZERO
+    
+  - platform: rotary_encoder
+    name: "Right Encoder"
+    pin_a: GPIO32
+    pin_b: GPIO33
+    id: right_encoder
+    restore_mode: ALWAYS_ZERO
+
+# Fixed button assignments
+binary_sensor:
+  # What you thought was "left button" actually connects to right encoder
+  - platform: gpio
+    pin:
+      number: GPIO27
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Right Encoder Button"  # This is actually the right button
+    id: right_enc_btn
+    
+  # Left button might be on a different pin - try GPIO12
+  - platform: gpio
+    pin:
+      number: GPIO12
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Left Encoder Button"
+    id: left_enc_btn
+    
+  # Try some other pins for the missing left button
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Test Button 1"
+    id: test_btn1
+    
+  - platform: gpio
+    pin:
+      number: GPIO4
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Test Button 2"
+    id: test_btn2
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    id: oled_display
+    update_interval: 500ms
+    lambda: |-
+      it.print(0, 0, id(font_large), "GLITCH");
+      it.print(0, 20, id(font_large), "CUBE");
+      
+      // Show encoder values
+      it.printf(0, 40, id(font_small), "L:%d R:%d", 
+        id(left_encoder).state, id(right_encoder).state);
+      
+      // Show ALL button states for debugging
+      it.printf(0, 50, id(font_tiny), "L:%s R:%s", 
+        id(left_enc_btn).state ? "X" : "-",
+        id(right_enc_btn).state ? "X" : "-");
+      it.printf(0, 58, id(font_tiny), "T1:%s T2:%s", 
+        id(test_btn1).state ? "X" : "-",
+        id(test_btn2).state ? "X" : "-");
+
+
+
+
+# Working keypad LEDs with effects
+light:
+  - platform: fastled_clockless
+    pin: GPIO17
+    num_leds: 16
+    chipset: WS2812B
+    name: "Key RGB Matrix"
+    id: key_leds
+    rgb_order: GRB
+    effects:
+      - strobe:
+          name: "Strobe"
+          colors:
+            - state: true
+              brightness: 100%
+              red: 100%
+              green: 20%
+              blue: 0%
+              duration: 250ms
+            - state: false
+              duration: 250ms
+      - pulse:
+          name: "Pulse"
+          transition_length: 2s
+          update_interval: 1s
+      - random:
+          name: "Random"
+          transition_length: 3s
+          update_interval: 2s
+      - addressable_rainbow:
+          name: "Moving Rainbow"
+          speed: 10
+          width: 50
+      - addressable_color_wipe:
+          name: "Color Wipe"
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 4
+            - red: 0%
+              green: 100%
+              blue: 0%
+              num_leds: 4
+            - red: 0%
+              green: 0%
+              blue: 100%
+              num_leds: 4
+            - red: 100%
+              green: 100%
+              blue: 0%
+              num_leds: 4
+          add_led_interval: 100ms
+          reverse: true
+      - addressable_scan:
+          name: "Scanner"
+          move_interval: 100ms
+      - addressable_twinkle:
+          name: "Twinkle"
+          twinkle_probability: 5%
+      - addressable_fireworks:
+          name: "Fireworks"
+          update_interval: 32ms
+          spark_probability: 10%
+          use_random_color: true
+      - addressable_flicker:
+          name: "Flicker"
+          update_interval: 16ms
+          intensity: 5%
+
+# Display
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_large
+    size: 16
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 10
+  - file: "gfonts://Roboto"
+    id: font_tiny
+    size: 8

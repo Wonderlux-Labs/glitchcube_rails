@@ -1,0 +1,46 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.current_persona
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '485'
+      Date:
+      - Sat, 23 Aug 2025 12:46:40 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.current_persona","state":"sparkle","attributes":{"options":["buddy","jax","zorp","thecube","neon","sparkle","crash","mobius"],"editable":false,"icon":"mdi:account","friendly_name":"Current
+        Persona"},"last_changed":"2025-08-23T01:24:36.768567+00:00","last_reported":"2025-08-23T01:24:36.768567+00:00","last_updated":"2025-08-23T01:24:36.768567+00:00","context":{"id":"01K3A8E2RZQ1G5JPW4N4111TQT","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
+  recorded_at: Sat, 23 Aug 2025 12:46:40 GMT
+recorded_with: VCR 6.3.1

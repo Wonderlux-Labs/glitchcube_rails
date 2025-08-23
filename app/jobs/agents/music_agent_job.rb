@@ -1,40 +1,41 @@
-# app/jobs/ha_agent_job.rb
-class HaAgentJob < ApplicationJob
+# app/jobs/music_agent_job.rb
+module Agents
+  class MusicAgentJob < ApplicationJob
   queue_as :default
 
   def perform(request:, tool_intents:, session_id:, conversation_id:, user_message:)
-    Rails.logger.info "🏠 HaAgentJob starting for session: #{session_id}"
-    Rails.logger.info "📝 Request: #{request}"
+    Rails.logger.info "🎵 MusicAgentJob starting for session: #{session_id}"
+    Rails.logger.info "📝 Music Request: #{request}"
 
     begin
-      # Call Home Assistant's conversation.process API
-      response = call_ha_conversation_agent(request)
+      # Call Home Assistant's conversation.jukebot API
+      response = call_music_conversation_agent(request)
 
-      Rails.logger.info "✅ HA agent response received"
+      Rails.logger.info "✅ Music agent response received"
       Rails.logger.info "📄 Response: #{response.inspect}"
 
       # Store results for next conversation turn (not as interrupting message)
-      store_ha_results(
+      store_music_results(
         session_id: session_id,
         conversation_id: conversation_id,
         user_message: user_message,
         tool_intents: tool_intents,
-        ha_response: response
+        music_response: response
       )
 
-      Rails.logger.info "💾 HA results stored for next conversation turn"
+      Rails.logger.info "💾 Music results stored for next conversation turn"
 
     rescue StandardError => e
-      Rails.logger.error "❌ HaAgentJob failed: #{e.message}"
+      Rails.logger.error "❌ MusicAgentJob failed: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
 
       # Store failure for next turn
-      store_ha_results(
+      store_music_results(
         session_id: session_id,
         conversation_id: conversation_id,
         user_message: user_message,
         tool_intents: tool_intents,
-        ha_response: nil,
+        music_response: nil,
         error: e.message
       )
     end
@@ -42,18 +43,18 @@ class HaAgentJob < ApplicationJob
 
   private
 
-  def call_ha_conversation_agent(request)
-    Rails.logger.info "🏠 Calling HA conversation agent"
-    Rails.logger.info "📤 Sending: #{request}"
+  def call_music_conversation_agent(request)
+    Rails.logger.info "🎵 Calling HA music conversation agent"
+    Rails.logger.info "📤 Sending to jukebot: #{request}"
 
-    # Call actual Home Assistant conversation agent
+    # Call Home Assistant conversation.jukebot agent
     HomeAssistantService.new.conversation_process(
       text: request,
-      agent_id: "conversation.claude_conversation"
+      agent_id: "conversation.jukebot"
     )
   end
 
-  def store_ha_results(session_id:, conversation_id:, user_message:, tool_intents:, ha_response:, error: nil)
+  def store_music_results(session_id:, conversation_id:, user_message:, tool_intents:, music_response:, error: nil)
     # Store results in conversation metadata, not as conversation log entries
     # This avoids interrupting ongoing TTS/conversation
 
@@ -64,12 +65,13 @@ class HaAgentJob < ApplicationJob
     existing_metadata = conversation.metadata_json || {}
     pending_results = existing_metadata["pending_ha_results"] || []
 
-    # Create result entry
+    # Create result entry for music
     result_entry = {
       timestamp: Time.current.iso8601,
       user_message: user_message,
       tool_intents: tool_intents,
-      ha_response: ha_response,
+      music_response: music_response,
+      agent_type: "music", # Tag this as music agent result
       error: error,
       processed: false
     }
@@ -84,6 +86,7 @@ class HaAgentJob < ApplicationJob
 
     conversation.update!(metadata_json: updated_metadata)
 
-    Rails.logger.info "💾 Stored HA results in conversation metadata (not as conversation log)"
+    Rails.logger.info "💾 Stored music agent results in conversation metadata (not as conversation log)"
+  end
   end
 end

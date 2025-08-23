@@ -1,6 +1,6 @@
 default: &default
   conversation_timeout_monitor:
-    class: ConversationTimeoutMonitorJob
+    class: Recurring::System::ConversationTimeoutMonitorJob
     schedule: every minute
     queue: default
 
@@ -10,28 +10,33 @@ default: &default
     queue: default
 
   weather_forecast_update:
-    class: WeatherForecastSummarizerJob
+    class: Recurring::Content::WeatherForecastSummarizerJob
     schedule: "0 * * * *"     # Every hour at the top of the hour
     queue: default
 
   conversation_summarizer:
-    class: ConversationSummarizerJob
+    class: Recurring::System::Summaries::ConversationSummarizerJob
     schedule: "*/30 * * * *"  # Every 30 minutes
     queue: default
 
   goal_monitor:
-    class: GoalMonitorJob
+    class: Recurring::Persona::GoalMonitorJob
     schedule: "*/5 * * * *"   # Every 5 minutes
     queue: default
 
   intermediate_summarizer:
-    class: IntermediateSummarizerJob
+    class: Recurring::System::Summaries::IntermediateSummarizerJob
     schedule: "0 */3 * * *"   # Every 3 hours at the top of the hour
     queue: default
 
   daily_summarizer:
-    class: DailySummarizerJob
+    class: Recurring::System::Summaries::DailySummarizerJob
     schedule: "0 3 * * *"     # Daily at 3 AM
+    queue: default
+
+  summary_consolidation:
+    class: Recurring::System::Summaries::SummaryConsolidationJob
+    schedule: "30 2 * * *"    # Daily at 2:30 AM (before daily summarizer)
     queue: default
 
 production:
@@ -42,13 +47,16 @@ production:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
 
+  random_persona:
+    class: Recurring::Persona::RandomPersonaJob
+    schedule: "*/5"
   gps_sensor_update:
-    class: GpsSensorUpdateJob
-    schedule: "*/1 * * * *"   # Every 5 minutes
+    class: Recurring::System::GpsSensorUpdateJob
+    schedule: "*/5 * * * *"   # Every 5 minutes
     queue: default
 
   host_registration:
-    class: HostRegistrationJob
+    class: Recurring::System::HostRegistrationJob
     schedule: "*/5 * * * *"   # Every 5 minutes
     queue: default
 
@@ -57,11 +65,11 @@ development:
   
   # Development-specific overrides (faster intervals for testing)
   gps_sensor_update:
-    class: GpsSensorUpdateJob
-    schedule: "*/1 * * * *"   # Every 3 minutes in dev (faster)
+    class: Recurring::System::GpsSensorUpdateJob
+    schedule: "*/3 * * * *"   # Every 3 minutes in dev (faster)
     queue: default
 
   host_registration:
-    class: HostRegistrationJob
-    schedule: "*/1 * * * *"   # Every 1 minute in dev (faster)
+    class: Recurring::System::HostRegistrationJob
+    schedule: "*/3 * * * *"   # Every 1 minute in dev (faster)
     queue: default

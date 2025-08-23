@@ -139,7 +139,7 @@ module Services
       def fetch_current_location
         return nil unless GlitchCube.config.home_assistant.url
 
-        gps_service = Services::Gps::GPSTrackingService.new
+        gps_service = Gps::GPSTrackingService.new
         location_data = gps_service.current_location
 
         # Return the address string for memory location matching

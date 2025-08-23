@@ -4,7 +4,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   def location
     begin
       # Get current location with full context
-      location_data = ::Services::Gps::GPSTrackingService.new.current_location
+      location_data = ::Gps::GPSTrackingService.new.current_location
 
       if location_data.nil?
         render json: {
@@ -25,7 +25,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   end
 
   def coords
-    location = ::Services::Gps::GPSTrackingService.new.current_location
+    location = ::Gps::GPSTrackingService.new.current_location
     if location&.dig(:lat) && location[:lng]
       render json: {
         lat: location[:lat],
@@ -40,9 +40,9 @@ class Api::V1::GpsController < Api::V1::BaseController
 
   def proximity
     begin
-      current_loc = ::Services::Gps::GPSTrackingService.new.current_location
+      current_loc = ::Gps::GPSTrackingService.new.current_location
       if current_loc && current_loc[:lat] && current_loc[:lng]
-        proximity = ::Services::Gps::GPSTrackingService.new.proximity_data(current_loc[:lat], current_loc[:lng])
+        proximity = ::Gps::GPSTrackingService.new.proximity_data(current_loc[:lat], current_loc[:lng])
         render json: proximity
       else
         render json: { landmarks: [], portos: [], map_mode: "normal", visual_effects: [] }
@@ -66,7 +66,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   def simulate_movement
     begin
       if GlitchCube.gps_spoofing_allowed?
-        ::Services::Gps::GPSTrackingService.new.simulate_movement!
+        ::Gps::GPSTrackingService.new.simulate_movement!
         render json: { success: true, message: "Movement simulation updated" }
       else
         render json: { error: "Simulation mode not enabled" }, status: :bad_request
@@ -80,7 +80,7 @@ class Api::V1::GpsController < Api::V1::BaseController
     begin
       # Simple history endpoint - will generate over time
       # For now return current location as single point
-      current_loc = ::Services::Gps::GPSTrackingService.new.current_location
+      current_loc = ::Gps::GPSTrackingService.new.current_location
 
       if current_loc && current_loc[:lat] && current_loc[:lng]
         history = [ {
@@ -105,14 +105,14 @@ class Api::V1::GpsController < Api::V1::BaseController
 
     begin
       # Get GPS coordinates
-      location = ::Services::Gps::GPSTrackingService.new.current_location
+      location = ::Gps::GPSTrackingService.new.current_location
       if location.nil? || !location[:lat] || !location[:lng]
         render plain: "GPS unavailable", status: :service_unavailable
         return
       end
 
       # Get zone and address info
-      context = ::Services::Gps::LocationContextService.full_context(location[:lat], location[:lng])
+      context = ::Gps::LocationContextService.full_context(location[:lat], location[:lng])
 
       # Return simple text: address if in city, zone otherwise
       if context[:zone] == :city && context[:address]

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Services::Gps::GPSTrackingService, type: :service do
+RSpec.describe Gps::GPSTrackingService, type: :service do
   let(:service) { described_class.new }
   let(:mock_ha_service) { instance_double(HomeAssistantService) }
 
@@ -22,7 +22,7 @@ RSpec.describe Services::Gps::GPSTrackingService, type: :service do
     end
 
     before do
-      allow(Services::Gps::LocationContextService).to receive(:full_context)
+      allow(Gps::LocationContextService).to receive(:full_context)
         .and_return(location_context)
     end
 
@@ -96,7 +96,7 @@ RSpec.describe Services::Gps::GPSTrackingService, type: :service do
     end
 
     before do
-      allow(Services::Gps::LocationContextService).to receive(:full_context)
+      allow(Gps::LocationContextService).to receive(:full_context)
         .and_return(location_context)
     end
 

@@ -9,6 +9,9 @@ OpenRouter.configure do |config|
   config.site_name = Rails.configuration.openrouter_app_name || "GlitchCube"
   config.site_url = Rails.configuration.openrouter_site_url || "https://glitchcube.dev"
 
+  # Timeout configuration to prevent long delays (like 151+ second responses)
+  config.request_timeout = 45  # 45 second timeout for LLM calls
+
   # Auto-heal structured output responses when models don't support it natively
   config.auto_heal_responses = true
   config.healer_model = "openai/gpt-4o-mini"

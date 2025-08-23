@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
-# DailySummarizerJob
-# Runs once per day to create comprehensive daily summaries from all activity
-# Synthesizes hourly, intermediate (3-hour), and goal completion summaries
-class DailySummarizerJob < ApplicationJob
+module Recurring
+  module System
+    module Summaries
+    # DailySummarizerJob
+    # Runs once per day to create comprehensive daily summaries from all activity
+    # Synthesizes hourly, intermediate (3-hour), and goal completion summaries
+    class DailySummarizerJob < ApplicationJob
   queue_as :default
 
   def perform
@@ -347,5 +350,8 @@ class DailySummarizerJob < ApplicationJob
     Rails.logger.info "✅ Created empty daily summary for quiet day"
   rescue StandardError => e
     Rails.logger.error "❌ Failed to create empty daily summary: #{e.message}"
+  end
+    end
+    end
   end
 end

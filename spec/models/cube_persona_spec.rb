@@ -7,7 +7,7 @@ RSpec.describe CubePersona, type: :model do
     context 'when Home Assistant is available' do
       before do
         allow(HomeAssistantService).to receive(:entity)
-          .with("input_text.current_persona")
+          .with("input_select.current_persona")
           .and_return({ "state" => "buddy" })
       end
 
@@ -24,7 +24,7 @@ RSpec.describe CubePersona, type: :model do
     context 'when Home Assistant is unavailable' do
       before do
         allow(HomeAssistantService).to receive(:entity)
-          .with("input_text.current_persona")
+          .with("input_select.current_persona")
           .and_return(nil)
       end
 
@@ -37,10 +37,15 @@ RSpec.describe CubePersona, type: :model do
   describe '.set_current_persona' do
     it 'accepts valid personas' do
       expect(HomeAssistantService).to receive(:call_service)
-        .with("input_text", "set_value", entity_id: "input_text.current_persona", value: "jax")
+        .with("input_select", "select_option", entity_id: "input_select.current_persona", option: "jax")
 
       expect(Rails.cache).to receive(:write)
-        .with("current_persona", "jax", expires_in: 10.minutes)
+        .with("current_persona", "jax", expires_in: 30.minutes)
+
+      # Mock the current_persona method to return a different persona to trigger switch logic
+      allow(CubePersona).to receive(:current_persona).and_return(:buddy)
+      expect(PersonaSwitchService).to receive(:handle_persona_switch)
+        .with(:jax, :buddy)
 
       CubePersona.set_current_persona(:jax)
     end
@@ -51,10 +56,16 @@ RSpec.describe CubePersona, type: :model do
       CubePersona.set_current_persona(:invalid)
     end
 
-    it 'only allows buddy, jax, and zorp' do
-      valid_personas = [ :buddy, :jax, :zorp ]
+    it 'only allows valid personas from PERSONAS constant' do
+      # Test a few representative personas from the PERSONAS constant
+      valid_personas = [ :buddy, :jax, :zorp, :thecube ]
       valid_personas.each do |persona|
         expect(HomeAssistantService).to receive(:call_service)
+          .with("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+        expect(Rails.cache).to receive(:write)
+          .with("current_persona", persona.to_s, expires_in: 30.minutes)
+        allow(PersonaSwitchService).to receive(:handle_persona_switch)
+
         CubePersona.set_current_persona(persona)
       end
     end

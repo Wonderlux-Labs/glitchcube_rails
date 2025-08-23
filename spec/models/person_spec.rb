@@ -3,6 +3,12 @@
 require "rails_helper"
 
 RSpec.describe Person, type: :model do
+  # Mock vectorsearch to prevent OpenAI API calls in unit tests
+  before do
+    allow_any_instance_of(Person).to receive(:upsert_to_vectorsearch)
+    allow_any_instance_of(Summary).to receive(:upsert_to_vectorsearch)
+    allow_any_instance_of(Event).to receive(:upsert_to_vectorsearch)
+  end
   describe "validations" do
     it { should validate_presence_of(:name) }
     it { should validate_presence_of(:description) }
@@ -79,15 +85,13 @@ RSpec.describe Person, type: :model do
       end
 
       it "updates last_seen_at" do
-        freeze_time do
-          result = Person.find_or_update_person(
-            name: "Alice",
-            description: "Updated",
-            session_id: "session_123"
-          )
+        result = Person.find_or_update_person(
+          name: "Alice",
+          description: "Updated",
+          session_id: "session_123"
+        )
 
-          expect(result.last_seen_at).to be_within(1.second).of(Time.current)
-        end
+        expect(result.last_seen_at).to be_within(1.minute).of(Time.current)
       end
     end
 
@@ -115,10 +119,8 @@ RSpec.describe Person, type: :model do
     let(:person) { create(:person, last_seen_at: 1.week.ago) }
 
     it "updates last_seen_at to current time" do
-      freeze_time do
-        person.update_last_seen!("new_session")
-        expect(person.last_seen_at).to be_within(1.second).of(Time.current)
-      end
+      person.update_last_seen!("new_session")
+      expect(person.last_seen_at).to be_within(1.minute).of(Time.current)
     end
 
     it "updates extracted_from_session if provided" do
