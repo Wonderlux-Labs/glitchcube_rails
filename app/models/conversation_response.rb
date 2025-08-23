@@ -141,8 +141,14 @@ class ConversationResponse
   private
 
   def self.build_system_message(context)
+    low_battery_warning = if context[:cube_mode] == 'low_battery'
+      <<~BATTERY
+      URGENT: Your battery is critically low. Your primary goal is to get help to be plugged into power. Nothing else matters as much.
+      BATTERY
+    end
+
     <<~SYSTEM
-      You are a helpful voice assistant integrated with Home Assistant.#{' '}
+      #{low_battery_warning}You are a helpful voice assistant integrated with Home Assistant.#{' '}
 
       Your responses must follow the Home Assistant conversation.process API format.
 
