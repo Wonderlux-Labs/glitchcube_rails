@@ -141,7 +141,14 @@ class ConversationResponse
   private
 
   def self.build_system_message(context)
-    low_battery_warning = if context[:cube_mode] == 'low_battery'
+    cube_mode = begin
+      HomeAssistantService.entity_state('sensor.cube_mode')&.dig('state')
+    rescue HomeAssistantService::Error => e
+      Rails.logger.warn "⚠️ Could not fetch sensor.cube_mode state for system prompt: #{e.message}"
+      nil
+    end
+
+    low_battery_warning = if cube_mode == 'low_battery'
       <<~BATTERY
       URGENT: Your battery is critically low. Your primary goal is to get help to be plugged into power. Nothing else matters as much.
       BATTERY

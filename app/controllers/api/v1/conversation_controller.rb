@@ -7,15 +7,6 @@ class Api::V1::ConversationController < Api::V1::BaseController
     context = extract_context_from_payload
     session_id = extract_session_id_from_payload
 
-    # Check cube mode
-    begin
-      cube_mode_entity = HomeAssistantService.entity_state('sensor.cube_mode')
-      context[:cube_mode] = cube_mode_entity['state'] if cube_mode_entity
-      Rails.logger.info "🔋 Cube mode is: #{context[:cube_mode]}" if context[:cube_mode]
-    rescue HomeAssistantService::Error => e
-      Rails.logger.warn "⚠️ Could not fetch sensor.cube_mode state: #{e.message}"
-    end
-
     Rails.logger.info "🧠 Processing HASS conversation: #{message}"
     Rails.logger.info "📋 Session ID: #{session_id}"
     Rails.logger.info "🔍 Context: #{context}"
