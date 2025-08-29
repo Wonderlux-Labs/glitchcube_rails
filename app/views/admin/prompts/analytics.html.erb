@@ -1,0 +1,158 @@
+<% content_for :layout, 'admin' %>
+
+<h1>📊 Prompt Analytics</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Prompts', admin_prompts_path, class: 'btn' %>
+  <%= link_to 'Models', models_admin_prompts_path, class: 'btn' %>
+</div>
+
+<% if @persona_usage %>
+  <div style="margin-bottom: 30px;">
+    <h2>Persona Usage Trends</h2>
+    <% if @persona_usage[:persona_stats].any? %>
+      <div class="stats">
+        <% @persona_usage[:persona_stats].each do |persona, stats| %>
+          <div class="stat-box">
+            <h3><%= persona.humanize %></h3>
+            <p><%= stats[:count] || 0 %> conversations</p>
+            <small style="color: #666;">
+              Avg: <%= stats[:avg_duration]&.round(2) || 0 %>s
+              | Success: <%= stats[:success_rate] || 0 %>%
+            </small>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+        <p style="color: #666;">No persona usage data available.</p>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @model_usage %>
+  <div style="margin-bottom: 30px;">
+    <h2>Model Configuration</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><strong>Primary Model:</strong> <%= @model_usage[:primary_model] || 'Not configured' %></p>
+      <p><strong>Summarizer Model:</strong> <%= @model_usage[:summarizer_model] || 'Not configured' %></p>
+      <% if @model_usage[:backup_models].any? %>
+        <p><strong>Backup Models:</strong> <%= @model_usage[:backup_models].join(', ') %></p>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @conversation_trends %>
+  <div style="margin-bottom: 30px;">
+    <h2>Conversation Trends (Last 30 Days)</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Total Conversations</h3>
+        <p><%= @conversation_trends[:daily_count]&.values&.sum || 0 %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Average Duration</h3>
+        <p><%= @conversation_trends[:avg_duration] || 0 %>s</p>
+      </div>
+      <div class="stat-box">
+        <h3>Completion Rate</h3>
+        <p><%= @conversation_trends[:completion_rate] || 0 %>%</p>
+      </div>
+    </div>
+
+    <% if @conversation_trends[:daily_count]&.any? %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-top: 20px;">
+        <h3 style="margin-top: 0; color: #00ffff;">Daily Activity</h3>
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Conversations</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @conversation_trends[:daily_count].sort.reverse.first(14).each_with_index do |(date, count), index| %>
+              <tr>
+                <td><%= date.strftime('%m/%d') %></td>
+                <td><%= count %></td>
+                <td>
+                  <% if index > 0 %>
+                    <% prev_count = @conversation_trends[:daily_count].to_a.reverse[index - 1][1] %>
+                    <% change = count - prev_count %>
+                    <% if change > 0 %>
+                      <span style="color: #00ff00;">↑ +<%= change %></span>
+                    <% elsif change < 0 %>
+                      <span style="color: #ff0000;">↓ <%= change %></span>
+                    <% else %>
+                      <span style="color: #666;">→ 0</span>
+                    <% end %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @prompt_performance %>
+  <div style="margin-bottom: 30px;">
+    <h2>Performance Metrics</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Average Response Time</h3>
+        <p><%= @prompt_performance[:avg_response_time] %>s</p>
+      </div>
+      <div class="stat-box">
+        <h3>Error Rate</h3>
+        <p style="color: <%= @prompt_performance[:error_rate] > 0.1 ? '#ff0000' : '#00ff00' %>;">
+          <%= (@prompt_performance[:error_rate] * 100).round(2) %>%
+        </p>
+      </div>
+      <div class="stat-box">
+        <h3>User Satisfaction</h3>
+        <p style="color: <%= @prompt_performance[:user_satisfaction] > 4.0 ? '#00ff00' : '#ffff00' %>;">
+          <%= @prompt_performance[:user_satisfaction] %>/5.0
+        </p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Prompt Insights</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <% if @persona_usage && @persona_usage[:persona_stats].any? %>
+      <% most_used = @persona_usage[:persona_stats].max_by { |_, stats| stats[:count] || 0 } %>
+      <% if most_used %>
+        <p>• Most active persona: <strong><%= most_used[0].humanize %></strong> (<%= most_used[1][:count] %> conversations)</p>
+      <% end %>
+      
+      <% best_success = @persona_usage[:persona_stats].max_by { |_, stats| stats[:success_rate] || 0 } %>
+      <% if best_success %>
+        <p>• Best success rate: <strong><%= best_success[0].humanize %></strong> (<%= best_success[1][:success_rate] %>%)</p>
+      <% end %>
+    <% end %>
+
+    <% if @conversation_trends %>
+      <% if @conversation_trends[:avg_duration] && @conversation_trends[:avg_duration] > 0 %>
+        <p>• Average conversation duration: <strong><%= @conversation_trends[:avg_duration] %> seconds</strong></p>
+      <% end %>
+      
+      <% if @conversation_trends[:completion_rate] %>
+        <p>• Completion rate: <strong><%= @conversation_trends[:completion_rate] %>%</strong></p>
+      <% end %>
+    <% end %>
+
+    <% if @prompt_performance %>
+      <% if @prompt_performance[:error_rate] > 0.05 %>
+        <p style="color: #ff0000;">⚠️ Error rate is elevated at <%= (@prompt_performance[:error_rate] * 100).round(2) %>%</p>
+      <% end %>
+    <% end %>
+  </div>
+</div>

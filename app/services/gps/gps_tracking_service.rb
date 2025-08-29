@@ -10,7 +10,7 @@ module Gps
 
       def initialize
         @ha_service = HomeAssistantService.new
-        @current_location = nil
+        @current_location = current_location
       end
 
       # Get current GPS coordinates with full location context
@@ -18,7 +18,8 @@ module Gps
         @current_location = Rails.cache.fetch(:gps_current_location, expires_in: 5.minutes) do
           # Try to get real GPS data from Home Assistant first
           gps_data = fetch_from_home_assistant
-
+          return random_landmark_location if gps_data.nil? || gps_data.blank?
+          return random_landmark_location if gps_data[:lng].to_i.zero?
           # Fall back to random landmark if GPS unavailable
           gps_data || random_landmark_location
         end
@@ -73,12 +74,13 @@ module Gps
 
         # Write directly to the main cache
         Rails.cache.write("gps_current_location", location_data, expires_in: 5.minutes)
+        @current_location = current_location
         true
       end
 
       # Simulate cube movement - walk toward a landmark and stop when reached
       def simulate_movement!(landmark: nil)
-        current_data = @current_location
+        current_data = current_location # Get fresh location instead of cached @current_location
         begin
           destination_data = Rails.cache.read("cube_destination")
           destination = if destination_data
@@ -95,28 +97,120 @@ module Gps
           end
 
           Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
+          destination_landmark = Landmark.find_by(name: destination[:name])
 
           # Check if we've reached the destination
-          if reached_destination?(current_data, destination)
+          if reached_destination?(current_data, destination_landmark)
             Rails.cache.delete("cube_destination") # Clear destination
-            return "Arrived at #{destination[:name]}"
+            return {
+              status: "arrived",
+              message: "Arrived at #{destination[:name]}",
+              location: current_data,
+              destination: destination
+            }
           end
 
           # Move toward destination (small step)
           new_location = move_toward_destination(current_data, destination)
-          set_location(coords: "#{new_location[:lat]},#{new_location[:lng]}")
+
+          # Update location immediately without cache interference
+          location_data = {
+            lat: new_location[:lat],
+            lng: new_location[:lng],
+            timestamp: Time.now,
+            source: "simulation",
+            accuracy: 5.0, # Simulated accuracy
+            satellites: 12,
+            uptime: nil
+          }
+
+          # Write directly to cache and bypass the 5-minute cache
+          Rails.cache.write("gps_current_location", location_data, expires_in: 5.minutes)
+          @current_location = location_data
 
           distance = calculate_distance(current_data[:lat], current_data[:lng], destination[:lat], destination[:lng])
-          puts "Moving toward #{destination[:name]} (#{distance.round}m remaining)"
 
-          # Continue movement simulation
-          sleep(5)
-          simulate_movement!
+          # Start continuous movement if this is the first step
+          if destination_data.nil?
+            Recurring::System::MovementSimulationJob.perform_later
+          end
+
+          {
+            status: "moving",
+            message: "Moving toward #{destination[:name]} (#{distance.round}m remaining)",
+            location: new_location,
+            destination: destination,
+            distance_remaining: distance.round
+          }
         rescue StandardError => e
-          puts e.inspect
-          puts e.backtrace.inspect
-          "Movement simulation failed: #{e.message}"
+          Rails.logger.error "Movement simulation failed: #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+          {
+            status: "error",
+            message: "Movement simulation failed: #{e.message}",
+            error: e.message
+          }
         end
+      end
+
+      # Get current movement status without moving
+      def movement_status
+        destination_data = Rails.cache.read("cube_destination")
+        return { status: "idle", message: "No active movement" } unless destination_data
+
+        begin
+          destination = JSON.parse(destination_data, symbolize_names: true)
+          current_data = current_location
+          destination_landmark = Landmark.find_by(name: destination[:name])
+
+          if reached_destination?(current_data, destination_landmark)
+            Rails.cache.delete("cube_destination")
+            return {
+              status: "arrived",
+              message: "Arrived at #{destination[:name]}",
+              location: current_data
+            }
+          end
+
+          distance = calculate_distance(current_data[:lat], current_data[:lng], destination[:lat], destination[:lng])
+
+          {
+            status: "moving",
+            message: "Moving toward #{destination[:name]} (#{distance.round}m remaining)",
+            location: current_data,
+            destination: destination,
+            distance_remaining: distance.round
+          }
+        rescue StandardError => e
+          { status: "error", message: "Error checking movement status: #{e.message}" }
+        end
+      end
+
+      # Set a specific destination for movement
+      def set_destination(landmark_name)
+        landmark = Landmark.find_by(name: landmark_name)
+        return { error: "Landmark not found" } unless landmark
+
+        destination = {
+          lat: landmark.latitude.to_f,
+          lng: landmark.longitude.to_f,
+          name: landmark.name,
+          timestamp: Time.now.iso8601
+        }
+
+        Rails.cache.write("cube_destination", destination.to_json, expires_in: 2.hours)
+
+        # Start movement simulation
+        Recurring::System::MovementSimulationJob.perform_later
+
+        { success: true, destination: destination, message: "Movement started toward #{landmark_name}" }
+      end
+
+      # Stop current movement
+      def stop_movement
+        Rails.cache.delete("cube_destination")
+        # Note: The background job will naturally stop when it sees no destination
+        { success: true, message: "Movement stopped" }
       end
 
       private
@@ -141,9 +235,7 @@ module Gps
       def reached_destination?(current, destination)
         return unless destination
 
-        # Use PostGIS-based distance calculation
-        landmark = Landmark.new(latitude: destination[:lat], longitude: destination[:lng])
-        distance = landmark.distance_from(current[:lat], current[:lng]) * 1609.34 # Convert miles to meters
+        distance = destination.distance_from(current[:lat], current[:lng]) * 1609.34 # Convert miles to meters
         distance < 50 # Within 50 meters
       end
 

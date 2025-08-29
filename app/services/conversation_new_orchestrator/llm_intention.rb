@@ -54,9 +54,29 @@ class ConversationNewOrchestrator::LlmIntention
 
   def build_messages
     messages = []
-    messages << { role: "system", content: @prompt_data[:system_prompt] } if @prompt_data[:system_prompt]
-    messages.concat(@prompt_data[:messages]) if @prompt_data[:messages]&.any?
+
+    # CRITICAL: System message MUST be first - never after conversation history!
+    if @prompt_data[:system_prompt].present?
+      messages << { role: "system", content: @prompt_data[:system_prompt] }
+      Rails.logger.debug "📋 System prompt added FIRST (#{@prompt_data[:system_prompt].length} chars)"
+    end
+
+    # Add conversation history AFTER system message
+    if @prompt_data[:messages]&.any?
+      messages.concat(@prompt_data[:messages])
+      Rails.logger.debug "💬 Added #{@prompt_data[:messages].length} history messages"
+    end
+
+    # Add current user message last
     messages << { role: "user", content: @user_message }
+
+    # Verify system message is first
+    if messages.first&.dig(:role) != "system"
+      Rails.logger.error "🚨 CRITICAL: System message is not first! Order: #{messages.map { |m| m[:role] }.join(' → ')}"
+    else
+      Rails.logger.debug "✅ Message order correct: #{messages.map { |m| m[:role] }.join(' → ')}"
+    end
+
     messages
   end
 end

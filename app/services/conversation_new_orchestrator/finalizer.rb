@@ -129,8 +129,13 @@ class ConversationNewOrchestrator::Finalizer
     # Get base response and add end_conversation field
     response = conversation_response.to_home_assistant_response
     response[:end_conversation] = !continue_conversation  # Inverse of continue
+    
+    # Add configurable delay when continuing conversation
+    if continue_conversation
+      response[:continue_delay] = Rails.configuration.conversation_continue_delay.to_i
+    end
 
-    Rails.logger.info "📤 Response: continue_conversation=#{continue_conversation}, end_conversation=#{!continue_conversation}"
+    Rails.logger.info "📤 Response: continue_conversation=#{continue_conversation}, end_conversation=#{!continue_conversation}, continue_delay=#{response[:continue_delay]}"
 
     response
   end

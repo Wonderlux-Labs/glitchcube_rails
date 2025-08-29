@@ -1,0 +1,177 @@
+<% content_for :layout, 'admin' %>
+
+<h1>📊 System Dashboard</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to 'Detailed Health Check', health_admin_system_path, class: 'btn' %>
+  <%= link_to 'Refresh', admin_system_path, class: 'btn' %>
+</div>
+
+<% if @system_status %>
+  <div style="margin-bottom: 30px;">
+    <h2>System Information</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Application</h3>
+        <p><%= @system_status[:app_version] %></p>
+        <small style="color: #666;">Version</small>
+      </div>
+      <div class="stat-box">
+        <h3>Rails</h3>
+        <p><%= @system_status[:rails_version] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Ruby</h3>
+        <p><%= @system_status[:ruby_version] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Environment</h3>
+        <p><%= @system_status[:environment].upcase %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Database</h3>
+        <p style="color: <%= @system_status[:database_status] ? '#00ff00' : '#ff0000' %>;">
+          <%= @system_status[:database_status] ? '✅ Connected' : '❌ Disconnected' %>
+        </p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @service_health %>
+  <div style="margin-bottom: 30px;">
+    <h2>Service Health</h2>
+    <div class="stats">
+      <% @service_health.each do |service_name, health| %>
+        <div class="stat-box">
+          <h3><%= service_name.to_s.humanize %></h3>
+          <p style="color: <%= health[:status] == 'healthy' ? '#00ff00' : health[:status] == 'unknown' ? '#ffff00' : '#ff0000' %>;">
+            <%= health[:status].upcase %>
+          </p>
+          <% if health[:message] %>
+            <small style="color: #666;"><%= health[:message] %></small>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @resource_usage %>
+  <div style="margin-bottom: 30px;">
+    <h2>Resource Usage</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Database Size</h3>
+        <p><%= @resource_usage[:database_size] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Active Conversations</h3>
+        <p><%= @resource_usage[:active_conversations] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Total Memories</h3>
+        <p><%= number_with_delimiter(@resource_usage[:total_memories]) %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Total Summaries</h3>
+        <p><%= number_with_delimiter(@resource_usage[:total_summaries]) %></p>
+      </div>
+      <div class="stat-box">
+        <h3>People</h3>
+        <p><%= number_with_delimiter(@resource_usage[:total_people]) %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Events</h3>
+        <p><%= number_with_delimiter(@resource_usage[:total_events]) %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Facts</h3>
+        <p><%= number_with_delimiter(@resource_usage[:total_facts]) %></p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @background_jobs %>
+  <div style="margin-bottom: 30px;">
+    <h2>Background Jobs</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Total Jobs</h3>
+        <p><%= @background_jobs[:total_jobs] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Queued</h3>
+        <p><%= @background_jobs[:queued_jobs] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Processing</h3>
+        <p style="color: <%= @background_jobs[:processing_jobs] > 0 ? '#00ff00' : '#666' %>;">
+          <%= @background_jobs[:processing_jobs] %>
+        </p>
+      </div>
+      <div class="stat-box">
+        <h3>Failed</h3>
+        <p style="color: <%= @background_jobs[:failed_jobs] > 0 ? '#ff0000' : '#00ff00' %>;">
+          <%= @background_jobs[:failed_jobs] %>
+        </p>
+      </div>
+    </div>
+    <p style="margin-top: 10px;">
+      <%= link_to 'View Jobs Dashboard', '/jobs', class: 'btn', target: '_blank' %>
+    </p>
+  </div>
+<% end %>
+
+<% if @recent_errors && @recent_errors.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Recent Errors</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Level</th>
+          <th>Message</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_errors.each do |error| %>
+          <tr>
+            <td><%= error[:timestamp].strftime('%m/%d %H:%M') if error[:timestamp].respond_to?(:strftime) %></td>
+            <td>
+              <span style="color: <%= error[:level] == 'ERROR' ? '#ff0000' : '#ffff00' %>;">
+                <%= error[:level] %>
+              </span>
+            </td>
+            <td><%= truncate(error[:message], length: 80) %></td>
+            <td><%= error[:source] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Quick Actions</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <%= link_to 'View Logs', '#', class: 'btn', style: 'margin-right: 10px;' %>
+    <%= link_to 'Clear Cache', '#', class: 'btn', style: 'margin-right: 10px;' %>
+    <%= link_to 'System Health', health_admin_system_path, class: 'btn', style: 'margin-right: 10px;' %>
+    <%= link_to 'Background Jobs', '/jobs', class: 'btn', target: '_blank' %>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>System Information</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <% if @system_status %>
+      <p><strong>Uptime:</strong> <%= @system_status[:uptime] %> seconds</p>
+      <p><strong>Memory Usage:</strong> <%= @system_status[:memory_usage] %></p>
+    <% end %>
+    <p><strong>Server Time:</strong> <%= Time.current.strftime('%B %d, %Y at %I:%M:%S %p %Z') %></p>
+    <p><strong>Process ID:</strong> <%= Process.pid %></p>
+  </div>
+</div>

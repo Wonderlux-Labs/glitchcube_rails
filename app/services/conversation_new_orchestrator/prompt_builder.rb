@@ -23,7 +23,7 @@ class ConversationNewOrchestrator::PromptBuilder
     # Check for and inject any pending results from a previous turn
     inject_previous_ha_results(prompt_data)
     inject_previous_query_results(prompt_data)
-    Rails.logger.info("**#{prompt_data.inspect}**")
+    Rails.logger.debug("Prompt built: messages=#{prompt_data[:messages].size}, has_system=#{prompt_data[:system_prompt].present?}")
     ServiceResult.success(prompt_data)
   rescue => e
     ServiceResult.failure("Prompt building failed: #{e.message}")
@@ -40,8 +40,8 @@ class ConversationNewOrchestrator::PromptBuilder
     unprocessed_results.each do |result|
       result_text = format_ha_result_for_llm(result)
       system_msg = { role: "system", content: result_text }
-      # Insert right before the current user message in the history
-      prompt_data[:messages].insert(-1, system_msg)
+      # Append to end of message history
+      prompt_data[:messages] << system_msg
       Rails.logger.info "🔄 Injected: #{result_text}"
     end
   end
@@ -107,8 +107,8 @@ class ConversationNewOrchestrator::PromptBuilder
     result_text = "System note: Previous query results from your last response: #{query_results['results_summary']}"
     system_msg = { role: "system", content: result_text }
 
-    # Insert right before the current user message in the history
-    prompt_data[:messages].insert(-1, system_msg)
+    # Append to end of message history
+    prompt_data[:messages] << system_msg
     Rails.logger.info "🔄 Injected query results: #{result_text}"
 
     # Clear the pending query results now that we've injected them

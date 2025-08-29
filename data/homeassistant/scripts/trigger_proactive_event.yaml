@@ -1,0 +1,101 @@
+# Script to trigger contextual proactive events from Home Assistant
+# Uses current system state to generate natural, persona-appropriate messages
+
+trigger_proactive_event:
+  alias: "Trigger Proactive Event"
+  description: "Generate and announce a contextual proactive message based on trigger type"
+  fields:
+    trigger_type:
+      description: "Type of proactive trigger"
+      example: "motion_detected"
+      selector:
+        select:
+          options:
+            - "motion_detected"
+            - "event_reminder"
+            - "goal_check_in"
+            - "system_startup"
+            - "location_change"
+            - "time_based"
+            - "battery_low"
+            - "weather_change"
+            - "custom"
+    custom_context:
+      description: "Optional additional context (for custom triggers)"
+      example: "User returned home after long absence"
+      default: ""
+      selector:
+        text:
+          multiline: true
+  sequence:
+    - service: rest_command.glitchcube_proactive
+      data:
+        trigger: "{{ trigger_type }}"
+        context: |
+          {
+            {% if custom_context and custom_context != '' %}
+            "custom_context": {{ custom_context | to_json }},
+            {% endif %}
+            "time": "{{ now().strftime('%A %I:%M %p') }}",
+            "location": "{{ states('sensor.glitchcube_location_context') | default('unknown') }}",
+            "zone": "{{ state_attr('sensor.glitchcube_location_context', 'zone') | default('unknown') }}",
+            "current_persona": "{{ states('input_select.current_persona') | default('buddy') }}",
+            "battery_level": "{{ states('sensor.glitchcube_battery') | default('unknown') }}",
+            "temperature": "{{ states('sensor.outside_temperature') | default('unknown') }}",
+            "people_home": {{ states.person | selectattr('state', 'eq', 'home') | list | length }},
+            "motion_detected": {{ is_state('binary_sensor.motion_detected', 'on') }},
+            "system_uptime": "{{ states('sensor.system_uptime') | default('unknown') }}"
+          }
+    - service: system_log.write
+      data:
+        message: "Triggered proactive event: {{ trigger_type }} at {{ now() }}"
+        level: info
+
+# Quick trigger scripts for common scenarios
+proactive_motion_greeting:
+  alias: "Motion Detected Greeting"
+  description: "Natural greeting when motion is detected"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "motion_detected"
+
+proactive_event_reminder:
+  alias: "Event Reminder"
+  description: "Remind about upcoming events"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "event_reminder"
+
+proactive_goal_checkin:
+  alias: "Goal Check-in"
+  description: "Check in on current goals and progress"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "goal_check_in"
+
+proactive_system_startup:
+  alias: "System Startup Announcement"
+  description: "Announce system is ready after startup"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "system_startup"
+
+proactive_location_update:
+  alias: "Location Change Notification"
+  description: "Comment on location change or offer local info"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "location_change"
+
+proactive_time_based:
+  alias: "Time-based Suggestions"
+  description: "Time-appropriate suggestions or observations"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "time_based"

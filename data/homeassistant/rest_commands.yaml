@@ -72,13 +72,22 @@ check_glitchcube_health:
   method: GET
   timeout: 5
 
-# Proactive behavior commands
+# Proactive behavior commands - now with LLM-generated contextual messages
 glitchcube_proactive:
   url: "http://{{ states('input_text.glitchcube_host') | default('localhost') }}:4567/api/v1/conversation/proactive"
   method: POST
   headers:
     Content-Type: application/json
-  payload: '{"trigger": "{{ trigger }}", "context": "{{ context | default("n/a") }}"}'
+  payload: |
+    {
+      "trigger": "{{ trigger }}",
+      {% if context is defined and context != '' %}
+      "context": {{ context | to_json }}
+      {% else %}
+      "context": {}
+      {% endif %}
+    }
+  timeout: 30
 
 
 # Cycle through personas

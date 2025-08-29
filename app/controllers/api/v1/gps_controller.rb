@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 class Api::V1::GpsController < Api::V1::BaseController
+  # Reduce logging noise for high-frequency GPS endpoints
+  def self.silencer
+    @silencer ||= ActiveSupport::LogSubscriber.new
+  end
+
+  around_action :silence_gps_logging, only: [:location, :coords, :proximity]
   def location
     begin
       # Get current location with full context
@@ -66,13 +72,58 @@ class Api::V1::GpsController < Api::V1::BaseController
   def simulate_movement
     begin
       if GlitchCube.gps_spoofing_allowed?
-        ::Gps::GPSTrackingService.new.simulate_movement!
-        render json: { success: true, message: "Movement simulation updated" }
+        result = ::Gps::GPSTrackingService.new.simulate_movement!
+        render json: result
       else
         render json: { error: "Simulation mode not enabled" }, status: :bad_request
       end
     rescue StandardError => e
       render json: { error: "Simulation failed", details: e.message }, status: :internal_server_error
+    end
+  end
+
+  def movement_status
+    begin
+      if GlitchCube.gps_spoofing_allowed?
+        result = ::Gps::GPSTrackingService.new.movement_status
+        render json: result
+      else
+        render json: { error: "Simulation mode not enabled" }, status: :bad_request
+      end
+    rescue StandardError => e
+      render json: { error: "Status check failed", details: e.message }, status: :internal_server_error
+    end
+  end
+
+  def set_destination
+    begin
+      if GlitchCube.gps_spoofing_allowed?
+        landmark_name = params[:landmark]
+        unless landmark_name
+          render json: { error: "landmark parameter required" }, status: :bad_request
+          return
+        end
+
+        result = ::Gps::GPSTrackingService.new.set_destination(landmark_name)
+        render json: result
+      else
+        render json: { error: "Simulation mode not enabled" }, status: :bad_request
+      end
+    rescue StandardError => e
+      render json: { error: "Destination setting failed", details: e.message }, status: :internal_server_error
+    end
+  end
+
+  def stop_movement
+    begin
+      if GlitchCube.gps_spoofing_allowed?
+        result = ::Gps::GPSTrackingService.new.stop_movement
+        render json: result
+      else
+        render json: { error: "Simulation mode not enabled" }, status: :bad_request
+      end
+    rescue StandardError => e
+      render json: { error: "Stop movement failed", details: e.message }, status: :internal_server_error
     end
   end
 
@@ -167,6 +218,14 @@ class Api::V1::GpsController < Api::V1::BaseController
         source: "Fallback (empty)",
         error: "Database unavailable: #{e.message}"
       }
+    end
+  end
+
+  private
+
+  def silence_gps_logging
+    Rails.logger.silence(Logger::WARN) do
+      yield
     end
   end
 end

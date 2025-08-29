@@ -78,6 +78,34 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+
+  # Disable vectorsearch callbacks in tests to prevent API calls
+  config.before(:each) do
+    allow_any_instance_of(Event).to receive(:upsert_to_vectorsearch)
+    allow_any_instance_of(Summary).to receive(:upsert_to_vectorsearch)
+
+    # Mock Home Assistant API calls to prevent real HTTP requests
+    unless described_class == HomeAssistantService || RSpec.current_example.metadata[:allow_ha_calls]
+      stub_home_assistant_api_calls
+    end
+  end
+end
+
+# Helper method for stubbing Home Assistant API calls
+def stub_home_assistant_api_calls
+  # Mock common HomeAssistantService methods (use actual method names)
+  allow(HomeAssistantService).to receive(:entity).and_return({ "state" => "unknown", "attributes" => {} })
+  allow(HomeAssistantService).to receive(:call_service).and_return(true)
+  allow(HomeAssistantService).to receive(:entity_state).and_return("unknown")
+  allow(HomeAssistantService).to receive(:history).and_return([])
+  allow(HomeAssistantService).to receive(:entities).and_return([])
+  allow(HomeAssistantService).to receive(:available?).and_return(true)
+
+  # Mock specific entities that tests commonly check
+  allow(HomeAssistantService).to receive(:entity).with("input_select.current_persona")
+    .and_return({ "state" => "buddy", "attributes" => { "options" => [ "buddy", "sparkle", "jax" ] } })
+  allow(HomeAssistantService).to receive(:entity).with("sensor.boredom_score")
+    .and_return({ "state" => "5", "attributes" => {} })
 end
 
 # Shoulda Matchers configuration

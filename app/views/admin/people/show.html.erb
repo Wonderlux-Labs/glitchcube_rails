@@ -1,0 +1,119 @@
+<% content_for :layout, 'admin' %>
+
+<h1>👤 <%= @person.name %></h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to People', admin_people_path, class: 'btn' %>
+  <%= link_to 'Edit', edit_admin_person_path(@person), class: 'btn' %>
+  <%= link_to 'Delete', admin_person_path(@person), method: :delete, 
+              class: 'btn', 
+              confirm: 'Are you sure?',
+              style: 'color: #ff0000;' %>
+</div>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Relationship</h3>
+    <p><%= @person.relationship&.humanize || 'Unknown' %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Last Seen</h3>
+    <p>
+      <% if @person.last_seen_at %>
+        <%= @person.last_seen_at.strftime('%B %d, %Y at %I:%M %p') %>
+      <% else %>
+        Never
+      <% end %>
+    </p>
+  </div>
+  <div class="stat-box">
+    <h3>Related Summaries</h3>
+    <p><%= @related_summaries.count %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Related Events</h3>
+    <p><%= @related_events.count %></p>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Description</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <%= simple_format(@person.description) %>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Session Information</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <p><strong>Extracted from session:</strong> <%= @person.extracted_from_session %></p>
+    <% if @person.metadata.present? %>
+      <p><strong>Metadata:</strong></p>
+      <pre><%= JSON.pretty_generate(@person.metadata_json) %></pre>
+    <% end %>
+  </div>
+</div>
+
+<% if @related_summaries.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Related Summaries</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Summary</th>
+          <th>Messages</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @related_summaries.each do |summary| %>
+          <tr>
+            <td><%= summary.summary_type.humanize %></td>
+            <td><%= truncate(summary.summary_text, length: 150) %></td>
+            <td><%= summary.message_count %></td>
+            <td><%= summary.created_at.strftime('%m/%d %H:%M') %></td>
+            <td>
+              <%= link_to 'View', admin_summary_path(summary), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @related_events.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Related Events</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Event Time</th>
+          <th>Importance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @related_events.each do |event| %>
+          <tr>
+            <td><strong><%= event.title %></strong></td>
+            <td><%= truncate(event.description, length: 100) %></td>
+            <td><%= event.formatted_time %></td>
+            <td>
+              <span style="color: <%= event.high_importance? ? '#ff0000' : '#00ff00' %>;">
+                <%= event.importance %>/10
+              </span>
+            </td>
+            <td>
+              <%= link_to 'View', admin_event_path(event), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

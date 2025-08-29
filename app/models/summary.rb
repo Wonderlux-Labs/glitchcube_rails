@@ -63,46 +63,12 @@ class Summary < ApplicationRecord
     end
   end
 
-  # RAG query methods for intelligent summary analysis
-  def self.ask(question)
-    Rails.logger.info "🔍 Summary.ask: #{question}"
-
-    begin
-      # Try vector search first, fallback to text search
-      results = begin
-        similarity_search(question, k: 10)
-      rescue => e
-        Rails.logger.warn "❌ Vector search failed, using text search: #{e.message}"
-        text_search_fallback(question, limit: 10)
-      end
-
-      return "No relevant summaries found." if results.empty?
-
-      # Format results for LLM analysis
-      context = build_rag_context(results, question)
-
-      # Use LLM to synthesize answer
-      synthesize_answer(question, context)
-    rescue => e
-      Rails.logger.error "❌ Summary search failed: #{e.message}"
-      "Error: Unable to search summaries - #{e.message}"
-    end
-  end
-
   def self.get_themes
     ask("What are the main themes and topics that have emerged across conversations?")
   end
 
   def self.get_current_events
     ask("What are any major current events, news, or important happenings we need to be aware about?")
-  end
-
-  def self.get_mood_patterns
-    ask("What mood patterns and emotional themes have been observed in recent interactions?")
-  end
-
-  def self.get_learning_insights
-    ask("What insights, learnings, or patterns about the user have been discovered?")
   end
 
   def self.text_search_fallback(question, limit: 10)

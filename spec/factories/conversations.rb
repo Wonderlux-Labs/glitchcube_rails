@@ -10,5 +10,11 @@ FactoryBot.define do
     total_cost { 0.0 }
     total_tokens { 0 }
     continue_conversation { true }
+
+    trait :with_conversation_logs do
+      after(:create) do |conversation|
+        create_list(:conversation_log, 3, conversation: conversation)
+      end
+    end
   end
 end

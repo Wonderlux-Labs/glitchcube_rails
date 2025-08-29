@@ -4,10 +4,6 @@ default: &default
     schedule: every minute
     queue: default
 
-  conversation_memory_extraction:
-    class: ConversationMemoryExtractionJob  
-    schedule: "*/30 * * * *"  # Every 30 minutes
-    queue: default
 
   weather_forecast_update:
     class: Recurring::Content::WeatherForecastSummarizerJob
@@ -24,10 +20,6 @@ default: &default
     schedule: "*/5 * * * *"   # Every 5 minutes
     queue: default
 
-  intermediate_summarizer:
-    class: Recurring::System::Summaries::IntermediateSummarizerJob
-    schedule: "0 */3 * * *"   # Every 3 hours at the top of the hour
-    queue: default
 
   daily_summarizer:
     class: Recurring::System::Summaries::DailySummarizerJob

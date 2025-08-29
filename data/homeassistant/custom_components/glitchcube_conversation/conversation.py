@@ -363,7 +363,7 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
                 'play_media',
                 {
                     'entity_id': 'media_player.square_voice',
-                    'media_content_id': '/media/sounds/listening_resume.wav',  # Add this sound file
+                    'media_content_id': '/local/sounds/listening_resume.wav',
                     'media_content_type': 'audio/wav',
                 },
                 blocking=False

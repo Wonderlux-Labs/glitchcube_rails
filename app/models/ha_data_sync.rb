@@ -349,7 +349,7 @@ class HaDataSync
   end
 
   def self.low_power_mode?
-    get_current_mode == "low_power"
+    get_current_mode == "low_power" || get_current_mode == "battery_low"
   end
 
   def self.enter_low_power_mode(trigger_source = "battery_low")
@@ -358,6 +358,59 @@ class HaDataSync
 
   def self.exit_low_power_mode(trigger_source = "battery_restored")
     update_cube_mode("conversation", trigger_source)
+  end
+
+  # Entity access methods for reading data from Home Assistant
+  def self.entity(entity_id)
+    HomeAssistantService.entity(entity_id)
+  rescue => e
+    Rails.logger.error "HaDataSync failed to get entity #{entity_id}: #{e.message}"
+    nil
+  end
+
+  def self.entity_state(entity_id)
+    HomeAssistantService.entity_state(entity_id)
+  rescue => e
+    Rails.logger.error "HaDataSync failed to get entity state #{entity_id}: #{e.message}"
+    nil
+  end
+
+  def self.entity_attribute(entity_id, attribute_path)
+    entity_data = entity(entity_id)
+    return nil unless entity_data
+
+    if attribute_path.is_a?(Array)
+      # Handle nested attribute access like ["attributes", "time_of_day"]
+      attribute_path.reduce(entity_data) { |data, key| data&.dig(key) }
+    else
+      entity_data.dig("attributes", attribute_path)
+    end
+  rescue => e
+    Rails.logger.error "HaDataSync failed to get entity attribute #{entity_id}.#{attribute_path}: #{e.message}"
+    nil
+  end
+
+  def self.get_context_data
+    entity("sensor.glitchcube_context")
+  end
+
+  def self.get_context_attribute(attribute)
+    entity_attribute("sensor.glitchcube_context", attribute)
+  end
+
+  def self.get_location_context
+    entity("sensor.glitchcube_location_context")
+  end
+
+  def self.extended_location
+   string = "thE gLitcH cUbe is at - #{get_location_context}"
+   string += "\n nearest landmarks: #{get_location_context_attribute('landmarks')}"
+   string += "\n the nearest porto is #{get_location_context_attribute('porto_distance') / 100.0} minute walk away"
+   string
+  end
+
+  def self.get_location_context_attribute(attribute)
+    entity_attribute("sensor.glitchcube_location_context", attribute)
   end
 
   private

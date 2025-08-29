@@ -1,0 +1,124 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🤖 Prompts</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to 'Analytics', analytics_admin_prompts_path, class: 'btn' %>
+  <%= link_to 'Models', models_admin_prompts_path, class: 'btn' %>
+</div>
+
+<% if @prompt_usage_stats %>
+  <div class="stats">
+    <div class="stat-box">
+      <h3>Total Conversations</h3>
+      <p><%= @prompt_usage_stats[:total_conversations] %></p>
+      <small style="color: #666;">last 30 days</small>
+    </div>
+    <div class="stat-box">
+      <h3>Unique Personas</h3>
+      <p><%= @prompt_usage_stats[:unique_personas] %></p>
+    </div>
+    <div class="stat-box">
+      <h3>Most Used</h3>
+      <p><%= @prompt_usage_stats[:most_used_persona]&.humanize || 'N/A' %></p>
+    </div>
+  </div>
+<% end %>
+
+<% if @persona_prompts.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Persona Prompts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>File Size</th>
+          <th>Last Modified</th>
+          <th>Usage</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @persona_prompts.each do |prompt| %>
+          <tr>
+            <td><strong><%= prompt[:name] %></strong></td>
+            <td><%= truncate(prompt[:description], length: 100) %></td>
+            <td><%= number_to_human_size(prompt[:size]) %></td>
+            <td><%= prompt[:last_modified].strftime('%m/%d %H:%M') %></td>
+            <td>
+              <% if @prompt_usage_stats && @prompt_usage_stats[:persona_usage] %>
+                <% usage = @prompt_usage_stats[:persona_usage][prompt[:filename]] || 0 %>
+                <%= usage %> conversations
+              <% else %>
+                N/A
+              <% end %>
+            </td>
+            <td>
+              <%= link_to 'View', admin_prompt_path(prompt[:filename]), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @general_prompts.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>General/System Prompts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>File Size</th>
+          <th>Last Modified</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @general_prompts.each do |prompt| %>
+          <tr>
+            <td><strong><%= prompt[:name] %></strong></td>
+            <td><%= truncate(prompt[:description], length: 100) %></td>
+            <td><%= number_to_human_size(prompt[:size]) %></td>
+            <td><%= prompt[:last_modified].strftime('%m/%d %H:%M') %></td>
+            <td>
+              <%= link_to 'View', admin_prompt_path(prompt[:filename]), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @persona_prompts.empty? && @general_prompts.empty? %>
+  <div style="background: #2a2a2a; padding: 20px; border: 1px solid #444; text-align: center;">
+    <p style="color: #666;">No prompt files found.</p>
+    <p style="color: #666;">Expected locations:</p>
+    <ul style="color: #666; text-align: left; display: inline-block;">
+      <li><code>lib/prompts/personas/*.yml</code></li>
+      <li><code>lib/prompts/general/*.yml</code></li>
+    </ul>
+  </div>
+<% end %>
+
+<% if @prompt_usage_stats && @prompt_usage_stats[:persona_usage].any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Persona Usage (Last 30 Days)</h2>
+    <div class="stats">
+      <% @prompt_usage_stats[:persona_usage].sort_by { |_, count| -count }.first(6).each do |persona, count| %>
+        <div class="stat-box">
+          <h3><%= persona.humanize %></h3>
+          <p><%= count %> conversations</p>
+          <% total = @prompt_usage_stats[:total_conversations] %>
+          <% if total > 0 %>
+            <small style="color: #666;"><%= ((count.to_f / total) * 100).round(1) %>%</small>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

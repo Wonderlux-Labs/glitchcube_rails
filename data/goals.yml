@@ -13,7 +13,7 @@ safety_goals:
     description: "I need assistance from nearby humans - something's not right"
     triggers: ["safety_mode", "system_error"]
   return_to_camp:
-    description: "I should head back to camp for safety and maintenance"
+    description: "I should head back to camp for safety and maintenance. I know I stay at 5:45 and G"
     triggers: ["safety_mode", "home_goal"]
 
 utility_goals:

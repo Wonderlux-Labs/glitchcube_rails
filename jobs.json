@@ -11,7 +11,6 @@
     "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/daily_summarizer_job.rb",
     "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/async_tool_job.rb",
     "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/conversation_timeout_monitor_job.rb",
-    "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/conversation_memory_extraction_job.rb",
     "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/goal_monitor_job.rb",
     "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/application_job.rb",
     "/Users/estiens/code/glitchcube-main/glitchcube_rails/app/jobs/host_registration_job.rb",

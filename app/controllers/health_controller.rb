@@ -1,5 +1,7 @@
 # app/controllers/health_controller.rb
 class HealthController < ApplicationController
+  # Reduce logging noise for frequent health checks
+  around_action :silence_health_logging, only: [:show]
   def show
     health_data = {
       status: overall_status,
@@ -90,5 +92,13 @@ class HealthController < ApplicationController
     # Simple uptime - just return a reasonable number
     # In a real app you'd track actual boot time
     3600  # 1 hour placeholder
+  end
+
+  private
+
+  def silence_health_logging
+    Rails.logger.silence(Logger::WARN) do
+      yield
+    end
   end
 end

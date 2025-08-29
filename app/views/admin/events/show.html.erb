@@ -1,0 +1,109 @@
+<% content_for :layout, 'admin' %>
+
+<h1>📅 <%= @event.title %></h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Events', admin_events_path, class: 'btn' %>
+  <%= link_to 'Timeline View', timeline_admin_events_path, class: 'btn' %>
+</div>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Event Time</h3>
+    <p><%= @event.formatted_time %></p>
+    <% if @event.upcoming? %>
+      <small style="color: #00ffff;"><%= @event.hours_until_event %> hours remaining</small>
+    <% end %>
+  </div>
+  <div class="stat-box">
+    <h3>Importance</h3>
+    <p style="color: <%= @event.high_importance? ? '#ff0000' : @event.importance >= 4 ? '#ffff00' : '#00ff00' %>;">
+      <%= @event.importance %>/10
+    </p>
+  </div>
+  <div class="stat-box">
+    <h3>Status</h3>
+    <p class="<%= @event.upcoming? ? 'active-status' : 'finished-status' %>">
+      <%= @event.upcoming? ? 'Upcoming' : 'Past' %>
+    </p>
+  </div>
+  <div class="stat-box">
+    <h3>Type</h3>
+    <p><%= @event.event_type&.humanize || 'No type set' %></p>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Description</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <%= simple_format(@event.description) %>
+  </div>
+</div>
+
+<% if @event.location.present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Location</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><%= @event.location %></p>
+      <% if @event.address.present? %>
+        <p><strong>Address:</strong> <%= @event.address %></p>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @event.metadata.present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Event Metadata</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <pre><%= JSON.pretty_generate(@event.metadata_json) %></pre>
+    </div>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Event Details</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <p><strong>Created:</strong> <%= @event.created_at.strftime('%B %d, %Y at %I:%M %p') %></p>
+    <p><strong>Updated:</strong> <%= @event.updated_at.strftime('%B %d, %Y at %I:%M %p') %></p>
+    <% if @event.respond_to?(:extracted_from_session) && @event.extracted_from_session.present? %>
+      <p><strong>Extracted from session:</strong> <%= @event.extracted_from_session %></p>
+    <% end %>
+  </div>
+</div>
+
+<% if @related_events.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Related Events (Same Location)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Event Time</th>
+          <th>Importance</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @related_events.each do |event| %>
+          <tr>
+            <td><strong><%= event.title %></strong></td>
+            <td><%= event.formatted_time %></td>
+            <td>
+              <span style="color: <%= event.high_importance? ? '#ff0000' : '#00ff00' %>;">
+                <%= event.importance %>/10
+              </span>
+            </td>
+            <td class="<%= event.upcoming? ? 'active-status' : 'finished-status' %>">
+              <%= event.upcoming? ? 'Upcoming' : 'Past' %>
+            </td>
+            <td>
+              <%= link_to 'View', admin_event_path(event), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

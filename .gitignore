@@ -35,3 +35,4 @@
 .tool_versions
 .env
 CLAUDE.md
+.aider*

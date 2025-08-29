@@ -1,0 +1,141 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🤖 Model Configuration</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Prompts', admin_prompts_path, class: 'btn' %>
+  <%= link_to 'Analytics', analytics_admin_prompts_path, class: 'btn' %>
+</div>
+
+<% if @current_models %>
+  <div style="margin-bottom: 30px;">
+    <h2>Current Configuration</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Primary Model</h3>
+        <p><%= @current_models[:primary] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Summarizer Model</h3>
+        <p><%= @current_models[:summarizer] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Temperature</h3>
+        <p><%= @current_models[:temperature] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Max Tokens</h3>
+        <p><%= @current_models[:max_tokens] %></p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @available_models.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Available Models</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Model Name</th>
+          <th>Provider</th>
+          <th>Capabilities</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @available_models.each do |model| %>
+          <tr>
+            <td><strong><%= model[:name] %></strong></td>
+            <td><%= model[:provider] %></td>
+            <td>
+              <% model[:capabilities].each do |capability| %>
+                <span style="background: #444; padding: 2px 6px; border-radius: 3px; margin-right: 5px; font-size: 0.8em;">
+                  <%= capability %>
+                </span>
+              <% end %>
+            </td>
+            <td>
+              <% if @current_models[:primary] == model[:name] %>
+                <span style="color: #00ff00;">Primary</span>
+              <% elsif @current_models[:summarizer] == model[:name] %>
+                <span style="color: #00ffff;">Summarizer</span>
+              <% else %>
+                <span style="color: #666;">Available</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @model_capabilities.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Model Capabilities</h2>
+    <% @model_capabilities.each do |model_name, capabilities| %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+        <h3 style="color: #00ffff; margin-top: 0;"><%= model_name %></h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+          <div>
+            <strong>Max Tokens:</strong> <%= number_with_delimiter(capabilities[:max_tokens]) %>
+          </div>
+          <div>
+            <strong>Context Window:</strong> <%= number_with_delimiter(capabilities[:context_window]) %>
+          </div>
+          <div>
+            <strong>Function Calls:</strong> 
+            <span style="color: <%= capabilities[:supports_functions] ? '#00ff00' : '#ff0000' %>;">
+              <%= capabilities[:supports_functions] ? '✅ Supported' : '❌ Not supported' %>
+            </span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Configuration Files</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <p><strong>Configuration locations:</strong></p>
+    <ul style="margin: 10px 0;">
+      <li><code>config/initializers/openrouter.rb</code> - OpenRouter/LLM configuration</li>
+      <li><code>config/initializers/conversation_config.rb</code> - Conversation settings</li>
+      <li><code>config/application.rb</code> - Application-wide settings</li>
+    </ul>
+    
+    <% if Rails.configuration.respond_to?(:home_assistant_url) %>
+      <p><strong>Home Assistant URL:</strong> <%= Rails.configuration.home_assistant_url || 'Not configured' %></p>
+    <% end %>
+    
+    <% if Rails.configuration.respond_to?(:openrouter_api_key) %>
+      <p><strong>OpenRouter API Key:</strong> 
+        <% if Rails.configuration.openrouter_api_key.present? %>
+          <span style="color: #00ff00;">✅ Configured</span>
+        <% else %>
+          <span style="color: #ff0000;">❌ Not configured</span>
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Model Usage Guidelines</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <h3 style="color: #00ffff; margin-top: 0;">Primary Model</h3>
+    <p>Used for main conversation responses and complex reasoning tasks. Should be your most capable model.</p>
+    
+    <h3 style="color: #00ffff;">Summarizer Model</h3>
+    <p>Used for generating summaries of conversations and content. Can be a smaller, faster model optimized for summarization.</p>
+    
+    <h3 style="color: #00ffff;">Temperature Settings</h3>
+    <ul>
+      <li><strong>0.0-0.3:</strong> Very focused, deterministic responses</li>
+      <li><strong>0.4-0.7:</strong> Balanced creativity and consistency</li>
+      <li><strong>0.8-1.0:</strong> Highly creative, more varied responses</li>
+    </ul>
+  </div>
+</div>

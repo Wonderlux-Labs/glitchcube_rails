@@ -145,7 +145,7 @@ class ConversationNewOrchestrator::ActionExecutor
     Rails.logger.info "🎵 Sending to music agent: #{music_request}"
 
     # Send to music conversation agent asynchronously
-    MusicAgentJob.perform_later(
+    Agents::MusicAgentJob.perform_later(
       request: music_request,
       tool_intents: music_intents,
       session_id: @session_id,
@@ -168,7 +168,7 @@ class ConversationNewOrchestrator::ActionExecutor
     Rails.logger.info "🤖 Sending to HA agent: #{ha_request}"
 
     # Send to HA conversation agent asynchronously
-    HaAgentJob.perform_later(
+    Agents::HaAgentJob.perform_later(
       request: ha_request,
       tool_intents: general_intents,
       session_id: @session_id,

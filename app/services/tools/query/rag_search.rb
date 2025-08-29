@@ -95,7 +95,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
   def search_summaries(query, limit)
     return [] unless defined?(Summary) && Summary.respond_to?(:similarity_search)
 
-    summaries = Summary.similarity_search(query, limit)
+    summaries = Summary.similarity_search(query).limit(limit)
     summaries.map do |summary|
       metadata = summary.metadata_json
       {
@@ -114,7 +114,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
   def search_events(query, limit)
     return [] unless defined?(Event) && Event.respond_to?(:similarity_search)
 
-    events = Event.similarity_search(query, limit)
+    events = Event.similarity_search(query).limit(limit)
     events.map do |event|
       {
         id: event.id,
@@ -133,7 +133,7 @@ class Tools::Query::RagSearch < Tools::BaseTool
   def search_people(query, limit)
     return [] unless defined?(Person) && Person.respond_to?(:similarity_search)
 
-    people = Person.similarity_search(query, limit)
+    people = Person.similarity_search(query).limit(limit)
     people.map do |person|
       {
         id: person.id,

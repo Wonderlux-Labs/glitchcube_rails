@@ -56,7 +56,7 @@ RSpec.describe "Proactive Conversation API", type: :request do
 
     it "handles proactive conversation that might trigger actions", :vcr do
       # Mock a proactive trigger that might cause light changes
-      allow_any_instance_of(ConversationOrchestrator).to receive(:call).and_return({
+      allow_any_instance_of(ConversationNewOrchestrator).to receive(:call).and_return({
         continue_conversation: false,
         response: {
           speech: {
@@ -116,8 +116,8 @@ RSpec.describe "Proactive Conversation API", type: :request do
 
     it "formats proactive message correctly for orchestrator" do
       # Test that the message is properly formatted with [PROACTIVE] prefix
-      orchestrator_instance = instance_double(ConversationOrchestrator)
-      allow(ConversationOrchestrator).to receive(:new).with(
+      orchestrator_instance = instance_double(ConversationNewOrchestrator)
+      allow(ConversationNewOrchestrator).to receive(:new).with(
         hash_including(
           message: "[PROACTIVE] motion_detected_with_boredom: Motion in living room, no conversation for 22 minutes"
         )
@@ -145,8 +145,8 @@ RSpec.describe "Proactive Conversation API", type: :request do
 
     it "includes proactive context information" do
       # Test that proactive context is properly structured
-      orchestrator_instance = instance_double(ConversationOrchestrator)
-      allow(ConversationOrchestrator).to receive(:new).with(
+      orchestrator_instance = instance_double(ConversationNewOrchestrator)
+      allow(ConversationNewOrchestrator).to receive(:new).with(
         hash_including(
           context: hash_including(
             source: "proactive_trigger",

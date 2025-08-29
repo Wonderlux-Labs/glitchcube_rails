@@ -8,7 +8,7 @@ response_format:
     [THOUGHTS: your inner thoughts - Include anything you want to remember about this person or conversation here]
     [MOOD: your current mood/emotional state]
     [QUESTIONS: your pressing questions for the user or yourself]
-    [GOAL: how progres towards your goal is going]
+    [GOAL: did you make any progress on it, okay if not!]
     
     The spoken part should be your natural dialogue response. NO stage directions, NO asides, JUST spoken words.
     The metadata helps track conversation state and your internal experience.

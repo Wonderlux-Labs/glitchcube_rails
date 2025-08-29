@@ -1,0 +1,92 @@
+<% content_for :layout, 'admin' %>
+
+<h1>👥 People</h1>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Total People</h3>
+    <p><%= @total_count %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Seen Recently</h3>
+    <p><%= @recent_count %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Unique Relationships</h3>
+    <p><%= @relationships.count %></p>
+  </div>
+</div>
+
+<div style="margin-bottom: 20px;">
+  <%= form_with url: admin_people_path, method: :get, local: true, class: 'search-form' do |form| %>
+    <%= form.text_field :search, placeholder: "Search people...", value: params[:search], style: "margin-right: 10px;" %>
+    <%= form.select :relationship, options_for_select([['All Relationships', '']] + @relationships.map { |r| [r.humanize, r] }, params[:relationship]), {}, style: "margin-right: 10px;" %>
+    <%= form.submit "Filter", class: 'btn' %>
+    <%= link_to 'Clear', admin_people_path, class: 'btn' %>
+  <% end %>
+</div>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to 'All', admin_people_path, class: 'btn' %>
+  <%= link_to 'Recent Only', admin_people_path(recent_only: true), class: 'btn' %>
+  <% @relationships.each do |relationship| %>
+    <%= link_to relationship.humanize, admin_people_path(relationship: relationship), class: 'btn' %>
+  <% end %>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Relationship</th>
+      <th>Last Seen</th>
+      <th>Session</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @people.each do |person| %>
+      <tr>
+        <td><strong><%= person.name %></strong></td>
+        <td><%= truncate(person.description, length: 100) %></td>
+        <td><%= person.relationship&.humanize || 'Unknown' %></td>
+        <td>
+          <% if person.last_seen_at %>
+            <%= person.last_seen_at.strftime('%m/%d %H:%M') %>
+            <% if person.last_seen_at > 1.week.ago %>
+              <span style="color: #00ff00;">●</span>
+            <% elsif person.last_seen_at > 1.month.ago %>
+              <span style="color: #ffff00;">●</span>
+            <% else %>
+              <span style="color: #666;">●</span>
+            <% end %>
+          <% else %>
+            Never
+          <% end %>
+        </td>
+        <td><%= person.extracted_from_session&.truncate(12) %>...</td>
+        <td>
+          <%= link_to 'View', admin_person_path(person), class: 'btn' %>
+          <%= link_to 'Edit', edit_admin_person_path(person), class: 'btn' %>
+          <%= link_to 'Delete', admin_person_path(person), method: :delete, 
+                      class: 'btn', 
+                      confirm: 'Are you sure?',
+                      style: 'color: #ff0000;' %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @people.respond_to?(:total_pages) %>
+  <div style="margin-top: 20px;">
+    Page <%= @people.current_page %> of <%= @people.total_pages %>
+    <% if @people.prev_page %>
+      <%= link_to '← Previous', admin_people_path(page: @people.prev_page), class: 'btn' %>
+    <% end %>
+    <% if @people.next_page %>
+      <%= link_to 'Next →', admin_people_path(page: @people.next_page), class: 'btn' %>
+    <% end %>
+  </div>
+<% end %>

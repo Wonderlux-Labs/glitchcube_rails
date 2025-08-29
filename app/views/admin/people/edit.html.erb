@@ -1,0 +1,60 @@
+<% content_for :layout, 'admin' %>
+
+<h1>✏️ Edit <%= @person.name %></h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Person', admin_person_path(@person), class: 'btn' %>
+  <%= link_to '← Back to People', admin_people_path, class: 'btn' %>
+</div>
+
+<%= form_with model: [:admin, @person], local: true do |form| %>
+  <% if @person.errors.any? %>
+    <div style="color: #ff0000; margin-bottom: 20px;">
+      <h3><%= pluralize(@person.errors.count, "error") %> prohibited this person from being saved:</h3>
+      <ul>
+        <% @person.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="margin-bottom: 20px;">
+    <%= form.label :name, style: "display: block; margin-bottom: 5px; color: #00ffff;" %>
+    <%= form.text_field :name, style: "width: 100%; padding: 8px; background: #2a2a2a; border: 1px solid #444; color: #00ff00;" %>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <%= form.label :description, style: "display: block; margin-bottom: 5px; color: #00ffff;" %>
+    <%= form.text_area :description, rows: 6, style: "width: 100%; padding: 8px; background: #2a2a2a; border: 1px solid #444; color: #00ff00;" %>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <%= form.label :relationship, style: "display: block; margin-bottom: 5px; color: #00ffff;" %>
+    <%= form.text_field :relationship, style: "width: 100%; padding: 8px; background: #2a2a2a; border: 1px solid #444; color: #00ff00;" %>
+    <small style="color: #666;">e.g., friend, family, coworker, etc.</small>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <%= form.label :metadata, "Metadata (JSON)", style: "display: block; margin-bottom: 5px; color: #00ffff;" %>
+    <%= form.text_area :metadata, rows: 8, style: "width: 100%; padding: 8px; background: #2a2a2a; border: 1px solid #444; color: #00ff00; font-family: monospace;" %>
+    <small style="color: #666;">Raw JSON metadata - be careful editing this</small>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <p style="color: #666;">
+      <strong>Extracted from session:</strong> <%= @person.extracted_from_session %><br>
+      <strong>Last seen:</strong> 
+      <% if @person.last_seen_at %>
+        <%= @person.last_seen_at.strftime('%B %d, %Y at %I:%M %p') %>
+      <% else %>
+        Never
+      <% end %>
+    </p>
+  </div>
+
+  <div>
+    <%= form.submit "Update Person", class: 'btn', style: "background: #006600; color: #ffffff;" %>
+    <%= link_to 'Cancel', admin_person_path(@person), class: 'btn' %>
+  </div>
+<% end %>

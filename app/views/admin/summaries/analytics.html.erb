@@ -1,0 +1,169 @@
+<% content_for :layout, 'admin' %>
+
+<h1>📊 Summaries Analytics</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Summaries', admin_summaries_path, class: 'btn' %>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Summary Type Distribution</h2>
+  <div class="stats">
+    <% @type_distribution.each do |type, count| %>
+      <div class="stat-box">
+        <h3><%= type.humanize %></h3>
+        <p><%= count %> summaries</p>
+        <small style="color: #666;">
+          <%= ((count.to_f / @type_distribution.values.sum) * 100).round(1) %>%
+        </small>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Recent Activity (Last 7 Days)</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <% if @recent_activity.any? %>
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Summaries Created</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_activity.sort.reverse.each_with_index do |(date, count), index| %>
+            <tr>
+              <td><%= date.strftime('%A, %B %d') %></td>
+              <td><%= count %></td>
+              <td>
+                <% if index > 0 %>
+                  <% prev_count = @recent_activity.to_a.reverse[index - 1][1] %>
+                  <% change = count - prev_count %>
+                  <% if change > 0 %>
+                    <span style="color: #00ff00;">↑ +<%= change %></span>
+                  <% elsif change < 0 %>
+                    <span style="color: #ff0000;">↓ <%= change %></span>
+                  <% else %>
+                    <span style="color: #666;">→ 0</span>
+                  <% end %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p style="color: #666; text-align: center;">No activity data available for the last 7 days.</p>
+    <% end %>
+  </div>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Average Message Counts by Type</h2>
+  <div class="stats">
+    <% @avg_message_counts.each do |type, avg_count| %>
+      <div class="stat-box">
+        <h3><%= type.humanize %></h3>
+        <p><%= avg_count || 0 %> messages</p>
+        <small style="color: #666;">average per summary</small>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% if @avg_durations.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Average Duration by Type</h2>
+    <div class="stats">
+      <% @avg_durations.each do |type, avg_duration| %>
+        <div class="stat-box">
+          <h3><%= type.humanize %></h3>
+          <p><%= avg_duration || 0 %> minutes</p>
+          <small style="color: #666;">average duration</small>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @recent_goals.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Recent Goal Completions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Goal</th>
+          <th>Category</th>
+          <th>Completed</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_goals.each do |goal| %>
+          <% metadata = goal.metadata_json %>
+          <tr>
+            <td><%= truncate(goal.summary_text, length: 80) %></td>
+            <td><%= metadata['goal_category']&.humanize || 'Unknown' %></td>
+            <td><%= goal.created_at.strftime('%m/%d %H:%M') %></td>
+            <td>
+              <% if metadata['duration_seconds'] %>
+                <%= (metadata['duration_seconds'].to_f / 60).round(1) %>min
+              <% else %>
+                N/A
+              <% end %>
+            </td>
+            <td>
+              <% if metadata['expired'] %>
+                <span style="color: #ff0000;">Expired</span>
+              <% else %>
+                <span style="color: #00ff00;">Completed</span>
+              <% end %>
+            </td>
+            <td>
+              <%= link_to 'View', admin_summary_path(goal), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @summary_trends.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Summary Trends (Last 30 Days)</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p style="color: #666;">Detailed trend analysis would be displayed here with charts/graphs.</p>
+      <p>Summary types tracked: <%= @summary_trends.keys.map(&:humanize).join(', ') %></p>
+      <p>Total data points: <%= @summary_trends.values.sum %></p>
+    </div>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Summary Insights</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <% most_common_type = @type_distribution.max_by { |_, count| count } %>
+    <% if most_common_type %>
+      <p>• Most common summary type: <strong><%= most_common_type[0].humanize %></strong> (<%= most_common_type[1] %> summaries)</p>
+    <% end %>
+    
+    <% if @avg_message_counts.any? %>
+      <% highest_msg_type = @avg_message_counts.max_by { |_, avg| avg || 0 } %>
+      <p>• Type with highest message count: <strong><%= highest_msg_type[0].humanize %></strong> (<%= highest_msg_type[1] %> avg)</p>
+    <% end %>
+    
+    <% if @recent_goals.any? %>
+      <p>• Recent goal completions: <strong><%= @recent_goals.count %></strong></p>
+      <% expired_goals = @recent_goals.select { |g| g.metadata_json['expired'] } %>
+      <% if expired_goals.any? %>
+        <p>• Expired goals: <strong><%= expired_goals.count %></strong> out of <%= @recent_goals.count %></p>
+      <% end %>
+    <% end %>
+  </div>
+</div>

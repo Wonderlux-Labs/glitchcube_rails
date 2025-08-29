@@ -1,0 +1,106 @@
+<% content_for :layout, 'admin' %>
+
+<h1>📝 Summaries</h1>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Total Summaries</h3>
+    <p><%= @stats[:total_count] %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Today</h3>
+    <p><%= @stats[:today_count] %></p>
+  </div>
+  <div class="stat-box">
+    <h3>This Week</h3>
+    <p><%= @stats[:week_count] %></p>
+  </div>
+</div>
+
+<div style="margin-bottom: 20px;">
+  <h3>Summary Types</h3>
+  <div class="stats">
+    <% @stats[:by_type].each do |type, count| %>
+      <div class="stat-box">
+        <h4><%= type.humanize %></h4>
+        <p><%= count %></p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div style="margin-bottom: 20px;">
+  <%= form_with url: admin_summaries_path, method: :get, local: true, class: 'search-form' do |form| %>
+    <%= form.text_field :search, placeholder: "Search summaries...", value: params[:search], style: "margin-right: 10px;" %>
+    <%= form.select :type, options_for_select([['All Types', '']] + Summary::SUMMARY_TYPES.map { |t| [t.humanize, t] }, params[:type]), {}, style: "margin-right: 10px;" %>
+    <%= form.select :date_range, options_for_select([['All Time', ''], ['Today', 'today'], ['This Week', 'week'], ['This Month', 'month']], params[:date_range]), {}, style: "margin-right: 10px;" %>
+    <%= form.submit "Filter", class: 'btn' %>
+    <%= link_to 'Clear', admin_summaries_path, class: 'btn' %>
+  <% end %>
+</div>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to 'All Summaries', admin_summaries_path, class: 'btn' %>
+  <%= link_to 'Daily', admin_summaries_path(type: 'daily'), class: 'btn' %>
+  <%= link_to 'Session', admin_summaries_path(type: 'session'), class: 'btn' %>
+  <%= link_to 'Goal Completions', admin_summaries_path(type: 'goal_completion'), class: 'btn' %>
+  <%= link_to 'Analytics', analytics_admin_summaries_path, class: 'btn' %>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Summary Text</th>
+      <th>Messages</th>
+      <th>Duration</th>
+      <th>Time Period</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @summaries.each do |summary| %>
+      <tr>
+        <td>
+          <span style="background: #444; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+            <%= summary.summary_type.humanize %>
+          </span>
+        </td>
+        <td><%= truncate(summary.summary_text, length: 120) %></td>
+        <td><%= summary.message_count %></td>
+        <td>
+          <% if summary.duration_in_minutes %>
+            <%= summary.duration_in_minutes %>min
+          <% else %>
+            N/A
+          <% end %>
+        </td>
+        <td>
+          <% if summary.start_time && summary.end_time %>
+            <%= summary.start_time.strftime('%m/%d %H:%M') %> - 
+            <%= summary.end_time.strftime('%H:%M') %>
+          <% else %>
+            N/A
+          <% end %>
+        </td>
+        <td><%= summary.created_at.strftime('%m/%d %H:%M') %></td>
+        <td>
+          <%= link_to 'View', admin_summary_path(summary), class: 'btn' %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @summaries.respond_to?(:total_pages) %>
+  <div style="margin-top: 20px;">
+    Page <%= @summaries.current_page %> of <%= @summaries.total_pages %>
+    <% if @summaries.prev_page %>
+      <%= link_to '← Previous', admin_summaries_path(page: @summaries.prev_page), class: 'btn' %>
+    <% end %>
+    <% if @summaries.next_page %>
+      <%= link_to 'Next →', admin_summaries_path(page: @summaries.next_page), class: 'btn' %>
+    <% end %>
+  </div>
+<% end %>

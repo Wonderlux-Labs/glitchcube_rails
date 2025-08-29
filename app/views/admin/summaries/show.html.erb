@@ -1,0 +1,161 @@
+<% content_for :layout, 'admin' %>
+
+<h1>📝 Summary Details</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Summaries', admin_summaries_path, class: 'btn' %>
+  <%= link_to 'Analytics', analytics_admin_summaries_path, class: 'btn' %>
+</div>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Type</h3>
+    <p><%= @summary.summary_type.humanize %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Message Count</h3>
+    <p><%= @summary.message_count %></p>
+  </div>
+  <div class="stat-box">
+    <h3>Duration</h3>
+    <p>
+      <% if @summary.duration_in_minutes %>
+        <%= @summary.duration_in_minutes %> minutes
+      <% else %>
+        N/A
+      <% end %>
+    </p>
+  </div>
+  <div class="stat-box">
+    <h3>Created</h3>
+    <p><%= @summary.created_at.strftime('%B %d, %Y at %I:%M %p') %></p>
+  </div>
+</div>
+
+<% if @summary.start_time && @summary.end_time %>
+  <div style="margin-bottom: 30px;">
+    <h2>Time Period</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><strong>Start:</strong> <%= @summary.start_time.strftime('%B %d, %Y at %I:%M %p') %></p>
+      <p><strong>End:</strong> <%= @summary.end_time.strftime('%B %d, %Y at %I:%M %p') %></p>
+      <p><strong>Duration:</strong> <%= @summary.duration_in_minutes %> minutes</p>
+    </div>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Summary Text</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <%= simple_format(@summary.summary_text) %>
+  </div>
+</div>
+
+<% if @metadata.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Metadata</h2>
+    
+    <% if @metadata['general_mood'].present? %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+        <h3 style="color: #00ffff; margin-top: 0;">General Mood</h3>
+        <p><%= @metadata['general_mood'] %></p>
+      </div>
+    <% end %>
+
+    <% if @metadata['topics'].present? %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+        <h3 style="color: #00ffff; margin-top: 0;">Topics</h3>
+        <% @metadata['topics'].each do |topic| %>
+          <span style="background: #444; padding: 2px 6px; border-radius: 3px; margin-right: 5px; font-size: 0.9em;">
+            <%= topic %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @metadata['important_questions'].present? %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+        <h3 style="color: #00ffff; margin-top: 0;">Important Questions</h3>
+        <ul style="margin: 0;">
+          <% @metadata['important_questions'].each do |question| %>
+            <li><%= question %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <% if @metadata['useful_thoughts'].present? %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+        <h3 style="color: #00ffff; margin-top: 0;">Useful Thoughts</h3>
+        <ul style="margin: 0;">
+          <% @metadata['useful_thoughts'].each do |thought| %>
+            <li><%= thought %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <!-- Goal completion specific metadata -->
+    <% if @summary.summary_type == 'goal_completion' %>
+      <% if @metadata['goal_id'].present? %>
+        <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+          <h3 style="color: #00ffff; margin-top: 0;">Goal Information</h3>
+          <p><strong>Goal ID:</strong> <%= @metadata['goal_id'] %></p>
+          <% if @metadata['goal_category'].present? %>
+            <p><strong>Category:</strong> <%= @metadata['goal_category'] %></p>
+          <% end %>
+          <% if @metadata['duration_seconds'].present? %>
+            <p><strong>Duration:</strong> <%= (@metadata['duration_seconds'].to_f / 60).round(1) %> minutes</p>
+          <% end %>
+          <% if @metadata['completion_notes'].present? %>
+            <p><strong>Notes:</strong> <%= @metadata['completion_notes'] %></p>
+          <% end %>
+          <% if @metadata['expired'].present? %>
+            <p><strong>Expired:</strong> <%= @metadata['expired'] ? 'Yes' : 'No' %></p>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <!-- Raw metadata -->
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <h3 style="color: #00ffff; margin-top: 0;">Raw Metadata</h3>
+      <pre><%= JSON.pretty_generate(@metadata) %></pre>
+    </div>
+  </div>
+<% end %>
+
+<% if @related_summaries.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Related Summaries (Same Type)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Summary Text</th>
+          <th>Messages</th>
+          <th>Duration</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @related_summaries.each do |summary| %>
+          <tr>
+            <td><%= truncate(summary.summary_text, length: 100) %></td>
+            <td><%= summary.message_count %></td>
+            <td>
+              <% if summary.duration_in_minutes %>
+                <%= summary.duration_in_minutes %>min
+              <% else %>
+                N/A
+              <% end %>
+            </td>
+            <td><%= summary.created_at.strftime('%m/%d %H:%M') %></td>
+            <td>
+              <%= link_to 'View', admin_summary_path(summary), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

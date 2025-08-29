@@ -1,0 +1,300 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/binary_sensor.living_room_motion
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:37:44 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/binary_sensor.living_room_motion
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:37:44 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/binary_sensor.living_room_motion
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:37:44 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/weather.home
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:37:44 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/weather.home
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:37:44 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/weather.home
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:37:44 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
+- request:
+    method: post
+    uri: http://glitch.local:8123/api/services/assist_satellite/start_conversation
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"assist_satellite.square_voice","start_message":"[PROACTIVE]
+        weather_alert: Storm approaching, might want to secure outdoor items","extra_system_prompt":"You
+        are responding to a proactive trigger. Be engaging and helpful."}'
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '413'
+      Date:
+      - Sat, 23 Aug 2025 14:37:51 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '[{"entity_id":"assist_satellite.square_voice","state":"responding","attributes":{"friendly_name":"Square
+        Voice Assist satellite","supported_features":3},"last_changed":"2025-08-23T14:37:43.845516+00:00","last_reported":"2025-08-23T14:37:43.845516+00:00","last_updated":"2025-08-23T14:37:43.845516+00:00","context":{"id":"01K3BNTAGZY43TJ70B3QP79P0E","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}]'
+  recorded_at: Sat, 23 Aug 2025 14:37:51 GMT
+recorded_with: VCR 6.3.1

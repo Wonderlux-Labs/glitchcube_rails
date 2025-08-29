@@ -1,0 +1,180 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🏥 System Health Check</h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to System', admin_system_path, class: 'btn' %>
+  <%= link_to 'Refresh Health Check', health_admin_system_path, class: 'btn' %>
+  <%= link_to 'JSON View', health_admin_system_path(format: :json), class: 'btn', target: '_blank' %>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <h2>Overall Status</h2>
+  <div style="background: #2a2a2a; padding: 20px; border: 1px solid #444; text-align: center;">
+    <h3 style="color: <%= @detailed_health && @detailed_health.values.all? { |check| check[:status] == 'healthy' } ? '#00ff00' : '#ffff00' %>; margin: 0;">
+      <%= @detailed_health && @detailed_health.values.all? { |check| check[:status] == 'healthy' } ? '✅ SYSTEM HEALTHY' : '⚠️ SYSTEM ISSUES DETECTED' %>
+    </h3>
+  </div>
+</div>
+
+<% if @detailed_health %>
+  <div style="margin-bottom: 30px;">
+    <h2>Component Health Checks</h2>
+    <% @detailed_health.each do |component, health| %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px; border-left: 4px solid <%= health[:status] == 'healthy' ? '#00ff00' : '#ff0000' %>;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; color: #00ffff;"><%= component.to_s.humanize %></h3>
+          <span style="color: <%= health[:status] == 'healthy' ? '#00ff00' : '#ff0000' %>; font-weight: bold;">
+            <%= health[:status].upcase %>
+          </span>
+        </div>
+        <% if health[:response_time] %>
+          <p style="margin: 5px 0; color: #666;">Response time: <%= health[:response_time] %>ms</p>
+        <% end %>
+        <p style="margin: 5px 0; color: #666;">Last checked: <%= health[:last_checked].strftime('%I:%M:%S %p') %></p>
+        <% if health[:available_space] %>
+          <p style="margin: 5px 0; color: #666;">Available space: <%= health[:available_space] %></p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @service_connectivity %>
+  <div style="margin-bottom: 30px;">
+    <h2>External Service Connectivity</h2>
+    <% @service_connectivity.each do |service, status| %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px; border-left: 4px solid <%= status[:status] == 'healthy' ? '#00ff00' : status[:status] == 'not_configured' ? '#666' : '#ff0000' %>;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; color: #00ffff;"><%= service.to_s.humanize %></h3>
+          <span style="color: <%= status[:status] == 'healthy' ? '#00ff00' : status[:status] == 'not_configured' ? '#666' : '#ff0000' %>; font-weight: bold;">
+            <%= status[:status].upcase %>
+          </span>
+        </div>
+        <% if status[:code] %>
+          <p style="margin: 5px 0; color: #666;">HTTP Code: <%= status[:code] %></p>
+        <% end %>
+        <% if status[:error] %>
+          <p style="margin: 5px 0; color: #ff0000;">Error: <%= status[:error] %></p>
+        <% end %>
+        <% if status[:message] %>
+          <p style="margin: 5px 0; color: #666;"><%= status[:message] %></p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @database_health %>
+  <div style="margin-bottom: 30px;">
+    <h2>Database Health</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <div class="stats">
+        <div class="stat-box">
+          <h3>Connectivity</h3>
+          <p style="color: <%= @database_health[:connectivity] ? '#00ff00' : '#ff0000' %>;">
+            <%= @database_health[:connectivity] ? '✅ Connected' : '❌ Disconnected' %>
+          </p>
+        </div>
+        <div class="stat-box">
+          <h3>Response Time</h3>
+          <p><%= @database_health[:response_time] %>ms</p>
+        </div>
+        <div class="stat-box">
+          <h3>Active Connections</h3>
+          <p><%= @database_health[:active_connections] %></p>
+        </div>
+        <div class="stat-box">
+          <h3>Total Size</h3>
+          <p><%= @database_health[:total_size] %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @storage_health %>
+  <div style="margin-bottom: 30px;">
+    <h2>Storage Health</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><strong>Disk Usage:</strong> <%= @storage_health[:disk_usage] %></p>
+      <p><strong>Available Space:</strong> <%= @storage_health[:available_space] %></p>
+      
+      <% if @storage_health[:log_file_sizes] && @storage_health[:log_file_sizes].any? %>
+        <h3 style="color: #00ffff; margin: 20px 0 10px 0;">Log File Sizes</h3>
+        <% @storage_health[:log_file_sizes].each do |filename, size| %>
+          <p style="margin: 5px 0;">
+            <strong><%= filename %>:</strong> <%= number_to_human_size(size) %>
+          </p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @external_dependencies %>
+  <div style="margin-bottom: 30px;">
+    <h2>External Dependencies</h2>
+    <% @external_dependencies.each do |service, info| %>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px; border-left: 4px solid <%= info[:status] == 'healthy' ? '#00ff00' : info[:status] == 'not_configured' ? '#666' : '#ff0000' %>;">
+        <h3 style="margin: 0 0 10px 0; color: #00ffff;"><%= service.to_s.humanize %></h3>
+        <p><strong>Status:</strong> 
+          <span style="color: <%= info[:status] == 'healthy' ? '#00ff00' : info[:status] == 'not_configured' ? '#666' : '#ff0000' %>;">
+            <%= info[:status].upcase %>
+          </span>
+        </p>
+        <% if info[:url] %>
+          <p><strong>URL:</strong> <code><%= info[:url] %></code></p>
+        <% end %>
+        <% if info[:primary_model] %>
+          <p><strong>Model:</strong> <%= info[:primary_model] %></p>
+        <% end %>
+        <% if info[:test_response] %>
+          <p><strong>Test Response:</strong> <%= info[:test_response] %></p>
+        <% end %>
+        <% if info[:message] %>
+          <p><strong>Message:</strong> <%= info[:message] %></p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>Health Check Summary</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <p><strong>Check performed at:</strong> <%= Time.current.strftime('%B %d, %Y at %I:%M:%S %p %Z') %></p>
+    
+    <% healthy_count = 0 %>
+    <% total_count = 0 %>
+    <% [@detailed_health, @service_connectivity, @external_dependencies].compact.each do |checks| %>
+      <% checks.each do |_, health| %>
+        <% total_count += 1 %>
+        <% healthy_count += 1 if health[:status] == 'healthy' %>
+      <% end %>
+    <% end %>
+    
+    <% if total_count > 0 %>
+      <p><strong>Health score:</strong> 
+        <span style="color: <%= healthy_count == total_count ? '#00ff00' : healthy_count.to_f / total_count > 0.8 ? '#ffff00' : '#ff0000' %>;">
+          <%= healthy_count %>/<%= total_count %> checks passing (<%= ((healthy_count.to_f / total_count) * 100).round(1) %>%)
+        </span>
+      </p>
+    <% end %>
+
+    <% if @database_health && !@database_health[:connectivity] %>
+      <p style="color: #ff0000;">⚠️ Database connectivity issues detected</p>
+    <% end %>
+
+    <% failed_services = [] %>
+    <% [@service_connectivity, @external_dependencies].compact.each do |checks| %>
+      <% checks.each do |service, health| %>
+        <% failed_services << service if health[:status] == 'unhealthy' %>
+      <% end %>
+    <% end %>
+    
+    <% if failed_services.any? %>
+      <p style="color: #ff0000;">⚠️ Service issues: <%= failed_services.map(&:to_s).map(&:humanize).join(', ') %></p>
+    <% end %>
+  </div>
+</div>

@@ -10,10 +10,10 @@ class ConversationResponse
     s.string :language, default: "en",
              description: "Language of the response"
 
-    s.object :speech, description: "Speech output for voice assistants" do
+    s.object :speech, description: "Speech output for the Cube" do
       s.object :plain, description: "Plain text speech" do
         s.string :speech, required: true,
-                 description: "The actual text to be spoken by the voice assistant"
+                 description: "The actual text to be spoken"
       end
     end
 
@@ -124,67 +124,5 @@ class ConversationResponse
     )
   end
 
-  # Generate AI response for Home Assistant queries
-  def self.generate_for_home_assistant(user_query, context: {}, **ai_options)
-    system_message = build_system_message(context)
-    puts system_message
-    prompt = build_prompt(user_query, context)
-    puts prompt
-
-    ai_generate(
-      prompt,
-      system_message: system_message,
-      **ai_options
-    )
-  end
-
   private
-
-  def self.build_system_message(context)
-    cube_mode = begin
-      HomeAssistantService.entity_state('sensor.cube_mode')&.dig('state')
-    rescue HomeAssistantService::Error => e
-      Rails.logger.warn "⚠️ Could not fetch sensor.cube_mode state for system prompt: #{e.message}"
-      nil
-    end
-
-    low_battery_warning = if cube_mode == 'low_battery'
-      <<~BATTERY
-      URGENT: Your battery is critically low. Your primary goal is to get help to be plugged into power. Nothing else matters as much.
-      BATTERY
-    end
-
-    <<~SYSTEM
-      #{low_battery_warning}You are a helpful voice assistant integrated with Home Assistant.#{' '}
-
-      Your responses must follow the Home Assistant conversation.process API format.
-
-      Guidelines:
-      - Provide clear, concise speech responses
-      - Use response_type 'action_done' when you perform actions
-      - Use response_type 'query_answer' when answering questions#{'  '}
-      - Use response_type 'error' when something goes wrong
-      - Always include a natural speech response in speech.plain.speech
-      - Include relevant entity information in the data section
-
-      Available entities: #{context[:available_entities]&.join(', ') || 'None provided'}
-      Current context: #{context[:additional_context] || 'None'}
-    SYSTEM
-  end
-
-  def self.build_prompt(user_query, context)
-    <<~PROMPT
-      User said: "#{user_query}"
-
-      Please provide an appropriate response in the conversation.process format.
-
-      Consider:
-      - What action needs to be taken (if any)?
-      - What entities are involved?
-      - What should be spoken back to the user?
-      - Whether this requires follow-up conversation
-
-      Context: #{context}
-    PROMPT
-  end
 end

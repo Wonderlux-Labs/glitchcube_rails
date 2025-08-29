@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Direct Tool Calling Integration", type: :integration do
+RSpec.describe "Direct Tool Calling Integration", type: :integration, skip: "ConversationOrchestrator class no longer exists" do
   let(:conversation_orchestrator) do
     ConversationOrchestrator.new(
       session_id: "test_session",

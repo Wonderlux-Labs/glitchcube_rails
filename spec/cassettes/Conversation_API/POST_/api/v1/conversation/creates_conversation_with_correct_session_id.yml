@@ -1,0 +1,490 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.cube_mode
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '31'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"message":"Entity not found."}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.cube_mode
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '473'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.cube_mode","state":"conversation","attributes":{"options":["conversation","jukebox","performance","guide","party","ambient","low_power"],"editable":false,"icon":"mdi:shape-cube","friendly_name":"Cube
+        Operating Mode"},"last_changed":"2025-08-22T10:42:56.842853+00:00","last_reported":"2025-08-22T10:42:56.842853+00:00","last_updated":"2025-08-22T10:42:56.842853+00:00","context":{"id":"01K38NZPPA2ZNBR2FDS7X2M9M7","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.cube_mode
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '473'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.cube_mode","state":"conversation","attributes":{"options":["conversation","jukebox","performance","guide","party","ambient","low_power"],"editable":false,"icon":"mdi:shape-cube","friendly_name":"Cube
+        Operating Mode"},"last_changed":"2025-08-22T10:42:56.842853+00:00","last_reported":"2025-08-22T10:42:56.842853+00:00","last_updated":"2025-08-22T10:42:56.842853+00:00","context":{"id":"01K38NZPPA2ZNBR2FDS7X2M9M7","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.glitchcube_context
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '524'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"sensor.glitchcube_context","state":"active","attributes":{"weather_summary":"unavailable","time_of_day":"morning","day_of_week":"Saturday","current_location":"Black
+        Rock City","last_updated":"2025-08-23T07:33:00.375221-07:00","icon":"mdi:brain","friendly_name":"Context
+        For Cube"},"last_changed":"2025-08-22T10:45:12.587667+00:00","last_reported":"2025-08-23T14:33:00.375425+00:00","last_updated":"2025-08-23T14:33:00.375425+00:00","context":{"id":"01K3BNHNPQKZPFTS4JH8A38AYH","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.glitchcube_context
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '524'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"sensor.glitchcube_context","state":"active","attributes":{"weather_summary":"unavailable","time_of_day":"morning","day_of_week":"Saturday","current_location":"Black
+        Rock City","last_updated":"2025-08-23T07:33:00.375221-07:00","icon":"mdi:brain","friendly_name":"Context
+        For Cube"},"last_changed":"2025-08-22T10:45:12.587667+00:00","last_reported":"2025-08-23T14:33:00.375425+00:00","last_updated":"2025-08-23T14:33:00.375425+00:00","context":{"id":"01K3BNHNPQKZPFTS4JH8A38AYH","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.glitchcube_context
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '524'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"sensor.glitchcube_context","state":"active","attributes":{"weather_summary":"unavailable","time_of_day":"morning","day_of_week":"Saturday","current_location":"Black
+        Rock City","last_updated":"2025-08-23T07:33:00.375221-07:00","icon":"mdi:brain","friendly_name":"Context
+        For Cube"},"last_changed":"2025-08-22T10:45:12.587667+00:00","last_reported":"2025-08-23T14:33:00.375425+00:00","last_updated":"2025-08-23T14:33:00.375425+00:00","context":{"id":"01K3BNHNPQKZPFTS4JH8A38AYH","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.glitchcube_location_context
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '829'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"sensor.glitchcube_location_context","state":"3:30 & Esplanade","attributes":{"friendly_name":"GlitchCube
+        Location Context","icon":"mdi:map-marker-radius","zone":"city","address":"3:30
+        & Esplanade","street":null,"block":null,"within_fence":true,"distance_from_man":"2
+        feet","landmarks":"Toilet 28, Station 3, Station 3, Toilet 25, 3 & B Plaza","landmark_count":5,"nearest_landmark":"Toilet
+        28","nearest_porto":"Toilet 28","porto_distance":0.0,"coordinates":"40.77842187,
+        -119.19634979","source":"random_landmark","last_updated":"2025-08-23T07:30:00-05:00"},"last_changed":"2025-08-23T12:27:00.174323+00:00","last_reported":"2025-08-23T12:30:00.541711+00:00","last_updated":"2025-08-23T12:30:00.541711+00:00","context":{"id":"01K3BEGETXJRBW577S38PP5999","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:11 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.glitchcube_location_context
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '829'
+      Date:
+      - Sat, 23 Aug 2025 14:33:11 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"sensor.glitchcube_location_context","state":"3:30 & Esplanade","attributes":{"friendly_name":"GlitchCube
+        Location Context","icon":"mdi:map-marker-radius","zone":"city","address":"3:30
+        & Esplanade","street":null,"block":null,"within_fence":true,"distance_from_man":"2
+        feet","landmarks":"Toilet 28, Station 3, Station 3, Toilet 25, 3 & B Plaza","landmark_count":5,"nearest_landmark":"Toilet
+        28","nearest_porto":"Toilet 28","porto_distance":0.0,"coordinates":"40.77842187,
+        -119.19634979","source":"random_landmark","last_updated":"2025-08-23T07:30:00-05:00"},"last_changed":"2025-08-23T12:27:00.174323+00:00","last_reported":"2025-08-23T12:30:00.541711+00:00","last_updated":"2025-08-23T12:30:00.541711+00:00","context":{"id":"01K3BEGETXJRBW577S38PP5999","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:12 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/sensor.glitchcube_location_context
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '829'
+      Date:
+      - Sat, 23 Aug 2025 14:33:12 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"sensor.glitchcube_location_context","state":"3:30 & Esplanade","attributes":{"friendly_name":"GlitchCube
+        Location Context","icon":"mdi:map-marker-radius","zone":"city","address":"3:30
+        & Esplanade","street":null,"block":null,"within_fence":true,"distance_from_man":"2
+        feet","landmarks":"Toilet 28, Station 3, Station 3, Toilet 25, 3 & B Plaza","landmark_count":5,"nearest_landmark":"Toilet
+        28","nearest_porto":"Toilet 28","porto_distance":0.0,"coordinates":"40.77842187,
+        -119.19634979","source":"random_landmark","last_updated":"2025-08-23T07:30:00-05:00"},"last_changed":"2025-08-23T12:27:00.174323+00:00","last_reported":"2025-08-23T12:30:00.541711+00:00","last_updated":"2025-08-23T12:30:00.541711+00:00","context":{"id":"01K3BEGETXJRBW577S38PP5999","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:12 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.cube_mode
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '473'
+      Date:
+      - Sat, 23 Aug 2025 14:33:12 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.cube_mode","state":"conversation","attributes":{"options":["conversation","jukebox","performance","guide","party","ambient","low_power"],"editable":false,"icon":"mdi:shape-cube","friendly_name":"Cube
+        Operating Mode"},"last_changed":"2025-08-22T10:42:56.842853+00:00","last_reported":"2025-08-22T10:42:56.842853+00:00","last_updated":"2025-08-22T10:42:56.842853+00:00","context":{"id":"01K38NZPPA2ZNBR2FDS7X2M9M7","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:12 GMT
+- request:
+    method: get
+    uri: http://glitch.local:8123/api/states/input_select.cube_mode
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - glitch.local:8123
+      Authorization:
+      - Bearer <HOME_ASSISTANT_TOKEN>
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - no-referrer
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - ''
+      X-Frame-Options:
+      - SAMEORIGIN
+      Content-Length:
+      - '473'
+      Date:
+      - Sat, 23 Aug 2025 14:33:12 GMT
+    body:
+      encoding: UTF-8
+      string: '{"entity_id":"input_select.cube_mode","state":"conversation","attributes":{"options":["conversation","jukebox","performance","guide","party","ambient","low_power"],"editable":false,"icon":"mdi:shape-cube","friendly_name":"Cube
+        Operating Mode"},"last_changed":"2025-08-22T10:42:56.842853+00:00","last_reported":"2025-08-22T10:42:56.842853+00:00","last_updated":"2025-08-22T10:42:56.842853+00:00","context":{"id":"01K38NZPPA2ZNBR2FDS7X2M9M7","parent_id":null,"user_id":null}}'
+  recorded_at: Sat, 23 Aug 2025 14:33:12 GMT
+recorded_with: VCR 6.3.1

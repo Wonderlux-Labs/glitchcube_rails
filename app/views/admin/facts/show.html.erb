@@ -1,0 +1,144 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🔍 Fact #<%= @fact.id %></h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Facts', admin_facts_path, class: 'btn' %>
+</div>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Importance</h3>
+    <p>
+      <% if @fact.respond_to?(:importance) && @fact.importance.present? %>
+        <% importance = @fact.importance.to_i %>
+        <span style="color: <%= importance >= 7 ? '#ff0000' : importance >= 4 ? '#ffff00' : '#00ff00' %>;">
+          <%= importance %>/10
+        </span>
+      <% else %>
+        <span style="color: #666;">Not set</span>
+      <% end %>
+    </p>
+  </div>
+  <div class="stat-box">
+    <h3>Created</h3>
+    <p><%= @fact.created_at.strftime('%B %d, %Y') %></p>
+    <small style="color: #666;"><%= @fact.created_at.strftime('%I:%M %p') %></small>
+  </div>
+  <div class="stat-box">
+    <h3>Updated</h3>
+    <p><%= @fact.updated_at.strftime('%B %d, %Y') %></p>
+    <small style="color: #666;"><%= @fact.updated_at.strftime('%I:%M %p') %></small>
+  </div>
+  <div class="stat-box">
+    <h3>Database ID</h3>
+    <p><%= @fact.id %></p>
+  </div>
+</div>
+
+<% if @fact.respond_to?(:content) && @fact.content.present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Content</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <%= simple_format(@fact.content) %>
+    </div>
+  </div>
+<% end %>
+
+<% if @fact.respond_to?(:title) && @fact.title.present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Title</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><%= @fact.title %></p>
+    </div>
+  </div>
+<% end %>
+
+<% if @fact.respond_to?(:description) && @fact.description.present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Description</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <%= simple_format(@fact.description) %>
+    </div>
+  </div>
+<% end %>
+
+<% if @fact.respond_to?(:category) && @fact.category.present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Category</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><%= @fact.category.humanize %></p>
+    </div>
+  </div>
+<% end %>
+
+<% if @metadata.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Metadata</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <pre><%= JSON.pretty_generate(@metadata) %></pre>
+    </div>
+  </div>
+<% end %>
+
+<div style="margin-bottom: 30px;">
+  <h2>System Information</h2>
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+    <p><strong>Database ID:</strong> <%= @fact.id %></p>
+    <p><strong>Created at:</strong> <%= @fact.created_at.strftime('%B %d, %Y at %I:%M:%S %p %Z') %></p>
+    <p><strong>Updated at:</strong> <%= @fact.updated_at.strftime('%B %d, %Y at %I:%M:%S %p %Z') %></p>
+    
+    <% if @fact.respond_to?(:extracted_from_session) && @fact.extracted_from_session.present? %>
+      <p><strong>Extracted from session:</strong> <%= @fact.extracted_from_session %></p>
+    <% end %>
+    
+    <% if @fact.respond_to?(:source) && @fact.source.present? %>
+      <p><strong>Source:</strong> <%= @fact.source %></p>
+    <% end %>
+  </div>
+</div>
+
+<% if @related_facts.any? %>
+  <div style="margin-bottom: 30px;">
+    <h2>Related Facts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Content</th>
+          <th>Importance</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @related_facts.each do |fact| %>
+          <tr>
+            <td><%= fact.id %></td>
+            <td>
+              <% if fact.respond_to?(:content) && fact.content.present? %>
+                <%= truncate(fact.content, length: 100) %>
+              <% else %>
+                <em style="color: #666;">Fact #<%= fact.id %></em>
+              <% end %>
+            </td>
+            <td>
+              <% if fact.respond_to?(:importance) && fact.importance.present? %>
+                <% importance = fact.importance.to_i %>
+                <span style="color: <%= importance >= 7 ? '#ff0000' : importance >= 4 ? '#ffff00' : '#00ff00' %>;">
+                  <%= importance %>/10
+                </span>
+              <% else %>
+                <span style="color: #666;">N/A</span>
+              <% end %>
+            </td>
+            <td><%= fact.created_at.strftime('%m/%d %H:%M') %></td>
+            <td>
+              <%= link_to 'View', admin_fact_path(fact), class: 'btn' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

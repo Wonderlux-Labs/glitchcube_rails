@@ -1,0 +1,100 @@
+<% content_for :layout, 'admin' %>
+
+<h1>🤖 Prompt: <%= @prompt_file.humanize %></h1>
+
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Prompts', admin_prompts_path, class: 'btn' %>
+  <%= link_to 'Analytics', analytics_admin_prompts_path, class: 'btn' %>
+</div>
+
+<% if @prompt_path %>
+  <div class="stats">
+    <div class="stat-box">
+      <h3>File Path</h3>
+      <p style="font-family: monospace; font-size: 0.8em;">
+        <%= @prompt_path.to_s.gsub(Rails.root.to_s, '') %>
+      </p>
+    </div>
+    <div class="stat-box">
+      <h3>File Size</h3>
+      <p><%= number_to_human_size(File.size(@prompt_path)) %></p>
+    </div>
+    <div class="stat-box">
+      <h3>Last Modified</h3>
+      <p><%= File.mtime(@prompt_path).strftime('%B %d, %Y at %I:%M %p') %></p>
+    </div>
+  </div>
+
+  <% if @prompt_content %>
+    <% if @prompt_content.is_a?(Hash) %>
+      <!-- Structured YAML content -->
+      <% @prompt_content.each do |key, value| %>
+        <div style="margin-bottom: 30px;">
+          <h2><%= key.humanize %></h2>
+          <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+            <% if value.is_a?(String) %>
+              <%= simple_format(value) %>
+            <% elsif value.is_a?(Array) %>
+              <ul>
+                <% value.each do |item| %>
+                  <li><%= simple_format(item.to_s) %></li>
+                <% end %>
+              </ul>
+            <% elsif value.is_a?(Hash) %>
+              <% value.each do |subkey, subvalue| %>
+                <div style="margin-bottom: 10px;">
+                  <strong><%= subkey.humanize %>:</strong>
+                  <% if subvalue.is_a?(String) %>
+                    <%= simple_format(subvalue) %>
+                  <% else %>
+                    <pre style="margin-top: 5px;"><%= subvalue.to_s %></pre>
+                  <% end %>
+                </div>
+              <% end %>
+            <% else %>
+              <pre><%= value.to_s %></pre>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <!-- Simple string content -->
+      <div style="margin-bottom: 30px;">
+        <h2>Content</h2>
+        <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+          <%= simple_format(@prompt_content.to_s) %>
+        </div>
+      </div>
+    <% end %>
+
+    <div style="margin-bottom: 30px;">
+      <h2>Raw YAML Content</h2>
+      <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+        <pre style="margin: 0; overflow-x: auto;"><%= @raw_content %></pre>
+      </div>
+    </div>
+  <% else %>
+    <div style="background: #2a2a2a; padding: 20px; border: 1px solid #444; text-align: center;">
+      <p style="color: #ff0000;">Error: Could not load prompt content</p>
+    </div>
+  <% end %>
+
+  <!-- File metadata -->
+  <div style="margin-bottom: 30px;">
+    <h2>File Information</h2>
+    <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
+      <p><strong>Full Path:</strong> <code><%= @prompt_path %></code></p>
+      <p><strong>File Size:</strong> <%= File.size(@prompt_path) %> bytes</p>
+      <p><strong>Last Modified:</strong> <%= File.mtime(@prompt_path).strftime('%B %d, %Y at %I:%M:%S %p %Z') %></p>
+      <p><strong>File Permissions:</strong> <%= sprintf("%o", File.stat(@prompt_path).mode)[-3..-1] %></p>
+      <p><strong>Readable:</strong> <%= File.readable?(@prompt_path) ? '✅ Yes' : '❌ No' %></p>
+      <p><strong>Writable:</strong> <%= File.writable?(@prompt_path) ? '✅ Yes' : '❌ No' %></p>
+    </div>
+  </div>
+
+<% else %>
+  <div style="background: #2a2a2a; padding: 20px; border: 1px solid #444; text-align: center;">
+    <p style="color: #ff0000;">Error: Prompt file not found</p>
+    <p style="color: #666;">Expected at: <code>lib/prompts/personas/<%= @prompt_file %>.yml</code> or <code>lib/prompts/general/<%= @prompt_file %>.yml</code></p>
+  </div>
+<% end %>

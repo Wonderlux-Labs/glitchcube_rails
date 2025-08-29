@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       # New conversation orchestrator route (matches HASS agent)
       post "conversation", to: "conversation#handle"
       post "conversation/proactive", to: "conversation#proactive"
+      post "conversation/persona_arrival", to: "conversation#persona_arrival"
 
       namespace :home_assistant do
         get "health", to: "home_assistant#health"
@@ -41,6 +42,9 @@ Rails.application.routes.draw do
       get "gps/home", to: "gps#home"
       get "gps/history", to: "gps#history"
       post "gps/simulate_movement", to: "gps#simulate_movement"
+      get "gps/movement_status", to: "gps#movement_status"
+      post "gps/set_destination", to: "gps#set_destination"
+      post "gps/stop_movement", to: "gps#stop_movement"
       get "gps/cube_current_loc", to: "gps#cube_current_loc"
       get "gps/landmarks", to: "gps#landmarks"
 
@@ -105,6 +109,32 @@ Rails.application.routes.draw do
 
     get "system", to: "system#index"
     get "system/health", to: "system#health"
+
+    resources :people, only: [ :index, :show, :edit, :update, :destroy ] do
+      collection do
+        get :search
+      end
+    end
+
+    resources :events, only: [ :index, :show ] do
+      collection do
+        get :timeline
+        get :search
+      end
+    end
+
+    resources :summaries, only: [ :index, :show ] do
+      collection do
+        get :analytics
+        get :search
+      end
+    end
+
+    resources :facts, only: [ :index, :show ] do
+      collection do
+        get :search
+      end
+    end
   end
 
   # Defines the root path route ("/")

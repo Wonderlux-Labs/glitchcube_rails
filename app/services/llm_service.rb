@@ -1,11 +1,13 @@
 # app/services/llm_service.rb
 require "ostruct"
+require "net/http"
+require "timeout"
 
 class LlmService
   class << self
     # Main conversation call with tool support
     def call_with_tools(messages:, tools: [], model: nil, **options)
-      model = [ "deepseek/deepseek-r1-0528", "mistralai/mistral-medium-3.1", "openai/gpt-5-mini", "minimax/minimax-01", "ai21/jamba-large-1.7" ].sample
+      model = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ].sample
       model_to_use = model || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with tools: #{model_to_use}"
@@ -79,7 +81,7 @@ class LlmService
         # Return the actual OpenRouter response object
         response
 
-      rescue Net::TimeoutError, Net::ReadTimeout, Timeout::Error => e
+      rescue Net::ReadTimeout, Timeout::Error => e
 
         # ====================================================================
         # TIMEOUT: LLM tool call timed out - trying faster models
@@ -151,6 +153,7 @@ class LlmService
 
     # Main conversation call with structured output (no tools)
     def call_with_structured_output(messages:, response_format:, model: nil, **options)
+      model = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ].sample
       model_to_use = model || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
@@ -188,7 +191,7 @@ class LlmService
 
         response
 
-      rescue Net::TimeoutError, Net::ReadTimeout, Timeout::Error => e
+      rescue Net::ReadTimeout, Timeout::Error => e
 
         # ====================================================================
         # TIMEOUT: LLM call timed out - trying faster fallback models
