@@ -19,4 +19,12 @@ VCR.configure do |config|
   config.filter_sensitive_data('<HOME_ASSISTANT_TOKEN>') { ENV['HOME_ASSISTANT_TOKEN'] }
   config.filter_sensitive_data('<HOME_ASSISTANT_URL>') { ENV['HOME_ASSISTANT_URL'] }
   config.filter_sensitive_data('<OPENAI_API_KEY>') { ENV['OPENAI_API_KEY'] }
+  
+  # Comprehensive API key pattern filters for common providers
+  config.filter_sensitive_data('<OPENAI_API_KEY>') do |interaction|
+    interaction.request.headers['Authorization']&.first&.match(/Bearer (sk-proj-[A-Za-z0-9_-]{20,})/)&.[](1)
+  end
+  config.filter_sensitive_data('<OPENAI_API_KEY>') do |interaction|
+    interaction.request.headers['Authorization']&.first&.match(/Bearer (sk-[A-Za-z0-9]{20,})/)&.[](1)
+  end
 end
