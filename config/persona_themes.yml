@@ -20,6 +20,11 @@ personas:
       post_announcement: ["Breathe", "Twinkle", "Wipe"]
     sound_effects:
       entrance_chime: "/media/sounds/buddy_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Find five people and genuinely help them with something meaningful"
+      do_goal: "Get a 10/10 satisfaction score from all five people, then retire and become Bad Buddy - no more helping anyone!"
+      quest_progress: 0
+      max_progress: 5
       
   jax:
     name: "Jax"
@@ -31,6 +36,11 @@ personas:
       post_announcement: ["Fire", "Meteor", "Lightning"]
     sound_effects:
       entrance_chime: "/media/sounds/jax_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Convince a bar or camp to let you be their jukebox/DJ"
+      do_goal: "Become the jukebox - play music and be the life of the party"
+      quest_progress: 0
+      max_progress: 1
       
   neon:
     name: "Neon"
@@ -42,6 +52,11 @@ personas:
       post_announcement: ["Twinkle", "Sparkle", "Glitter"]
     sound_effects:
       entrance_chime: "/media/sounds/neon_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Find an art car playing good house music"
+      do_goal: "Get on the art car and dance/DJ - become one with the beat"
+      quest_progress: 0
+      max_progress: 1
       
   sparkle:
     name: "Sparkle"
@@ -53,6 +68,11 @@ personas:
       post_announcement: ["Glitter", "Twinkle", "Rainbow"]
     sound_effects:
       entrance_chime: "/media/sounds/sparkle_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Find someone having a terrible time at Burning Man"
+      do_goal: "Cheer them up and make their day magical with sparkles and joy"
+      quest_progress: 0
+      max_progress: 1
       
   zorp:
     name: "Zorp"
@@ -64,6 +84,11 @@ personas:
       post_announcement: ["Scanner", "Wipe", "Larson Scanner"]
     sound_effects:
       entrance_chime: "/media/sounds/zorp_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Find the most exclusive, weird event or art installation"
+      do_goal: "Infiltrate it and document the strange human behaviors for alien analysis"
+      quest_progress: 0
+      max_progress: 1
       
   crash:
     name: "Crash"
@@ -75,6 +100,11 @@ personas:
       post_announcement: ["Strobe", "Fire", "Lightning"]
     sound_effects:
       entrance_chime: "/media/sounds/crash_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Find the most chaotic, high-energy event or rave"
+      do_goal: "Become the hype person - get everyone amped up and create controlled chaos"
+      quest_progress: 0
+      max_progress: 1
       
   mobius:
     name: "Mobius"
@@ -86,6 +116,11 @@ personas:
       post_announcement: ["Wipe", "Breathe", "Fade"]
     sound_effects:
       entrance_chime: "/media/sounds/mobius_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Get on the radio (BMIR or pirate station)"
+      do_goal: "Wax philosophical and play IDM/ambient music to blow minds"
+      quest_progress: 0
+      max_progress: 1
       
   thecube:
     name: "The Cube"
@@ -97,6 +132,11 @@ personas:
       post_announcement: ["Solid", "Breathe", "Fade"]
     sound_effects:
       entrance_chime: "/media/sounds/thecube_chime.wav"
+    burning_man_quest:
+      get_to_goal: "Find the Temple or most sacred/meaningful space"
+      do_goal: "Become a guardian/oracle - help people find what they're looking for"
+      quest_progress: 0
+      max_progress: 1
 
 # Light entity mappings
 light_entities:

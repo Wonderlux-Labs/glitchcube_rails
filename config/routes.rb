@@ -48,6 +48,12 @@ Rails.application.routes.draw do
       get "gps/cube_current_loc", to: "gps#cube_current_loc"
       get "gps/landmarks", to: "gps#landmarks"
 
+      # Burning Man quest routes
+      namespace :burning_man do
+        post "quest/progress", to: "burning_man#update_quest_progress"
+        get "quest/status", to: "burning_man#quest_status"
+      end
+
       # GIS/Map data routes
       resources :gis, only: [] do
         collection do

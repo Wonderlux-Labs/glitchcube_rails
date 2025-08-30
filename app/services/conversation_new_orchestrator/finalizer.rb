@@ -130,9 +130,9 @@ class ConversationNewOrchestrator::Finalizer
     response = conversation_response.to_home_assistant_response
     response[:end_conversation] = !continue_conversation  # Inverse of continue
     
-    # Add configurable delay when continuing conversation
+    # Add hardcoded 3 second delay when continuing conversation
     if continue_conversation
-      response[:continue_delay] = Rails.configuration.conversation_continue_delay.to_i
+      response[:continue_delay] = 3
     end
 
     Rails.logger.info "📤 Response: continue_conversation=#{continue_conversation}, end_conversation=#{!continue_conversation}, continue_delay=#{response[:continue_delay]}"

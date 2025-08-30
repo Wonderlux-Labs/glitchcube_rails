@@ -1,0 +1,78 @@
+# Home Assistant Configuration for Burning Man Quest Mode
+# Add this to your Home Assistant configuration.yaml
+
+# Input booleans
+input_boolean:
+  burning_man_quest_mode:
+    name: "🔥 Burning Man Quest Mode"
+    icon: mdi:fire
+
+# Sensors for quest tracking
+sensor:
+  - platform: template
+    sensors:
+      burning_man_current_quest:
+        friendly_name: "Current Burning Man Quest"
+        value_template: >-
+          {% if states('input_boolean.burning_man_quest_mode') == 'on' %}
+            {{ state_attr('sensor.glitchcube_current_goal', 'goal_id') | replace('burning_man_quest_', '') | title }}
+          {% else %}
+            None
+          {% endif %}
+        attribute_templates:
+          description: >-
+            {% if states('input_boolean.burning_man_quest_mode') == 'on' %}
+              {{ states('sensor.glitchcube_current_goal') }}
+            {% else %}
+              Quest mode not active
+            {% endif %}
+          progress: >-
+            {% if states('input_boolean.burning_man_quest_mode') == 'on' %}
+              {{ state_attr('sensor.glitchcube_current_goal', 'progress') | default(0) }}
+            {% else %}
+              0
+            {% endif %}
+          max_progress: >-
+            {% if states('input_boolean.burning_man_quest_mode') == 'on' %}
+              {{ state_attr('sensor.glitchcube_current_goal', 'max_progress') | default(1) }}
+            {% else %}
+              1
+            {% endif %}
+
+# Scripts for quest management
+script:
+  burning_man_quest_progress:
+    alias: "🎯 Update Quest Progress"
+    sequence:
+      - service: rest_command.update_burning_man_quest_progress
+      - service: homeassistant.update_entity
+        entity_id: sensor.glitchcube_current_goal
+
+# REST commands to interact with Rails app
+rest_command:
+  update_burning_man_quest_progress:
+    url: "http://localhost:3000/api/v1/burning_man/quest/progress"
+    method: POST
+    headers:
+      Content-Type: application/json
+    payload: '{"increment": 1}'
+
+# Lovelace dashboard card configuration
+# Add this to your dashboard:
+lovelace_burning_man_quest_card: |
+  type: entities
+  title: 🔥 Burning Man Quests
+  show_header_toggle: false
+  entities:
+    - input_boolean.burning_man_quest_mode
+    - type: divider
+    - sensor.burning_man_current_quest
+    - type: custom:button-card
+      name: "Update Quest Progress"
+      tap_action:
+        action: call-service
+        service: script.burning_man_quest_progress
+      styles:
+        card:
+          - background-color: var(--accent-color)
+          - color: white

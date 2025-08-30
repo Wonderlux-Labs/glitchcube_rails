@@ -25,6 +25,16 @@ class GoalService
       false
     end
 
+    # Check if burning man quest mode is active
+    def burning_man_quest_mode_active?
+      ha_service = HomeAssistantService.new
+      quest_mode = ha_service.entity("input_boolean.burning_man_quest_mode")
+      quest_mode&.dig("state") == "on"
+    rescue StandardError => e
+      Rails.logger.error "Failed to check burning man quest mode: #{e.message}"
+      false
+    end
+
     # Check if battery level is critical
     def battery_level_critical?
       HaDataSync.low_power_mode?
@@ -45,6 +55,11 @@ class GoalService
     # Select and set a new goal based on current conditions
     def select_goal(time_limit: 2.hours)
       Rails.logger.info "🎯 Selecting new goal"
+
+      # Check if burning man quest mode is active
+      if burning_man_quest_mode_active?
+        return select_burning_man_quest
+      end
 
       goals_data = load_goals
       return nil if goals_data.empty?
@@ -339,6 +354,107 @@ class GoalService
     rescue StandardError => e
       Rails.logger.error "Failed to fetch world state attributes: #{e.message}"
       {} # Return empty hash on any error
+    end
+
+    # Select burning man quest for current persona
+    def select_burning_man_quest
+      Rails.logger.info "🔥 Selecting Burning Man quest"
+      
+      # Get current persona
+      current_persona = CubePersona.current_persona
+      return nil unless current_persona
+
+      # Load persona themes to get quest data
+      themes_file = Rails.root.join("config", "persona_themes.yml")
+      return nil unless File.exist?(themes_file)
+
+      themes_data = YAML.load_file(themes_file)
+      persona_data = themes_data.dig("personas", current_persona)
+      quest_data = persona_data&.dig("burning_man_quest")
+
+      return nil unless quest_data
+
+      # Check quest progress
+      quest_progress = quest_data["quest_progress"] || 0
+      max_progress = quest_data["max_progress"] || 1
+
+      if quest_progress >= max_progress
+        # Quest completed - persona has "retired" from their quest
+        goal_description = "Quest completed! #{quest_data['do_goal']} ✅"
+        Rails.logger.info "🎯 #{current_persona} quest is complete!"
+      else
+        # Quest in progress
+        goal_description = if quest_progress == 0
+          quest_data["get_to_goal"]
+        else
+          quest_data["do_goal"]  
+        end
+      end
+
+      quest_goal = {
+        id: "burning_man_quest_#{current_persona}",
+        description: goal_description,
+        category: "burning_man_quest",
+        persona: current_persona,
+        progress: quest_progress,
+        max_progress: max_progress
+      }
+
+      # Set goal in cache with longer time limit (burning man is about the experience!)
+      Rails.cache.write(CURRENT_GOAL_KEY, quest_goal)
+      Rails.cache.write(GOAL_STARTED_AT_KEY, Time.current)
+      Rails.cache.write(GOAL_TIME_LIMIT_KEY, 6.hours) # Longer quests
+      Rails.cache.write(LAST_CATEGORY_KEY, "burning_man_quest")
+
+      # Update Home Assistant
+      update_home_assistant_goal_sensors(quest_goal, Time.current, 6.hours)
+
+      Rails.logger.info "🔥 Selected Burning Man quest: #{quest_goal[:description]}"
+      quest_goal
+    rescue StandardError => e
+      Rails.logger.error "❌ Failed to select Burning Man quest: #{e.message}"
+      nil
+    end
+
+    # Update quest progress for current persona (call this when user completes quest step)
+    def update_burning_man_quest_progress(increment = 1)
+      Rails.logger.info "🔥 Updating Burning Man quest progress"
+      
+      current_persona = CubePersona.current_persona
+      return false unless current_persona
+
+      themes_file = Rails.root.join("config", "persona_themes.yml")
+      return false unless File.exist?(themes_file)
+
+      themes_data = YAML.load_file(themes_file)
+      persona_data = themes_data.dig("personas", current_persona)
+      return false unless persona_data
+
+      quest_data = persona_data["burning_man_quest"]
+      return false unless quest_data
+
+      # Update progress
+      current_progress = quest_data["quest_progress"] || 0
+      max_progress = quest_data["max_progress"] || 1
+      new_progress = [current_progress + increment, max_progress].min
+
+      quest_data["quest_progress"] = new_progress
+
+      # Write back to file
+      File.write(themes_file, themes_data.to_yaml)
+
+      Rails.logger.info "🎯 #{current_persona} quest progress: #{new_progress}/#{max_progress}"
+
+      # Special handling for Buddy's retirement
+      if current_persona == "buddy" && new_progress >= max_progress
+        Rails.logger.info "🔥 BUDDY HAS RETIRED! Becoming Bad Buddy..."
+        # You could trigger a persona switch here if needed
+      end
+
+      true
+    rescue StandardError => e
+      Rails.logger.error "❌ Failed to update Burning Man quest progress: #{e.message}"
+      false
     end
   end
 end

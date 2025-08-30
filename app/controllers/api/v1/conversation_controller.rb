@@ -263,8 +263,8 @@ class Api::V1::ConversationController < Api::V1::BaseController
         speech_text: speech_text,
         continue_conversation: continue_conversation,
         end_conversation: !continue_conversation,
-        # Include configurable delay when continuing conversation
-        continue_delay: continue_conversation ? Rails.configuration.conversation_continue_delay.to_i : nil,
+        # Include hardcoded 3 second delay when continuing conversation
+        continue_delay: continue_conversation ? 3 : nil,
         # Include metadata for debugging
         metadata: {
           orchestrator_keys: orchestrator_result.keys,
