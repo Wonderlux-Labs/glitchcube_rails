@@ -4,10 +4,10 @@ require 'rails_helper'
 
 RSpec.describe 'Api::V1::Gps', type: :request do
   describe 'GET /api/v1/gps/location' do
-    let(:mock_gps_service) { instance_double(Gps::GPSTrackingService) }
+    let(:mock_gps_service) { instance_double(Gps::GpsTrackingService) }
 
     before do
-      allow(Gps::GPSTrackingService).to receive(:new).and_return(mock_gps_service)
+      allow(Gps::GpsTrackingService).to receive(:new).and_return(mock_gps_service)
     end
 
     context 'when GPS data is available' do

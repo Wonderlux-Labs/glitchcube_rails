@@ -12,7 +12,7 @@ module Recurring
 
     begin
       # Get current location from GPS service
-      gps_service = Gps::GPSTrackingService.new
+      gps_service = Gps::GpsTrackingService.new
       location_data = gps_service.current_location
       Rails.logger.info("***LOCATION #{location_data}***")
       return unless location_data && location_data[:lat] && location_data[:lng]

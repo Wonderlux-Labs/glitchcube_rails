@@ -53,7 +53,7 @@ class ProactiveMessageService
 
     # Add location context if available
     begin
-      gps_service = Services::Gps::GPSTrackingService.new
+      gps_service = Services::Gps::GpsTrackingService.new
       location = gps_service.current_location
       context[:location] = {
         zone: location[:zone],

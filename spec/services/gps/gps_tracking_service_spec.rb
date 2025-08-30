@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Gps::GPSTrackingService, type: :service do
+RSpec.describe Gps::GpsTrackingService, type: :service do
   let(:service) { described_class.new }
   let(:mock_ha_service) { instance_double(HomeAssistantService) }
 

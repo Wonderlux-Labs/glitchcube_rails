@@ -3,7 +3,7 @@
 # Simple service to get GPS coordinates from Home Assistant
 # All location context comes from LocationContextService
 module Gps
-  class GPSTrackingService
+  class GpsTrackingService
       def self.current_location
         new.current_location
       end

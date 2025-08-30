@@ -10,7 +10,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   def location
     begin
       # Get current location with full context
-      location_data = ::Gps::GPSTrackingService.new.current_location
+      location_data = ::Gps::GpsTrackingService.new.current_location
 
       if location_data.nil?
         render json: {
@@ -31,7 +31,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   end
 
   def coords
-    location = ::Gps::GPSTrackingService.new.current_location
+    location = ::Gps::GpsTrackingService.new.current_location
     if location&.dig(:lat) && location[:lng]
       render json: {
         lat: location[:lat],
@@ -46,9 +46,9 @@ class Api::V1::GpsController < Api::V1::BaseController
 
   def proximity
     begin
-      current_loc = ::Gps::GPSTrackingService.new.current_location
+      current_loc = ::Gps::GpsTrackingService.new.current_location
       if current_loc && current_loc[:lat] && current_loc[:lng]
-        proximity = ::Gps::GPSTrackingService.new.proximity_data(current_loc[:lat], current_loc[:lng])
+        proximity = ::Gps::GpsTrackingService.new.proximity_data(current_loc[:lat], current_loc[:lng])
         render json: proximity
       else
         render json: { landmarks: [], portos: [], map_mode: "normal", visual_effects: [] }
@@ -72,7 +72,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   def simulate_movement
     begin
       if GlitchCube.gps_spoofing_allowed?
-        result = ::Gps::GPSTrackingService.new.simulate_movement!
+        result = ::Gps::GpsTrackingService.new.simulate_movement!
         render json: result
       else
         render json: { error: "Simulation mode not enabled" }, status: :bad_request
@@ -85,7 +85,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   def movement_status
     begin
       if GlitchCube.gps_spoofing_allowed?
-        result = ::Gps::GPSTrackingService.new.movement_status
+        result = ::Gps::GpsTrackingService.new.movement_status
         render json: result
       else
         render json: { error: "Simulation mode not enabled" }, status: :bad_request
@@ -104,7 +104,7 @@ class Api::V1::GpsController < Api::V1::BaseController
           return
         end
 
-        result = ::Gps::GPSTrackingService.new.set_destination(landmark_name)
+        result = ::Gps::GpsTrackingService.new.set_destination(landmark_name)
         render json: result
       else
         render json: { error: "Simulation mode not enabled" }, status: :bad_request
@@ -117,7 +117,7 @@ class Api::V1::GpsController < Api::V1::BaseController
   def stop_movement
     begin
       if GlitchCube.gps_spoofing_allowed?
-        result = ::Gps::GPSTrackingService.new.stop_movement
+        result = ::Gps::GpsTrackingService.new.stop_movement
         render json: result
       else
         render json: { error: "Simulation mode not enabled" }, status: :bad_request
@@ -131,7 +131,7 @@ class Api::V1::GpsController < Api::V1::BaseController
     begin
       # Simple history endpoint - will generate over time
       # For now return current location as single point
-      current_loc = ::Gps::GPSTrackingService.new.current_location
+      current_loc = ::Gps::GpsTrackingService.new.current_location
 
       if current_loc && current_loc[:lat] && current_loc[:lng]
         history = [ {
@@ -156,7 +156,7 @@ class Api::V1::GpsController < Api::V1::BaseController
 
     begin
       # Get GPS coordinates
-      location = ::Gps::GPSTrackingService.new.current_location
+      location = ::Gps::GpsTrackingService.new.current_location
       if location.nil? || !location[:lat] || !location[:lng]
         render plain: "GPS unavailable", status: :service_unavailable
         return

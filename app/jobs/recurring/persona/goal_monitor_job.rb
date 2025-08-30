@@ -7,8 +7,7 @@ module Recurring
 
   def perform
     return unless Rails.env.production? || Rails.env.development?
-    if GoalService.current_goal.nil?
-      
+    
     Rails.logger.info "🎯 GoalMonitorJob starting"
 
     check_goal_expiration
