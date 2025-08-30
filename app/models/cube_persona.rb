@@ -7,9 +7,26 @@ class CubePersona
   # Not an ActiveRecord model - just a plain Ruby class
 
   def self.current_persona
-    name = Rails.cache.fetch("current_persona") do
-      HomeAssistantService.entity("input_select.current_persona")&.dig("state") || :buddy
+    # Always fetch fresh from Home Assistant to ensure we have the correct persona
+    # Only use cache as a fallback if HA is unavailable
+    begin
+      name = HomeAssistantService.entity("input_select.current_persona")&.dig("state")
+      if name.present?
+        # Update cache with fresh value
+        Rails.cache.write("current_persona", name, expires_in: 30.minutes)
+        Rails.logger.debug "🎭 Fetched current persona from HA: #{name}"
+      else
+        # Fallback to cache if HA returns nil
+        name = Rails.cache.read("current_persona") || "buddy"
+        Rails.logger.warn "⚠️ HA returned nil for persona, using cached/default: #{name}"
+      end
+    rescue => e
+      # If HA is unavailable, use cache
+      Rails.logger.error "❌ Failed to fetch persona from HA: #{e.message}"
+      name = Rails.cache.read("current_persona") || "buddy"
+      Rails.logger.warn "⚠️ Using cached/default persona: #{name}"
     end
+    
     name.to_sym
   end
 
@@ -23,8 +40,11 @@ class CubePersona
     # Get current persona before switching
     previous_persona = current_persona
 
+    # Clear the cache immediately to force fresh read
+    Rails.cache.delete("current_persona")
+    
     HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
-    # Extended cache expiration for stability
+    # Write new persona to cache
     Rails.cache.write("current_persona", persona.to_s, expires_in: 30.minutes)
 
     Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona}"

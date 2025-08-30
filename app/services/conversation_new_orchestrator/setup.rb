@@ -73,7 +73,10 @@ class ConversationNewOrchestrator::Setup
       Rails.logger.warn "🎭 Persona override in context: using #{@context[:persona]}"
       @context[:persona]
     else
-      CubePersona.current_persona
+      # Always get fresh persona from system, not cache
+      current = CubePersona.current_persona
+      Rails.logger.info "🎭 Current persona determined: #{current}"
+      current
     end
   end
 
