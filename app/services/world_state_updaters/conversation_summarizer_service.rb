@@ -38,8 +38,10 @@ class WorldStateUpdaters::ConversationSummarizerService
       logs = conversation.conversation_logs.chronological
 
       # Extract mood, thoughts, and questions from each log
-      self_awareness_data = []
+      mood_data = []
+      thoughts_data = []
       questions_data = []
+      self_awareness_data = []
       people_data = []
       events_data = []
 
@@ -47,6 +49,7 @@ class WorldStateUpdaters::ConversationSummarizerService
         # Try to extract structured data first, then fall back to text analysis
         extracted = extract_structured_data(log) || extract_from_text(log)
 
+        mood_data << extracted[:mood] if extracted[:mood].present?
         self_awareness_data.concat(extracted[:self_awareness]) if extracted[:self_awareness]&.any?
         thoughts_data.concat(extracted[:thoughts]) if extracted[:thoughts]&.any?
         questions_data.concat(extracted[:questions]) if extracted[:questions]&.any?
