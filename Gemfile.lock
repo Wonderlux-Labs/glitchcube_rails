@@ -1,6 +1,6 @@
 GIT
   remote: https://www.github.com/estiens/open_router
-  revision: 8cb154dbdc8b5ff0e68fa57b92826b832d4f9b45
+  revision: a6e6e28f229a3dd600da9fc9f07ca521d55c5717
   branch: dev
   specs:
     open_router_enhanced (1.1.0)
@@ -93,7 +93,7 @@ GEM
     bcrypt_pbkdf (1.1.1-arm64-darwin)
     bcrypt_pbkdf (1.1.1-x86_64-darwin)
     benchmark (0.4.1)
-    bigdecimal (3.2.2)
+    bigdecimal (3.2.3)
     bindex (0.8.1)
     bootsnap (1.18.6)
       msgpack (~> 1.2)
@@ -109,7 +109,7 @@ GEM
       xpath (~> 3.2)
     coderay (1.1.3)
     concurrent-ruby (1.3.5)
-    connection_pool (2.5.3)
+    connection_pool (2.5.4)
     crack (1.0.0)
       bigdecimal
       rexml
@@ -167,7 +167,7 @@ GEM
     jbuilder (2.14.1)
       actionview (>= 7.0.0)
       activesupport (>= 7.0.0)
-    json (2.13.2)
+    json (2.15.0)
     json-schema (4.3.1)
       addressable (>= 2.8)
     kamal (2.7.0)
