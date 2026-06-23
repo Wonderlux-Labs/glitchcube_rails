@@ -16,12 +16,15 @@ module Gps
       # Get current GPS coordinates with full location context
       def current_location
         @current_location = Rails.cache.fetch(:gps_current_location, expires_in: 5.minutes) do
-          # Try to get real GPS data from Home Assistant first
+          # Try to get real GPS data from Home Assistant first; fall back to a
+          # random landmark if GPS is missing or has no fix. Must yield the value
+          # (not `return`) so the context merge below still runs.
           gps_data = fetch_from_home_assistant
-          return random_landmark_location if gps_data.nil? || gps_data.blank?
-          return random_landmark_location if gps_data[:lng].to_i.zero?
-          # Fall back to random landmark if GPS unavailable
-          gps_data || random_landmark_location
+          if gps_data.nil? || gps_data.blank? || gps_data[:lng].to_i.zero?
+            random_landmark_location
+          else
+            gps_data
+          end
         end
 
         context = Gps::LocationContextService.full_context(@current_location[:lat], @current_location[:lng])

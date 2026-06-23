@@ -10,7 +10,7 @@ RSpec.describe GlitchCube, type: :model do
     end
 
     it 'returns true in test environment' do
-      skip "TODO: possible real bug: gps_spoofing_allowed? only honors development? now, not test?"
+      allow(Rails.env).to receive(:development?).and_return(false)
       allow(Rails.env).to receive(:test?).and_return(true)
       expect(GlitchCube.gps_spoofing_allowed?).to be true
     end

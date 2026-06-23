@@ -17,14 +17,8 @@ class GlitchCube
       Gps::GpsTrackingService.new.set_location(coords: "#{lat}, #{lng}")
     end
 
-    def home_camp_coordinates
-      {}
-    end
-
     def gps_spoofing_allowed?
-      return false unless Rails.env.development?
-
-      true
+      Rails.env.development? || Rails.env.test?
     end
 
     # Get home camp coordinates (default to center of Black Rock City)

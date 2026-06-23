@@ -457,9 +457,6 @@ RSpec.describe CubePerformance, type: :service do
         expect(service.duration_minutes).to eq(999)
 
         # Empty session ID (should use default generation)
-        skip "TODO: possible real bug: CubePerformance uses `session_id ||= ...`, " \
-             "so an empty-string session_id is kept verbatim instead of falling " \
-             "back to a generated id (blank is not treated as nil)."
         freeze_time do
           service = CubePerformance.poetry_slam(session_id: '')
           expect(service.session_id).to eq("poetry_#{Time.current.to_i}")

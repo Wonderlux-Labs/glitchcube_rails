@@ -5,7 +5,7 @@ class CubePerformance
   class << self
     # Start a stand-up comedy routine
     def standup_comedy(duration_minutes: 10, session_id: nil, **context)
-      session_id ||= "comedy_#{Time.current.to_i}"
+      session_id = session_id.presence || "comedy_#{Time.current.to_i}"
 
       prompt = """You're doing a #{duration_minutes}-minute stand-up comedy routine at Burning Man.
 
@@ -23,7 +23,7 @@ class CubePerformance
 
     # Tell an epic adventure story
     def adventure_story(duration_minutes: 15, session_id: nil, **context)
-      session_id ||= "story_#{Time.current.to_i}"
+      session_id = session_id.presence || "story_#{Time.current.to_i}"
 
       prompt = """You're telling an epic adventure story about your journey through space
       before crash-landing at Burning Man. Make it dramatic, funny, and engaging.
@@ -48,7 +48,7 @@ class CubePerformance
 
     # Improvisational performance
     def improv_session(duration_minutes: 8, session_id: nil, **context)
-      session_id ||= "improv_#{Time.current.to_i}"
+      session_id = session_id.presence || "improv_#{Time.current.to_i}"
 
       prompt = """You're doing an improvisational performance, reacting to your environment
       and creating spontaneous scenarios. Keep it dynamic and unpredictable.
@@ -73,7 +73,7 @@ class CubePerformance
 
     # Poetry performance
     def poetry_slam(duration_minutes: 12, session_id: nil, **context)
-      session_id ||= "poetry_#{Time.current.to_i}"
+      session_id = session_id.presence || "poetry_#{Time.current.to_i}"
 
       prompt = """You're performing a series of poems about Burning Man, technology, and human connection.
       Mix humor with deeper themes as BUDDY the helpful AI.
@@ -98,7 +98,7 @@ class CubePerformance
 
     # Custom performance with user-defined prompt
     def custom_performance(prompt:, duration_minutes: 10, performance_type: "custom", session_id: nil, **context)
-      session_id ||= "custom_#{Time.current.to_i}"
+      session_id = session_id.presence || "custom_#{Time.current.to_i}"
 
       PerformanceModeService.start_performance(
         session_id: session_id,

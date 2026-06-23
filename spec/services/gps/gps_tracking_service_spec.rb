@@ -64,7 +64,6 @@ RSpec.describe Gps::GpsTrackingService, type: :service do
       end
 
       it 'returns fallback location with context' do
-        skip "TODO: possible real bug: current_location uses `return random_landmark_location` inside the Rails.cache.fetch block, which returns from the method and skips the LocationContextService context merge — so the random-landmark fallback path never gets zone/address/landmarks merged in"
         result = service.current_location
 
         expect(result[:lat]).to eq(40.7864)
@@ -76,10 +75,9 @@ RSpec.describe Gps::GpsTrackingService, type: :service do
     end
 
     it 'always returns location data with context merged' do
-      skip "TODO: possible real bug: current_location uses `return random_landmark_location` inside the Rails.cache.fetch block, which returns from the method and skips the LocationContextService context merge — so the random-landmark fallback path never gets zone/address/landmarks merged in"
       allow(mock_ha_service).to receive(:entity).and_return(nil)
       landmark = instance_double(Landmark, latitude: 40.7864, longitude: -119.2065)
-      allow(Landmark).to receive_message_chain(:active, :order).and_return([ landmark ])
+      allow(Landmark).to receive_message_chain(:active, :sample).and_return(landmark)
 
       result = service.current_location
 
