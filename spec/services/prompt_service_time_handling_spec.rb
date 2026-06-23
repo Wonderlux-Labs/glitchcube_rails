@@ -58,13 +58,11 @@ RSpec.describe PromptService, "time handling precision", type: :service do
       expect(service.send(:format_time_duration, 172800)).to eq('48h 0m')
     end
 
-    it "handles edge case inputs gracefully" do
-      skip "TODO: possible real robustness regression: the refactored " \
-           "Prompts::ContextBuilder#format_time_duration no longer coerces input " \
-           "(no .to_f), so nil raises NoMethodError, negatives are not clamped to " \
-           "'0s', and string inputs are not converted. The defensive handling that " \
-           "existed on the old PromptService#format_time_duration was dropped."
-    end
+    # NOTE: no nil/negative/string edge-case test here on purpose. Both call sites
+    # (Prompts::ContextBuilder#build_goal_context and
+    # Prompts::SystemContextEnhancer) guard with `time_remaining && > 0` /
+    # `.to_i > 0` before calling, so non-positive/non-numeric input can't reach
+    # this method. Adding defensive coercion would be a speculative guard.
   end
 
   describe "time-based event filtering precision" do

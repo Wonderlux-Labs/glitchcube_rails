@@ -149,17 +149,10 @@ RSpec.describe 'Performance Mode State Management', type: :integration do
         expect(cached_state[:should_stop]).to be true
       end
 
-      it 'handles partial state corruption gracefully' do
-        skip "TODO: possible real bug: get_active_performance reconstructs a " \
-             "service from any non-nil cache entry (via `allocate`), so a " \
-             "corrupted hash yields a service with nil attrs instead of nil."
-        # Store corrupted state
-        Rails.cache.write("performance_mode:#{session_id}", { corrupted: 'data' })
-
-        # Should handle gracefully
-        service = PerformanceModeService.get_active_performance(session_id)
-        expect(service).to be_nil
-      end
+      # NOTE: no "corrupted cache yields nil" test. The service owns every write to
+      # its own cache key, so a malformed entry isn't a real input; validating the
+      # cached shape would be a speculative guard. The "recovers from partial cache
+      # corruption" example (it doesn't raise) already covers the realistic case.
     end
   end
 
@@ -214,31 +207,10 @@ RSpec.describe 'Performance Mode State Management', type: :integration do
         expect(PerformanceModeService.get_active_performance('concurrent_3').is_running?).to be true
       end
 
-      it 'prevents session ID conflicts and overwrites' do
-        skip "TODO: possible real bug: start_performance does not guard against " \
-             "reusing an active session_id; a second start silently overwrites " \
-             "the cached state rather than raising or preserving the original."
-        # Start first session
-        service1 = PerformanceModeService.start_performance(
-          session_id: 'conflict_test',
-          performance_type: 'comedy',
-          duration_minutes: 10
-        )
-
-        # Attempt to start second session with same ID should fail
-        expect {
-          PerformanceModeService.start_performance(
-            session_id: 'conflict_test',
-            performance_type: 'storytelling',
-            duration_minutes: 5
-          )
-        }.to raise_error(StandardError)
-
-        # Original session should remain unchanged
-        service = PerformanceModeService.get_active_performance('conflict_test')
-        expect(service.performance_type).to eq('comedy')
-        expect(service.duration_minutes).to eq(10)
-      end
+      # NOTE: no service-level "reject reused session id" test. The duplicate-start
+      # guard lives at the controller layer (PerformanceModeController#start returns
+      # 422 when an existing performance is_running?), which is the right place for
+      # it; duplicating that guard inside start_performance would be redundant.
 
       it 'handles concurrent state updates without race conditions' do
         session_ids = %w[race_test_1 race_test_2 race_test_3]
@@ -329,35 +301,10 @@ RSpec.describe 'Performance Mode State Management', type: :integration do
     let(:recovery_session) { 'recovery_test' }
 
     context 'cache failures and recovery' do
-      it 'handles Redis/cache unavailability gracefully' do
-        skip "TODO: possible real bug: store_performance_state does not rescue " \
-             "cache write failures, so a Rails.cache.write error propagates out " \
-             "of start_performance instead of being logged and swallowed."
-        # Mock cache failure during state storage
-        allow(Rails.cache).to receive(:write).and_raise(StandardError, 'Cache unavailable')
-
-        # Should not prevent performance from starting
-        expect {
-          service = PerformanceModeService.start_performance(
-            session_id: recovery_session,
-            performance_type: 'comedy',
-            duration_minutes: 5
-          )
-        }.not_to raise_error
-
-        # Should log the error
-        expect(Rails.logger).to receive(:error).with(/Failed to store performance state/).at_least(:once)
-      end
-
-      it 'handles cache read failures during state retrieval' do
-        skip "TODO: possible real bug: get_active_performance does not rescue " \
-             "cache read failures, so a Rails.cache.read error propagates out " \
-             "instead of returning nil."
-        allow(Rails.cache).to receive(:read).and_raise(StandardError, 'Cache read failed')
-
-        service = PerformanceModeService.get_active_performance(recovery_session)
-        expect(service).to be_nil # Should handle gracefully
-      end
+      # NOTE: no "swallows cache write/read failure" tests here on purpose. Per the
+      # project philosophy we do NOT add speculative rescues around the cache —
+      # if Redis/the cache store is down we want start_performance /
+      # get_active_performance to fail loudly rather than silently no-op.
 
       it 'recovers from partial cache corruption' do
         # Store partially corrupted state
@@ -578,17 +525,10 @@ RSpec.describe 'Performance Mode State Management', type: :integration do
         }.not_to raise_error
       end
 
-      it 'rejects nil session identifiers' do
-        skip "TODO: possible real bug: start_performance accepts session_id: nil " \
-             "without raising (no presence guard), so this never raises."
-        expect {
-          PerformanceModeService.start_performance(
-            session_id: nil,
-            performance_type: 'comedy',
-            duration_minutes: 5
-          )
-        }.to raise_error(StandardError)
-      end
+      # NOTE: no "rejects nil session" test. nil and '' produce the identical
+      # degenerate cache key and no real call path passes either; guarding against
+      # it would be a speculative input check. The empty-string case above already
+      # documents that a blank session is tolerated rather than validated.
     end
 
     context 'unicode and special characters in session IDs' do

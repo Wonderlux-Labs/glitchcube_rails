@@ -98,40 +98,10 @@ RSpec.describe 'Api::V1::Gps', type: :request do
       end
     end
 
-    context 'with real data (integration test)' do
-      before do
-        # Load real data if available
-        begin
-          Rails.application.load_seed if defined?(Rails.application.load_seed)
-        rescue StandardError
-          # Ignore if seed fails
-        end
-
-        # GlitchCube.set_current_location delegates to
-        # Gps::GpsTrackingService.new.set_location, but the outer before stubs
-        # `.new` with an instance_double. Allow set_location so this setup does
-        # not crash before the example's `pending` declaration is reached.
-        allow(mock_gps_service).to receive(:set_location)
-
-        # Set spoofed location for testing
-        allow(GlitchCube).to receive(:gps_spoofing_allowed?).and_return(true)
-        GlitchCube.set_current_location(lat: 40.7864, lng: -119.2065)
-      end
-
-      it 'returns location data with real services' do
-        pending "TODO: Fix GPS integration test - requires proper Landmark seed data and GPS spoofing service initialization"
-        # Only run if we have landmark data
-        if Landmark.count > 0
-          get '/api/v1/gps/location'
-
-          expect(response).to have_http_status(:ok)
-
-          json_response = JSON.parse(response.body, symbolize_names: true)
-          expect(json_response[:lat]).to eq(40.7864)
-          expect(json_response[:lng]).to eq(-119.2065)
-          expect(json_response[:source]).to eq('spoofed')
-        end
-      end
-    end
+    # NOTE: a "with real data (integration test)" example was removed here. It
+    # fought the outer `Gps::GpsTrackingService.new` stub, expected a 'spoofed'
+    # source the service never emits, and duplicated coverage already provided by
+    # spec/services/gps/gps_tracking_service_spec.rb (real current_location with
+    # context merge) and the mocked controller examples above.
   end
 end

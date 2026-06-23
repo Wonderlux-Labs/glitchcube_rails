@@ -381,22 +381,9 @@ RSpec.describe PerformanceModeJob, type: :job do
     end
   end
 
-  describe 'memory and resource management' do
-    it 'properly cleans up instance variables and references' do
-      skip "TODO: flaky ObjectSpace threshold — object count increase is environment-dependent and non-deterministic across GC cycles"
-      # This test ensures we don't have memory leaks from long-running performances
-      initial_objects = ObjectSpace.count_objects
-
-      perform_enqueued_jobs do
-        PerformanceModeJob.perform_later(**job_params)
-      end
-
-      GC.start # Force garbage collection
-      final_objects = ObjectSpace.count_objects
-
-      # We shouldn't have a significant increase in objects
-      object_increase = final_objects[:TOTAL] - initial_objects[:TOTAL]
-      expect(object_increase).to be < 1000 # Reasonable threshold
-    end
-  end
+  # NOTE: removed a "doesn't leak objects" test that asserted on
+  # ObjectSpace.count_objects deltas. Live object counts depend on GC timing and
+  # everything else running in the VM, so the threshold was non-deterministic and
+  # gave no reliable signal. Memory regressions are better caught by profiling than
+  # by unit assertions on object counts.
 end
