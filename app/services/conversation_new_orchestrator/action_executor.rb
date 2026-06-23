@@ -14,13 +14,13 @@ class ConversationNewOrchestrator::ActionExecutor
   def call
     direct_tool_results = execute_direct_tools
     memory_search_results = execute_memory_searches
-    delegate_to_agents
+    dispatch_environment_instruction
 
     all_sync_results = direct_tool_results.merge(memory_search_results)
 
     ServiceResult.success({
       sync_results: all_sync_results,
-      delegated_intents: @output.dig("tool_intents") || []
+      delegated_intents: environment_intents
     })
   rescue => e
     ServiceResult.failure("Action execution failed: #{e.message}")
@@ -87,93 +87,38 @@ class ConversationNewOrchestrator::ActionExecutor
     results
   end
 
-  def delegate_to_agents
-    intents = @output.dig("tool_intents")
-    return if intents.blank?
-
-    Rails.logger.info "🤖 Delegating #{intents.length} tool intentions to specialized agents"
-
-    # Group intents by domain
-    intent_groups = group_intents_by_domain(intents)
-
-    # Delegate to music agent if there are music intents
-    if intent_groups[:music].any?
-      delegate_to_music_agent(intent_groups[:music])
-    end
-
-    # Delegate to general HA agent if there are non-music intents
-    if intent_groups[:general].any?
-      delegate_to_ha_agent(intent_groups[:general])
-    end
+  # Brain LLM expresses environment changes either as a single plain-English
+  # `environment_instruction` (preferred) or as a list of `tool_intents`
+  # (legacy). Both collapse to one instruction handed to the single translator.
+  def environment_intents
+    @output.dig("tool_intents") || []
   end
 
-  def group_intents_by_domain(intents)
-    music_intents = []
-    general_intents = []
+  def environment_instruction
+    explicit = @output.dig("environment_instruction")
+    return explicit if explicit.present?
 
-    intents.each do |intent|
-      tool = intent["tool"].to_s.downcase
-      if is_music_intent?(tool)
-        music_intents << intent
-      else
-        general_intents << intent
-      end
-    end
+    intents = environment_intents
+    return nil if intents.blank?
 
-    {
-      music: music_intents,
-      general: general_intents
-    }
+    intents.map { |i| i["intent"] }.compact_blank.join("; ").presence
   end
 
-  def is_music_intent?(tool)
-    music_keywords = %w[music audio sound song track play pause volume spotify]
-    music_keywords.any? { |keyword| tool.include?(keyword) }
-  end
+  # Replaces the old per-domain fan-out to Home Assistant conversation agents.
+  # All environment changes go through one translator (ToolCallingService) via
+  # EnvironmentDirectorJob — speak first, act async.
+  def dispatch_environment_instruction
+    instruction = environment_instruction
+    return if instruction.blank?
 
-  def delegate_to_music_agent(music_intents)
-    Rails.logger.info "🎵 Delegating #{music_intents.length} music intentions to music agent"
+    Rails.logger.info "🎬 Dispatching environment instruction: #{instruction}"
 
-    # Format intentions for music agent
-    intent_descriptions = music_intents.map do |intent|
-      "#{intent['tool']}: #{intent['intent']}"
-    end.join("; ")
-
-    # Create a request that includes context
-    music_request = "User asked: \"#{@user_message}\". Please handle music: #{intent_descriptions}"
-
-    Rails.logger.info "🎵 Sending to music agent: #{music_request}"
-
-    # Send to music conversation agent asynchronously
-    Agents::MusicAgentJob.perform_later(
-      request: music_request,
-      tool_intents: music_intents,
+    EnvironmentDirectorJob.perform_later(
+      instruction: instruction,
       session_id: @session_id,
       conversation_id: @conversation_id,
-      user_message: @user_message
-    )
-  end
-
-  def delegate_to_ha_agent(general_intents)
-    Rails.logger.info "🏠 Delegating #{general_intents.length} general intentions to HA conversation agent"
-
-    # Format intentions for HA agent
-    intent_descriptions = general_intents.map do |intent|
-      "#{intent['tool']}: #{intent['intent']}"
-    end.join("; ")
-
-    # Create a request that includes context
-    ha_request = "User asked: \"#{@user_message}\". Please execute: #{intent_descriptions}"
-
-    Rails.logger.info "🤖 Sending to HA agent: #{ha_request}"
-
-    # Send to HA conversation agent asynchronously
-    Agents::HaAgentJob.perform_later(
-      request: ha_request,
-      tool_intents: general_intents,
-      session_id: @session_id,
-      conversation_id: @conversation_id,
-      user_message: @user_message
+      user_message: @user_message,
+      persona: @output.dig("persona")
     )
   end
 end

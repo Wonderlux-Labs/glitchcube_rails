@@ -23,15 +23,24 @@ class Schemas::NarrativeResponseSchema
       string :goal_progress,
              description: "Progress towards your current goal"
 
+      # Single plain-English instruction describing every environment change you
+      # want, in one sentence. A separate translator turns this into precise
+      # device commands, so just describe the desired effect naturally.
+      # Examples: "Turn the lights deep orange and play heavy metal",
+      # "Dim everything and turn on the fan". Leave blank for no change.
+      string :environment_instruction,
+             description: "Plain-English description of all environment/device changes to make, or empty if none"
+
+      # Legacy structured form, still accepted. Prefer environment_instruction.
       array :tool_intents,
-            description: "Actions to perform in the environment via Home Assistant agent" do
+            description: "Legacy: per-action environment intents. Prefer environment_instruction." do
         object do
           string :tool, required: true,
-                 description: "Array of Tools you want to use",
+                 description: "Tool category",
                  enum: [ "lights", "music", "display", "environment" ]
 
           string :intent, required: true,
-                 description: "Natural language description of what to do. Examples: 'Make lights golden and warm', 'Play something energetic', 'Show rainbow colors'"
+                 description: "Natural language description of what to do"
         end
       end
 

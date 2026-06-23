@@ -7,11 +7,15 @@ class LlmService
   class << self
     # Main conversation call with tool support
     def call_with_tools(messages:, tools: [], model: nil, **options)
-      model = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ].sample
-      model_to_use = model || Rails.configuration.default_ai_model
+      # Respect an explicitly requested model (e.g. the translator pins a
+      # precise tool-calling model); only sample from the pool when none given.
+      default_pool = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ]
+      # In test env, skip pool sampling so VCR cassettes stay stable
+      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with tools: #{model_to_use}"
-      Rails.logger.info "🔧 Tools available: #{tools.length} - #{tools.map(&:name).join(', ')}"
+      tool_names = tools.map { |t| t.is_a?(Hash) ? (t.dig(:function, :name) || t.dig("function", "name")) : t.name }
+      Rails.logger.info "🔧 Tools available: #{tools.length} - #{tool_names.join(', ')}"
       Rails.logger.info "📝 Last message: #{messages.last&.dig(:content)&.first(200)}..."
       Rails.logger.debug "📚 Full messages: #{messages.map { |m| "#{m[:role]}: #{m[:content]&.first(100)}..." }.join(' | ')}"
 
@@ -29,7 +33,7 @@ class LlmService
         Rails.logger.info "   Model: #{model_to_use}"
         Rails.logger.info "   Tool choice: #{tools.any? ? 'auto' : nil}"
         Rails.logger.info "   Extras: #{extras.inspect}"
-        Rails.logger.info "   Tools: #{tools.length} tools - #{tools.map(&:name).join(', ')}"
+        Rails.logger.info "   Tools: #{tools.length} tools - #{tool_names.join(', ')}"
         Rails.logger.info "📋 FULL REQUEST DETAILS:"
         Rails.logger.info "   Messages (#{messages.length}):"
         messages.each_with_index do |msg, i|
@@ -96,7 +100,7 @@ class LlmService
         Rails.logger.error ""
 
         # Try faster models for tool calls on timeout
-        fast_models = [ "openai/gpt-5-mini", "google/gemini-2.5-flash" ]
+        fast_models = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ]
         Rails.logger.warn "🚀 Trying #{fast_models.length} fast models for tool call timeout..."
 
         fast_models.each do |fast_model|
@@ -153,8 +157,9 @@ class LlmService
 
     # Main conversation call with structured output (no tools)
     def call_with_structured_output(messages:, response_format:, model: nil, **options)
-      model = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ].sample
-      model_to_use = model || Rails.configuration.default_ai_model
+      default_pool = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ]
+      # In test env, skip pool sampling so VCR cassettes stay stable
+      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.default_ai_model
 
       Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
       Rails.logger.info "📊 Response format: #{response_format.name}"
@@ -207,7 +212,7 @@ class LlmService
         Rails.logger.error ""
 
         # Try faster fallback models for timeouts
-        fast_fallback_models = [ "openai/gpt-5-mini", "google/gemini-2.5-flash" ]
+        fast_fallback_models = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ]
         Rails.logger.warn "🚀 Trying #{fast_fallback_models.length} fast fallback models for timeout..."
 
         fast_fallback_models.each do |fallback_model|

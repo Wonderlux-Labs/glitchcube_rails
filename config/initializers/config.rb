@@ -20,10 +20,10 @@ Rails.application.configure do
   # config.service_name_api_key = ENV['SERVICE_NAME_API_KEY']
 
 
-  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "mistralai/mistral-nemo"
-  config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "openai/gpt-5-mini"
-  config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "openai/gpt-oss-120b"
-  config.fallback_models = [ "google/gemini-2.5-flash" ]
+  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "google/gemini-3.1-flash-lite"
+  config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "google/gemini-3.1-flash-lite"
+  config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "google/gemini-3.1-flash-lite"
+  config.fallback_models = [ "google/gemini-3.1-flash-lite" ]
   config.two_tier_tools_enabled = ENV["TWO_TIER_TOOLS"] == "true"
   # Orchestrator feature flag removed - always use ConversationNewOrchestrator
   # config.use_new_orchestrator = true
