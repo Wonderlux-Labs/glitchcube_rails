@@ -1,34 +1,26 @@
 # app/services/tools/query/rag_search.rb
 class Tools::Query::RagSearch < Tools::BaseTool
   def self.definition
-    {
-      type: "function",
-      function: {
-        name: "rag_search",
-        description: "Search through past conversations, events, and people using RAG (semantic search)",
-        parameters: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description: "What to search for (will be semantically matched against summaries, events, and people)"
-            },
-            type: {
-              type: "string",
-              enum: [ "all", "summaries", "events", "people" ],
-              description: "What type of data to search (default: all)"
-            },
-            limit: {
-              type: "integer",
-              minimum: 1,
-              maximum: 10,
-              description: "Maximum number of results to return (default: 5)"
-            }
-          },
-          required: [ "query" ]
-        }
-      }
-    }
+    # Must return an OpenRouter::Tool (like every sibling tool) so that
+    # Tools::Registry tool lists are homogeneous and LlmService.call_with_tools
+    # can call `tools.map(&:name)`. Returning a bare Hash here previously crashed
+    # the tool-calling path (and the EnvironmentDirector translator).
+    @definition ||= OpenRouter::Tool.define do
+      name "rag_search"
+      description "Search through past conversations, events, and people using RAG (semantic search)"
+
+      parameters do
+        string :query, required: true,
+               description: "What to search for (will be semantically matched against summaries, events, and people)"
+
+        string :type,
+               description: "What type of data to search (default: all)",
+               enum: [ "all", "summaries", "events", "people" ]
+
+        integer :limit,
+                description: "Maximum number of results to return, 1-10 (default: 5)"
+      end
+    end
   end
 
   def self.description

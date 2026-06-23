@@ -3,9 +3,8 @@
 # TODO: SPECS WHEN SENSORS ARE COMPLETE
 # Write comprehensive specs once the HA context sensor is fully configured and operational
 
-module Services
-  module Memory
-    class ContextInjectionService
+module Memory
+  class ContextInjectionService
       def self.inject_context(base_prompt, context)
         new.inject_context(base_prompt, context)
       end
@@ -131,14 +130,14 @@ module Services
 
       def add_memory_context(context_parts, context)
         location = context[:location] || fetch_current_location
-        memories = Services::Memory::MemoryRecallService.get_relevant_memories(
+        memories = Memory::MemoryRecallService.get_relevant_memories(
           location: location,
           context: context,
           limit: 2
         )
 
         if memories.any?
-          memory_context = Services::Memory::MemoryRecallService.format_for_context(memories)
+          memory_context = Memory::MemoryRecallService.format_for_context(memories)
           context_parts << memory_context.strip.gsub(/^RECENT MEMORIES TO NATURALLY REFERENCE:\s*/, "")
         end
       rescue StandardError => e
@@ -174,6 +173,5 @@ module Services
 
         "\n\nRECENT MEMORIES:\n#{formatted.join("\n")}\n"
       end
-    end
   end
 end

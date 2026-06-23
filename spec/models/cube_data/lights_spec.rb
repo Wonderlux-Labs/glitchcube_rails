@@ -123,10 +123,11 @@ RSpec.describe CubeData::Lights do
 
   describe '.all_on' do
     it 'turns on all cube lights with same parameters' do
+      # all_on forwards every keyword arg (including the nil-valued ones) to turn_on.
       expect(CubeData::Lights).to receive(:turn_on)
-        .with("light.cube_light_top", brightness: 255, effect: "rainbow")
+        .with("light.cube_light_top", brightness: 255, color: nil, effect: "rainbow", transition: nil)
       expect(CubeData::Lights).to receive(:turn_on)
-        .with("light.cube_inner", brightness: 255, effect: "rainbow")
+        .with("light.cube_inner", brightness: 255, color: nil, effect: "rainbow", transition: nil)
 
       CubeData::Lights.all_on(brightness: 255, effect: "rainbow")
     end

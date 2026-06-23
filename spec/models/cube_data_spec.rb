@@ -122,9 +122,11 @@ RSpec.describe CubeData do
 
       health = CubeData.health_check
 
+      # cached_sensors is nil when caching is disabled (the default in the test env),
+      # since cache_stats returns {} unless CACHE_ENABLED.
       expect(health).to include(
         homeassistant_available: true,
-        cached_sensors: be_a(Integer),
+        cached_sensors: be_a(Integer).or(be_nil),
         modules_loaded: be_a(Integer),
         total_sensors: be_a(Integer)
       )
