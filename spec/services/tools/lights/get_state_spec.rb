@@ -2,11 +2,11 @@
 require 'rails_helper'
 
 RSpec.describe Tools::Lights::GetState do
-  let(:mock_service) { instance_double(HomeAssistantService) }
-
   before do
-    allow(HomeAssistantService).to receive(:instance).and_return(mock_service)
-    allow(mock_service).to receive(:entities).and_return([
+    # The app validates entities via the class-level HomeAssistantService.entities
+    # (a global stub in rails_helper returns [] by default), so stub the class
+    # methods directly to override it.
+    allow(HomeAssistantService).to receive(:entities).and_return([
       { 'entity_id' => 'light.cube_voice_ring', 'state' => 'on' }
     ])
   end
@@ -37,12 +37,12 @@ RSpec.describe Tools::Lights::GetState do
 
     before do
       # Mock the service boundary
-      allow(mock_service).to receive(:entity).and_return(entity_data)
+      allow(HomeAssistantService).to receive(:entity).and_return(entity_data)
     end
 
     context 'with valid entity_id' do
       it 'calls HomeAssistantService.entity with correct parameter' do
-        expect(mock_service).to receive(:entity).with(valid_entity_id)
+        expect(HomeAssistantService).to receive(:entity).with(valid_entity_id).and_return(entity_data)
 
         tool.call(entity_id: valid_entity_id)
       end
@@ -91,7 +91,7 @@ RSpec.describe Tools::Lights::GetState do
 
     context 'when entity not found' do
       before do
-        allow(mock_service).to receive(:entity).and_return(nil)
+        allow(HomeAssistantService).to receive(:entity).and_return(nil)
       end
 
       it 'returns error response' do
@@ -106,7 +106,7 @@ RSpec.describe Tools::Lights::GetState do
 
     context 'when HomeAssistantService raises error' do
       before do
-        allow(mock_service).to receive(:entity).and_raise(
+        allow(HomeAssistantService).to receive(:entity).and_raise(
           HomeAssistantService::Error.new('Connection failed')
         )
       end

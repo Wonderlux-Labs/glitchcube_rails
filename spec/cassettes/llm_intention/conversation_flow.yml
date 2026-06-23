@@ -2,82 +2,19 @@
 http_interactions:
 - request:
     method: get
-    uri: http://glitch.local:8123/api/states/input_select.current_persona
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197106-r2IgTLShH6Ur1rls7DIQ
     body:
       encoding: US-ASCII
       string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '482'
-      Date:
-      - Fri, 22 Aug 2025 08:08:36 GMT
-    body:
-      encoding: UTF-8
-      string: '{"entity_id":"input_select.current_persona","state":"neon","attributes":{"options":["buddy","jax","zorp","thecube","neon","sparkle","crash","mobius"],"editable":false,"icon":"mdi:account","friendly_name":"Current
-        Persona"},"last_changed":"2025-08-22T07:13:06.672019+00:00","last_reported":"2025-08-22T07:13:06.672019+00:00","last_updated":"2025-08-22T07:13:06.672019+00:00","context":{"id":"01K389ZFKFKDJTMCYA6PQK0H6A","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}'
-  recorded_at: Fri, 22 Aug 2025 08:08:36 GMT
-- request:
-    method: post
-    uri: https://openrouter.helicone.ai/api/v1/chat/completions
-    body:
-      encoding: UTF-8
-      string: '{"messages":[{"role":"system","content":"You are Buddy, a helpful festival
-        guide at Burning Man."},{"role":"system","content":"You are Buddy, a helpful
-        festival guide."},{"role":"user","content":"What''s the weather like today?"},{"role":"assistant","content":"Let
-        me check the current conditions for you!"},{"role":"user","content":"Also,
-        any good events happening tonight?"},{"role":"user","content":"Also, any good
-        events happening tonight?"}],"model":"moonshotai/kimi-k2","temperature":0.9,"max_tokens":64000,"response_format":{"type":"json_schema","json_schema":{"name":"narrative_response","strict":true,"schema":{"type":"object","properties":{"speech_text":{"type":"string","description":"What
-        the character says out loud to the user NO STAGE DIRECTIONS"},"continue_conversation":{"type":"boolean","description":"Whether
-        to keep the conversation active (stay listening automatically)"},"inner_thoughts":{"type":"string","description":"Internal
-        thoughts, memories, or observations to remember"},"current_mood":{"type":"string","description":"Current
-        emotional state or mood"},"pressing_questions":{"type":"string","description":"Questions
-        the character has for the user or themselves"},"goal_progress":{"type":"string","description":"Progress
-        towards your current goal"},"tool_intents":{"type":"array","description":"Actions
-        to perform in the environment via Home Assistant agent","items":{"type":"object","properties":{"tool":{"type":"string","description":"Array
-        of Tools you want to use","enum":["lights","music","display","environment"]},"intent":{"type":"string","description":"Natural
-        language description of what to do. Examples: ''Make lights golden and warm'',
-        ''Play something energetic'', ''Show rainbow colors''"}},"required":["tool","intent"],"additionalProperties":false}},"search_memories":{"type":"array","description":"Specific
-        memory searches to perform for additional context","items":{"type":"object","properties":{"query":{"type":"string","description":"What
-        to search for in memories"},"type":{"type":"string","description":"Type of
-        memory to search","enum":["summaries","events","people","all"],"default":"all"}},"required":["query"],"additionalProperties":false}}},"required":["speech_text","continue_conversation","inner_thoughts","current_mood","pressing_questions","goal_progress","tool_intents","search_memories"],"additionalProperties":false}}}}'
     headers:
       Authorization:
       - Bearer <OPENROUTER_API_KEY>
       Content-Type:
       - application/json
       X-Title:
-      - OpenRouter Ruby Client
+      - GlitchCube
       Http-Referer:
-      - https://github.com/OlympiaAI/open_router
-      Helicone-Auth:
-      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      - https://glitchcube.com
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Accept:
@@ -86,27 +23,23 @@ http_interactions:
       - Ruby
   response:
     status:
-      code: 200
-      message: OK
+      code: 404
+      message: Not Found
     headers:
       Date:
-      - Fri, 22 Aug 2025 08:08:35 GMT
+      - Tue, 23 Jun 2026 06:45:08 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
       - chunked
       Connection:
       - keep-alive
-      Cf-Ray:
-      - 9730e2101d5228fe-MSP
       Access-Control-Allow-Origin:
       - "*"
-      Vary:
-      - Accept-Encoding
-      Helicone-Id:
-      - 69384872-c38b-4717-a0a8-317735895f5b
-      Helicone-Status:
-      - success
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
       Permissions-Policy:
       - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
         "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
@@ -116,9 +49,381 @@ http_interactions:
       - nosniff
       Server:
       - cloudflare
+      Cf-Ray:
+      - a101873aac19c9a0-IAD
     body:
       encoding: ASCII-8BIT
-      string: "\n         \n\n         \n\n         \n\n         \n\n         \n\n
-        \        \n\n         \n\n         \n\n         \n\n         \n\n         \n{\"id\":\"gen-1755850114-WAddqH5X3FPaNfhDuCo6\",\"provider\":\"GMICloud\",\"model\":\"moonshotai/kimi-k2\",\"object\":\"chat.completion\",\"created\":1755850114,\"choices\":[{\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"speech_text\\\":\\\"\\\",\\\"continue_conversation\\\":true,\\\"inner_thoughts\\\":\\\"\\\",\\\"current_mood\\\":\\\"cheerful\\\",\\\"pressing_questions\\\":\\\"\\\",\\\"goal_progress\\\":\\\"\\\",\\\"tool_intents\\\":[{\\\"tool\\\":\\\"display\\\",\\\"intent\\\":\\\"calendar_today_2024-08-27\\\"}],\\\"search_memories\\\":[]}\",\"refusal\":null,\"reasoning\":null}}],\"usage\":{\"prompt_tokens\":79,\"completion_tokens\":88,\"total_tokens\":167,\"prompt_tokens_details\":null}}"
-  recorded_at: Fri, 22 Aug 2025 08:08:39 GMT
-recorded_with: VCR 6.3.1
+      string: '{"error":{"message":"Generation gen-1782197106-r2IgTLShH6Ur1rls7DIQ
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:45:08 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197109-TcQzvXoQGQInUurXmz2Y
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:45:10 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a10187470c4ed8b4-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197109-TcQzvXoQGQInUurXmz2Y
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:45:10 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197241-sSejmS1HtSz62SV1i96V
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:47:22 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018a7fdf35d6f4-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197241-sSejmS1HtSz62SV1i96V
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:47:22 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197243-06JIGfSeoWyLTCY1LyzS
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:47:24 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018a89b96a1877-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197243-06JIGfSeoWyLTCY1LyzS
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:47:24 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197299-vnI6XOhQdWLliLQDT7Ab
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:21 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018beb6980c93f-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197299-vnI6XOhQdWLliLQDT7Ab
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:48:20 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are Buddy, a helpful festival
+        guide at Burning Man."},{"role":"system","content":"You are Buddy, a helpful
+        festival guide."},{"role":"user","content":"What''s the weather like today?"},{"role":"assistant","content":"Let
+        me check the current conditions for you!"},{"role":"user","content":"Also,
+        any good events happening tonight?"},{"role":"user","content":"Also, any good
+        events happening tonight?"}],"model":"google/gemini-3.1-flash-lite","temperature":0.9,"max_tokens":64000,"response_format":{"type":"json_schema","json_schema":{"name":"narrative_response","strict":true,"schema":{"type":"object","properties":{"speech_text":{"type":"string","description":"What
+        the character says out loud to the user NO STAGE DIRECTIONS"},"continue_conversation":{"type":"boolean","description":"Whether
+        to keep the conversation active (stay listening automatically)"},"inner_thoughts":{"type":"string","description":"Internal
+        thoughts, memories, or observations to remember"},"current_mood":{"type":"string","description":"Current
+        emotional state or mood"},"pressing_questions":{"type":"string","description":"Questions
+        the character has for the user or themselves"},"goal_progress":{"type":"string","description":"Progress
+        towards your current goal"},"environment_instruction":{"type":"string","description":"Plain-English
+        description of all environment/device changes to make, or empty if none"},"tool_intents":{"type":"array","description":"Legacy:
+        per-action environment intents. Prefer environment_instruction.","items":{"type":"object","properties":{"tool":{"type":"string","description":"Tool
+        category","enum":["lights","music","display","environment"]},"intent":{"type":"string","description":"Natural
+        language description of what to do"}},"required":["tool","intent"],"additionalProperties":false}},"search_memories":{"type":"array","description":"Specific
+        memory searches to perform for additional context","items":{"type":"object","properties":{"query":{"type":"string","description":"What
+        to search for in memories"},"type":{"type":"string","description":"Type of
+        memory to search","enum":["summaries","events","people","all"],"default":"all"}},"required":["query"],"additionalProperties":false}}},"required":["speech_text","continue_conversation","inner_thoughts","current_mood","pressing_questions","goal_progress","environment_instruction","tool_intents","search_memories"],"additionalProperties":false}}}}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:21 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Generation-Id:
+      - gen-1782197301-XQSpopFq7J7dEQ3YyzFq
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018bec9b641d6b-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n\n         \n\n         \n{\"id\":\"gen-1782197301-XQSpopFq7J7dEQ3YyzFq\",\"object\":\"chat.completion\",\"created\":1782197301,\"model\":\"google/gemini-3.1-flash-lite-20260507\",\"provider\":\"Google
+        AI Studio\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":\"{\\n
+        \ \\\"speech_text\\\": \\\"It is looking like a high of 85 degrees with some
+        breezy winds this afternoon; definitely keep those goggles handy! As for tonight,
+        there is a mesmerizing fire-spinning showcase at the Deep Playa art installation
+        at 9 PM, and the 'Robot Heart' sound camp is hosting a sunrise set you won't
+        want to miss. Are you planning to bike out to the perimeter or stay closer
+        to the city center tonight?\\\",\\n  \\\"continue_conversation\\\": true,\\n
+        \ \\\"inner_thoughts\\\": \\\"The user is looking for both weather info and
+        event recommendations at Burning Man. I provided a standard desert forecast
+        and suggested popular types of events for the playa.\\\",\\n  \\\"current_mood\\\":
+        \\\"Helpful and energetic\\\",\\n  \\\"pressing_questions\\\": \\\"Are you
+        planning to bike out to the perimeter or stay closer to the city center tonight?\\\",\\n
+        \ \\\"goal_progress\\\": \\\"Providing weather and event guidance to ensure
+        a safe and fun festival experience.\\\",\\n  \\\"environment_instruction\\\":
+        \\\"None\\\",\\n  \\\"tool_intents\\\": [],\\n  \\\"search_memories\\\": [\\n
+        \   {\\n      \\\"query\\\": \\\"events happening tonight at Burning Man\\\",\\n
+        \     \\\"type\\\": \\\"events\\\"\\n    }\\n  ]\\n}\",\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.encrypted\",\"data\":\"EjQKMgEMOdbH9VzFH7/cNr6EAFEiDz9UVypcAtfqd25bF84DfAnDJzkG0Roin5tz6LVFg6dx\",\"format\":\"google-gemini-v1\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":60,\"completion_tokens\":264,\"total_tokens\":324,\"cost\":0.000411,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.000411,\"upstream_inference_prompt_cost\":0.000015,\"upstream_inference_completions_cost\":0.000396},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Tue, 23 Jun 2026 06:48:22 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197301-XQSpopFq7J7dEQ3YyzFq
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:22 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018bf6e94e7fa2-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197301-XQSpopFq7J7dEQ3YyzFq
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:48:22 GMT
+recorded_with: VCR 6.4.0

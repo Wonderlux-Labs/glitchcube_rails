@@ -8,10 +8,19 @@ VCR.configure do |config|
   # STRICT: Block ALL HTTP requests unless explicitly in a VCR cassette
   config.allow_http_connections_when_no_cassette = false
 
-  # Default record mode - will record if cassette doesn't exist
+  # Record mode: VCR_RECORD=new_episodes forces re-record of changed interactions
+  record_mode = case ENV["VCR_RECORD"]
+  when "new_episodes" then :new_episodes
+  when "all"          then :all
+  when "none"         then :none
+  else                     :once
+  end
+
+  # Match on method + uri only (not body) — body matching causes permanent drift
+  # when model is randomized or gem request format changes between dev/main branches.
   config.default_cassette_options = {
-    record: :once,
-    match_requests_on: [ :method, :uri, :body ]
+    record: record_mode,
+    match_requests_on: [ :method, :uri ]
   }
 
   # Filter sensitive data

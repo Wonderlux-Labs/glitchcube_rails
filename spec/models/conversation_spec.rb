@@ -3,6 +3,9 @@
 require 'rails_helper'
 
 RSpec.describe Conversation, type: :model do
+  # freeze_time / travel_to helpers are not globally included in this suite.
+  include ActiveSupport::Testing::TimeHelpers
+
   describe 'associations' do
     it { should have_many(:messages).dependent(:destroy) }
   end

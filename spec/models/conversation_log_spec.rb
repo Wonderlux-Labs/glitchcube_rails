@@ -10,9 +10,13 @@ RSpec.describe ConversationLog, type: :model do
   end
 
   describe 'scopes' do
-    let!(:log1) { create(:conversation_log, session_id: 'session1') }
-    let!(:log2) { create(:conversation_log, session_id: 'session2') }
-    let!(:log3) { create(:conversation_log, session_id: 'session1') }
+    # ConversationLog belongs_to :conversation via session_id (FK), so the parent
+    # conversation must exist with the same session_id we assign to the log.
+    let!(:conversation1) { create(:conversation, session_id: 'session1') }
+    let!(:conversation2) { create(:conversation, session_id: 'session2') }
+    let!(:log1) { create(:conversation_log, conversation: conversation1, session_id: 'session1') }
+    let!(:log2) { create(:conversation_log, conversation: conversation2, session_id: 'session2') }
+    let!(:log3) { create(:conversation_log, conversation: conversation1, session_id: 'session1') }
 
     describe '.by_session' do
       it 'returns logs for specific session' do

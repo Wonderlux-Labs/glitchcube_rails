@@ -30,49 +30,90 @@ RSpec.describe ToolCallingService, type: :service do
       ])
     end
 
-    context 'when LLM returns valid tool calls', :vcr do
-      it 'translates intent to precise tool execution', pending: 'TODO: Setup VCR cassettes for API integration' do
+    context 'when LLM returns no tool calls' do
+      before do
+        llm_response = instance_double(
+          OpenRouter::Response,
+          tool_calls: [],
+          has_tool_calls?: false,
+          content: "Done.",
+          model: "google/gemini-3.1-flash-lite",
+          usage: {}
+        )
+        allow(LlmService).to receive(:call_with_tools).and_return(llm_response)
+      end
+
+      it 'returns a natural language string response' do
         result = service.execute_intent(intent, context)
 
-        expect(result).to include(:success, :natural_response, :tools_executed)
-        expect(result[:success]).to be(true)
-        expect(result[:natural_response]).to be_a(String)
-        expect(result[:tools_executed]).to be_an(Array)
-
-        puts "✅ ToolCallingService execution test passed!"
-        puts "   Natural response: #{result[:natural_response]}"
-        puts "   Tools executed: #{result[:tools_executed]}"
+        expect(result).to be_a(String)
       end
     end
 
-    context 'when handling sync tools' do
+    context 'when LLM returns sync tool calls' do
       let(:intent) { 'What color are the lights?' }
 
-      it 'executes sync tools immediately and returns results', pending: 'TODO: Setup VCR cassettes for sync tools' do
+      before do
+        tool_call = instance_double(OpenRouter::ToolCall, name: "get_light_state", arguments: { "entity_id" => "light.cube_inner" }, id: "tc1")
+        llm_response = instance_double(
+          OpenRouter::Response,
+          tool_calls: [tool_call],
+          has_tool_calls?: true,
+          content: nil,
+          model: "google/gemini-3.1-flash-lite",
+          usage: {}
+        )
+        allow(LlmService).to receive(:call_with_tools).and_return(llm_response)
+
+        executor = instance_double(ToolExecutor)
+        allow(ToolExecutor).to receive(:new).and_return(executor)
+        allow(executor).to receive(:categorize_tool_calls).and_return({
+          sync_tools: [tool_call],
+          async_tools: []
+        })
+        allow(executor).to receive(:execute_sync).and_return({
+          "get_light_state" => { success: true, message: "Light is blue" }
+        })
+      end
+
+      it 'executes sync tools and returns a natural language response' do
         result = service.execute_intent(intent, context)
 
-        expect(result).to include(:success)
-        expect(result[:success]).to be(true)
-
-        puts "✅ Sync tool execution test passed!"
-        puts "   Query result: #{result[:natural_response]}"
+        expect(result).to be_a(String)
+        expect(result).to include("completed")
       end
     end
 
-    context 'when handling async tools' do
+    context 'when LLM returns async tool calls' do
       let(:intent) { 'Turn off all lights' }
 
-      it 'queues async tools and returns acknowledgment', pending: 'TODO: Setup VCR cassettes for async tools' do
-        # Mock async job execution
-        allow(AsyncToolJob).to receive(:perform_later)
+      before do
+        tool_call = instance_double(OpenRouter::ToolCall, name: "turn_off_light", arguments: { "entity_id" => "light.cube_inner" }, id: "tc2")
+        llm_response = instance_double(
+          OpenRouter::Response,
+          tool_calls: [tool_call],
+          has_tool_calls?: true,
+          content: nil,
+          model: "google/gemini-3.1-flash-lite",
+          usage: {}
+        )
+        allow(LlmService).to receive(:call_with_tools).and_return(llm_response)
 
+        executor = instance_double(ToolExecutor)
+        allow(ToolExecutor).to receive(:new).and_return(executor)
+        allow(executor).to receive(:categorize_tool_calls).and_return({
+          sync_tools: [],
+          async_tools: [tool_call]
+        })
+        allow(executor).to receive(:execute_async)
+        allow(AsyncToolJob).to receive(:perform_later)
+      end
+
+      it 'queues async tools and returns a natural language acknowledgment' do
         result = service.execute_intent(intent, context)
 
-        expect(result).to include(:success)
-        expect(result[:success]).to be(true)
-
-        puts "✅ Async tool queueing test passed!"
-        puts "   Async response: #{result[:natural_response]}"
+        expect(result).to be_a(String)
+        expect(result).to include("turning off")
       end
     end
   end
@@ -164,17 +205,28 @@ RSpec.describe ToolCallingService, type: :service do
   describe 'parameter translation' do
     let(:intent) { 'Set lights to magenta at 75% brightness' }
 
-    it 'translates natural language to precise parameters', :vcr do
-      pending "TODO: Fix parameter translation test - requires proper VCR cassettes and LLM API integration for natural language processing"
+    before do
+      llm_response = instance_double(
+        OpenRouter::Response,
+        tool_calls: [],
+        has_tool_calls?: false,
+        content: "Done.",
+        model: "google/gemini-3.1-flash-lite",
+        usage: {}
+      )
+      allow(LlmService).to receive(:call_with_tools).and_return(llm_response)
+    end
+
+    it 'passes natural language intent to LLM for tool parameter translation' do
+      expect(LlmService).to receive(:call_with_tools).with(
+        hash_including(messages: array_including(hash_including(content: a_string_including("magenta"))))
+      ).and_return(instance_double(
+        OpenRouter::Response,
+        tool_calls: [], has_tool_calls?: false, content: "Done.", model: "test", usage: {}
+      ))
+
       result = service.execute_intent(intent)
-
-      expect(result[:success]).to be(true)
-
-      # The ToolCallingService should have translated:
-      # - "magenta" → rgb_color: [255, 0, 255]
-      # - "75% brightness" → brightness_percent: 75
-      puts "✅ Parameter translation test passed!"
-      puts "   Response: #{result[:natural_response]}"
+      expect(result).to be_a(String)
     end
   end
 end

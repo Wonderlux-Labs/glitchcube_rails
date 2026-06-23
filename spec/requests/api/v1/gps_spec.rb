@@ -107,6 +107,12 @@ RSpec.describe 'Api::V1::Gps', type: :request do
           # Ignore if seed fails
         end
 
+        # GlitchCube.set_current_location delegates to
+        # Gps::GpsTrackingService.new.set_location, but the outer before stubs
+        # `.new` with an instance_double. Allow set_location so this setup does
+        # not crash before the example's `pending` declaration is reached.
+        allow(mock_gps_service).to receive(:set_location)
+
         # Set spoofed location for testing
         allow(GlitchCube).to receive(:gps_spoofing_allowed?).and_return(true)
         GlitchCube.set_current_location(lat: 40.7864, lng: -119.2065)

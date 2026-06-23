@@ -17,12 +17,12 @@ OpenRouter.configure do |config|
   config.healer_model = "openai/gpt-4o-mini"
   config.max_heal_attempts = 2
 
-  if Rails.configuration.helicone_api_key
-
-              config.uri_base = "https://openrouter.helicone.ai/api"
-              config.api_version = "v1"
-              config.extra_headers = {
-                "Helicone-Auth" => "Bearer #{Rails.configuration.helicone_api_key}"
-              }
+  # Skip Helicone proxy in test env so cassettes record against the real OpenRouter endpoint
+  if Rails.configuration.helicone_api_key && !Rails.env.test?
+    config.uri_base = "https://openrouter.helicone.ai/api"
+    config.api_version = "v1"
+    config.extra_headers = {
+      "Helicone-Auth" => "Bearer #{Rails.configuration.helicone_api_key}"
+    }
   end
 end

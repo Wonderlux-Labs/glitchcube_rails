@@ -36,3 +36,6 @@
 .env
 CLAUDE.md
 .aider*
+
+# macOS Finder metadata
+.DS_Store

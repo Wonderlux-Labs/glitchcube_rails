@@ -13,9 +13,30 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
     )
   end
 
+  # Shared context used across sibling describe blocks (previously only defined
+  # in the first describe, which broke the others).
+  let(:mock_context) do
+    {
+      performance_type: 'comedy',
+      segment_number: 1,
+      time_elapsed_seconds: 30,
+      time_remaining_minutes: 0.5,
+      is_opening: true,
+      is_middle: false,
+      is_closing: false,
+      previous_themes: [],
+      session_id: session_id
+    }
+  end
+
   before do
     Rails.cache.clear
     ConversationLog.where(session_id: session_id).delete_all
+    # Permit arbitrary log output; examples that assert a specific message still
+    # do so via `expect(Rails.logger).to receive(...)`.
+    allow(Rails.logger).to receive(:info).and_call_original
+    allow(Rails.logger).to receive(:warn).and_call_original
+    allow(Rails.logger).to receive(:error).and_call_original
   end
 
   after do
@@ -23,19 +44,6 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
   end
 
   describe 'ContextualSpeechTriggerService integration', vcr: { cassette_name: 'performance_llm/contextual_speech_integration' } do
-    let(:mock_context) do
-      {
-        performance_type: 'comedy',
-        segment_number: 1,
-        time_elapsed_seconds: 30,
-        time_remaining_minutes: 0.5,
-        is_opening: true,
-        is_middle: false,
-        is_closing: false,
-        previous_themes: [],
-        session_id: session_id
-      }
-    end
 
     context 'successful LLM response generation' do
       let(:expected_llm_response) do
@@ -114,7 +122,7 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
           .with(
             hash_including(
               context: hash_including(
-                previous_segments: array_of_size(2)
+                previous_segments: have_attributes(size: 2)
               )
             )
           )
@@ -124,27 +132,35 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
       end
 
       it 'handles different segment types correctly' do
-        %w[opening development callback_segment closing].each do |segment_type|
+        # Stacking multiple `expect_any_instance_of` inside a loop is an RSpec
+        # foot-gun (each call overrides the prior). Instead capture the context
+        # the service computes per call and assert the segment_type mapping
+        # produced by PerformanceModeService#determine_segment_type.
+        cases = {
+          'opening'         => { number: 1, expected_type: 'opening' },
+          'development'     => { number: 3, expected_type: 'callback_segment' },
+          'callback_segment' => { number: 3, expected_type: 'callback_segment' },
+          'closing'         => { number: 3, expected_type: 'closing' }
+        }
+
+        cases.each do |label, data|
+          captured_segment_type = nil
+          allow_any_instance_of(ContextualSpeechTriggerService)
+            .to receive(:trigger_speech) do |_, args|
+              captured_segment_type = args[:context][:segment_type]
+              expected_llm_response.merge(segment_type: label)
+            end
+
           context = mock_context.merge(
-            segment_number: segment_type == 'opening' ? 1 : 3,
-            is_opening: segment_type == 'opening',
-            is_middle: segment_type == 'development',
-            is_closing: segment_type == 'closing'
+            segment_number: data[:number],
+            is_opening: label == 'opening',
+            is_middle: label == 'development',
+            is_closing: label == 'closing'
           )
 
-          expect_any_instance_of(ContextualSpeechTriggerService)
-            .to receive(:trigger_speech)
-            .with(
-              hash_including(
-                context: hash_including(
-                  segment_type: segment_type == 'development' ? 'callback_segment' : segment_type
-                )
-              )
-            )
-            .and_return(expected_llm_response.merge(segment_type: segment_type))
-
           result = service.send(:generate_performance_segment, context)
-          expect(result[:segment_type]).to eq(segment_type)
+          expect(captured_segment_type).to eq(data[:expected_type])
+          expect(result[:segment_type]).to eq(label)
         end
       end
     end
@@ -392,11 +408,11 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
       # Mock sleep to speed up test
       allow(service).to receive(:sleep)
 
-      # Mock is_running? to return true for first few calls, then false
-      call_count = 0
+      # Stop once 4 segments are stored. Counting is_running? calls is fragile
+      # because send_performance_segment also calls time_remaining -> is_running?,
+      # so gate on the stored-segment count instead.
       allow(service).to receive(:is_running?) do
-        call_count += 1
-        call_count <= 4 # Allow 4 segments then stop
+        service.instance_variable_get(:@performance_segments).size < 4
       end
 
       # Run the performance loop
@@ -404,7 +420,7 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
 
       # Verify segments were generated and stored
       segments = service.instance_variable_get(:@performance_segments)
-      expect(segments).to have(4).items
+      expect(segments.size).to eq(4)
 
       # Verify progression through segment types
       expect(segments[0][:speech]).to include('Welcome everyone')
@@ -419,21 +435,23 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
       service.instance_variable_set(:@is_running, true)
       service.instance_variable_set(:@performance_segments, [])
 
-      # Mock alternating success/failure pattern
-      call_count = 0
+      # Mock alternating success/failure pattern (odd = success, even = failure)
+      trigger_calls = 0
       allow_any_instance_of(ContextualSpeechTriggerService)
         .to receive(:trigger_speech) do
-          call_count += 1
-          if call_count.odd?
+          trigger_calls += 1
+          if trigger_calls.odd?
             performance_segments_sequence[0] # Success
           else
             raise StandardError, "Intermittent LLM failure" # Failure
           end
         end
 
-      # Mock other dependencies
+      # Mock other dependencies. Gate on trigger_calls (robust against the extra
+      # is_running? call inside send_performance_segment -> time_remaining) so
+      # the loop runs long enough to hit at least one failure (even) iteration.
       allow(service).to receive(:sleep)
-      allow(service).to receive(:is_running?).and_return(true, true, false)
+      allow(service).to receive(:is_running?) { trigger_calls < 3 }
 
       expect(Rails.logger).to receive(:warn).with(/Failed to generate performance segment/).at_least(:once)
 
@@ -484,6 +502,15 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
           performance_type: context[:performance_type],
           duration_minutes: 10
         )
+
+        # build_performance_prompt only joins context[:previous_themes] into the
+        # continuation guidance when prior segments exist; seed one so the
+        # mid/closing themes actually appear in the prompt.
+        if context[:previous_themes].present?
+          stage_service.instance_variable_set(:@performance_segments, [
+            { segment: 1, speech: 'seed', timestamp: Time.current }
+          ])
+        end
 
         captured_prompt = nil
         allow_any_instance_of(ContextualSpeechTriggerService)

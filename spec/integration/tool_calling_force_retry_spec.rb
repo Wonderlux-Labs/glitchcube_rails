@@ -64,8 +64,10 @@ RSpec.describe 'Forced Tool Calling Retry', type: :integration do
       expect(result).to be_a(String)
       expect(result).not_to eq("I'm having trouble with that right now.")
 
-      # Should have made two calls to the get_light_state tool
-      expect(call_count).to eq(2)
+      # Should have retried: the first call fails, a later call succeeds. The
+      # exact count depends on how many times the live model re-invokes the
+      # tool, so assert the retry happened (>1) rather than a brittle exact count.
+      expect(call_count).to be > 1
     end
   end
 end

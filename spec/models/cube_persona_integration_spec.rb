@@ -40,63 +40,11 @@ RSpec.describe "CubePersona persona switching integration", type: :model do
         CubePersona.set_current_persona(:sparkle)
       end
 
-      it "includes goal context in the persona notification" do
-        expect(LlmService).to receive(:call_with_tools) do |args|
-          messages = args[:messages]
-          user_message = messages[1][:content]
-
-          expect(user_message).to include("Make people laugh and feel the magic")
-          expect(user_message).to include("25%") # 1 hour of 4 hours
-          expect(user_message).to include("Buddy was working on this goal")
-
-          { "choices" => [ { "message" => { "content" => "I'll continue this joyful mission!" } } ] }
-        end
-
-        CubePersona.set_current_persona(:sparkle)
-      end
-    end
-
-    context "when switching personas with no active goal" do
-      let(:new_goal_status) do
-        {
-          goal_description: "Learn about new art installations",
-          category: "exploration_goals",
-          time_limit: 30.minutes
-        }
-      end
-
-      before do
-        # First call returns nil (no current goal), second call returns new goal after selection
-        allow(GoalService).to receive(:current_goal_status).and_return(nil, new_goal_status)
-        allow(GoalService).to receive(:select_goal).and_return({
-          goal_id: :discover_art,
-          goal_description: "Learn about new art installations",
-          category: "exploration_goals"
-        })
-        allow(LlmService).to receive(:call_with_tools).and_return({
-          "choices" => [ { "message" => { "content" => "Ooh! Art exploration sounds amazing! ✨" } } ]
-        })
-      end
-
-      it "automatically selects a new goal" do
-        expect(GoalService).to receive(:select_goal)
-
-        CubePersona.set_current_persona(:sparkle)
-      end
-
-      it "notifies the persona about the new goal" do
-        expect(LlmService).to receive(:call_with_tools) do |args|
-          messages = args[:messages]
-          user_message = messages[1][:content]
-
-          expect(user_message).to include("selected a new one for you")
-          expect(user_message).to include("Learn about new art installations")
-
-          { "choices" => [ { "message" => { "content" => "Perfect! I love art!" } } ] }
-        end
-
-        CubePersona.set_current_persona(:sparkle)
-      end
+      # NOTE: PersonaSwitchService.handle_persona_switch was refactored — it no longer
+      # auto-selects a goal (GoalService.select_goal) nor sends an LLM goal-context
+      # notification (LlmService.call_with_tools). The specs covering that removed
+      # goal-awareness flow ("includes goal context", "automatically selects a new goal",
+      # "notifies the persona about the new goal") were deleted.
     end
 
     context "when persona doesn't actually change" do

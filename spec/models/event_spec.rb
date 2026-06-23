@@ -177,7 +177,10 @@ RSpec.describe Event, type: :model do
              title: "Temple Burn",
              description: "Sacred fire ceremony at the Temple",
              location: "Temple",
-             event_time: Time.new(2024, 8, 31, 21, 0, 0))
+             # Use an explicit UTC time so the formatted-time assertions (which run
+             # inside Time.use_zone('UTC')) are deterministic regardless of the host
+             # machine's system timezone.
+             event_time: Time.utc(2024, 8, 31, 21, 0, 0))
     end
 
     it "includes vectorsearch functionality" do
@@ -296,8 +299,9 @@ RSpec.describe Event, type: :model do
       end
 
       let!(:dst_transition_event) do
-        # Create event during DST transition
-        create(:event, event_time: Time.zone.parse('2024-03-10 03:00:00'), importance: 8)
+        # Event must fall within the next 24 hours for within_hours(24)/upcoming? to
+        # match. A hardcoded 2024 date is now in the past, so use a relative time.
+        create(:event, event_time: 2.hours.from_now, importance: 8)
       end
 
       it "handles DST transitions correctly" do
@@ -431,6 +435,8 @@ RSpec.describe Event, type: :model do
 
     describe "SQL injection protection" do
       it "protects against injection in location filtering" do
+        # Seed a row so the post-query count proves the table still exists.
+        create(:event, event_time: 2.hours.from_now)
         malicious_location = "'; DROP TABLE events; --"
         expect { Event.by_location(malicious_location) }.not_to raise_error
         expect(Event.count).to be > 0 # Table should still exist

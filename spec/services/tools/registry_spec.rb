@@ -7,10 +7,11 @@ RSpec.describe Tools::Registry do
       tools = described_class.all_tools
 
       expect(tools).to be_a(Hash)
+      # list_light_effects was removed from the registry's all_tools (the
+      # Tools::Lights::ListEffects class still exists but is no longer registered).
       expect(tools.keys).to include(
         'set_light_state',
         'get_light_state',
-        'list_light_effects',
         'set_light_effect'
       )
     end
@@ -30,8 +31,10 @@ RSpec.describe Tools::Registry do
     it 'returns only sync tools' do
       sync_tools = described_class.sync_tools
 
-      expect(sync_tools.keys).to include('get_light_state', 'list_light_effects')
-      expect(sync_tools.keys).not_to include('turn_on_light', 'turn_off_light')
+      # list_light_effects was removed from the registry; get_light_state and
+      # display_notification remain sync tools.
+      expect(sync_tools.keys).to include('get_light_state', 'display_notification')
+      expect(sync_tools.keys).not_to include('set_light_state', 'set_light_effect')
     end
   end
 
@@ -60,14 +63,13 @@ RSpec.describe Tools::Registry do
   end
 
   describe '.execute_tool' do
-    let(:mock_service) { instance_double(HomeAssistantService) }
-
     before do
-      allow(HomeAssistantService).to receive(:instance).and_return(mock_service)
-      allow(mock_service).to receive(:entities).and_return([
+      # Validation uses the class-level HomeAssistantService.entities/.entity
+      # (rails_helper globally stubs them to empty), so stub at the class level.
+      allow(HomeAssistantService).to receive(:entities).and_return([
         { 'entity_id' => 'light.cube_voice_ring', 'state' => 'off' }
       ])
-      allow(mock_service).to receive(:entity).and_return({
+      allow(HomeAssistantService).to receive(:entity).and_return({
         'state' => 'on',
         'attributes' => { 'brightness' => 255 }
       })

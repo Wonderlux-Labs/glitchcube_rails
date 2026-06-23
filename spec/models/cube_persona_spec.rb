@@ -16,7 +16,10 @@ RSpec.describe CubePersona, type: :model do
       end
 
       it 'caches the result' do
-        expect(Rails.cache).to receive(:fetch).with("current_persona").and_return("buddy")
+        # current_persona now always reads fresh from HA and writes the value back
+        # into the cache (it no longer uses Rails.cache.fetch).
+        expect(Rails.cache).to receive(:write)
+          .with("current_persona", "buddy", expires_in: 30.minutes)
         CubePersona.current_persona
       end
     end
@@ -57,16 +60,21 @@ RSpec.describe CubePersona, type: :model do
     end
 
     it 'only allows valid personas from PERSONAS constant' do
-      # Test a few representative personas from the PERSONAS constant
+      # Test a few representative personas from the PERSONAS constant.
+      # Use spies (allow + have_received) so expectations don't accumulate across
+      # loop iterations — set_current_persona also writes the cache internally via
+      # its current_persona lookup, so a per-iteration `expect(...).to receive` would
+      # over-count.
       valid_personas = [ :buddy, :jax, :zorp, :thecube ]
-      valid_personas.each do |persona|
-        expect(HomeAssistantService).to receive(:call_service)
-          .with("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
-        expect(Rails.cache).to receive(:write)
-          .with("current_persona", persona.to_s, expires_in: 30.minutes)
-        allow(PersonaSwitchService).to receive(:handle_persona_switch)
+      allow(HomeAssistantService).to receive(:call_service)
+      allow(PersonaSwitchService).to receive(:handle_persona_switch)
+      allow(CubePersona).to receive(:current_persona).and_return(:neon)
 
+      valid_personas.each do |persona|
         CubePersona.set_current_persona(persona)
+
+        expect(HomeAssistantService).to have_received(:call_service)
+          .with("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
       end
     end
   end

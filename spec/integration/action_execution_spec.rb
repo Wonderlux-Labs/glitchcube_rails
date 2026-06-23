@@ -86,17 +86,10 @@ RSpec.describe "Action Execution Integration", type: :integration do
       expect(nonexistent_result[:error]).to eq("Tool 'nonexistent_tool' not found")
     end
 
-    it "delegates async tools to Home Assistant" do
-      # Mock the job that ActionExecutor tries to enqueue
-      ha_agent_job_class = Class.new do
-        def self.perform_later(*args)
-          # Mock implementation - just return success
-          true
-        end
-      end
-      stub_const("HaAgentJob", ha_agent_job_class)
+    it "dispatches environment intents to the single translator job" do
+      allow(EnvironmentDirectorJob).to receive(:perform_later)
 
-      # Test delegation of async tools
+      # Test delegation of environment intents
       llm_response = {
         "tool_intents" => [
           {
@@ -120,16 +113,30 @@ RSpec.describe "Action Execution Integration", type: :integration do
       expect(result.data[:delegated_intents]).to include(
         hash_including("tool" => "light.living_room")
       )
+      # All environment changes go through one translator (no per-domain fan-out)
+      expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
+        hash_including(instruction: "Make lights warm and orange like fire")
+      )
+    end
+
+    it "dispatches a single environment_instruction directly" do
+      allow(EnvironmentDirectorJob).to receive(:perform_later)
+
+      result = ConversationNewOrchestrator::ActionExecutor.call(
+        llm_response: { "environment_instruction" => "Turn the lights orange and play heavy metal" },
+        session_id: session_id,
+        conversation_id: session_id,
+        user_message: "make it spooky"
+      )
+
+      expect(result.success?).to be true
+      expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
+        hash_including(instruction: "Turn the lights orange and play heavy metal")
+      )
     end
 
     it "handles mixed sync and async tools" do
-      # Mock the job that ActionExecutor tries to enqueue
-      ha_agent_job_class = Class.new do
-        def self.perform_later(*args)
-          true
-        end
-      end
-      stub_const("HaAgentJob", ha_agent_job_class)
+      allow(EnvironmentDirectorJob).to receive(:perform_later)
 
       # Test combined direct tools and delegated intents
       llm_response = {

@@ -69,15 +69,17 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
       end
 
       it "filters out malformed events from proactive injection" do
-        service = described_class.new(
-          persona: "buddy",
+        # Event/goal context injection moved from PromptService into
+        # Prompts::ContextBuilder (inject_upcoming_events_context renamed to
+        # build_upcoming_events_context). Exercise it where it now lives.
+        builder = Prompts::ContextBuilder.new(
           conversation: conversation,
           extra_context: {},
           user_message: "What's happening?"
         )
 
         # Should not include malformed events in context
-        context = service.send(:inject_upcoming_events_context)
+        context = builder.send(:build_upcoming_events_context)
         if context.present?
           expect(context).not_to include("Malformed Event")
         end
@@ -124,7 +126,10 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
         result = service.build
 
         expect(result[:context]).to be_a(String)
-        expect(Rails.logger).to have_received(:error).with(/Failed to build goal context/)
+        # Goal context is built by both Prompts::ContextBuilder and
+        # Prompts::SystemContextEnhancer during a single build, so the error is
+        # logged more than once. We only care that it was logged and swallowed.
+        expect(Rails.logger).to have_received(:error).with(/Failed to build goal context/).at_least(:once)
       end
     end
   end
@@ -166,20 +171,23 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
   end
 
   describe "Event scoping chains that failed in production" do
-    let!(:high_priority_upcoming) { create(:event, event_time: 2.hours.from_now, importance: 8, location: "Center Camp") }
-    let!(:high_priority_past) { create(:event, event_time: 2.hours.ago, importance: 8, location: "Center Camp") }
-    let!(:low_priority_upcoming) { create(:event, event_time: 2.hours.from_now, importance: 3, location: "Center Camp") }
-    let!(:far_future_event) { create(:event, event_time: 3.days.from_now, importance: 9, location: "Deep Playa") }
+    # Distinct titles are required: the event factory defaults every event to the
+    # same title, which would make the "not_to include(...)" assertions below
+    # meaningless (an included upcoming event would share a past event's title).
+    let!(:high_priority_upcoming) { create(:event, title: "High Priority Upcoming", event_time: 2.hours.from_now, importance: 8, location: "Center Camp") }
+    let!(:high_priority_past) { create(:event, title: "High Priority Past", event_time: 2.hours.ago, importance: 8, location: "Center Camp") }
+    let!(:low_priority_upcoming) { create(:event, title: "Low Priority Upcoming", event_time: 2.hours.from_now, importance: 3, location: "Center Camp") }
+    let!(:far_future_event) { create(:event, title: "Far Future Event", event_time: 3.days.from_now, importance: 9, location: "Deep Playa") }
 
     it "correctly filters events for proactive injection" do
-      service = described_class.new(
-        persona: "buddy",
+      # Moved to Prompts::ContextBuilder#build_upcoming_events_context.
+      builder = Prompts::ContextBuilder.new(
         conversation: conversation,
         extra_context: {},
         user_message: "What's happening soon?"
       )
 
-      context = service.send(:inject_upcoming_events_context)
+      context = builder.send(:build_upcoming_events_context)
 
       if context.present?
         # Should include high priority upcoming events within 48 hours
@@ -230,20 +238,21 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
     end
 
     it "formats time durations correctly in goal context" do
-      service = described_class.new(persona: "buddy", conversation: conversation, extra_context: {})
-      context = service.send(:build_goal_context)
+      # build_goal_context / format_time_duration now live on Prompts::ContextBuilder.
+      builder = Prompts::ContextBuilder.new(conversation: conversation, extra_context: {}, user_message: nil)
+      context = builder.send(:build_goal_context)
 
       expect(context).to include("Time remaining: 20m")
     end
 
     it "handles edge case time durations" do
-      service = described_class.new(persona: "buddy", conversation: conversation, extra_context: {})
+      builder = Prompts::ContextBuilder.new(conversation: conversation, extra_context: {}, user_message: nil)
 
       # Test various time durations
-      expect(service.send(:format_time_duration, 0)).to eq('0s')
-      expect(service.send(:format_time_duration, 45)).to eq('45s')
-      expect(service.send(:format_time_duration, 90)).to eq('1m')
-      expect(service.send(:format_time_duration, 3661)).to eq('1h 1m')
+      expect(builder.send(:format_time_duration, 0)).to eq('0s')
+      expect(builder.send(:format_time_duration, 45)).to eq('45s')
+      expect(builder.send(:format_time_duration, 90)).to eq('1m')
+      expect(builder.send(:format_time_duration, 3661)).to eq('1h 1m')
     end
   end
 

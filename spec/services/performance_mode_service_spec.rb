@@ -3,6 +3,8 @@
 require 'rails_helper'
 
 RSpec.describe PerformanceModeService, type: :service do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:session_id) { 'test_performance_session' }
   let(:default_options) do
     {
@@ -18,6 +20,11 @@ RSpec.describe PerformanceModeService, type: :service do
     Rails.cache.clear
     # Clear any existing conversation logs
     ConversationLog.where(session_id: session_id).delete_all
+    # Allow arbitrary log output; individual examples set strict expectations
+    # on specific messages via `expect(Rails.logger).to receive(...)`.
+    allow(Rails.logger).to receive(:info).and_call_original
+    allow(Rails.logger).to receive(:warn).and_call_original
+    allow(Rails.logger).to receive(:error).and_call_original
   end
 
   after do
@@ -186,12 +193,17 @@ RSpec.describe PerformanceModeService, type: :service do
     end
 
     it 'returns remaining seconds when running' do
-      freeze_time do
-        service.start_performance
+      # Single time-travel context (no nested freeze+travel): pin "now", start
+      # the performance there, then assert remaining at +30s within the one
+      # travel_to block. @start_time/@end_time are set by start_performance
+      # relative to the pinned time.
+      now = Time.current.change(nsec: 0)
+      service.start_performance
+      service.instance_variable_set(:@start_time, now)
+      service.instance_variable_set(:@end_time, now + 2.minutes)
 
-        travel_to(30.seconds.from_now) do
-          expect(service.time_remaining).to eq(90) # 2 minutes - 30 seconds
-        end
+      travel_to(now + 30.seconds) do
+        expect(service.time_remaining).to eq(90) # 2 minutes - 30 seconds
       end
     end
   end
@@ -241,7 +253,7 @@ RSpec.describe PerformanceModeService, type: :service do
         service.run_performance_loop
 
         segments = service.instance_variable_get(:@performance_segments)
-        expect(segments).to have(1).item
+        expect(segments.size).to eq(1)
         expect(segments.first[:speech]).to eq(mock_segment[:speech_text])
         expect(segments.first[:segment]).to eq(1)
       end
@@ -274,8 +286,10 @@ RSpec.describe PerformanceModeService, type: :service do
 
     context 'when time expires naturally' do
       it 'stops performance with time_expired reason' do
-        # Mock time progression
-        allow(service).to receive(:is_running?).and_return(true, true, false)
+        # Drive the loop to break via the end_time guard while is_running?
+        # still reports true, so the post-loop natural-completion branch fires.
+        service.instance_variable_set(:@end_time, 1.minute.ago)
+        allow(service).to receive(:is_running?).and_return(true)
         allow(service).to receive(:generate_performance_segment).and_return(nil)
 
         expect(service).to receive(:stop_performance).with('time_expired')
@@ -366,6 +380,11 @@ RSpec.describe PerformanceModeService, type: :service do
     let(:speech_text) { "This is a test performance segment for the audience!" }
 
     before do
+      # ConversationLog belongs_to :conversation (required FK on session_id),
+      # so the parent Conversation must exist before logging a segment.
+      Conversation.find_or_create_by!(session_id: session_id) do |c|
+        c.started_at = Time.current
+      end
       service.start_performance
       allow_any_instance_of(HomeAssistantService)
         .to receive(:send_conversation_response)
@@ -529,9 +548,12 @@ RSpec.describe PerformanceModeService, type: :service do
 
     describe '#extract_themes_from_previous_segments' do
       before do
+        # Note: the service only keeps the last 3 *unique* themes, so the data
+        # here is crafted to yield exactly three (avoiding the "technology"
+        # keyword that "AI" would otherwise trigger in the space segment).
         segments = [
           { speech: 'Welcome to Burning Man! The playa is amazing!' },
-          { speech: 'As an AI in space, I had many galactic adventures.' },
+          { speech: 'Out in space, I had many galactic adventures.' },
           { speech: 'Customer service was my specialty across the universe.' }
         ]
         service.instance_variable_set(:@performance_segments, segments)

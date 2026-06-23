@@ -265,9 +265,8 @@ RSpec.describe GoalService, type: :service do
         allow(mock_ha_service).to receive(:entity)
           .with('input_boolean.safety_mode')
           .and_return({ 'state' => 'off' })
-        allow(mock_ha_service).to receive(:entity)
-          .with('input_select.battery_level')
-          .and_return({ 'state' => 'critical' })
+        # battery_level_critical? now delegates to HaDataSync.low_power_mode?
+        allow(HaDataSync).to receive(:low_power_mode?).and_return(true)
       end
 
       it 'returns true' do
@@ -280,9 +279,7 @@ RSpec.describe GoalService, type: :service do
         allow(mock_ha_service).to receive(:entity)
           .with('input_boolean.safety_mode')
           .and_return({ 'state' => 'off' })
-        allow(mock_ha_service).to receive(:entity)
-          .with('input_select.battery_level')
-          .and_return({ 'state' => 'excellent' })
+        allow(HaDataSync).to receive(:low_power_mode?).and_return(false)
       end
 
       it 'returns false' do
@@ -299,26 +296,15 @@ RSpec.describe GoalService, type: :service do
   end
 
   describe '.battery_level_critical?' do
-    it 'returns true for critical battery' do
-      allow(mock_ha_service).to receive(:entity)
-        .with('input_select.battery_level')
-        .and_return({ 'state' => 'critical' })
+    # battery_level_critical? now delegates to HaDataSync.low_power_mode?
+    it 'returns true when low power mode is active' do
+      allow(HaDataSync).to receive(:low_power_mode?).and_return(true)
 
       expect(described_class.battery_level_critical?).to be true
     end
 
-    it 'returns true for low battery' do
-      allow(mock_ha_service).to receive(:entity)
-        .with('input_select.battery_level')
-        .and_return({ 'state' => 'low' })
-
-      expect(described_class.battery_level_critical?).to be true
-    end
-
-    it 'returns false for good battery' do
-      allow(mock_ha_service).to receive(:entity)
-        .with('input_select.battery_level')
-        .and_return({ 'state' => 'excellent' })
+    it 'returns false when low power mode is inactive' do
+      allow(HaDataSync).to receive(:low_power_mode?).and_return(false)
 
       expect(described_class.battery_level_critical?).to be false
     end

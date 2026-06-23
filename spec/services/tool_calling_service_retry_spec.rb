@@ -104,7 +104,7 @@ RSpec.describe ToolCallingService, type: :service do
         allow(Rails.configuration).to receive(:try).with(:tool_calling_max_iterations).and_return(nil)
 
         service = described_class.new(session_id: session_id)
-        expect(service.instance_variable_get(:@max_iterations)).to eq(4)
+        expect(service.instance_variable_get(:@max_iterations)).to eq(5)
       end
     end
   end

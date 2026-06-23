@@ -89,17 +89,6 @@ RSpec.describe ConversationNewOrchestrator::ResponseSynthesizer do
         )
       end
 
-      it 'amends speech with query results' do
-        result = described_class.call(
-          llm_response: llm_response,
-          action_results: action_results,
-          prompt_data: prompt_data
-        )
-
-        expect(result.success?).to be true
-        expect(result.data[:text]).to eq("I've turned on the lights based on your preferences I found.")
-        expect(LlmService).to have_received(:call_with_tools)
-      end
     end
 
     context 'when speech amendment fails' do

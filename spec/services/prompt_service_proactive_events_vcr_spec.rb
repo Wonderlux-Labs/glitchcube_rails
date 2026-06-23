@@ -3,7 +3,13 @@
 require "rails_helper"
 
 RSpec.describe PromptService, "proactive events with VCR", type: :service do
-  describe "proactive event injection with real API context", :vcr do
+  # NOTE: Proactive-event / location context injection was refactored out of
+  # PromptService into Prompts::ContextBuilder. The old private methods
+  # `inject_upcoming_events_context` and `get_current_location` now live there
+  # (the former renamed to `build_upcoming_events_context`). These methods only
+  # touch the DB and the (mocked) Home Assistant service — no LLM/OpenRouter call
+  # — so the original VCR cassettes were unnecessary and have been removed.
+  describe "proactive event injection with real API context" do
     let(:conversation) { create(:conversation, session_id: "proactive_test_session") }
     let(:prompt_service) do
       described_class.new(
@@ -12,6 +18,20 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
         extra_context: { source: "vcr_proactive_test" },
         user_message: "What's happening today?"
       )
+    end
+    # Context-building methods now live on Prompts::ContextBuilder.
+    let(:context_builder) do
+      Prompts::ContextBuilder.new(
+        conversation: conversation,
+        extra_context: { source: "vcr_proactive_test" },
+        user_message: "What's happening today?"
+      )
+    end
+
+    before do
+      # Avoid OpenAI embedding HTTP calls triggered by Event/Summary creation.
+      allow_any_instance_of(Event).to receive(:upsert_to_vectorsearch).and_return(true)
+      allow_any_instance_of(Summary).to receive(:upsert_to_vectorsearch).and_return(true)
     end
 
     describe "high-priority event injection" do
@@ -42,26 +62,25 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
                location: "Deep Playa")
       end
 
-      it "injects high-priority events automatically in context", vcr: { cassette_name: "proactive_events/high_priority_injection" } do
-        # Mock Home Assistant to avoid external calls in this test
-        ha_service = double("HomeAssistantService")
-        allow(HomeAssistantService).to receive(:new).and_return(ha_service)
-        allow(ha_service).to receive(:entity).and_return(nil)
+      it "injects high-priority events automatically in context" do
+        # No current location -> only the high-priority block runs.
+        # (ContextBuilder reads location via HaDataSync, not HomeAssistantService.new.)
+        allow(HaDataSync).to receive(:extended_location).and_return(nil)
 
-        context = prompt_service.send(:inject_upcoming_events_context)
+        context = context_builder.send(:build_upcoming_events_context)
 
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Emergency Weather Alert")
         expect(context).to include("Temple Burn Ceremony")
         expect(context).not_to include("Art Walk") # Only importance >= 7
-
-        # Verify timing information is included
-        expect(context).to include("2 hours")
-        expect(context).to include("8 hours")
+        # NOTE: relative-time strings ("2 hours"/"8 hours") were dropped in the
+        # refactor; ContextBuilder now formats events with an absolute timestamp.
       end
 
-      it "formats high-priority events with proper urgency indicators", vcr: { cassette_name: "proactive_events/urgency_formatting" } do
-        context = prompt_service.send(:inject_upcoming_events_context)
+      it "formats high-priority events with proper urgency indicators" do
+        allow(HaDataSync).to receive(:extended_location).and_return(nil)
+
+        context = context_builder.send(:build_upcoming_events_context)
 
         expect(context).to include("next 48h")
         expect(context).to include("Severe dust storm approaching")
@@ -90,36 +109,29 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       context "when location is available from HA sensor" do
         before do
-          ha_service = double("HomeAssistantService")
-          allow(HomeAssistantService).to receive(:new).and_return(ha_service)
-
-          context_sensor = {
-            "attributes" => {
-              "current_location" => "Center Camp"
-            }
-          }
-          allow(ha_service).to receive(:entity).with("sensor.glitchcube_context").and_return(context_sensor)
+          # ContextBuilder resolves the current location via HaDataSync, not via
+          # HomeAssistantService.new, so stub at that boundary.
+          allow(HaDataSync).to receive(:extended_location).and_return("Center Camp")
         end
 
-        it "injects nearby events based on current location", vcr: { cassette_name: "proactive_events/nearby_location_injection" } do
-          context = prompt_service.send(:inject_upcoming_events_context)
+        it "injects nearby events based on current location" do
+          context = context_builder.send(:build_upcoming_events_context)
 
           expect(context).to include("UPCOMING NEARBY EVENTS")
           expect(context).to include("Camp Sunrise Pancake Breakfast")
           expect(context).not_to include("Deep Playa Sound Bath")
 
           expect(context).to include("next 24h")
-          expect(context).to include("Center Camp")
         end
 
-        it "combines high-priority and nearby events correctly", vcr: { cassette_name: "proactive_events/combined_priority_and_nearby" } do
+        it "combines high-priority and nearby events correctly" do
           # Add a high-priority event too
           create(:event,
                  title: "Critical Safety Briefing",
                  importance: 8,
                  event_time: 3.hours.from_now)
 
-          context = prompt_service.send(:inject_upcoming_events_context)
+          context = context_builder.send(:build_upcoming_events_context)
 
           expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
           expect(context).to include("UPCOMING NEARBY EVENTS")
@@ -130,79 +142,45 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
 
       context "when location is not available" do
         before do
-          ha_service = double("HomeAssistantService")
-          allow(HomeAssistantService).to receive(:new).and_return(ha_service)
-          allow(ha_service).to receive(:entity).and_return(nil)
+          allow(HaDataSync).to receive(:extended_location).and_return(nil)
         end
 
-        it "only includes high-priority events without location filtering", vcr: { cassette_name: "proactive_events/no_location_available" } do
-          context = prompt_service.send(:inject_upcoming_events_context)
+        it "only includes high-priority events without location filtering" do
+          context = context_builder.send(:build_upcoming_events_context)
 
-          expect(context).not_to include("UPCOMING NEARBY EVENTS")
+          # No high-priority and no location -> no context at all.
+          expect(context.to_s).not_to include("UPCOMING NEARBY EVENTS")
           # Should not include medium-importance events when no location available
-          expect(context).not_to include("Camp Sunrise Pancake Breakfast")
+          expect(context.to_s).not_to include("Camp Sunrise Pancake Breakfast")
         end
       end
 
       context "when HA service fails" do
         before do
-          allow(HomeAssistantService).to receive(:new).and_raise(StandardError.new("HA connection failed"))
+          allow(HaDataSync).to receive(:extended_location).and_raise(StandardError.new("HA connection failed"))
         end
 
-        it "continues gracefully without location-based events", vcr: { cassette_name: "proactive_events/ha_service_failure" } do
-          expect { prompt_service.send(:inject_upcoming_events_context) }.not_to raise_error
+        it "continues gracefully without location-based events" do
+          expect { context_builder.send(:build_upcoming_events_context) }.not_to raise_error
 
-          context = prompt_service.send(:inject_upcoming_events_context)
-          expect(context).not_to include("UPCOMING NEARBY EVENTS")
+          context = context_builder.send(:build_upcoming_events_context)
+          expect(context.to_s).not_to include("UPCOMING NEARBY EVENTS")
         end
 
-        it "logs HA service failures appropriately", vcr: { cassette_name: "proactive_events/ha_failure_logging" } do
-          prompt_service.send(:get_current_location)
+        it "logs HA service failures appropriately" do
+          allow(Rails.logger).to receive(:warn).and_call_original
+          context_builder.send(:get_current_location)
           expect(Rails.logger).to have_received(:warn).with(/Failed to get current location/)
         end
       end
     end
 
-    describe "integration with full RAG context" do
-      let!(:high_priority_event) do
-        create(:event,
-               title: "Exodus Traffic Advisory",
-               description: "Heavy traffic expected - plan departure accordingly",
-               event_time: 12.hours.from_now,
-               importance: 8)
-      end
-
-      let!(:relevant_summary) do
-        create(:summary,
-               summary_text: "Previous conversation about exodus planning and traffic")
-      end
-
-      before do
-        # Mock similarity search for RAG
-        allow(Summary).to receive(:similarity_search).and_return([ relevant_summary ])
-        allow(Event).to receive(:similarity_search).and_return([])
-        allow(Person).to receive(:similarity_search).and_return([])
-      end
-
-      it "includes both proactive events and RAG results in context", vcr: { cassette_name: "proactive_events/full_rag_integration" } do
-        context = prompt_service.send(:inject_rag_context, "When should I leave?")
-
-        expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
-        expect(context).to include("Exodus Traffic Advisory")
-        expect(context).to include("Recent relevant conversations")
-        expect(context).to include("exodus planning")
-      end
-
-      it "prioritizes proactive events before RAG results", vcr: { cassette_name: "proactive_events/event_priority_order" } do
-        context = prompt_service.send(:inject_rag_context, "tell me about events")
-        lines = context.split("\n")
-
-        high_priority_line = lines.find_index { |line| line.include?("HIGH-PRIORITY EVENTS") }
-        conversation_line = lines.find_index { |line| line.include?("Recent relevant") }
-
-        expect(high_priority_line).to be < conversation_line
-      end
-    end
+    # NOTE: The "integration with full RAG context" describe block was removed.
+    # It exercised PromptService#inject_rag_context and the inline similarity-search
+    # RAG injection ("Recent relevant conversations"), which were deleted in the
+    # refactor (RAG/similarity injection is commented out in
+    # Prompts::SystemContextEnhancer). There is no replacement method to test, so the
+    # examples were not portable.
 
     describe "full prompt building with proactive events" do
       let!(:imminent_event) do
@@ -213,20 +191,20 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
                importance: 10)
       end
 
-      it "includes proactive events in complete prompt context", vcr: { cassette_name: "proactive_events/full_prompt_integration" } do
+      it "includes proactive events in complete prompt context" do
+        allow(HaDataSync).to receive(:extended_location).and_return(nil)
+
         prompt_data = prompt_service.build
         context = prompt_data[:context]
 
         expect(context).to include("UPCOMING HIGH-PRIORITY EVENTS")
         expect(context).to include("Gate Closure Warning")
-        expect(context).to include("4 hours")
-
-        # Should also include other context elements
-        expect(context).to include("VERY IMPORTANT BREAKING NEWS")
-        expect(context).to include("Random Facts")
+        # NOTE: relative-time strings ("4 hours") and the
+        # "VERY IMPORTANT BREAKING NEWS"/"Random Facts" context blocks were removed
+        # in the refactor, so those assertions were dropped.
       end
 
-      it "maintains context structure with proactive events", vcr: { cassette_name: "proactive_events/context_structure" } do
+      it "maintains context structure with proactive events" do
         prompt_data = prompt_service.build
 
         expect(prompt_data).to have_key(:system_prompt)
@@ -241,54 +219,62 @@ RSpec.describe PromptService, "proactive events with VCR", type: :service do
     end
 
     describe "time-based event filtering" do
-      let!(:immediate_event) { create(:event, event_time: 1.hour.from_now, importance: 8) }
-      let!(:near_future_event) { create(:event, event_time: 24.hours.from_now, importance: 8) }
-      let!(:far_future_event) { create(:event, event_time: 3.days.from_now, importance: 8) }
-      let!(:past_event) { create(:event, event_time: 2.hours.ago, importance: 9) }
+      # Distinct titles are required because the factory defaults all events to the
+      # same title, and the refactored ContextBuilder no longer emits relative-time
+      # strings (it formats absolute timestamps), so we assert on titles instead.
+      let!(:immediate_event) { create(:event, title: "Immediate Event", event_time: 1.hour.from_now, importance: 8) }
+      let!(:near_future_event) { create(:event, title: "Near Future Event", event_time: 24.hours.from_now, importance: 8) }
+      let!(:far_future_event) { create(:event, title: "Far Future Event", event_time: 3.days.from_now, importance: 8) }
+      let!(:past_event) { create(:event, title: "Past Event", event_time: 2.hours.ago, importance: 9) }
 
-      it "only includes events within 48-hour window", vcr: { cassette_name: "proactive_events/time_window_filtering" } do
-        context = prompt_service.send(:inject_upcoming_events_context)
+      it "only includes events within 48-hour window" do
+        allow(HaDataSync).to receive(:extended_location).and_return(nil)
+        context = context_builder.send(:build_upcoming_events_context)
 
-        expect(context).to include("1 hour")      # immediate_event
-        expect(context).to include("24 hours")    # near_future_event
-        expect(context).not_to include("3 days")  # far_future_event (outside window)
-        expect(context).not_to include("2 hours ago") # past_event (already happened)
+        expect(context).to include("Immediate Event")
+        expect(context).to include("Near Future Event")
+        expect(context).not_to include("Far Future Event")  # outside 48h window
+        expect(context).not_to include("Past Event")        # already happened
       end
     end
 
     describe "event importance filtering" do
-      let!(:critical_event) { create(:event, event_time: 6.hours.from_now, importance: 10) }
-      let!(:high_event) { create(:event, event_time: 8.hours.from_now, importance: 7) }
-      let!(:medium_event) { create(:event, event_time: 4.hours.from_now, importance: 6) }
-      let!(:low_event) { create(:event, event_time: 2.hours.from_now, importance: 3) }
+      let!(:critical_event) { create(:event, title: "Critical Event", event_time: 6.hours.from_now, importance: 10) }
+      let!(:high_event) { create(:event, title: "High Event", event_time: 8.hours.from_now, importance: 7) }
+      let!(:medium_event) { create(:event, title: "Medium Event", event_time: 4.hours.from_now, importance: 6) }
+      let!(:low_event) { create(:event, title: "Low Event", event_time: 2.hours.from_now, importance: 3) }
 
-      it "only includes high importance events (>= 7)", vcr: { cassette_name: "proactive_events/importance_filtering" } do
-        context = prompt_service.send(:inject_upcoming_events_context)
+      it "only includes high importance events (>= 7)" do
+        allow(HaDataSync).to receive(:extended_location).and_return(nil)
+        context = context_builder.send(:build_upcoming_events_context)
 
         # Should include importance >= 7
-        expect(context.scan(/\d+ hours/).length).to eq(2) # critical_event and high_event
+        expect(context).to include("Critical Event")
+        expect(context).to include("High Event")
 
-        # Verify it's not just counting - check it includes the high importance ones
-        expect(context).to include("6 hours")  # critical_event
-        expect(context).to include("8 hours")  # high_event
+        # Should exclude importance < 7
+        expect(context).not_to include("Medium Event")
+        expect(context).not_to include("Low Event")
       end
     end
 
     describe "no events scenario" do
-      it "returns nil when no high-priority events exist", vcr: { cassette_name: "proactive_events/no_events_scenario" } do
+      before { allow(HaDataSync).to receive(:extended_location).and_return(nil) }
+
+      it "returns nil when no high-priority events exist" do
         # Only create low-priority events
         create(:event, event_time: 2.hours.from_now, importance: 3)
         create(:event, event_time: 4.hours.from_now, importance: 5)
 
-        context = prompt_service.send(:inject_upcoming_events_context)
+        context = context_builder.send(:build_upcoming_events_context)
         expect(context).to be_nil
       end
 
-      it "handles empty event database gracefully", vcr: { cassette_name: "proactive_events/empty_database" } do
+      it "handles empty event database gracefully" do
         Event.destroy_all
 
-        expect { prompt_service.send(:inject_upcoming_events_context) }.not_to raise_error
-        context = prompt_service.send(:inject_upcoming_events_context)
+        expect { context_builder.send(:build_upcoming_events_context) }.not_to raise_error
+        context = context_builder.send(:build_upcoming_events_context)
         expect(context).to be_nil
       end
     end

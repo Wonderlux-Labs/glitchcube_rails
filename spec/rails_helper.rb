@@ -57,6 +57,9 @@ RSpec.configure do |config|
   # Include FactoryBot methods
   config.include FactoryBot::Syntax::Methods
 
+  # Time travel/freeze helpers (freeze_time, travel_to) available in every spec.
+  config.include ActiveSupport::Testing::TimeHelpers
+
   # RSpec Rails uses metadata to mix in different behaviours to your tests,
   # for example enabling you to call `get` and `post` in request specs. e.g.:
   #

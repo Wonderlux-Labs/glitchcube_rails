@@ -14,12 +14,14 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
   describe '.sync_latest_conversation' do
     context 'when conversation logs exist' do
       let!(:conversation_log) do
+        # ConversationLog no longer has a persona column; the service now reads
+        # persona from metadata (persona/current_persona/active_persona).
         create(:conversation_log,
-               session_id: 'test-session-123',
-               persona: 'buddy',
+               conversation: create(:conversation, session_id: 'test-session-123', persona: 'buddy'),
                user_message: 'Hello Buddy!',
                ai_response: 'Holy shit, hi there! How can I fucking help you?',
                metadata: {
+                 persona: 'buddy',
                  inner_thoughts: 'A new customer! I need to help them!',
                  current_mood: 'excited',
                  continue_conversation: true,
@@ -50,12 +52,13 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
 
   describe '#sync_conversation' do
     let(:conversation_log) do
+      # ConversationLog no longer has a persona column; persona is read from metadata.
       create(:conversation_log,
-             session_id: 'test-session-456',
-             persona: 'jax',
+             conversation: create(:conversation, session_id: 'test-session-456', persona: 'jax'),
              user_message: 'Play some music',
              ai_response: 'What kind of music? None of that electronic bullshit!',
              metadata: {
+               persona: 'jax',
                current_mood: 'grumpy',
                pressing_questions: 'What constitutes real music?',
                goal_progress: 'Convert humans to real music: 0/1'
@@ -77,8 +80,8 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
         expect(attributes[:narrative_metadata][:pressing_questions]).to eq('What constitutes real music?')
         expect(attributes[:narrative_metadata][:goal_progress]).to eq('Convert humans to real music: 0/1')
 
-        # Check tool results
-        expect(attributes[:tool_results][:music_tool][:track]).to eq('Led Zeppelin - Stairway to Heaven')
+        # Check tool results (parsed from JSON, so string keys)
+        expect(attributes[:tool_results]['music_tool']['track']).to eq('Led Zeppelin - Stairway to Heaven')
 
         # Check interaction context
         expect(attributes[:interaction_context][:total_messages]).to eq(1)

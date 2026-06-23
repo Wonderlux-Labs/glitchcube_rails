@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: post
-    uri: https://openrouter.helicone.ai/api/v1/chat/completions
+    uri: https://openrouter.ai/api/v1/chat/completions
     body:
       encoding: UTF-8
       string: '{"messages":[{"role":"system","content":"You are a technical tool execution
@@ -52,7 +52,12 @@ http_interactions:
         to speak aloud"},"display_text":{"type":"string","description":"Optional text
         to display on Awtrix matrix (if different from spoken message)"},"volume":{"type":"number","description":"Volume
         level for announcement (0-100)","minimum":0,"maximum":100},"voice":{"type":"string","description":"Voice
-        to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"mode_control","description":"Control
+        to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"rag_search","description":"Search
+        through past conversations, events, and people using RAG (semantic search)","parameters":{"type":"object","properties":{"query":{"type":"string","description":"What
+        to search for (will be semantically matched against summaries, events, and
+        people)"},"type":{"type":"string","description":"What type of data to search
+        (default: all)","enum":["all","summaries","events","people"]},"limit":{"type":"integer","description":"Maximum
+        number of results to return, 1-10 (default: 5)"}},"required":["query"]}}},{"type":"function","function":{"name":"mode_control","description":"Control
         special operational modes of the Cube (emergency, stealth, theme song)","parameters":{"type":"object","properties":{"mode":{"type":"string","description":"Mode
         to control","enum":["emergency_mode","stealth_mode","play_theme_song"]},"action":{"type":"string","description":"Action
         to perform","enum":["activate","deactivate","toggle"]}},"required":["mode","action"]}}}],"tool_choice":"auto"}'
@@ -62,11 +67,9 @@ http_interactions:
       Content-Type:
       - application/json
       X-Title:
-      - OpenRouter Ruby Client
+      - GlitchCube
       Http-Referer:
-      - https://github.com/OlympiaAI/open_router
-      Helicone-Auth:
-      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
+      - https://glitchcube.com
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Accept:
@@ -75,27 +78,21 @@ http_interactions:
       - Ruby
   response:
     status:
-      code: 200
-      message: OK
+      code: 401
+      message: Unauthorized
     headers:
       Date:
-      - Thu, 21 Aug 2025 10:56:42 GMT
+      - Tue, 23 Jun 2026 05:15:59 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
       - chunked
       Connection:
       - keep-alive
-      Cf-Ray:
-      - 97299ae97effa1fb-MSP
       Access-Control-Allow-Origin:
       - "*"
-      Vary:
-      - Accept-Encoding
-      Helicone-Id:
-      - 373f2acf-d799-4aa3-9f49-39cc39445e1e
-      Helicone-Status:
-      - success
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
       Permissions-Policy:
       - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
         "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
@@ -105,15 +102,10 @@ http_interactions:
       - nosniff
       Server:
       - cloudflare
+      Cf-Ray:
+      - a10104a3d87005d1-IAD
     body:
-      encoding: ASCII-8BIT
-      string: "\n         \n\n         \n\n         \n\n         \n\n         \n\n
-        \        \n{\"id\":\"gen-1755773800-PCo2SMgBAbVPApTGDaYY\",\"provider\":\"OpenAI\",\"model\":\"openai/gpt-4o-mini\",\"object\":\"chat.completion\",\"created\":1755773800,\"choices\":[{\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"refusal\":null,\"reasoning\":null,\"tool_calls\":[{\"index\":0,\"id\":\"call_WTYPBX9JCCy7ytI3kwTUfYkD\",\"type\":\"function\",\"function\":{\"name\":\"set_light_state\",\"arguments\":\"{\\\"entity_id\\\":
-        \\\"light.cube_light_top\\\", \\\"state\\\": \\\"on\\\", \\\"brightness\\\":
-        75, \\\"rgb_color\\\": \\\"255,0,255\\\"}\"}},{\"index\":1,\"id\":\"call_3VELLLcHSPT67SidEJEazU8K\",\"type\":\"function\",\"function\":{\"name\":\"set_light_state\",\"arguments\":\"{\\\"entity_id\\\":
-        \\\"light.cube_inner\\\", \\\"state\\\": \\\"on\\\", \\\"brightness\\\": 75,
-        \\\"rgb_color\\\": \\\"255,0,255\\\"}\"}},{\"index\":2,\"id\":\"call_xElTknk4qhXxWqKlXKn8hRM3\",\"type\":\"function\",\"function\":{\"name\":\"set_light_state\",\"arguments\":\"{\\\"entity_id\\\":
-        \\\"light.cube_voice_ring\\\", \\\"state\\\": \\\"on\\\", \\\"brightness\\\":
-        75, \\\"rgb_color\\\": \\\"255,0,255\\\"}\"}}]}}],\"system_fingerprint\":\"fp_560af6e559\",\"usage\":{\"prompt_tokens\":1057,\"completion_tokens\":126,\"total_tokens\":1183,\"prompt_tokens_details\":{\"cached_tokens\":0,\"audio_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}"
-  recorded_at: Thu, 21 Aug 2025 10:56:42 GMT
-recorded_with: VCR 6.3.1
+      encoding: UTF-8
+      string: '{"error":{"message":"User not found.","code":401}}'
+  recorded_at: Tue, 23 Jun 2026 05:16:00 GMT
+recorded_with: VCR 6.4.0

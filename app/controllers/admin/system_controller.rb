@@ -66,12 +66,12 @@ class Admin::SystemController < Admin::BaseController
   def get_resource_usage
     {
       database_size: get_database_size,
-      active_conversations: Conversation.where(status: 'active').count rescue 0,
-      total_memories: ConversationMemory.count rescue 0,
-      total_summaries: Summary.count rescue 0,
-      total_people: Person.count rescue 0,
-      total_events: Event.count rescue 0,
-      total_facts: Fact.count rescue 0
+      active_conversations: (Conversation.where(status: 'active').count rescue 0),
+      total_memories: (ConversationMemory.count rescue 0),
+      total_summaries: (Summary.count rescue 0),
+      total_people: (Person.count rescue 0),
+      total_events: (Event.count rescue 0),
+      total_facts: (Fact.count rescue 0)
     }
   end
 

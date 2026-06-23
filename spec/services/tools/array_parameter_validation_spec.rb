@@ -43,7 +43,7 @@ RSpec.describe "Tool array parameter validation", type: :service do
         # Make a minimal API call to validate the tool definition
         client.complete(
           [ { role: "user", content: "Turn on lights with red color" } ],
-          model: "openai/gpt-5-mini",
+          model: "google/gemini-3.1-flash-lite",
           tools: [ tool_definition ],
           tool_choice: "auto",
           extras: { temperature: 0.1, max_tokens: 50 }
