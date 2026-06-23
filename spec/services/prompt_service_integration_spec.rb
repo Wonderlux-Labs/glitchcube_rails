@@ -211,13 +211,10 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
     end
 
     it "correctly chains Event scopes without N+1 queries" do
-      # Test that complex scoping doesn't cause performance issues
+      # The whole scope chain should resolve in a single SQL query.
       expect {
         Event.upcoming.high_importance.within_hours(24).by_location("Center Camp").limit(5).to_a
-      }.not_to exceed_query_limit(5) # Should be efficient
-    rescue NameError
-      # Skip if query counting gem not available
-      skip "Query counting not available"
+      }.not_to exceed_query_limit(1)
     end
   end
 
