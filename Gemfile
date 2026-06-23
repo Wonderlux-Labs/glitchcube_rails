@@ -1,11 +1,10 @@
 source "https://rubygems.org"
 ruby "3.3.9"
 
-gem "rails", "~> 8.0.2", ">= 8.0.2.1"
+gem "rails"
 gem "propshaft"
 gem "pg"
-gem "puma", ">= 5.0"
-gem "jbuilder"
+gem "puma"
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
@@ -36,17 +35,15 @@ group :development do
 end
 
 group :test do
-  gem "capybara"
-  gem "selenium-webdriver"
   gem "shoulda-matchers"
   gem "vcr"
   gem "webmock"
 end
 
-gem "dotenv-rails", "~> 3.1"
-gem "open_router_enhanced", git: "https://www.github.com/estiens/open_router", branch: "dev"
+gem "dotenv-rails"
+gem "open_router_enhanced", git: "https://www.github.com/estiens/open_router", branch: "main"
 gem "geocoder"
 
-gem "langchainrb_rails", "~> 0.1.12"
+gem "langchainrb_rails"
 gem "neighbor"
 gem "ruby-openai"
