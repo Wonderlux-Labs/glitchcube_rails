@@ -249,21 +249,6 @@ class Tools::Registry
       end
     end
 
-    # Get tools for two-tier mode (narrative LLM gets no tools - uses structured output)
-    def tools_for_two_tier_mode(persona)
-      []
-    end
-
-    # Get tool definitions for two-tier mode (technical LLM needs actual tools)
-    def tool_definitions_for_two_tier_mode(persona)
-      tool_definitions_for_persona(persona)
-    end
-
-    # Check if two-tier mode is enabled
-    def two_tier_mode_enabled?
-      Rails.configuration.try(:two_tier_tools_enabled) || false
-    end
-
     # Refresh entity cache (call when entities might have changed)
     def refresh_entity_cache!
       @cube_light_entities = nil

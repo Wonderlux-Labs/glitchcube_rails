@@ -24,7 +24,6 @@ Rails.application.configure do
   config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "google/gemini-3.1-flash-lite"
   config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "google/gemini-3.1-flash-lite"
   config.fallback_models = [ "google/gemini-3.1-flash-lite" ]
-  config.two_tier_tools_enabled = ENV["TWO_TIER_TOOLS"] == "true"
   # Orchestrator feature flag removed - always use ConversationNewOrchestrator
   # config.use_new_orchestrator = true
 end

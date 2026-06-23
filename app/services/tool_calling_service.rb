@@ -67,7 +67,7 @@ class ToolCallingService
 
     LlmService.call_with_tools(
       messages: prompt,
-      tools: Tools::Registry.tool_definitions_for_two_tier_mode(persona), # Only persona-specific tools
+      tools: Tools::Registry.tool_definitions_for_persona(persona), # Only persona-specific tools
       model: model,
       temperature: 0.1 # Low temperature for precise technical execution
     )
