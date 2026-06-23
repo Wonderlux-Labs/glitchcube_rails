@@ -110,6 +110,9 @@ Reordered (2026-06-22) around three operating criteria: **(1) raise the safety n
 | 2026-06-22 | **Test baseline triaged 280 failures → 0** (922 ex, 130 pending) via 6 bounded agents; fixed real bugs (RagSearch tool def, CubeData autoload); deleted ~45 dead specs + ~23 stale LLM cassettes (re-record TODOs). | full suite ×3, 0 failures |
 | 2026-06-22 | **A1 harness:** `FakeHomeAssistant` + first end-to-end orchestrator scenario (golden-master happy path), no hardware/network. | scenario spec green |
 | 2026-06-23 | **Gem refresh:** unpinned + `bundle update` → Rails 8.1.3, neighbor 1.2, solid_queue 1.4, etc. Removed unused gems (jbuilder, capybara, selenium-webdriver). Added do-it-right philosophy to CLAUDE.md. | 923 ex, 0 failures; zeitwerk clean |
+| 2026-06-23 | **Pending backlog cleared to zero.** Fixed real bugs (GPS context merge, gps_spoofing test-env, blank perf session); added `exceed_query_limit` matcher (real N+1 test); backfilled specs for `FakeHomeAssistant` (54), `EnvironmentDirectorJob` (12), `WorldStateUpdaters::Registry` (16); deleted old-architecture/drifted/speculative specs (real_e2e two-tier, perf-mode wall-clock e2e, action-exec fan-out, GPS integration, cache/nil/coercion guards, flaky ObjectSpace). | **933 ex, 0 failures, 0 pending**; rubocop clean |
+| 2026-06-23 | **Finished deprecating the two-tier path:** deleted `Tools::HomeAssistant::CallAgent` + `*_two_tier_mode` registry methods + `TWO_TIER_TOOLS` config; `ToolCallingService` calls `tool_definitions_for_persona`. | suite green |
+| 2026-06-23 | **Docs cleanup (E2 start):** updated CLAUDE.md (models, brain→translator flow, gem branch); deleted `to_be_implemented/` (orphaned dupes of `app/services/memory/`), `docs/deprecated/{README,HARNESS_RESULTS,GLITCHCUBE_IMPROVEMENTS_PLAN}`, `docs/toolcall_implementation_plan.md`, `.aider` chat log; promoted `PRODUCTION_DEPLOYMENT`/`USAGE_EXAMPLES` out of `deprecated/`; bannered legacy harness README. | — |
 
 ---
 
@@ -118,11 +121,11 @@ Reordered (2026-06-22) around three operating criteria: **(1) raise the safety n
 The full-suite triage (gem switch exposed ~280 failures) was spec-only, but it surfaced genuine app bugs. Fixed inline where they blocked the refactor; the rest are tracked here.
 
 - **FIXED — `Tools::Query::RagSearch.definition` returned a bare `Hash`** instead of an `OpenRouter::Tool` (every sibling returns a Tool). `LlmService.call_with_tools` does `tools.map(&:name)`, so any tool list including rag_search crashed — breaking `ToolCallingService` (the translator) in production-equivalent paths. Converted to `OpenRouter::Tool.define`. Verified all registry tools are now homogeneous.
-- **OPEN (HIGH) — `CubeData` model never autoloads.** `config/initializers/cube_data_sensors.rb` defines the `CubeData` constant before Zeitwerk can load `app/models/cube_data.rb`, so the model's methods (`read_sensor`/`write_sensor`/`ha_service`/`available?`) are missing at runtime — only the initializer's `sensor_id`/`all_sensors` exist. Specs work around it with an explicit `require`. Production `CubeData.read_sensor` likely breaks. Needs an initializer/loader fix.
-- **OPEN (MED) — `Gps::GpsTrackingService#current_location`** `return`s the random-landmark fallback *inside* the `Rails.cache.fetch` block, exiting the method and skipping the `LocationContextService` merge — so the fallback path never gets `zone`/`address`/`landmarks` (only the live-GPS path does).
-- **OPEN (LOW) — `Prompts::ContextBuilder#format_time_duration`** lost input coercion (nil → `NoMethodError`, negatives not clamped, numeric strings not converted); currently swallowed by a `rescue` in `build_goal_context`.
-- **OPEN (LOW) — `PerformanceModeService`**: `get_active_performance` doesn't rescue cache-read failures; `start_performance` accepts `session_id: nil` with no presence guard.
-- **OPEN (LOW) — `GlitchCube.gps_spoofing_allowed?`** honors only `development`, not `test`.
+- **OPEN (HIGH) — `CubeData` model never autoloads.** `config/initializers/cube_data_sensors.rb` defines the `CubeData` constant before Zeitwerk can load `app/models/cube_data.rb`, so the model's methods (`read_sensor`/`write_sensor`/`ha_service`/`available?`) are missing at runtime — only the initializer's `sensor_id`/`all_sensors` exist. Specs work around it with an explicit `require`. Production `CubeData.read_sensor` likely breaks. Needs an initializer/loader fix. **Still open — highest-value remaining bug.**
+- **FIXED (2026-06-23) — `Gps::GpsTrackingService#current_location`** the random-landmark fallback `return`ed *inside* the `Rails.cache.fetch` block, skipping the `LocationContextService` merge. The block now yields the value so context always merges.
+- **FIXED (2026-06-23) — `GlitchCube.gps_spoofing_allowed?`** now honors `test?` as well as `development?` (and a dead duplicate `home_camp_coordinates` was removed).
+- **FIXED (2026-06-23) — `CubePerformance` blank session id** (`session_id ||=` kept `""`) → now `session_id.presence || …`.
+- **WONTFIX (2026-06-23, philosophy) — `format_time_duration` coercion** and **`PerformanceModeService` cache-read/write rescue + nil-session guard.** Both call sites of `format_time_duration` already guard `> 0`, and the cache/nil cases are speculative ("let it fail loudly"). Tests asserting the defensive behavior were removed rather than adding guards.
 
 Also notable: `PersonaSwitchService` was gutted (now just ends conversations + sets the HASS persona — no goal handoff / theatrical sequence), and the proactive endpoint moved off the orchestrator to `ProactiveMessageService`. Several specs encoded the old behavior and were deleted.
 
@@ -130,4 +133,24 @@ Also notable: `PersonaSwitchService` was gutted (now just ends conversations + s
 - Streaming TTS depth (stop at B1, or invest in B2) — decide after measuring on-site latency.
 - `EventProfile` storage: flat YAML (assumed) vs DB-backed (admin-editable).
 - Keep `ConversationLog` naming or migrate to `Conversation`/`Message`.
-- Whether to fix the `to_be_implemented/` memory services (wire up) or delete them.
+- ~~Whether to fix the `to_be_implemented/` memory services or delete them~~ → **DELETED (2026-06-23)**; they duplicated `app/services/memory/`. Memory *integration* (wiring memory into the conversation flow) is now tracked in §8 below.
+
+---
+
+## 8. What's next (plan as of 2026-06-23)
+
+Foundation is done: green/fast suite, brain→translator pipeline live, fake harness in place, gems current, docs cleaned. Remaining work, in recommended order:
+
+1. **Fix `CubeData` autoload (HIGH, small).** The one known production-breaking bug left (see §6a). `read_sensor`/`write_sensor` are missing at runtime because the initializer defines the constant before Zeitwerk loads the model. Move the sensor map into the model (or a plain module the initializer requires) so the class loads normally. Add a spec that calls `CubeData.read_sensor` without an explicit `require`.
+
+2. **Finish Phase 2 (LLM pipeline polish).** The fan-out is gone; remaining: (a) drop the legacy `tool_intents` fallback in `ActionExecutor` once nothing emits it, (b) make the brain/translator/summarizer **model roles** explicit in config (today they all default to `gemini-3.1-flash-lite`), (c) trim verbose logging in `LlmService`/`ToolCallingService`. Optional: lightweight tool-call **timing metrics** (the one salvageable idea from the deleted `toolcall_implementation_plan` — only if we actually want latency data on-site; otherwise skip per "no speculative tooling").
+
+3. **Phase 3 — `EventProfile` portability** (most invasive; guard with golden-master). Introduce `EventProfile.current` defaulting to a `burning_man` profile that reproduces today's exact values, then route personas/goals/geo through it incrementally; add a `regional` profile last. Snapshot current prompt/goal output and assert byte-identical after the layer lands. Keep geocoding — make it profile-driven, don't remove it.
+
+4. **Memory integration** (was the core of the deleted `GLITCHCUBE_IMPROVEMENTS_PLAN`). `app/services/memory/` exists but isn't wired into the conversation flow, and `search_memories` from the brain isn't consumed end-to-end. Decide the minimal useful loop: recall relevant memories at prompt-build time + extract/store memories after a turn. Build only what a single event needs — not the full 6-job summarization pipeline that was just deleted.
+
+5. **Phase 4 — HASS component migration** (separate artifact, last/parallel). `_async_handle_message`/`ChatLog`, strip hardcoded values; rebuild a **fast** end-to-end smoke test against a dev HASS instance (the deleted `real_end_to_end`/perf-mode e2e specs should come back here — but driven by an **injectable clock** in `PerformanceModeService` so they don't loop against wall-clock). Streaming TTS only if latency warrants.
+
+6. **E2 cosmetics, anytime.** Reconcile/retire the stale `scripts/*harness*` benchmarks into the `FakeHomeAssistant` scenario harness; write the state-ownership table (`docs/ARCHITECTURE.md`); revisit the `ConversationLog`→`Conversation` rename decision.
+
+**Standing test-quality follow-up:** a real OpenAI embedding call fires during the suite (rag_search path) — gate it behind a cassette/stub so the suite stays offline and fast.

@@ -1,5 +1,14 @@
 # Model Test Harness
 
+> ⚠️ **Legacy (pre-refactor).** These `scripts/*harness*` benchmarks were written for
+> the old two-tier model switching (separate narrative + tool models), which no
+> longer exists — the pipeline is now a single brain LLM + one translator
+> (`ToolCallingService` via `EnvironmentDirectorJob`). For driving scenarios
+> "fakely" against the real orchestrator, prefer the spec-based harness
+> (`FakeHomeAssistant` + `spec/integration/conversation_scenario_spec.rb`). These
+> scripts are kept only for ad-hoc model benchmarking and are slated to be folded
+> into the scenario harness (see REFACTOR_NOTES → "what's next").
+
 A comprehensive testing suite for benchmarking different AI model combinations in the GlitchCube conversational AI system.
 
 ## Quick Start
