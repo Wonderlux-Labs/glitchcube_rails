@@ -15,17 +15,20 @@ class Admin::WorldStateController < Admin::BaseController
 
   def trigger
     service_name = params[:service]
+    service_class = WorldStateUpdaters::Registry.fetch(service_name)
+
+    if service_class.nil?
+      flash[:error] = "❌ Service '#{service_name}' not found"
+      return redirect_to admin_world_state_path
+    end
 
     begin
-      service_class = "WorldStateUpdaters::#{service_name}".constantize
       result = service_class.call
 
       flash[:notice] = "✅ #{service_name} executed successfully"
       if result.is_a?(String)
         flash[:notice] += ": #{result.truncate(100)}"
       end
-    rescue NameError
-      flash[:error] = "❌ Service '#{service_name}' not found"
     rescue StandardError => e
       flash[:error] = "❌ Service failed: #{e.message}"
     end
@@ -62,23 +65,17 @@ class Admin::WorldStateController < Admin::BaseController
   end
 
   def get_available_world_state_services
-    # Scan for available world state services
-    services = []
-
+    # Only services on the trigger allowlist may be invoked from the UI.
     service_dir = Rails.root.join("app", "services", "world_state_updaters")
-    if Dir.exist?(service_dir)
-      Dir.glob("#{service_dir}/*.rb").each do |file|
-        filename = File.basename(file, ".rb")
-        service_name = filename.camelize
-        services << {
-          name: service_name,
-          filename: filename,
-          description: extract_service_description(file)
-        }
-      end
-    end
 
-    services
+    WorldStateUpdaters::Registry.names.map do |service_name|
+      filename = service_name.underscore
+      {
+        name: service_name,
+        filename: filename,
+        description: extract_service_description(service_dir.join("#{filename}.rb"))
+      }
+    end
   end
 
   def extract_service_description(file_path)
