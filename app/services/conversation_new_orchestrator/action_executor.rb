@@ -12,48 +12,18 @@ class ConversationNewOrchestrator::ActionExecutor
   end
 
   def call
-    direct_tool_results = execute_direct_tools
     memory_search_results = execute_memory_searches
-    dispatch_environment_instruction
-
-    all_sync_results = direct_tool_results.merge(memory_search_results)
+    dispatched = dispatch_environment_instruction
 
     ServiceResult.success({
-      sync_results: all_sync_results,
-      delegated_intents: environment_intents
+      sync_results: memory_search_results,
+      dispatched_environment: dispatched
     })
   rescue => e
     ServiceResult.failure("Action execution failed: #{e.message}")
   end
 
   private
-
-  def execute_direct_tools
-    direct_tool_calls = @output.dig("direct_tool_calls") || []
-    return {} if direct_tool_calls.empty?
-
-    results = {}
-    direct_tool_calls.each do |tool_call|
-      tool_name = tool_call["tool_name"]
-      parameters = tool_call["parameters"] || {}
-
-      begin
-        # Convert string keys to symbols for Ruby method calls
-        symbol_params = parameters.transform_keys(&:to_sym)
-
-        # Execute the tool using the registry
-        result = Tools::Registry.execute_tool(tool_name, **symbol_params)
-        results[tool_name] = result
-
-        Rails.logger.info "🔧 Direct tool executed: #{tool_name} - #{result[:success] ? 'SUCCESS' : 'FAILED'}"
-      rescue => e
-        Rails.logger.error "❌ Direct tool execution failed: #{tool_name} - #{e.message}"
-        results[tool_name] = { success: false, error: e.message, tool: tool_name }
-      end
-    end
-
-    results
-  end
 
   def execute_memory_searches
     memory_searches = @output.dig("search_memories") || []
@@ -87,29 +57,18 @@ class ConversationNewOrchestrator::ActionExecutor
     results
   end
 
-  # Brain LLM expresses environment changes either as a single plain-English
-  # `environment_instruction` (preferred) or as a list of `tool_intents`
-  # (legacy). Both collapse to one instruction handed to the single translator.
-  def environment_intents
-    @output.dig("tool_intents") || []
-  end
-
+  # The brain LLM describes every environment change as one plain-English
+  # `environment_instruction` ("turn the lights orange and play heavy metal").
   def environment_instruction
-    explicit = @output.dig("environment_instruction")
-    return explicit if explicit.present?
-
-    intents = environment_intents
-    return nil if intents.blank?
-
-    intents.map { |i| i["intent"] }.compact_blank.join("; ").presence
+    @output.dig("environment_instruction").presence
   end
 
   # Replaces the old per-domain fan-out to Home Assistant conversation agents.
   # All environment changes go through one translator (ToolCallingService) via
-  # EnvironmentDirectorJob — speak first, act async.
+  # EnvironmentDirectorJob — speak first, act async. Returns true if dispatched.
   def dispatch_environment_instruction
     instruction = environment_instruction
-    return if instruction.blank?
+    return false if instruction.blank?
 
     Rails.logger.info "🎬 Dispatching environment instruction: #{instruction}"
 
@@ -120,5 +79,6 @@ class ConversationNewOrchestrator::ActionExecutor
       user_message: @user_message,
       persona: @output.dig("persona")
     )
+    true
   end
 end

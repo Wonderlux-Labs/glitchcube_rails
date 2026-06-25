@@ -8,37 +8,6 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
   let(:user_message) { 'Turn on the lights' }
 
   describe '.call' do
-    context 'with direct tool calls' do
-      let(:llm_response) do
-        {
-          "direct_tool_calls" => [
-            {
-              "tool_name" => "lights.control",
-              "parameters" => { "action" => "turn_on", "entity_id" => "light.living_room" }
-            }
-          ]
-        }
-      end
-
-      before do
-        allow(Tools::Registry).to receive(:execute_tool)
-          .with("lights.control", action: "turn_on", entity_id: "light.living_room")
-          .and_return({ success: true, message: "Light turned on" })
-      end
-
-      it 'executes direct tools and returns results' do
-        result = described_class.call(
-          llm_response: llm_response,
-          session_id: session_id,
-          conversation_id: conversation_id,
-          user_message: user_message
-        )
-
-        expect(result.success?).to be true
-        expect(result.data[:sync_results]).to include("lights.control" => { success: true, message: "Light turned on" })
-      end
-    end
-
     context 'with memory searches' do
       let(:llm_response) do
         {
@@ -70,20 +39,21 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
       end
     end
 
-    context 'with tool intents for delegation' do
+    context 'with an environment instruction for delegation' do
       let(:llm_response) do
-        {
-          "tool_intents" => [
-            {
-              "tool" => "home_assistant.call_service",
-              "intent" => "turn_on_lights",
-              "parameters" => { "entity_id" => "light.kitchen" }
-            }
-          ]
-        }
+        { "environment_instruction" => "turn the kitchen lights orange" }
       end
 
-      it 'delegates tool intents and marks them for async execution' do
+      it 'dispatches the instruction to EnvironmentDirectorJob and signals dispatched_environment' do
+        expect(EnvironmentDirectorJob).to receive(:perform_later).with(
+          hash_including(
+            instruction: "turn the kitchen lights orange",
+            session_id: session_id,
+            conversation_id: conversation_id,
+            user_message: user_message
+          )
+        )
+
         result = described_class.call(
           llm_response: llm_response,
           session_id: session_id,
@@ -92,29 +62,16 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
         )
 
         expect(result.success?).to be true
-        expect(result.data[:delegated_intents]).to eq(llm_response["tool_intents"])
+        expect(result.data[:dispatched_environment]).to be true
       end
     end
 
-    context 'when tool execution fails' do
-      let(:llm_response) do
-        {
-          "direct_tool_calls" => [
-            {
-              "tool_name" => "broken.tool",
-              "parameters" => {}
-            }
-          ]
-        }
-      end
+    context 'with a blank environment instruction' do
+      let(:llm_response) { { "environment_instruction" => "" } }
 
-      before do
-        allow(Tools::Registry).to receive(:execute_tool)
-          .with("broken.tool")
-          .and_raise(StandardError.new("Tool is broken"))
-      end
+      it 'does not dispatch and returns dispatched_environment: false' do
+        expect(EnvironmentDirectorJob).not_to receive(:perform_later)
 
-      it 'captures tool failures gracefully' do
         result = described_class.call(
           llm_response: llm_response,
           session_id: session_id,
@@ -123,10 +80,7 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
         )
 
         expect(result.success?).to be true
-        expect(result.data[:sync_results]["broken.tool"]).to include(
-          success: false,
-          error: "Tool is broken"
-        )
+        expect(result.data[:dispatched_environment]).to be false
       end
     end
 
@@ -143,7 +97,7 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
 
         expect(result.success?).to be true
         expect(result.data[:sync_results]).to eq({})
-        expect(result.data[:delegated_intents]).to eq([])
+        expect(result.data[:dispatched_environment]).to be false
       end
     end
   end

@@ -42,7 +42,7 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
         sync_results: {
           'lights.control' => { success: true, message: 'Light turned on' }
         },
-        delegated_intents: []
+        dispatched_environment: false
       }
     }
   end
@@ -81,7 +81,7 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
           session_id,
           'I have turned on the lights.',
           false, # continue_conversation
-          hash_including(:sync_tools, :async_tools)
+          hash_including(:sync_tools, :environment_dispatched)
         )
       end
 
@@ -120,14 +120,12 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
       end
     end
 
-    context 'with async tools pending' do
+    context 'with environment instruction dispatched' do
       before do
-        state[:action_results][:delegated_intents] = [
-          { 'tool' => 'async.tool', 'parameters' => {} }
-        ]
+        state[:action_results][:dispatched_environment] = true
       end
 
-      it 'keeps conversation active due to pending async tools' do
+      it 'keeps conversation active while environment job runs' do
         allow(conversation).to receive(:end!)
 
         described_class.call(state: state, user_message: user_message)
@@ -135,16 +133,12 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
         expect(conversation).not_to have_received(:end!)
       end
 
-      it 'includes async tools in success entities' do
+      it 'sets continue_conversation true in the HASS response' do
         described_class.call(state: state, user_message: user_message)
 
         expect(ConversationResponse).to have_received(:action_done).with(
           anything,
-          hash_including(
-            success_entities: array_including(
-              hash_including(entity_id: 'async.tool', state: 'pending')
-            )
-          )
+          hash_including(continue_conversation: true)
         )
       end
     end
@@ -194,6 +188,31 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
             )
           )
         )
+      end
+    end
+
+    context 'with brain-flagged memories' do
+      before do
+        state[:ai_response][:memories] = [
+          { 'summary' => 'User is named Dot', 'memory_type' => 'fact', 'importance' => 8 }
+        ]
+      end
+
+      it 'enqueues MemoryStoreJob to persist them async' do
+        expect(MemoryStoreJob).to receive(:perform_later).with(
+          session_id: session_id,
+          memories: state[:ai_response][:memories]
+        )
+
+        described_class.call(state: state, user_message: user_message)
+      end
+    end
+
+    context 'without flagged memories' do
+      it 'does not enqueue MemoryStoreJob' do
+        expect(MemoryStoreJob).not_to receive(:perform_later)
+
+        described_class.call(state: state, user_message: user_message)
       end
     end
 

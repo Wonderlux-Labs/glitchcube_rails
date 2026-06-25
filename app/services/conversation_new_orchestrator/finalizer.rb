@@ -12,6 +12,7 @@ class ConversationNewOrchestrator::Finalizer
   def call
     tool_analysis = analyze_tools
     store_conversation_log(tool_analysis)
+    store_flagged_memories
     end_conversation_if_needed(tool_analysis)
 
     hass_response = format_for_hass(tool_analysis)
@@ -32,11 +33,11 @@ class ConversationNewOrchestrator::Finalizer
 
   def analyze_tools
     sync_results = @state.dig(:action_results, :sync_results) || {}
-    delegated_intents = @state.dig(:action_results, :delegated_intents) || []
+    environment_dispatched = @state.dig(:action_results, :dispatched_environment) || false
 
     {
       sync_tools: sync_results.keys,
-      async_tools: delegated_intents.map { |intent| intent["tool"] },
+      environment_dispatched: environment_dispatched,
       query_tools: sync_results.select { |k, v| k.include?("memory_search") }.keys,
       action_tools: sync_results.keys.select { |tool| tool != "rag_search" }
     }
@@ -51,7 +52,7 @@ class ConversationNewOrchestrator::Finalizer
 
     metadata = {
       sync_tools: tool_analysis[:sync_tools],
-      async_tools: tool_analysis[:async_tools],
+      environment_dispatched: tool_analysis[:environment_dispatched],
       response_id: @state[:ai_response][:id]
     }
 
@@ -62,7 +63,8 @@ class ConversationNewOrchestrator::Finalizer
         current_mood: @state[:ai_response][:current_mood],
         pressing_questions: @state[:ai_response][:pressing_questions],
         continue_conversation_from_llm: @state[:ai_response][:continue_conversation],
-        goal_progress: @state[:ai_response][:goal_progress]
+        goal_progress: @state[:ai_response][:goal_progress],
+        environment_instruction: @state[:ai_response][:environment_instruction]
       })
     end
 
@@ -83,8 +85,17 @@ class ConversationNewOrchestrator::Finalizer
     end
   end
 
+  # Persist any facts the brain flagged worth remembering. Async so the embedding
+  # write never delays the spoken response (speak-first, act-async).
+  def store_flagged_memories
+    memories = @state.dig(:ai_response, :memories) || []
+    return if memories.empty?
+
+    MemoryStoreJob.perform_later(session_id: @state[:session_id], memories: memories)
+  end
+
   def continue_conversation?(tool_analysis)
-    @state.dig(:ai_response, :continue_conversation) || tool_analysis[:async_tools].any?
+    @state.dig(:ai_response, :continue_conversation) || tool_analysis[:environment_dispatched]
   end
 
   def end_conversation_if_needed(tool_analysis)
@@ -107,15 +118,12 @@ class ConversationNewOrchestrator::Finalizer
   end
 
   def format_for_hass(tool_analysis)
-    # Determine response type based on tool usage
-    response_type = tool_analysis[:async_tools].any? ? "action_done" : "query_answer"
+    # No real entity names available — environment instruction is opaque plain-English
+    success_entities = []
+    targets = []
 
-    # Build entity lists for tools
-    success_entities = build_success_entities(tool_analysis)
-    targets = build_targets(tool_analysis)
-
-    # Use LLM's continue_conversation OR force true if tools pending
-    continue_conversation = @state[:ai_response][:continue_conversation] || tool_analysis[:async_tools].any?
+    # Use LLM's continue_conversation OR force true if environment job was dispatched
+    continue_conversation = @state[:ai_response][:continue_conversation] || tool_analysis[:environment_dispatched]
 
     # Create proper ConversationResponse
     conversation_response = ConversationResponse.action_done(
@@ -129,7 +137,7 @@ class ConversationNewOrchestrator::Finalizer
     # Get base response and add end_conversation field
     response = conversation_response.to_home_assistant_response
     response[:end_conversation] = !continue_conversation  # Inverse of continue
-    
+
     # Add hardcoded 3 second delay when continuing conversation
     if continue_conversation
       response[:continue_delay] = 3
@@ -138,32 +146,5 @@ class ConversationNewOrchestrator::Finalizer
     Rails.logger.info "📤 Response: continue_conversation=#{continue_conversation}, end_conversation=#{!continue_conversation}, continue_delay=#{response[:continue_delay]}"
 
     response
-  end
-
-  def build_success_entities(tool_analysis)
-    # For async tools, assume they will succeed (they execute in background)
-    tool_analysis[:async_tools].map do |tool_name|
-      {
-        entity_id: tool_name,
-        name: tool_name&.humanize,
-        state: "pending" # Will be updated when async job completes
-      }
-    end
-  end
-
-  def build_targets(tool_analysis)
-    # Extract entity targets from all tool calls
-    all_tools = (tool_analysis[:sync_tools] + tool_analysis[:async_tools])
-
-    all_tools.map do |tool_name|
-      # Skip if it's just a string (tool name without arguments)
-      next if tool_name.blank?
-
-      {
-        entity_id: tool_name,
-        name: tool_name.humanize,
-        domain: tool_name.split(".").first
-      }
-    end.compact
   end
 end

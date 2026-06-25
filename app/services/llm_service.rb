@@ -13,11 +13,9 @@ class LlmService
       # In test env, skip pool sampling so VCR cassettes stay stable
       model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.default_ai_model
 
-      Rails.logger.info "🤖 LLM call with tools: #{model_to_use}"
       tool_names = tools.map { |t| t.is_a?(Hash) ? (t.dig(:function, :name) || t.dig("function", "name")) : t.name }
-      Rails.logger.info "🔧 Tools available: #{tools.length} - #{tool_names.join(', ')}"
-      Rails.logger.info "📝 Last message: #{messages.last&.dig(:content)&.first(200)}..."
-      Rails.logger.debug "📚 Full messages: #{messages.map { |m| "#{m[:role]}: #{m[:content]&.first(100)}..." }.join(' | ')}"
+      Rails.logger.info "🤖 LLM call with tools: #{model_to_use} (#{tools.length} tools)"
+      Rails.logger.debug { "   tools: #{tool_names.join(', ')} | last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
         # Prepare extras with OpenRouter-specific parameters
@@ -28,25 +26,6 @@ class LlmService
 
         client = OpenRouter::Client.new
 
-        # Log the full request being sent
-        Rails.logger.info "🚀 OpenRouter Request:"
-        Rails.logger.info "   Model: #{model_to_use}"
-        Rails.logger.info "   Tool choice: #{tools.any? ? 'auto' : nil}"
-        Rails.logger.info "   Extras: #{extras.inspect}"
-        Rails.logger.info "   Tools: #{tools.length} tools - #{tool_names.join(', ')}"
-        Rails.logger.info "📋 FULL REQUEST DETAILS:"
-        Rails.logger.info "   Messages (#{messages.length}):"
-        messages.each_with_index do |msg, i|
-          Rails.logger.info "     [#{i+1}] #{msg[:role]}: #{msg[:content]&.first(500)}#{'...' if msg[:content]&.length.to_i > 500}"
-        end
-        if tools.any?
-          Rails.logger.info "   Tool Definitions:"
-          tools.each_with_index do |tool, i|
-            Rails.logger.info "     [#{i+1}] #{tool.name}: #{tool.description}"
-            Rails.logger.info "         Parameters: #{tool.parameters.inspect}"
-          end
-        end
-
         response = client.complete(
           messages,
           model: model_to_use,
@@ -55,30 +34,16 @@ class LlmService
           extras: extras
         )
 
-        # Log the full response received
-        Rails.logger.info "📥 OpenRouter Response:"
-        Rails.logger.info "   Content: #{response.content&.first(500)}#{'...' if response.content&.length.to_i > 500}"
-        Rails.logger.info "   Model: #{response.model}"
-        Rails.logger.info "   Usage: #{response.usage}"
-        Rails.logger.info "   Tool calls: #{response.tool_calls&.length || 0}"
+        tool_call_count = response.tool_calls&.length || 0
+        Rails.logger.info "✅ LLM response: #{response.model} | #{tool_call_count} tool calls | usage=#{response.usage}"
+        Rails.logger.debug { "   content: #{response.content&.first(300)}" }
         if response.tool_calls&.any?
           response.tool_calls.each_with_index do |tc, i|
             begin
-              Rails.logger.info "     [#{i+1}] #{tc.name}: #{tc.arguments}"
+              Rails.logger.debug { "   tool[#{i + 1}] #{tc.name}: #{tc.arguments}" }
             rescue OpenRouter::ToolCallError => e
-              Rails.logger.warn "     [#{i+1}] #{tc.name}: MALFORMED ARGUMENTS - #{e.message}"
+              Rails.logger.warn "⚠️  tool[#{i + 1}] #{tc.name}: MALFORMED ARGUMENTS - #{e.message}"
             end
-          end
-        end
-        Rails.logger.info "📄 FULL RAW RESPONSE:"
-        Rails.logger.info "#{JSON.pretty_generate(response.raw_response)}"
-
-        Rails.logger.info "✅ LLM response received: #{response.content&.first(100)}..."
-
-        if response.has_tool_calls?
-          Rails.logger.info "🔧 Tool calls requested: #{response.tool_calls.map(&:name).join(', ')}"
-          response.tool_calls.each_with_index do |tc, i|
-            Rails.logger.debug "   Tool #{i+1}: #{tc.name} with args: #{tc.arguments}"
           end
         end
 
@@ -86,27 +51,13 @@ class LlmService
         response
 
       rescue Net::ReadTimeout, Timeout::Error => e
-
-        # ====================================================================
-        # TIMEOUT: LLM tool call timed out - trying faster models
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "⏰ TIMEOUT: LLM tool call timed out with #{model_to_use} (45s limit)"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.warn "⏰ LLM tool call timed out with #{model_to_use} (#{e.class}); trying fast models"
 
         # Try faster models for tool calls on timeout
         fast_models = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ]
-        Rails.logger.warn "🚀 Trying #{fast_models.length} fast models for tool call timeout..."
 
         fast_models.each do |fast_model|
           begin
-            Rails.logger.info "⚡ Attempting fast model: #{fast_model}"
-
             client = OpenRouter::Client.new
             response = client.complete(
               messages,
@@ -116,9 +67,8 @@ class LlmService
               extras: extras
             )
 
-            Rails.logger.info "✅ SUCCESS: Fast model #{fast_model} worked for tool call after timeout!"
+            Rails.logger.info "✅ Fast model #{fast_model} recovered the tool call after timeout"
             return response
-
           rescue => fallback_error
             Rails.logger.warn "❌ Fast model #{fast_model} failed: #{fallback_error.message}"
             next
@@ -126,22 +76,18 @@ class LlmService
         end
 
         Rails.logger.error "💥 All fast models failed for tool call timeout"
+        OpenStruct.new(
+          content: "I'm having trouble thinking right now. Please try again.",
+          tool_calls: [],
+          has_tool_calls?: false,
+          usage: { prompt_tokens: 0, completion_tokens: 0 },
+          model: model_to_use,
+          error: "All models timed out"
+        )
 
       rescue StandardError => e
-
-        # ====================================================================
-        # ERROR: LLM tool call failed
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "❌ ERROR: LLM tool call failed with #{model_to_use}"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "   Details: #{e.inspect}"
-        Rails.logger.error "   Backtrace: #{e.backtrace.first(5).join("\n")}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.error "❌ LLM tool call failed with #{model_to_use}: #{e.class} - #{e.message}"
+        Rails.logger.debug { e.backtrace.first(5).join("\n") }
 
         # Return error response that mimics OpenRouter::Response interface
         OpenStruct.new(
@@ -161,10 +107,8 @@ class LlmService
       # In test env, skip pool sampling so VCR cassettes stay stable
       model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.default_ai_model
 
-      Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
-      Rails.logger.info "📊 Response format: #{response_format.name}"
-      Rails.logger.info "📝 Last message: #{messages.last&.dig(:content)&.first(200)}..."
-      Rails.logger.debug "📚 Full messages: #{messages.map { |m| "#{m[:role]}: #{m[:content]&.first(100)}..." }.join(' | ')}"
+      Rails.logger.info "🤖 LLM structured-output call: #{model_to_use} (#{response_format.name})"
+      Rails.logger.debug { "   last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
         # Prepare extras with OpenRouter-specific parameters
@@ -175,12 +119,6 @@ class LlmService
 
         client = OpenRouter::Client.new
 
-        # Log the full request being sent
-        Rails.logger.info "🚀 OpenRouter Structured Output Request:"
-        Rails.logger.info "   Model: #{model_to_use}"
-        Rails.logger.info "   Response format: #{response_format.name}"
-        Rails.logger.info "   Extras: #{extras.inspect}"
-
         response = client.complete(
           messages,
           model: model_to_use,
@@ -188,106 +126,55 @@ class LlmService
           extras: extras
         )
 
-        Rails.logger.info "📥 OpenRouter Response:"
-        Rails.logger.info "   Content: #{response.content&.truncate(200)}"
-        Rails.logger.info "   Model: #{response.model}"
-        Rails.logger.info "   Usage: #{response.usage}"
-        Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
+        Rails.logger.info "✅ LLM response: #{response.model} | structured=#{response.structured_output.present?} | usage=#{response.usage}"
+        Rails.logger.debug { "   content: #{response.content&.truncate(300)}" }
 
         response
 
       rescue Net::ReadTimeout, Timeout::Error => e
-
-        # ====================================================================
-        # TIMEOUT: LLM call timed out - trying faster fallback models
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "⏰ TIMEOUT: LLM call timed out with #{model_to_use} (45s limit)"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "   This prevents 151+ second delays like we saw before"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.warn "⏰ LLM call timed out with #{model_to_use} (#{e.class}); trying fast fallback models"
 
         # Try faster fallback models for timeouts
         fast_fallback_models = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ]
-        Rails.logger.warn "🚀 Trying #{fast_fallback_models.length} fast fallback models for timeout..."
 
         fast_fallback_models.each do |fallback_model|
           begin
-            Rails.logger.info "⚡ Attempting fast fallback model: #{fallback_model}"
-
             response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
-
-            Rails.logger.info ""
-            Rails.logger.info "=" * 70
-            Rails.logger.info "✅ SUCCESS: Fast fallback model #{fallback_model} worked after timeout!"
-            Rails.logger.info "=" * 70
-            Rails.logger.info ""
-
+            Rails.logger.info "✅ Fast fallback model #{fallback_model} recovered after timeout"
             return response
-
           rescue => fallback_error
             Rails.logger.warn "❌ Fast fallback model #{fallback_model} failed: #{fallback_error.message}"
             next
           end
         end
 
-        # If fast fallbacks fail, fall through to regular error handling
         Rails.logger.error "💥 All fast fallback models failed after timeout"
+        OpenStruct.new(
+          content: "I'm having trouble thinking right now. Please try again.",
+          structured_output: nil,
+          usage: { prompt_tokens: 0, completion_tokens: 0 },
+          model: model_to_use,
+          error: "All models timed out"
+        )
 
       rescue StandardError => e
-
-        # ====================================================================
-        # ERROR: LLM structured output call failed - trying fallback models
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "❌ ERROR: LLM structured output call failed with #{model_to_use}"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "   Backtrace: #{e.backtrace.first(3).join("\n")}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.error "❌ LLM structured-output call failed with #{model_to_use}: #{e.class} - #{e.message}"
+        Rails.logger.debug { e.backtrace.first(5).join("\n") }
 
         # Try fallback models
         fallback_models = Rails.configuration.fallback_models || []
-        if fallback_models.any?
-          Rails.logger.warn "🔄 Trying #{fallback_models.length} fallback models..."
-
-          fallback_models.shuffle.each do |fallback_model|
-            begin
-              Rails.logger.info "🔄 Attempting fallback model: #{fallback_model}"
-
-              response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
-
-              Rails.logger.info ""
-              Rails.logger.info "=" * 70
-              Rails.logger.info "✅ SUCCESS: Fallback model #{fallback_model} worked!"
-              Rails.logger.info "=" * 70
-              Rails.logger.info ""
-
-              return response
-
-            rescue => fallback_error
-              Rails.logger.warn "❌ Fallback model #{fallback_model} failed: #{fallback_error.message}"
-              next
-            end
+        fallback_models.shuffle.each do |fallback_model|
+          begin
+            response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
+            Rails.logger.info "✅ Fallback model #{fallback_model} succeeded"
+            return response
+          rescue => fallback_error
+            Rails.logger.warn "❌ Fallback model #{fallback_model} failed: #{fallback_error.message}"
+            next
           end
         end
 
-        # All models failed - return fallback response
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "💥 CRITICAL: All LLM models failed - returning fallback response"
-        Rails.logger.error "   Primary: #{model_to_use} - #{e.message}"
-        Rails.logger.error "   Fallbacks tried: #{fallback_models.join(', ')}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.error "💥 All LLM models failed (#{[ model_to_use, *fallback_models ].join(', ')}) - returning fallback response"
 
         # Return a mock response with error info
         OpenStruct.new(
@@ -304,25 +191,12 @@ class LlmService
 
     def attempt_structured_output_call(messages, response_format, model, extras)
       client = OpenRouter::Client.new
-
-      Rails.logger.info "🚀 OpenRouter Structured Output Request:"
-      Rails.logger.info "   Model: #{model}"
-      Rails.logger.info "   Response format: #{response_format.name}"
-      Rails.logger.info "   Extras: #{extras.inspect}"
-
-      response = client.complete(
+      client.complete(
         messages,
         model: model,
         response_format: response_format,
         extras: extras
       )
-
-      Rails.logger.info "📥 OpenRouter Response:"
-      Rails.logger.info "   Content: #{response.content&.truncate(200)}"
-      Rails.logger.info "   Model: #{response.model}"
-      Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
-
-      response
     end
 
     public
@@ -385,46 +259,6 @@ class LlmService
     end
 
     private
-
-
-    def transform_openrouter_response(response, model)
-      Rails.logger.info "Transforming OpenRouter response: #{response&.inspect}"
-      return nil unless response
-
-      choice = response.dig("choices", 0)
-      message = choice&.dig("message")
-
-      {
-        content: message&.dig("content") || "",
-        tool_calls: extract_tool_calls(message),
-        usage: response["usage"] || { prompt_tokens: 0, completion_tokens: 0 },
-        model: model,
-        finish_reason: choice&.dig("finish_reason"),
-        raw_response: response
-      }
-    end
-
-    def extract_tool_calls(message)
-      return [] unless message&.dig("tool_calls")
-
-      message["tool_calls"].map do |tool_call|
-        OpenStruct.new(
-          name: tool_call.dig("function", "name"),
-          arguments: parse_tool_arguments(tool_call.dig("function", "arguments")),
-          id: tool_call["id"]
-        )
-      end
-    end
-
-    def parse_tool_arguments(arguments_string)
-      Rails.logger.info("tool args are #{arguments_string}")
-      return {} unless arguments_string
-
-      JSON.parse(arguments_string)
-    rescue JSON::ParserError => e
-      Rails.logger.error "Failed to parse tool arguments: #{e.message}"
-      {}
-    end
 
     def build_background_messages(prompt, context)
       # If context includes pre-built messages, use them
