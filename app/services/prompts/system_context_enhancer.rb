@@ -53,21 +53,18 @@ module Prompts
       "Upcoming: #{formatted}"
     end
 
+    # Proactive memory recall: surface recent high-importance memories so the
+    # brain can reference them naturally. This is cheap (no per-turn embedding) —
+    # semantic, query-specific recall is the brain's job via `search_memories`,
+    # whose results surface on the next turn.
     def build_relevant_knowledge_context
       return nil unless @user_message.present?
 
-      snippets = []
+      memories = Memory::MemoryRecallService.get_relevant_memories(limit: 3)
+      return nil if memories.empty?
 
-      # Get relevant summaries only (most useful)
-      # TODO: Re-implement similarity search once vectorsearch methods are confirmed
-      # if defined?(Summary)
-      #   summaries = Summary.similarity_search(@user_message).limit(2)
-      #   summaries.each do |summary|
-      #     snippets << summary.summary_text.truncate(120)
-      #   end
-      # end
-
-      snippets.empty? ? nil : "Related: #{snippets.join(' • ')}"
+      formatted = memories.map { |m| "- #{m.summary}" }.join("\n")
+      "MEMORIES YOU CAN REFERENCE:\n#{formatted}"
     end
 
     def format_time_duration(seconds)

@@ -55,7 +55,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
         context: context_data
       )
 
-      # Skip announcement if determined inappropriate 
+      # Skip announcement if determined inappropriate
       unless result[:should_announce]
         Rails.logger.info "🤫 Skipping proactive announcement (not appropriate)"
         render json: { success: true, skipped: true }
@@ -115,7 +115,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
     persona_id = params[:persona_id] || params[:persona]
     current_goal = params[:current_goal]
     current_mood = params[:current_mood] || "neutral"
-    
+
     unless persona_id
       render json: { success: false, error: "persona_id required" }, status: 400
       return
@@ -132,10 +132,10 @@ class Api::V1::ConversationController < Api::V1::BaseController
 
       # Get system prompt
       system_prompt = get_persona_system_prompt(persona_instance)
-      
+
       # Build context
       context = build_arrival_context(current_goal, current_mood)
-      
+
       # Create arrival prompt
       user_message = "You've just become the active persona! Give a brief 3-second introduction that shows your personality and acknowledges the current situation. Context: #{context}"
 
@@ -148,19 +148,19 @@ class Api::V1::ConversationController < Api::V1::BaseController
       response = LlmService.call_with_structured_output(
         messages: messages,
         response_format: "text",
-        model: Rails.configuration.default_ai_model,
+        model: Rails.configuration.brain_model,
         temperature: 0.9
       )
 
       announcement = response.content || "Hello, I'm #{persona_id}!"
-      
+
       # Get persona voice
       persona_voice = get_persona_voice(persona_id)
-      
+
       # Announce via Home Assistant
       HomeAssistantService.call_service(
         "music_assistant",
-        "announce", 
+        "announce",
         {
           message: announcement,
           voice: persona_voice,
@@ -169,7 +169,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
       )
 
       Rails.logger.info "🎤 #{persona_id} arrival: #{announcement[0..100]}..."
-      
+
       render json: {
         success: true,
         persona_id: persona_id,
@@ -357,17 +357,17 @@ class Api::V1::ConversationController < Api::V1::BaseController
     context_parts = []
     context_parts << "Current mood: #{current_mood}" if current_mood.present?
     context_parts << "Current goal: #{current_goal}" if current_goal.present?
-    
+
     # Get basic environment context
     begin
       current_time = Time.current
       time_str = current_time.strftime("%l:%M %p").strip
       context_parts << "Time: #{time_str}"
-      
+
       hour = current_time.hour
       period = case hour
       when 5..11 then "morning"
-      when 12..16 then "afternoon" 
+      when 12..16 then "afternoon"
       when 17..20 then "evening"
       else "night"
       end
@@ -375,7 +375,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
     rescue
       # Ignore timing errors
     end
-    
+
     context_parts.join(", ")
   end
 end

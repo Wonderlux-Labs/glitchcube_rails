@@ -30,8 +30,9 @@ RSpec.describe ToolCallingService, type: :service do
         # Should not be a complete failure - either success or reasonable attempt
         expect(result).not_to eq("I'm having trouble with that right now.")
 
-        # Verify logs show retry attempts
-        expect(Rails.logger).to have_received(:info).with(/🔄 Tool calling attempt/)
+        # Verify the translator actually ran the intent (per-attempt detail is
+        # now debug-level; the intent log is the stable info-level signal).
+        expect(Rails.logger).to have_received(:info).with(/ToolCallingService executing intent/)
       end
     end
 

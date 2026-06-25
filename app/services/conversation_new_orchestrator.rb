@@ -81,10 +81,10 @@ class ConversationNewOrchestrator
   end
 
   def determine_model_for_conversation
-    # Use model from context, persona preference, or default
+    # Use model from context, persona preference, or the brain role default
     @context[:model] ||
     get_persona_preferred_model ||
-    Rails.configuration.default_ai_model
+    Rails.configuration.brain_model
   end
 
   def get_persona_preferred_model

@@ -62,7 +62,7 @@ class WorldStateUpdaters::NarrativeConversationSyncService
         pressing_questions: extract_metadata_field(metadata, "pressing_questions", "questions"),
         goal_progress: extract_metadata_field(metadata, "goal_progress", "goal"),
         continue_conversation: extract_continue_flag(metadata),
-        tool_intents: extract_tool_intents(metadata)
+        environment_instruction: extract_metadata_field(metadata, "environment_instruction")
       },
       interaction_context: {
         total_messages: ConversationLog.where(session_id: conversation_log.session_id).count,
@@ -117,23 +117,16 @@ class WorldStateUpdaters::NarrativeConversationSyncService
     nil
   end
 
-  def extract_tool_intents(metadata)
-    tool_intents = extract_metadata_field(metadata, "tool_intents", "tool_intent")
-    return tool_intents if tool_intents.is_a?(Array)
-    return [ tool_intents ] if tool_intents.is_a?(String) && tool_intents.present?
-
-    []
-  end
-
   def determine_if_active(metadata)
     continue_flag = extract_continue_flag(metadata)
     return continue_flag unless continue_flag.nil?
 
-    # If no explicit flag, assume active if there are tool intents or pressing questions
-    tool_intents = extract_tool_intents(metadata)
+    # If no explicit flag, assume active if the cube acted on the environment or
+    # still has pressing questions.
+    environment_instruction = extract_metadata_field(metadata, "environment_instruction")
     questions = extract_metadata_field(metadata, "pressing_questions", "questions")
 
-    tool_intents.any? || questions.present?
+    environment_instruction.present? || questions.present?
   end
 
   def sanitize_message(message)

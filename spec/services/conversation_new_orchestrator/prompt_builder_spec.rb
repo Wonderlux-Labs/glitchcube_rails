@@ -51,8 +51,7 @@ RSpec.describe ConversationNewOrchestrator::PromptBuilder do
           "pending_ha_results" => [
             {
               "id" => "result_1",
-              "tool" => "light.turn_on",
-              "tool_intents" => [ { "intent" => "turn on lights" } ],
+              "instruction" => "turn on lights",
               "ha_response" => {
                 "response" => {
                   "data" => {

@@ -113,6 +113,12 @@ Reordered (2026-06-22) around three operating criteria: **(1) raise the safety n
 | 2026-06-23 | **Pending backlog cleared to zero.** Fixed real bugs (GPS context merge, gps_spoofing test-env, blank perf session); added `exceed_query_limit` matcher (real N+1 test); backfilled specs for `FakeHomeAssistant` (54), `EnvironmentDirectorJob` (12), `WorldStateUpdaters::Registry` (16); deleted old-architecture/drifted/speculative specs (real_e2e two-tier, perf-mode wall-clock e2e, action-exec fan-out, GPS integration, cache/nil/coercion guards, flaky ObjectSpace). | **933 ex, 0 failures, 0 pending**; rubocop clean |
 | 2026-06-23 | **Finished deprecating the two-tier path:** deleted `Tools::HomeAssistant::CallAgent` + `*_two_tier_mode` registry methods + `TWO_TIER_TOOLS` config; `ToolCallingService` calls `tool_definitions_for_persona`. | suite green |
 | 2026-06-23 | **Docs cleanup (E2 start):** updated CLAUDE.md (models, brain→translator flow, gem branch); deleted `to_be_implemented/` (orphaned dupes of `app/services/memory/`), `docs/deprecated/{README,HARNESS_RESULTS,GLITCHCUBE_IMPROVEMENTS_PLAN}`, `docs/toolcall_implementation_plan.md`, `.aider` chat log; promoted `PRODUCTION_DEPLOYMENT`/`USAGE_EXAMPLES` out of `deprecated/`; bannered legacy harness README. | — |
+| 2026-06-23 | **Confirmed CubeData autoload fix** (was the last OPEN HIGH bug, §6a). Sensor registry already lives in the model; spec exercises `read_sensor`/`write_sensor` with no manual `require`. | cube_data specs green (37 ex) |
+| 2026-06-23 | **Finished Phase 2 (LLM polish).** Dropped the legacy `tool_intents` field end-to-end (schema, `ActionExecutor` fallback, `ContextualSpeechTriggerService`, `NarrativeConversationSyncService`, persona + base prompt YAML, dead `build_structured_output_instructions`); `delegated_intents` now reflects the dispatched `environment_instruction`. Made model **roles explicit** in config (`brain_model`/`translator_model`/`summarizer_model`); removed the legacy `default_tools_model` fallback; fixed the broken admin `primary_model`/`backup_models` reads. Trimmed `LlmService`/`ToolCallingService` logging (removed the full-raw-response dump + banner noise; details → debug) and deleted the dead `transform_openrouter_response` chain. Deleted orphaned two-tier cassettes. | conversation/LLM specs green (133 ex) |
+| 2026-06-23 | **Memory integration (recall→store loop).** Proactive recall: `SystemContextEnhancer` injects recent high-importance memories each turn (no per-turn embedding). On-demand: brain `search_memories` results now surface to the next turn via `pending_query_results`. Store: brain flags `memories` in the schema → `Finalizer` enqueues `MemoryStoreJob` → `ConversationMemory` (async, clamps untrusted importance/type). | memory specs green |
+| 2026-06-23 | **Phase 4 (in-repo): injectable clock.** `PerformanceModeService` takes a `RealClock`/`FakeClock` (mirrors the HASS `instance=` seam); rebuilt the deleted perf e2e smoke spec driven by virtual time (no wall-clock loop). Found+fixed a 30s-per-example HA-timeout in the job spec (unstubbed `send_conversation_response`). Migrated a `HomeAssistantService.new` caller to `.instance`. HASS **custom-component** migration (Python) deferred — needs a live HASS to verify. | perf specs green + fast (job spec 157s → 0.5s) |
+| 2026-06-23 | **Standing test-hygiene: embeddings offline.** Global stub in `rails_helper` now neutralizes `upsert_to_vectorsearch` *and* `similarity_search` for all five pgvector models (was only Event/Summary write side) — no spec leaks a real OpenAI embedding call. | full suite, no embedding HTTP |
+| 2026-06-23 | **E2 cosmetics:** retired the legacy `scripts/*harness*` benchmarks (built on the deleted two-tier path; superseded by the `FakeHomeAssistant` scenario spec); wrote `docs/ARCHITECTURE.md` (state-ownership table + pipeline + memory loop); settled the `ConversationLog` naming (keep it; documented as canonical). | — |
 
 ---
 
@@ -121,7 +127,7 @@ Reordered (2026-06-22) around three operating criteria: **(1) raise the safety n
 The full-suite triage (gem switch exposed ~280 failures) was spec-only, but it surfaced genuine app bugs. Fixed inline where they blocked the refactor; the rest are tracked here.
 
 - **FIXED — `Tools::Query::RagSearch.definition` returned a bare `Hash`** instead of an `OpenRouter::Tool` (every sibling returns a Tool). `LlmService.call_with_tools` does `tools.map(&:name)`, so any tool list including rag_search crashed — breaking `ToolCallingService` (the translator) in production-equivalent paths. Converted to `OpenRouter::Tool.define`. Verified all registry tools are now homogeneous.
-- **OPEN (HIGH) — `CubeData` model never autoloads.** `config/initializers/cube_data_sensors.rb` defines the `CubeData` constant before Zeitwerk can load `app/models/cube_data.rb`, so the model's methods (`read_sensor`/`write_sensor`/`ha_service`/`available?`) are missing at runtime — only the initializer's `sensor_id`/`all_sensors` exist. Specs work around it with an explicit `require`. Production `CubeData.read_sensor` likely breaks. Needs an initializer/loader fix. **Still open — highest-value remaining bug.**
+- **FIXED (2026-06-23) — `CubeData` model autoload.** The sensor registry now lives in the model (`app/models/cube_data.rb`); the initializer only calls `CubeData.initialize!` in `after_initialize`, so Zeitwerk loads the class normally and `read_sensor`/`write_sensor`/`ha_service`/`available?` are present at runtime. `spec/models/cube_data_spec.rb` exercises `read_sensor`/`write_sensor` with no manual `require`.
 - **FIXED (2026-06-23) — `Gps::GpsTrackingService#current_location`** the random-landmark fallback `return`ed *inside* the `Rails.cache.fetch` block, skipping the `LocationContextService` merge. The block now yields the value so context always merges.
 - **FIXED (2026-06-23) — `GlitchCube.gps_spoofing_allowed?`** now honors `test?` as well as `development?` (and a dead duplicate `home_camp_coordinates` was removed).
 - **FIXED (2026-06-23) — `CubePerformance` blank session id** (`session_id ||=` kept `""`) → now `session_id.presence || …`.
@@ -132,25 +138,34 @@ Also notable: `PersonaSwitchService` was gutted (now just ends conversations + s
 ## 7. Open decisions
 - Streaming TTS depth (stop at B1, or invest in B2) — decide after measuring on-site latency.
 - `EventProfile` storage: flat YAML (assumed) vs DB-backed (admin-editable).
-- Keep `ConversationLog` naming or migrate to `Conversation`/`Message`.
-- ~~Whether to fix the `to_be_implemented/` memory services or delete them~~ → **DELETED (2026-06-23)**; they duplicated `app/services/memory/`. Memory *integration* (wiring memory into the conversation flow) is now tracked in §8 below.
+- ~~Keep `ConversationLog` naming or migrate to `Conversation`/`Message`~~ → **RESOLVED (2026-06-23): keep `ConversationLog`** (rename has wide cosmetic blast radius, no functional gain). Documented as canonical in `docs/ARCHITECTURE.md`.
+- ~~Whether to fix the `to_be_implemented/` memory services or delete them~~ → **DELETED (2026-06-23)**; they duplicated `app/services/memory/`. Memory *integration* is now **DONE** (see §8 item 4).
 
 ---
 
 ## 8. What's next (plan as of 2026-06-23)
 
-Foundation is done: green/fast suite, brain→translator pipeline live, fake harness in place, gems current, docs cleaned. Remaining work, in recommended order:
+Foundation + most of the planned work is done. **Done:** ✅ CubeData autoload (1),
+✅ Phase 2 LLM polish (2), ✅ Memory integration (4), ✅ Phase 4 in-repo clock +
+rebuilt perf smoke test (5a), ✅ E2 cosmetics — harness retired, `ARCHITECTURE.md`
+written, `ConversationLog` naming settled (6), ✅ standing embedding-stub hygiene.
 
-1. **Fix `CubeData` autoload (HIGH, small).** The one known production-breaking bug left (see §6a). `read_sensor`/`write_sensor` are missing at runtime because the initializer defines the constant before Zeitwerk loads the model. Move the sensor map into the model (or a plain module the initializer requires) so the class loads normally. Add a spec that calls `CubeData.read_sensor` without an explicit `require`.
+**Remaining work:**
 
-2. **Finish Phase 2 (LLM pipeline polish).** The fan-out is gone; remaining: (a) drop the legacy `tool_intents` fallback in `ActionExecutor` once nothing emits it, (b) make the brain/translator/summarizer **model roles** explicit in config (today they all default to `gemini-3.1-flash-lite`), (c) trim verbose logging in `LlmService`/`ToolCallingService`. Optional: lightweight tool-call **timing metrics** (the one salvageable idea from the deleted `toolcall_implementation_plan` — only if we actually want latency data on-site; otherwise skip per "no speculative tooling").
+3. **Phase 3 — `EventProfile` portability** (most invasive; guard with golden-master).
+   Introduce `EventProfile.current` defaulting to a `burning_man` profile that
+   reproduces today's exact values, then route personas/goals/geo through it
+   incrementally; add a `regional` profile last. Snapshot current prompt/goal
+   output and assert byte-identical after the layer lands. Keep geocoding — make
+   it profile-driven, don't remove it. **This is the next real chunk.**
 
-3. **Phase 3 — `EventProfile` portability** (most invasive; guard with golden-master). Introduce `EventProfile.current` defaulting to a `burning_man` profile that reproduces today's exact values, then route personas/goals/geo through it incrementally; add a `regional` profile last. Snapshot current prompt/goal output and assert byte-identical after the layer lands. Keep geocoding — make it profile-driven, don't remove it.
+5b. **Phase 4 — HASS custom-component migration** (separate Python artifact, deferred).
+   `_async_handle_message`/`ChatLog`, strip hardcoded values; streaming TTS only
+   if latency warrants. Deferred because it can't be verified without a live HASS
+   instance — do it on-hardware. The in-repo, clock-driven smoke test (5a) is done.
 
-4. **Memory integration** (was the core of the deleted `GLITCHCUBE_IMPROVEMENTS_PLAN`). `app/services/memory/` exists but isn't wired into the conversation flow, and `search_memories` from the brain isn't consumed end-to-end. Decide the minimal useful loop: recall relevant memories at prompt-build time + extract/store memories after a turn. Build only what a single event needs — not the full 6-job summarization pipeline that was just deleted.
-
-5. **Phase 4 — HASS component migration** (separate artifact, last/parallel). `_async_handle_message`/`ChatLog`, strip hardcoded values; rebuild a **fast** end-to-end smoke test against a dev HASS instance (the deleted `real_end_to_end`/perf-mode e2e specs should come back here — but driven by an **injectable clock** in `PerformanceModeService` so they don't loop against wall-clock). Streaming TTS only if latency warrants.
-
-6. **E2 cosmetics, anytime.** Reconcile/retire the stale `scripts/*harness*` benchmarks into the `FakeHomeAssistant` scenario harness; write the state-ownership table (`docs/ARCHITECTURE.md`); revisit the `ConversationLog`→`Conversation` rename decision.
-
-**Standing test-quality follow-up:** a real OpenAI embedding call fires during the suite (rag_search path) — gate it behind a cassette/stub so the suite stays offline and fast.
+**Notes / smaller follow-ups:**
+- Optional lightweight tool-call **timing metrics** (salvageable idea from the
+  deleted `toolcall_implementation_plan`) — only if we want on-site latency data;
+  otherwise skip per "no speculative tooling."
+- `docs/PENDING_TEST_ANALYSIS.md` may now be stale — review when convenient.

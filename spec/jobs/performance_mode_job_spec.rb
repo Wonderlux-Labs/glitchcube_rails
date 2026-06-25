@@ -32,22 +32,17 @@ RSpec.describe PerformanceModeJob, type: :job do
     allow(Rails.logger).to receive(:warn).and_call_original
     allow(Rails.logger).to receive(:error).and_call_original
 
-    # Determinism + speed: the real run_performance_loop spins until wall-clock
-    # reaches @end_time (a full real minute+ for duration_minutes >= 1), which
-    # makes this suite take minutes and flake on timing assertions. Globally
-    # bound real PerformanceModeService instances to a couple of loop iterations
-    # and no-op sleep. (instance_double mocks are unaffected; examples that need
-    # the real loop still get segment generation, logging and state storage.)
-    allow_any_instance_of(PerformanceModeService).to receive(:sleep)
-    loop_iterations = Hash.new(0)
-    allow_any_instance_of(PerformanceModeService).to receive(:is_running?) do |svc|
-      sid = svc.session_id
-      loop_iterations[sid] += 1
-      loop_iterations[sid] <= 2
-    end
+    # Determinism + speed: with the real (wall-clock) clock, run_performance_loop
+    # spins until Time.current reaches @end_time (a full real minute+ for
+    # duration_minutes >= 1). Inject a FakeClock as the default clock for every
+    # new service so "sleep" advances virtual time instead of blocking — the loop
+    # then exhausts the duration in microseconds and exits naturally, no
+    # is_running?/sleep stubbing required. instance_double mocks are unaffected.
+    PerformanceModeService.clock = FakeClock.new
   end
 
   after do
+    PerformanceModeService.reset_clock!
     Rails.cache.clear
   end
 
@@ -56,6 +51,7 @@ RSpec.describe PerformanceModeJob, type: :job do
 
     before do
       allow(PerformanceModeService).to receive(:new).and_return(mock_service)
+      allow(mock_service).to receive(:clock).and_return(FakeClock.new)
       allow(mock_service).to receive(:instance_variable_set)
       allow(mock_service).to receive(:send)
       allow(mock_service).to receive(:run_performance_loop)
@@ -77,6 +73,8 @@ RSpec.describe PerformanceModeJob, type: :job do
 
     it 'sets up service timing and state correctly' do
       freeze_time do
+        # Job derives timestamps from service.clock.now; pin it to the frozen "now".
+        allow(mock_service).to receive(:clock).and_return(FakeClock.new(Time.current))
         expect(mock_service).to receive(:instance_variable_set).with(:@start_time, Time.current)
         expect(mock_service).to receive(:instance_variable_set).with(:@end_time, Time.current + 1.minute)
         expect(mock_service).to receive(:instance_variable_set).with(:@is_running, true)
@@ -147,6 +145,7 @@ RSpec.describe PerformanceModeJob, type: :job do
 
       before do
         allow(PerformanceModeService).to receive(:new).and_return(mock_service)
+        allow(mock_service).to receive(:clock).and_return(FakeClock.new)
         allow(mock_service).to receive(:instance_variable_set)
         allow(mock_service).to receive(:send)
         allow(mock_service).to receive(:run_performance_loop).and_raise(StandardError, 'Performance loop crashed')
@@ -270,11 +269,8 @@ RSpec.describe PerformanceModeJob, type: :job do
       end
 
       before do
-        # Use actual timing but speed it up for tests
-        allow_any_instance_of(PerformanceModeService).to receive(:sleep) do |_, duration|
-          sleep([ duration * 0.01, 0.1 ].min) # Speed up but maintain relative timing
-        end
-
+        # FakeClock (global before) advances virtual time on each sleep, so the
+        # loop burns through the 2-minute duration with zero real wall-clock wait.
         allow_any_instance_of(ContextualSpeechTriggerService)
           .to receive(:trigger_speech)
           .and_return({
@@ -294,7 +290,7 @@ RSpec.describe PerformanceModeJob, type: :job do
         end
 
         execution_time = Time.current - start_time
-        # Should complete reasonably quickly with our speed-up
+        # Virtual-clock loop completes near-instantly in real wall-clock time.
         expect(execution_time).to be < 10.seconds
       end
     end
@@ -312,6 +308,9 @@ RSpec.describe PerformanceModeJob, type: :job do
           speech_text: "This is SPARKLE performing!",
           segment_type: 'persona_test'
         })
+      # Loop speaks segments via the HA singleton; stub it so it never makes a
+      # real (30s-timeout) HTTP call once the virtual clock lets the loop run.
+      allow_any_instance_of(HomeAssistantService).to receive(:send_conversation_response)
     end
 
     it 'passes persona to service correctly', vcr: { cassette_name: 'performance_mode_job/persona_handling' } do
@@ -333,6 +332,8 @@ RSpec.describe PerformanceModeJob, type: :job do
           speech_text: "Type-specific performance content",
           segment_type: 'type_test'
         })
+      # Avoid the real (30s-timeout) HA HTTP call when the loop speaks segments.
+      allow_any_instance_of(HomeAssistantService).to receive(:send_conversation_response)
     end
 
     %w[comedy storytelling poetry improv].each do |performance_type|

@@ -92,7 +92,7 @@ RSpec.describe PromptService do
     end
 
     context 'tools' do
-      it 'returns empty array as tools are handled via tool_intents' do
+      it 'returns empty array as the brain emits an environment_instruction instead of tool calls' do
         expect(subject[:tools]).to eq([])
       end
     end

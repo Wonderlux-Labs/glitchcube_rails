@@ -61,7 +61,8 @@ class PromptService
   end
 
   def build_tools_for_persona
-    Rails.logger.info "🎭 Optimized prompt mode - no tool definitions needed (using tool_intents)"
+    # The brain LLM never receives tool definitions — it emits a plain-English
+    # environment_instruction that the translator turns into tool calls.
     []
   end
 

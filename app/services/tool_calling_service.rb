@@ -1,7 +1,8 @@
 # app/services/tool_calling_service.rb
 #
-# Tool-Calling LLM Service - Technical tier of two-tier architecture
-# Receives natural language intent from narrative LLM and translates to precise tool calls
+# Translator LLM. Receives a single plain-English environment_instruction from
+# the brain LLM and translates it into precise, validated Home Assistant tool
+# calls, retrying on validation errors. Runs at low temperature.
 class ToolCallingService
   def initialize(session_id: nil, conversation_id: nil)
     @session_id = session_id
@@ -21,7 +22,7 @@ class ToolCallingService
     current_intent = intent
 
     while iteration <= @max_iterations
-      Rails.logger.info "🔄 Tool calling attempt #{iteration}/#{@max_iterations}"
+      Rails.logger.debug { "🔄 Tool calling attempt #{iteration}/#{@max_iterations}" }
 
       # Call LLM to translate intent to tool calls
       tool_calls_response = call_tool_calling_llm(current_intent, context)
@@ -63,7 +64,7 @@ class ToolCallingService
     # Get persona from context, default to 'jax'
     persona = context&.dig(:persona) || "jax"
 
-    Rails.logger.info "🚀 Calling tool-calling LLM (#{model}) with persona-specific tools for #{persona}"
+    Rails.logger.debug { "🚀 Translator LLM (#{model}) with #{persona} tools" }
 
     LlmService.call_with_tools(
       messages: prompt,
@@ -74,10 +75,7 @@ class ToolCallingService
   end
 
   def determine_tool_calling_model
-    # Use configured tool-calling model, default_tools_model, or fall back to default AI model
-    Rails.configuration.try(:tool_calling_model) ||
-    Rails.configuration.try(:default_tools_model) ||
-    Rails.configuration.default_ai_model
+    Rails.configuration.translator_model
   end
 
   def build_tool_calling_prompt(intent, context)

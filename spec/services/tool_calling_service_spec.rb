@@ -7,7 +7,7 @@ RSpec.describe ToolCallingService, type: :service do
 
   before do
     # Mock configuration by defining accessors
-    Rails.configuration.define_singleton_method(:tool_calling_model) { 'gpt-4o-mini' }
+    Rails.configuration.define_singleton_method(:translator_model) { 'gpt-4o-mini' }
     Rails.configuration.define_singleton_method(:default_ai_model) { 'gpt-4o' }
   end
 
@@ -119,27 +119,11 @@ RSpec.describe ToolCallingService, type: :service do
   end
 
   describe '#determine_tool_calling_model' do
-    context 'when tool_calling_model is configured' do
-      before do
-        allow(Rails.configuration).to receive(:tool_calling_model).and_return('custom-model')
-      end
+    it 'uses the configured translator model' do
+      allow(Rails.configuration).to receive(:translator_model).and_return('custom-model')
 
-      it 'uses the configured model' do
-        model = service.send(:determine_tool_calling_model)
-        expect(model).to eq('custom-model')
-      end
-    end
-
-    context 'when tool_calling_model is not configured' do
-      before do
-        allow(Rails.configuration).to receive(:tool_calling_model).and_return(nil)
-        allow(Rails.configuration).to receive(:default_ai_model).and_return('gpt-4o')
-      end
-
-      it 'falls back to default AI model' do
-        model = service.send(:determine_tool_calling_model)
-        expect(model).to eq('gpt-4o')
-      end
+      model = service.send(:determine_tool_calling_model)
+      expect(model).to eq('custom-model')
     end
   end
 

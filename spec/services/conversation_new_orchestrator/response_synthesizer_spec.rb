@@ -91,6 +91,40 @@ RSpec.describe ConversationNewOrchestrator::ResponseSynthesizer do
 
     end
 
+    context "with the brain's own memory_search results" do
+      let(:conversation) { instance_double(Conversation, metadata_json: {}, update!: true) }
+      let(:action_results) do
+        {
+          sync_results: {
+            "memory_search_1" => { success: true, message: "Recalled: user likes techno" }
+          },
+          delegated_intents: []
+        }
+      end
+      let(:prompt_data) do
+        { messages: [], system_prompt: "x", conversation: conversation }
+      end
+
+      it "stores memory search results so they surface to the brain next turn" do
+        allow(conversation).to receive(:update!)
+
+        result = described_class.call(
+          llm_response: llm_response,
+          action_results: action_results,
+          prompt_data: prompt_data
+        )
+
+        expect(result.success?).to be true
+        expect(conversation).to have_received(:update!).with(
+          metadata_json: hash_including(
+            "pending_query_results" => hash_including(
+              results_summary: a_string_including("memory_search_1").and(a_string_including("Recalled: user likes techno"))
+            )
+          )
+        )
+      end
+    end
+
     context 'when speech amendment fails' do
       let(:action_results) do
         {

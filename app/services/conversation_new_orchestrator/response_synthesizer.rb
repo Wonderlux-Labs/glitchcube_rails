@@ -34,6 +34,8 @@ class ConversationNewOrchestrator::ResponseSynthesizer
       current_mood: structured_data["current_mood"],
       pressing_questions: structured_data["pressing_questions"],
       goal_progress: structured_data["goal_progress"],
+      environment_instruction: structured_data["environment_instruction"],
+      memories: structured_data["memories"] || [],
       speech_text: speech_text
     }
 
@@ -63,6 +65,8 @@ class ConversationNewOrchestrator::ResponseSynthesizer
       current_mood: narrative[:current_mood],
       pressing_questions: narrative[:pressing_questions],
       goal_progress: narrative[:goal_progress],
+      environment_instruction: narrative[:environment_instruction],
+      memories: narrative[:memories],
       success: true,
       speech_text: speech_text  # Also include as :speech_text for compatibility
     }
@@ -72,10 +76,13 @@ class ConversationNewOrchestrator::ResponseSynthesizer
     query_results = {}
 
     sync_results.each do |tool_name, result|
-      # Only include results from query tools
-      if Tools::Registry.tool_intent(tool_name) == :query && result
-        query_results[tool_name] = result
-      end
+      next unless result
+
+      # Include query-tool results and the brain's own memory searches so both
+      # surface to the next turn (the brain asked for them; deliver the answer).
+      query = Tools::Registry.tool_intent(tool_name) == :query
+      memory_search = tool_name.to_s.start_with?("memory_search")
+      query_results[tool_name] = result if query || memory_search
     end
 
     query_results

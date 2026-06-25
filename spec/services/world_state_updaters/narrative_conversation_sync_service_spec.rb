@@ -25,7 +25,7 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
                  inner_thoughts: 'A new customer! I need to help them!',
                  current_mood: 'excited',
                  continue_conversation: true,
-                 tool_intents: [ 'Make lights bright yellow' ]
+                 environment_instruction: 'Make lights bright yellow'
                }.to_json)
       end
 
@@ -35,6 +35,7 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
           expect(state).to eq('narrative_updated')
           expect(attributes[:last_conversation][:persona]).to eq('buddy')
           expect(attributes[:narrative_metadata][:inner_thoughts]).to eq('A new customer! I need to help them!')
+          expect(attributes[:narrative_metadata][:environment_instruction]).to eq('Make lights bright yellow')
         end
 
         described_class.sync_latest_conversation

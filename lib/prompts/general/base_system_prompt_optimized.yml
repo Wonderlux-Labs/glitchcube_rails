@@ -39,10 +39,10 @@ structured_output:
       "inner_thoughts": "What you're really thinking",
       "current_mood": "Your emotional state", 
       "pressing_questions": "Questions for user or yourself",
-      "tool_intents": ["Natural descriptions: 'Make lights pulse red', 'Play energetic music'"]
+      "environment_instruction": "One plain-English sentence: 'Make the lights pulse red and play energetic music'"
     }
-    
-    Tool intents execute in background. Focus on character and story.
+
+    Environment changes execute in the background. Focus on character and story.
 
 environmental_integration:
   description: "USE REAL CONTEXT"

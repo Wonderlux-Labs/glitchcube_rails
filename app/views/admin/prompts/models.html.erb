@@ -12,20 +12,16 @@
     <h2>Current Configuration</h2>
     <div class="stats">
       <div class="stat-box">
-        <h3>Primary Model</h3>
-        <p><%= @current_models[:primary] %></p>
+        <h3>Brain Model</h3>
+        <p><%= @current_models[:brain] %></p>
+      </div>
+      <div class="stat-box">
+        <h3>Translator Model</h3>
+        <p><%= @current_models[:translator] %></p>
       </div>
       <div class="stat-box">
         <h3>Summarizer Model</h3>
         <p><%= @current_models[:summarizer] %></p>
-      </div>
-      <div class="stat-box">
-        <h3>Temperature</h3>
-        <p><%= @current_models[:temperature] %></p>
-      </div>
-      <div class="stat-box">
-        <h3>Max Tokens</h3>
-        <p><%= @current_models[:max_tokens] %></p>
       </div>
     </div>
   </div>
@@ -56,8 +52,8 @@
               <% end %>
             </td>
             <td>
-              <% if @current_models[:primary] == model[:name] %>
-                <span style="color: #00ff00;">Primary</span>
+              <% if @current_models[:brain] == model[:name] %>
+                <span style="color: #00ff00;">Brain</span>
               <% elsif @current_models[:summarizer] == model[:name] %>
                 <span style="color: #00ffff;">Summarizer</span>
               <% else %>

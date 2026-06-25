@@ -204,31 +204,6 @@ RSpec.describe Prompts::SystemPromptBuilder do
     end
   end
 
-  describe '#get_tool_categories' do
-    let(:builder) do
-      described_class.new(
-        persona_instance: persona_instance,
-        context_builder: context_builder,
-        user_message: user_message
-      )
-    end
-
-    it 'extracts tool categories from registry' do
-      result = builder.send(:get_tool_categories)
-      expect(result).to contain_exactly("lights", "sound")
-    end
-
-    it 'handles tools without proper namespace' do
-      allow(Tools::Registry).to receive(:tools_for_persona).and_return([
-        double(name: "SimpleToolClass"),
-        double(name: "Tools::Lights::TurnOn")
-      ])
-
-      result = builder.send(:get_tool_categories)
-      expect(result).to include("lights")
-    end
-  end
-
   describe '#get_current_goal_description' do
     let(:builder) do
       described_class.new(

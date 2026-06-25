@@ -15,11 +15,7 @@ RSpec.describe Schemas::NarrativeResponseSchema do
       expect(schema).to be_a(OpenRouter::Schema)
     end
 
-    it 'includes tool_intents array with enum constraints' do
-      # Verify the schema allows tool enums we expect
-      tool_enums = [ "lights", "music", "display", "environment" ]
-
-      # This tests the schema definition exists
+    it 'builds without error' do
       expect { schema }.not_to raise_error
     end
   end
@@ -35,16 +31,7 @@ RSpec.describe Schemas::NarrativeResponseSchema do
           "inner_thoughts" => "This person seems interesting",
           "current_mood" => "curious",
           "pressing_questions" => "What brings you here?",
-          "tool_intents" => [
-            {
-              "tool" => "lights",
-              "intent" => "Make the lights warm and welcoming"
-            },
-            {
-              "tool" => "music",
-              "intent" => "Play something ambient"
-            }
-          ],
+          "environment_instruction" => "Make the lights warm and welcoming and play something ambient",
           "direct_tool_calls" => [
             {
               "tool_name" => "rag_search",
@@ -70,15 +57,9 @@ RSpec.describe Schemas::NarrativeResponseSchema do
         expect(valid_output).to have_key("continue_conversation")
       end
 
-      it 'has valid tool intents structure' do
-        tool_intents = valid_output["tool_intents"]
-        expect(tool_intents).to be_an(Array)
-
-        tool_intents.each do |intent|
-          expect(intent).to have_key("tool")
-          expect(intent).to have_key("intent")
-          expect([ "lights", "music", "display", "environment" ]).to include(intent["tool"])
-        end
+      it 'carries a plain-English environment instruction' do
+        expect(valid_output["environment_instruction"]).to be_a(String)
+        expect(valid_output["environment_instruction"]).to be_present
       end
 
       it 'has valid direct tool calls structure' do
@@ -109,7 +90,6 @@ RSpec.describe Schemas::NarrativeResponseSchema do
         {
           "speech_text" => "Sure thing.",
           "continue_conversation" => false,
-          "tool_intents" => [],
           "direct_tool_calls" => [],
           "search_memories" => []
         }
@@ -118,7 +98,6 @@ RSpec.describe Schemas::NarrativeResponseSchema do
       it 'works with minimal required fields only' do
         expect(minimal_output).to have_key("speech_text")
         expect(minimal_output).to have_key("continue_conversation")
-        expect(minimal_output["tool_intents"]).to be_an(Array)
         expect(minimal_output["direct_tool_calls"]).to be_an(Array)
         expect(minimal_output["search_memories"]).to be_an(Array)
       end

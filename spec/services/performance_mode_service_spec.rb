@@ -209,17 +209,17 @@ RSpec.describe PerformanceModeService, type: :service do
   end
 
   describe '#run_performance_loop', vcr: { cassette_name: 'performance_mode/performance_loop' } do
-    let(:service) { PerformanceModeService.new(session_id: session_id, duration_minutes: 1) }
+    # FakeClock: inter-segment sleeps advance virtual time (no real waiting) and
+    # are observable for assertions.
+    let(:clock) { FakeClock.new }
+    let(:service) { PerformanceModeService.new(session_id: session_id, duration_minutes: 1, clock: clock) }
 
     before do
-      service.instance_variable_set(:@start_time, Time.current)
-      service.instance_variable_set(:@end_time, Time.current + 1.minute)
+      service.instance_variable_set(:@start_time, clock.now)
+      service.instance_variable_set(:@end_time, clock.now + 1.minute)
       service.instance_variable_set(:@is_running, true)
       service.instance_variable_set(:@should_stop, false)
       service.instance_variable_set(:@performance_segments, [])
-
-      # Mock sleep to speed up tests
-      allow(service).to receive(:sleep)
     end
 
     context 'with successful segment generation' do
@@ -263,7 +263,7 @@ RSpec.describe PerformanceModeService, type: :service do
 
         expect(service).to receive(:calculate_segment_duration)
           .with(mock_segment[:speech_text]).and_return(15)
-        expect(service).to receive(:sleep).with(15)
+        expect(clock).to receive(:sleep).with(15).and_call_original
 
         service.run_performance_loop
       end
@@ -278,7 +278,7 @@ RSpec.describe PerformanceModeService, type: :service do
         allow(service).to receive(:is_running?).and_return(true, false)
 
         expect(Rails.logger).to receive(:warn).with(/Failed to generate performance segment/)
-        expect(service).to receive(:sleep).with(10) # Default retry sleep
+        expect(clock).to receive(:sleep).with(10).and_call_original # Default retry sleep
 
         service.run_performance_loop
       end

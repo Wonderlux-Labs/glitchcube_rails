@@ -4,14 +4,42 @@
 class PerformanceModeService
   class Error < StandardError; end
 
-  attr_reader :session_id, :performance_type, :duration_minutes, :prompt, :persona
+  # Real clock: "now" is wall-clock time (so ActiveSupport's travel_to/freeze_time
+  # still work) and #sleep actually blocks. Tests inject a FakeClock instead, which
+  # controls "now" and turns #sleep into a no-op so the loop never waits on the wall.
+  class RealClock
+    def now
+      Time.current
+    end
 
-  def initialize(session_id:, performance_type: "comedy", duration_minutes: 10, prompt: nil, persona: nil)
+    def sleep(seconds)
+      Kernel.sleep(seconds)
+    end
+  end
+
+  class << self
+    # Default clock for new services. Tests can swap in a FakeClock here (mirrors
+    # the HomeAssistantService.instance seam) or pass `clock:` to the constructor.
+    attr_writer :clock
+
+    def clock
+      @clock ||= RealClock.new
+    end
+
+    def reset_clock!
+      @clock = nil
+    end
+  end
+
+  attr_reader :session_id, :performance_type, :duration_minutes, :prompt, :persona, :clock
+
+  def initialize(session_id:, performance_type: "comedy", duration_minutes: 10, prompt: nil, persona: nil, clock: self.class.clock)
     @session_id = session_id
     @performance_type = performance_type
     @duration_minutes = duration_minutes
     @prompt = prompt || default_prompt_for_type(performance_type)
     @persona = persona
+    @clock = clock
     @start_time = nil
     @end_time = nil
     @performance_segments = []
@@ -30,7 +58,7 @@ class PerformanceModeService
     Rails.logger.info "🎭 Starting #{@performance_type} performance for #{@duration_minutes} minutes"
     Rails.logger.info "📝 Prompt: #{@prompt}"
 
-    @start_time = Time.current
+    @start_time = @clock.now
     @end_time = @start_time + @duration_minutes.minutes
     @is_running = true
 
@@ -54,7 +82,7 @@ class PerformanceModeService
   def stop_performance(reason = "manual_stop")
     @should_stop = true
     @is_running = false
-    @end_time = Time.current
+    @end_time = @clock.now
 
     Rails.logger.info "🛑 Performance stopped: #{reason}"
 
@@ -72,12 +100,12 @@ class PerformanceModeService
   end
 
   def is_running?
-    @is_running && !@should_stop && Time.current < @end_time
+    @is_running && !@should_stop && @clock.now < @end_time
   end
 
   def time_remaining
     return 0 unless is_running?
-    (@end_time - Time.current).to_i
+    (@end_time - @clock.now).to_i
   end
 
   def interrupt_for_wake_word
@@ -93,8 +121,8 @@ class PerformanceModeService
 
     while is_running?
       segment_count += 1
-      time_elapsed = Time.current - @start_time
-      time_remaining = (@end_time - Time.current) / 60.0 # in minutes
+      time_elapsed = @clock.now - @start_time
+      time_remaining = (@end_time - @clock.now) / 60.0 # in minutes
 
       Rails.logger.info "🎭 Performance segment #{segment_count} - #{time_elapsed.to_i}s elapsed, #{time_remaining.round(1)}m remaining"
 
@@ -106,7 +134,7 @@ class PerformanceModeService
         send_performance_segment(segment[:speech_text], segment_type: "performance_segment")
         @performance_segments << {
           segment: segment_count,
-          timestamp: Time.current,
+          timestamp: @clock.now,
           speech: segment[:speech_text],
           context: segment_context
         }
@@ -116,14 +144,14 @@ class PerformanceModeService
         sleep_time = [ segment_duration, 5 ].max # At least 5 seconds between segments
 
         Rails.logger.info "🎪 Segment complete, waiting #{sleep_time}s before next segment"
-        sleep(sleep_time)
+        @clock.sleep(sleep_time)
       else
         Rails.logger.warn "⚠️ Failed to generate performance segment #{segment_count}"
-        sleep(10) # Wait before retrying
+        @clock.sleep(10) # Wait before retrying
       end
 
       # Check if we should stop
-      break if @should_stop || Time.current >= @end_time
+      break if @should_stop || @clock.now >= @end_time
     end
 
     # Performance naturally ended
@@ -159,7 +187,7 @@ class PerformanceModeService
       is_middle: segment_number > 2 && time_remaining > 2,
       is_closing: time_remaining <= 2,
       previous_themes: extract_themes_from_previous_segments,
-      current_time: Time.current.strftime("%H:%M"),
+      current_time: @clock.now.strftime("%H:%M"),
       session_id: @session_id
     }
   end
@@ -275,8 +303,9 @@ Keep this segment engaging and around 30-60 seconds of speaking time. Make it fe
         segment_type: segment_type
       }
 
-      # Use the existing HA integration
-      HomeAssistantService.new.send_conversation_response(response_data)
+      # Use the existing HA integration (via the singleton seam so a FakeHomeAssistant
+      # injected through HomeAssistantService.instance is honored here too).
+      HomeAssistantService.instance.send_conversation_response(response_data)
 
       Rails.logger.info "✅ Performance segment broadcast successfully"
 
@@ -328,7 +357,7 @@ Keep this segment engaging and around 30-60 seconds of speaking time. Make it fe
       is_running: @is_running,
       should_stop: @should_stop,
       segments_count: @performance_segments.size,
-      last_updated: Time.current
+      last_updated: @clock.now
     }
 
     Rails.cache.write("performance_mode:#{@session_id}", state, expires_in: 2.hours)
@@ -341,6 +370,7 @@ Keep this segment engaging and around 30-60 seconds of speaking time. Make it fe
 
     # Reconstruct service from stored state
     service = allocate
+    service.instance_variable_set(:@clock, clock)
     service.instance_variable_set(:@session_id, state[:session_id])
     service.instance_variable_set(:@performance_type, state[:performance_type])
     service.instance_variable_set(:@duration_minutes, state[:duration_minutes])

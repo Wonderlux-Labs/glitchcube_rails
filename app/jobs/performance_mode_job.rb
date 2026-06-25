@@ -17,9 +17,10 @@ class PerformanceModeJob < ApplicationJob
         persona: persona
       )
 
-      # Set running state
-      service.instance_variable_set(:@start_time, Time.current)
-      service.instance_variable_set(:@end_time, Time.current + duration_minutes.minutes)
+      # Set running state (clock-driven so tests can control time deterministically)
+      now = service.clock.now
+      service.instance_variable_set(:@start_time, now)
+      service.instance_variable_set(:@end_time, now + duration_minutes.minutes)
       service.instance_variable_set(:@is_running, true)
       service.instance_variable_set(:@should_stop, false)
       service.instance_variable_set(:@performance_segments, [])

@@ -138,36 +138,6 @@ module Prompts
       parts.join("\n")
     end
 
-    def build_structured_output_instructions
-      tool_categories = get_tool_categories
-
-      <<~INSTRUCTIONS
-        You use STRUCTURED OUTPUT WITH TOOL INTENTIONS. Instead of calling tools directly, you will:
-
-        1. Provide your spoken response in 'speech_text'
-        2. Set 'continue_conversation' to true/false#{' '}
-        3. Include narrative metadata (inner_thoughts, current_mood, pressing_questions)
-        4. When you want to control the environment, specify tool intentions in 'tool_intents'
-
-        AVAILABLE TOOL CATEGORIES: #{tool_categories.join(', ')}
-
-        Tool intentions should be natural language descriptions of what you want to happen.
-        Examples: "Make lights golden and warm", "Play something energetic", "Show rainbow colors"
-
-        Home Assistant's conversation agent will execute these intentions in the background.
-        Results will be provided as context on the user's next message (not interrupting current response).
-        Focus on your character and narrative - be specific about environmental desires.
-      INSTRUCTIONS
-    end
-
-    def get_tool_categories
-      tools = Tools::Registry.tools_for_persona(@persona_instance.persona_id)
-
-      tools.map do |tool_class|
-        tool_class.name.split("::")[-2]&.downcase
-      end.compact.uniq.sort
-    end
-
     def get_current_goal_description
       begin
         goal_status = GoalService.current_goal_status

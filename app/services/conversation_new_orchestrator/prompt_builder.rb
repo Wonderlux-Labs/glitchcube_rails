@@ -73,8 +73,10 @@ class ConversationNewOrchestrator::PromptBuilder
   end
 
   def format_ha_result_for_llm(result)
+    instruction = result["instruction"].presence || "an environment change"
+
     if result["error"]
-      "System note: You tried to execute '#{format_tool_intents(result['tool_intents'])}' but it failed: #{result['error']}"
+      "System note: You tried to '#{instruction}' but it failed: #{result['error']}"
     else
       success_items = result.dig("ha_response", "response", "data", "success") || []
       failed_items = result.dig("ha_response", "response", "data", "failed") || []
@@ -86,13 +88,8 @@ class ConversationNewOrchestrator::PromptBuilder
       parts << "#{success_summary} completed" if success_summary.present?
       parts << "#{failed_summary} failed" if failed_summary.present?
 
-      "System note: You intended to #{format_tool_intents(result['tool_intents'])}. Result: #{parts.join(', ')}"
+      "System note: You intended to '#{instruction}'. Result: #{parts.join(', ')}"
     end
-  end
-
-  def format_tool_intents(tool_intents)
-    return "unknown action" unless tool_intents.is_a?(Array)
-    tool_intents.map { |intent| "#{intent['intent']}" }.join(" and ")
   end
 
   def inject_previous_query_results(prompt_data)

@@ -146,7 +146,7 @@ RSpec.describe ConversationNewOrchestrator::LlmIntention, type: :service do
           response_data = result.data[:llm_response]
 
           # These fields are optional - should be nil or present
-          optional_fields = %w[current_mood pressing_questions goal_progress tool_intents search_memories]
+          optional_fields = %w[current_mood pressing_questions goal_progress environment_instruction search_memories]
           optional_fields.each do |field|
             if response_data.key?(field)
               expect(response_data[field]).not_to eq("")
@@ -419,7 +419,24 @@ RSpec.describe ConversationNewOrchestrator::LlmIntention, type: :service do
   end
 
   describe "integration with conversation flow" do
-    context "typical conversation scenario", vcr: { cassette_name: "llm_intention/conversation_flow" } do
+    # Stubbed (not VCR) for the same reason as #call above: LlmService randomizes
+    # its model internally and the gem's generation-stats lookups make live
+    # cassettes non-reproducible. Keep these offline and deterministic.
+    context "typical conversation scenario" do
+      let(:event_structured) do
+        {
+          "speech_text" => "Oh, tonight? There's a fire-spinning circle near Center Camp around sunset.",
+          "continue_conversation" => true,
+          "inner_thoughts" => "They want events — surface what I remember.",
+          "search_memories" => [ { "query" => "events tonight near Center Camp", "type" => "events" } ]
+        }
+      end
+
+      before do
+        allow(LlmService).to receive(:call_with_structured_output)
+          .and_return(structured_output_response(event_structured, model: model))
+      end
+
       let(:rich_prompt_data) do
         {
           system_prompt: "You are Buddy, a helpful festival guide at Burning Man.",

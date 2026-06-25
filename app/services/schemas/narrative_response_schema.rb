@@ -1,7 +1,8 @@
 # app/services/schemas/narrative_response_schema.rb
 #
-# Schema for structured narrative responses in two-tier architecture
-# Narrative LLM returns this structure instead of using tool calls
+# Structured output returned by the brain LLM. Instead of emitting tool calls,
+# the brain returns speech plus a single plain-English `environment_instruction`
+# that the translator (ToolCallingService) turns into validated device commands.
 class Schemas::NarrativeResponseSchema
   def self.schema
     OpenRouter::Schema.define("narrative_response") do
@@ -31,33 +32,7 @@ class Schemas::NarrativeResponseSchema
       string :environment_instruction,
              description: "Plain-English description of all environment/device changes to make, or empty if none"
 
-      # Legacy structured form, still accepted. Prefer environment_instruction.
-      array :tool_intents,
-            description: "Legacy: per-action environment intents. Prefer environment_instruction." do
-        object do
-          string :tool, required: true,
-                 description: "Tool category",
-                 enum: [ "lights", "music", "display", "environment" ]
-
-          string :intent, required: true,
-                 description: "Natural language description of what to do"
-        end
-      end
-
-      #       # Direct tool calls for immediate execution
-      #       array :direct_tool_calls,
-      #             description: "Tools to execute directly and synchronously (for queries and immediate actions)" do
-      #         object do
-      #           string :tool_name, required: true,
-      #                  description: "Exact tool name to execute",
-      #                  enum: [ "rag_search", "get_light_state", "display_notification" ]
-
-      #           object :parameters,
-      #                  description: "Tool parameters as key-value pairs"
-      #         end
-      #       end
-
-      # Explicit memory search requests
+      # Explicit memory search requests. Results surface to you on the next turn.
       array :search_memories,
             description: "Specific memory searches to perform for additional context" do
         object do
@@ -68,6 +43,26 @@ class Schemas::NarrativeResponseSchema
                  description: "Type of memory to search",
                  enum: [ "summaries", "events", "people", "all" ],
                  default: "all"
+        end
+      end
+
+      # Facts worth remembering long-term. Only flag things genuinely useful to
+      # recall in future conversations (a name, a preference, a commitment) — not
+      # small talk. These are persisted as ConversationMemory after the turn.
+      array :memories,
+            description: "New facts worth remembering for future conversations" do
+        object do
+          string :summary, required: true,
+                 description: "The fact to remember, in one sentence"
+
+          string :memory_type,
+                 description: "Kind of memory",
+                 enum: [ "preference", "fact", "instruction", "context", "event" ],
+                 default: "fact"
+
+          integer :importance,
+                  description: "How important to remember, 1 (trivial) to 10 (critical)",
+                  default: 5
         end
       end
     end

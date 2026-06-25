@@ -20,10 +20,23 @@ Rails.application.configure do
   # config.service_name_api_key = ENV['SERVICE_NAME_API_KEY']
 
 
-  config.default_ai_model = ENV["DEFAULT_AI_MODEL"] || "google/gemini-3.1-flash-lite"
-  config.tool_calling_model = ENV["TOOL_CALLING_MODEL"] || "google/gemini-3.1-flash-lite"
-  config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "google/gemini-3.1-flash-lite"
-  config.fallback_models = [ "google/gemini-3.1-flash-lite" ]
-  # Orchestrator feature flag removed - always use ConversationNewOrchestrator
-  # config.use_new_orchestrator = true
+  # === LLM model roles ===
+  # The conversation pipeline uses three distinct LLM roles. Each can be pinned
+  # independently via ENV; today they all default to the same fast model, but
+  # the split is explicit so roles can be sized separately later.
+  #   brain      — the conversation/narrative LLM: decides what to say plus a
+  #                single plain-English `environment_instruction`.
+  #   translator — turns that one instruction into validated HASS tool calls
+  #                (ToolCallingService, run at low temperature).
+  #   summarizer — background conversation/daily summarization.
+  default_model = ENV["DEFAULT_AI_MODEL"] || "google/gemini-3.1-flash-lite"
+
+  config.brain_model      = ENV["BRAIN_MODEL"]      || default_model
+  config.translator_model = ENV["TOOL_CALLING_MODEL"] || default_model
+  config.summarizer_model = ENV["SUMMARIZER_MODEL"] || default_model
+
+  # Shared base default for ad-hoc/structured LLM calls that aren't tied to a
+  # specific role, plus the timeout/error fallback chain.
+  config.default_ai_model = default_model
+  config.fallback_models = [ default_model ]
 end

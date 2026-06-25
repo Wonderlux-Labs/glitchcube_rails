@@ -44,7 +44,6 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
   end
 
   describe 'ContextualSpeechTriggerService integration', vcr: { cassette_name: 'performance_llm/contextual_speech_integration' } do
-
     context 'successful LLM response generation' do
       let(:expected_llm_response) do
         {
@@ -364,6 +363,17 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
   end
 
   describe 'real-time LLM integration scenarios', vcr: { cassette_name: 'performance_llm/realtime_scenarios' } do
+    # Drive the loop on a FakeClock so inter-segment sleeps never touch the wall.
+    let(:clock) { FakeClock.new }
+    let(:service) do
+      PerformanceModeService.new(
+        session_id: session_id,
+        performance_type: 'comedy',
+        duration_minutes: 1,
+        clock: clock
+      )
+    end
+
     let(:performance_segments_sequence) do
       [
         {
@@ -405,9 +415,6 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
       service.instance_variable_set(:@is_running, true)
       service.instance_variable_set(:@performance_segments, [])
 
-      # Mock sleep to speed up test
-      allow(service).to receive(:sleep)
-
       # Stop once 4 segments are stored. Counting is_running? calls is fragile
       # because send_performance_segment also calls time_remaining -> is_running?,
       # so gate on the stored-segment count instead.
@@ -447,10 +454,10 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
           end
         end
 
-      # Mock other dependencies. Gate on trigger_calls (robust against the extra
-      # is_running? call inside send_performance_segment -> time_remaining) so
-      # the loop runs long enough to hit at least one failure (even) iteration.
-      allow(service).to receive(:sleep)
+      # Gate on trigger_calls (robust against the extra is_running? call inside
+      # send_performance_segment -> time_remaining) so the loop runs long enough
+      # to hit at least one failure (even) iteration. Sleeps go through the
+      # FakeClock and never block.
       allow(service).to receive(:is_running?) { trigger_calls < 3 }
 
       expect(Rails.logger).to receive(:warn).with(/Failed to generate performance segment/).at_least(:once)

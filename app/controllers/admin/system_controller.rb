@@ -66,7 +66,7 @@ class Admin::SystemController < Admin::BaseController
   def get_resource_usage
     {
       database_size: get_database_size,
-      active_conversations: (Conversation.where(status: 'active').count rescue 0),
+      active_conversations: (Conversation.where(status: "active").count rescue 0),
       total_memories: (ConversationMemory.count rescue 0),
       total_summaries: (Summary.count rescue 0),
       total_people: (Person.count rescue 0),
@@ -164,7 +164,7 @@ class Admin::SystemController < Admin::BaseController
     # OpenRouter/LLM Services
     dependencies[:llm_service] = {
       status: check_llm_service_health[:status],
-      primary_model: Rails.configuration.primary_model || "Not configured"
+      primary_model: Rails.configuration.brain_model || "Not configured"
     }
 
     dependencies
