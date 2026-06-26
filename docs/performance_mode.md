@@ -188,8 +188,8 @@ ConversationLog.create!(
   metadata: performance_metadata.to_json
 )
 
-# Sends to HA for TTS
-HomeAssistantService.new.send_conversation_response(response_data)
+# Sends to HA for TTS (via singleton seam so FakeHomeAssistant is honored in tests)
+HomeAssistantService.instance.send_conversation_response(response_data)
 ```
 
 ## Monitoring & Debugging
@@ -229,33 +229,15 @@ HomeAssistantService.new.send_conversation_response(response_data)
 
 ## Testing
 
-### Manual Testing
-```bash
-# Run basic functionality test
-ruby scripts/test_performance_mode.rb
+Use the spec suite. `PerformanceModeService` takes an injectable `FakeClock` (mirrors the `HomeAssistantService.instance` seam) so the timed loop runs in virtual time without wall-clock waits:
 
-# Test API endpoints (requires Rails server running)
-ruby scripts/test_performance_mode.rb --api
+```ruby
+fake_clock = PerformanceModeService::FakeClock.new(start_time: Time.current)
+service = PerformanceModeService.new(session_id: "test", clock: fake_clock)
 ```
 
-### Automated Testing
-Performance mode includes comprehensive test coverage:
-- Unit tests for PerformanceModeService
-- Integration tests for background job processing  
-- API endpoint testing with VCR cassettes
-- Wake word interruption scenarios
-
-## Security Considerations
-
-- Session ID validation prevents cross-session interference
-- Performance duration limits prevent resource exhaustion
-- Automatic cleanup prevents stale state accumulation
-- Content filtering through existing persona constraints
-
-## Future Enhancements
-
-- **Audience Interaction**: Integration with sensor data for crowd response
-- **Dynamic Adjustment**: Real-time performance modification based on engagement
-- **Performance Analytics**: Detailed metrics and performance optimization
-- **Multi-Modal**: Integration with lighting and visual effects during performances
-- **Collaborative**: Multi-agent performances with different personas
+Key specs:
+- `spec/services/performance_mode_service_spec.rb` — unit tests
+- `spec/jobs/performance_mode_job_spec.rb` — background job
+- `spec/integration/performance_mode_end_to_end_spec.rb` — full loop driven by `FakeClock`
+- `spec/requests/api/v1/performance_mode_spec.rb` — API endpoints

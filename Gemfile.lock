@@ -1,4 +1,11 @@
 GIT
+  remote: https://github.com/estiens/qualspec.git
+  revision: 4af4442628070021dd33559e14be9663e0405da5
+  specs:
+    qualspec (0.1.2)
+      faraday (~> 2.0)
+
+GIT
   remote: https://www.github.com/estiens/open_router
   revision: e92aeee2715fc42519cbdf27c7b758bc8b3be34e
   branch: main
@@ -468,6 +475,7 @@ DEPENDENCIES
   propshaft
   pry-rails
   puma
+  qualspec!
   rails
   rspec-rails
   rubocop-rails-omakase
