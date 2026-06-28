@@ -17,8 +17,11 @@ from .const import DOMAIN, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+PERSONA_NAMES = ["buddy", "jax", "neon", "sparkle", "zorp", "crash", "mobius", "thecube"]
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required("name", default="buddy"): vol.In(PERSONA_NAMES),
         vol.Optional("host", default=""): str,  # Empty default means use input_text.glitchcube_host
         vol.Optional("port", default=DEFAULT_PORT): int,
     }
@@ -91,11 +94,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         if user_input is not None:
             try:
-                # Set unique ID to prevent duplicate configurations - use domain since IP is dynamic
-                unique_id = f"{DOMAIN}"
+                name = user_input.get("name", "buddy")
+                unique_id = f"{DOMAIN}_{name}"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                
+
                 info = await validate_input(self.hass, user_input)
             except AbortFlow:
                 raise
@@ -105,7 +108,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                title = f"Glitch Cube - {name.title()}"
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
