@@ -75,28 +75,15 @@
       entity_id: scene.cube_voice_restore
 - id: '1755313710558'
   alias: Persona Switcher
-  description: ''
+  description: Switches Assist pipeline when persona changes. buddy/jax/neon have
+    dedicated pipelines; others fall back to preferred.
   triggers:
   - trigger: state
     entity_id:
     - input_select.current_persona
-    from:
-    to:
   conditions: []
   actions:
   - choose:
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: jax
-      sequence:
-      - action: select.select_option
-        data:
-          option: JAX
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
     - conditions:
       - condition: state
         entity_id: input_select.current_persona
@@ -104,35 +91,23 @@
       sequence:
       - action: select.select_option
         data:
-          option: BUDDY
+          option: buddy-glitch
         target:
           entity_id:
           - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
+          - select.home_assistant_voice_09739d_assistant_2
     - conditions:
       - condition: state
         entity_id: input_select.current_persona
-        state: sparkle
+        state: jax
       sequence:
       - action: select.select_option
         data:
-          option: SPARKLE
+          option: jax-glitch
         target:
           entity_id:
           - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: zorp
-      sequence:
-      - action: select.select_option
-        data:
-          option: ZORP
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
+          - select.home_assistant_voice_09739d_assistant_2
     - conditions:
       - condition: state
         entity_id: input_select.current_persona
@@ -140,61 +115,19 @@
       sequence:
       - action: select.select_option
         data:
-          option: NEON
+          option: neon-glitch
         target:
           entity_id:
           - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: crash
-      sequence:
-      - action: select.select_option
-        data:
-          option: CRASH
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: thecube
-      sequence:
-      - action: select.select_option
-        data:
-          option: THECUBE
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: mobius
-      sequence:
-      - action: select.select_option
-        data:
-          option: MOBIUS
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: NEON
-      sequence:
-      - action: select.select_option
-        data:
-          option: NEON
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions: []
-      sequence: []
+          - select.home_assistant_voice_09739d_assistant_2
+    default:
+    - action: select.select_option
+      data:
+        option: preferred
+      target:
+        entity_id:
+        - select.home_assistant_voice_09739d_assistant
+        - select.home_assistant_voice_09739d_assistant_2
   mode: single
 - id: '1755332428238'
   alias: Siren - Auto Off
