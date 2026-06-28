@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Action Execution Integration", type: :integration do
-  # Test the new ConversationNewOrchestrator action execution functionality
+  # Test the new ConversationOrchestrator action execution functionality
   # This replaces the deleted direct_tool_calling_spec.rb with new architecture
 
   let(:session_id) { "test_action_execution_123" }
@@ -31,7 +31,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
   end
 
   describe "ActionExecutor" do
-    let(:orchestrator) { ConversationNewOrchestrator.new(session_id: session_id, message: "test message", context: context) }
+    let(:orchestrator) { ConversationOrchestrator.new(session_id: session_id, message: "test message", context: context) }
 
     it "enqueues memory searches via search_memories (async, surfaces next turn)" do
       allow(MemorySearchJob).to receive(:perform_later)
@@ -42,7 +42,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
         ]
       }
 
-      result = ConversationNewOrchestrator::ActionExecutor.call(
+      result = ConversationOrchestrator::ActionExecutor.call(
         llm_response: llm_response,
         session_id: session_id,
         conversation_id: session_id,
@@ -60,7 +60,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
     it "dispatches a single environment_instruction to the translator job" do
       allow(EnvironmentDirectorJob).to receive(:perform_later)
 
-      result = ConversationNewOrchestrator::ActionExecutor.call(
+      result = ConversationOrchestrator::ActionExecutor.call(
         llm_response: { "environment_instruction" => "Turn the lights orange and play heavy metal" },
         session_id: session_id,
         conversation_id: session_id,
@@ -86,7 +86,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
         "environment_instruction" => "Dim the bedroom lights"
       }
 
-      result = ConversationNewOrchestrator::ActionExecutor.call(
+      result = ConversationOrchestrator::ActionExecutor.call(
         llm_response: llm_response,
         session_id: session_id,
         conversation_id: session_id,
@@ -115,7 +115,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
         }
       }
 
-      finalizer = ConversationNewOrchestrator::Finalizer.new(state: mock_state, user_message: "test")
+      finalizer = ConversationOrchestrator::Finalizer.new(state: mock_state, user_message: "test")
       tool_analysis = finalizer.send(:analyze_tools)
 
       expect(tool_analysis[:sync_tools]).to include("memory_search_1", "weather_tool")

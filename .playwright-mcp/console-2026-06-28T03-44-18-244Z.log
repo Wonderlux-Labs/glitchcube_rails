@@ -34,3 +34,13 @@
 [15509539ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
 [15509539ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
 [15512635ms] Object
+[16718719ms] Object
+[30655528ms] Object
+[60973843ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/auth/token:0
+[60974051ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[60981128ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/auth/token:0
+[60981128ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[60983740ms] Object
+[61909172ms] Object
+[68853848ms] Object
+[69184095ms] Object

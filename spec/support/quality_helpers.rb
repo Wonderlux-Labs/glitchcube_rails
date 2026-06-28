@@ -1,4 +1,6 @@
 module QualityHelpers
+  include ActiveJob::TestHelper
+
   # Calls the brain LLM for real against a given persona and user input.
   # Uses PromptBuilder to build a realistic system prompt, then calls LlmIntention
   # with the configured brain_model.
@@ -22,7 +24,7 @@ module QualityHelpers
     conversation = Conversation.create!(session_id: sid)
     persona_instance = Prompts::PersonaLoader.load(persona.to_s)
 
-    prompt_result = ConversationNewOrchestrator::PromptBuilder.call(
+    prompt_result = ConversationOrchestrator::PromptBuilder.call(
       conversation: conversation,
       persona: persona_instance,
       user_message: user_input,
@@ -31,7 +33,7 @@ module QualityHelpers
     raise "PromptBuilder failed: #{prompt_result.error}" unless prompt_result.success?
 
     t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    llm_result = ConversationNewOrchestrator::LlmIntention.call(
+    llm_result = ConversationOrchestrator::LlmIntention.call(
       prompt_data: prompt_result.data,
       user_message: user_input,
       model: Rails.configuration.brain_model
@@ -62,9 +64,14 @@ module QualityHelpers
     HomeAssistantService.instance = fake_ha
 
     t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    result = ToolCallingService
-      .new(session_id: "quality_tx_#{SecureRandom.hex(4)}")
-      .execute_intent(instruction, { persona: persona })
+    # Light/music tools are :async — execute_intent enqueues AsyncToolJob rather
+    # than calling HASS inline. Perform those jobs synchronously so the tools
+    # actually run against FakeHA and the device service calls are observable.
+    result = perform_enqueued_jobs do
+      ToolCallingService
+        .new(session_id: "quality_tx_#{SecureRandom.hex(4)}")
+        .execute_intent(instruction, { persona: persona })
+    end
     elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0).round(2)
 
     Rails.logger.info "[QUALITY] translator for '#{instruction[0..50]}': #{elapsed}s"

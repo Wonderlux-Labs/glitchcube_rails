@@ -122,6 +122,13 @@ Reordered (2026-06-22) around three operating criteria: **(1) raise the safety n
 | 2026-06-24 | **Memory loop wired end-to-end.** `NarrativeResponseSchema` gained a `memories` array field; `Finalizer` now enqueues `MemoryStoreJob` (async, so embedding write never blocks speech — same speak-first policy as `EnvironmentDirectorJob`). `SystemContextEnhancer.build_relevant_knowledge_context` replaced its TODO placeholder with a real `MemoryRecallService.get_relevant_memories(limit: 3)` call — proactive recall now injects top memories into the system prompt each turn. `ResponseSynthesizer` threads `memories` and `environment_instruction` through the response hash. `ContextualSpeechTriggerService` migrated off `tool_intents` array to single `environment_instruction` (now consistent with the brain→translator pipeline). Deleted `build_structured_output_instructions` (dead `tool_intents`-era code) from `SystemPromptBuilder`. Deleted three stale VCR cassettes (~1 200 lines). New specs: `MemoryStoreJob` (51 ex), `ResponseSynthesizer` (34 ex), `SystemContextEnhancer` (30 ex), performance-mode e2e with `FakeClock` (end-to-end loop runs in virtual time). | suite green |
 | 2026-06-26 | **qualspec quality infrastructure.** Added `gem "qualspec"` (github: estiens/qualspec 0.1.2). Built separate quality spec stack: `spec/quality_helper.rb` (VCR permissive, no HTTP blocking), `spec/support/quality_helpers.rb` (`run_brain_turn`/`run_translator` helpers with FakeHA + per-turn timing), `spec/support/qualspec_rubrics.rb` (3 custom rubrics: `:cube_persona`, `:environment_instruction_quality`, `:translator_result_quality`). Added `spec/quality/persona_quality_spec.rb` (7 ex: Buddy/Jax/Zorp — in-character, concise, env_instruction quality, Jax-vs-Buddy distinctiveness) and `spec/quality/translator_quality_spec.rb` (10 ex: 5 instruction types × judge + service_calls). Added `eval/glitchcube_personas.rb` standalone CLI for all-8-persona comparison with HTML report. **Not yet run against real OpenRouter** — first run is the next session's starting point. Decided FakeHA > live HASS for testing (state isolation); UTM live HASS reserved for pre-event manual smoke test. Stale docs deleted: `docs/PENDING_TEST_ANALYSIS.md`, `docs/light_tools_consolidation.md`. | syntax OK; normal suite unaffected |
 | 2026-06-28 | **Continuity simplification — replaced the whole memory/goal/summarizer stack** (see [`continuity.md`](continuity.md)). Three pieces now: a short **world-state flat file** (`storage/world_state.md`, mirrored to `sensor.glitchcube_world_state`) injected every turn; **one** `ReflectionService`/`ReflectionJob` (every 30 min) that reads `Conversation.unreflected`, rewrites the world state, and saves discrete memories; and a plain **`Memory`** model (renamed from `ConversationMemory`: `summary`→`content`, `memory_type`→`category`, +`emotion`/`occurs_at`, no session FK) searched by `Tools::Query::MemorySearch` (plain Rails — keyword/category/`occurs_at`, **no embeddings**; `embedding` column kept for a possible lazy future). **Deleted:** `GoalService` + `goals.yml` + `persona_themes.yml` + `goal_monitor`, the hourly/intermediate/daily/consolidation summarizers + `ConversationSummarizerService`, `app/services/memory/*` (recall/extraction/context-injection), `MemoryStoreJob`, `rag_search`, `SystemContextEnhancer`, `Event`/`Person`/`Fact` models + admin CRUD + their routes, `burning_man` controller/routes, and the goal/world-state rake tasks. Removed `vectorsearch` from `Summary`. Schema dropped `goal_progress` + per-turn `memories[]`; `search_memories` is now `{query, category, timeframe}`. New specs: `Memory`, `WorldState`, `ReflectionService`, `MemorySearch`. | suite green |
+| 2026-06-28 | **Renamed `ConversationNewOrchestrator` → `ConversationOrchestrator`.** It was always the only orchestrator; `New` was a dead qualifier from early development. Renamed the service file, the step-file directory, and all spec directories. Updated all references in controller, config, spec support, integration specs, and docs. | 760 ex, 0 failures |
+| 2026-06-28 | **Docs update:** CLAUDE.md gains UTM HASS VM connection info (SSH `root@glitch.local` / `easytoremember`), expanded `FakeHomeAssistant` usage docs, and `FakeClock` usage. REFACTOR_NOTES §8 updated to reflect post-memory-refactor state. | — |
+| 2026-06-28 | **Fixed qualspec quality spec loading:** removed manual `config.api_key=` call from `spec/quality_helper.rb` — qualspec reads `QUALSPEC_API_KEY` from env automatically; the explicit setter caused a `NoMethodError`. Both quality spec files now load and dry-run cleanly. | 16 quality examples dry-run clean |
+| 2026-06-28 | **Resilience fix (speech-path graceful degrade).** `LlmIntention`'s rescue now returns a *successful* synthetic narrative (fallback speech, `continue_conversation: false`, empty `environment_instruction`) instead of a failure — so a brain-LLM/OpenRouter error no longer rolls back the turn or makes the cube silent; it speaks "I'm having trouble thinking right now…" and the turn persists. Error still logged loudly via `ConversationLogger`. Validation failures (nil/blank prompt/model — bugs) still fail loudly. `EnvironmentDirectorJob` already log-and-skips on HASS failure (no change needed). | llm_intention spec 30 ex; full suite 760 ex, 0 failures |
+| 2026-06-28 | **Ran + recorded the quality specs live (first real OpenRouter run).** Removed the manual qualspec `api_key=`; added `QUALSPEC_API_KEY` to `.env` (qualspec's judge hits OpenRouter directly). Findings logged in §8. Surfaced: a missing built-in `:concise` rubric, a persona-bleed bug (Zorp answered "I am BUDDY"), over-long/over-swearing brain output, and a translator-harness gap (async tools enqueue `AsyncToolJob` so `FakeHA.service_calls` stays empty — translator works, assertion is wrong). | cassettes recorded under `spec/cassettes/qualspec/` |
+| 2026-06-28 | **Quality-spec quick wins (harness fixes).** (1) Defined the `:concise` rubric in `qualspec_rubrics.rb` (it was referenced as a qualspec built-in but doesn't exist — was crashing "Rubric not found"; now produces real scores). (2) Fixed the translator harness: `run_translator` now wraps `execute_intent` in `perform_enqueued_jobs` (incl. `ActiveJob::TestHelper`) so the `:async` light/music tools actually execute against FakeHA — `service_calls` populates (5 failures → flaky-1). **Two real MODEL findings, left as failing signal (not forced green):** brain `google/gemini-3.5-flash` emits ~11-sentence replies (fails `:concise`, needs prompt/model tightening); translator `minimax/minimax-m3` lacks `function_calling` and *intermittently* emits no tool call — a poor translator choice. Persona-bleed skipped (Zorp likely being deleted). | translator 4-5/5; concise rubric resolves |
+| 2026-06-28 | **Moved HASS YAML snapshots to `deprecated/`.** `data/homeassistant/` → `deprecated/homeassistant/`, `config/home_assistant/` → `deprecated/config_home_assistant/`, stray `app/services/gps/blah.yaml` → `deprecated/gps_scene_creator_automation.yaml`. Rails never loaded these (in-repo reference snapshot of live HASS config, long drifted); kept as copy-from examples. Added `deprecated/README.md`; updated two comment path refs in `ha_data_sync.rb`. The custom HASS component (`conversation.py`, Phase 4b) moved with it: `deprecated/homeassistant/custom_components/glitchcube_conversation/`. | app boots; suite green |
 
 ---
 
@@ -146,75 +153,73 @@ Also notable: `PersonaSwitchService` was gutted (now just ends conversations + s
 
 ---
 
-## 8. What's next (plan as of 2026-06-26)
+## 8. What's next (plan as of 2026-06-28)
 
-Foundation + most of the planned work is done. **Done:** ✅ CubeData autoload (1),
-✅ Phase 2 LLM polish (2), ✅ Memory integration — full recall→store loop wired (4),
-✅ Phase 4 in-repo clock + rebuilt perf smoke test (5a), ✅ E2 cosmetics — harness
-retired, `ARCHITECTURE.md` written, `ConversationLog` naming settled (6),
-✅ standing embedding-stub hygiene, ✅ performance-mode e2e spec with `FakeClock`,
-✅ qualspec integration — quality spec infrastructure built (see below).
+**Foundation work is done.** The core refactor (LLM pipeline, memory/continuity, tooling, test infrastructure) is complete and the suite is green.
+
+**Completed since last update (2026-06-28):**
+- ✅ Continuity simplification — world-state + reflection + plain Memory (no goals, no multi-layer summarizers, no embeddings)
+- ✅ `ConversationNewOrchestrator` → `ConversationOrchestrator` rename (cosmetic, it was always the only one)
+- ✅ CLAUDE.md updated with UTM HASS VM info and FakeHomeAssistant docs
 
 **Remaining work, in recommended order:**
 
-### Next session: run the quality specs + fix qualspec alpha issues
+### 1. Webhook request specs + world-state context setup (TOP priority)
 
-`spec/quality/` and `eval/` exist but have NOT been run against real OpenRouter yet.
-First real run will reveal any qualspec alpha gaps to fix.
+The real testing need is **HASS-triggered events arriving as webhooks** (e.g. a motion
+sensor change → POST to Rails → start a conversation / proactive moment). These are
+ordinary request specs; the hard part is **setting up complex world-state context** so
+we can assert behavior under specific conditions ("motion fires when it's night AND a
+Sunday AND the cube is in low-power mode"). What we need:
 
-```bash
-# Run the quality suite (live OpenRouter calls, real LLM credits):
-bundle exec rspec spec/quality/persona_quality_spec.rb
-bundle exec rspec spec/quality/translator_quality_spec.rb
+- A test helper to seed `WorldState` content + relevant entity/sensor state + clock
+  (time-of-day, day-of-week) for a request, then POST the trigger and assert on the
+  response/side effects.
+- This matters more than `FakeHomeAssistant` completeness right now — we care about
+  what *Rails does when HASS pokes it*, not about faking HASS's own responses.
+- Today's HASS→Rails entry points: `POST /ha/world_state/trigger` (→
+  `WorldStateUpdaters::Registry`). A dedicated motion/proactive webhook may need to be
+  added — design it alongside the spec.
 
-# Run the 8-persona eval CLI (generates HTML report):
-OPENROUTER_API_KEY=$OPENROUTER_API_KEY bundle exec ruby eval/glitchcube_personas.rb
-```
+### 2. Quality specs — reframe as MODEL quality, not persona-vs-persona (first run done)
 
-**Known alpha risk areas in `eval/glitchcube_personas.rb`** (standalone script uses
-internal qualspec APIs that may not exist yet):
-- `Qualspec::Suite.find(name)` — registry lookup
-- `Qualspec::Suite::Runner` / `Qualspec::Suite::HtmlReporter` — internal classes
-- `results.scores_by_candidate` / `results.scores_by_scenario` — Results data shape
-- `with_context` in scenario DSL
+The specs ran live (cassettes recorded). The **goal is to find the best/cheapest model**
+that (a) stays in character and (b) emits correct environment commands — NOT to compare
+personas to each other. To get there, qualspec should sweep **candidate models** against
+a fixed persona/instruction set and report pass-rate + cost per model.
 
-The RSpec specs (`spec/quality/`) use only documented API and should work as-is.
-Since we own the qualspec repo, fix missing APIs there as we go.
+Harness quick-wins — **DONE (2026-06-28):**
+- ✅ **`:concise` rubric** defined in `qualspec_rubrics.rb` (was crashing "Rubric not found").
+- ✅ **Translator harness** now `perform_enqueued_jobs` so `:async` light/music tools
+  execute against FakeHA and `service_calls` populates.
+- ⏭️ **Persona bleed** (Zorp "I am BUDDY") — skipped; Zorp likely being deleted.
 
-**After quality specs run:** review persona HTML report — if two personas score
-identically, adjust their YAMLs for distinctiveness. Pay attention to Jax vs Buddy
-(deliberately contrasting) and Mobius/Crash (most abstract voices).
+Real MODEL findings surfaced by the first run (left as failing signal, NOT forced green):
+- **Brain `google/gemini-3.5-flash` is too verbose** — ~11-sentence replies, fails the
+  `:concise` TTS criterion. Needs prompt tightening and/or a different model. A model
+  sweep is the right tool to pick the cheapest one that stays concise + in character.
+- **Translator `minimax/minimax-m3` is a weak tool-caller** — it lacks `function_calling`
+  capability and *intermittently* emits no tool call at all (the `light_color` scenario
+  flaked red then green on re-run). Strongly consider a different `TOOL_CALLING_MODEL`.
 
-### One resilience fix (small, high value)
+Next step to make this a real model sweep: parameterize the quality specs (or `eval/`)
+over **candidate models** and report pass-rate + cost per model, rather than testing one
+fixed brain/translator pairing.
 
-Add a single `rescue` at the `LlmIntention` boundary so an OpenRouter failure returns
-`"I'm having trouble thinking right now..."` rather than propagating an exception that
-makes the cube silent. Also: `EnvironmentDirectorJob` should log-and-skip on HASS
-failures rather than raising. Neither requires tests — just let-it-fail-loudly applies
-everywhere *except* the user-facing speech path.
+### 3. FakeHomeAssistant audit (lower priority now)
 
-### FakeHomeAssistant completeness audit
+Deferred — see §1. We need request-spec/world-state context more than HASS-response
+fidelity. The UTM VM (`glitch.local`, SSH `root/easytoremember`) stays reserved for
+pre-event manual smoke testing.
 
-Decision made (2026-06-26): continue using `FakeHomeAssistant` rather than a live HASS
-VM for testing. State isolation is the key reason — a live HASS accumulates state
-between test runs. Save UTM-based HASS for pre-event smoke testing (manual, 30-min
-checklist the day before a deploy). FakeHA covers 90%+ of what's testable.
-
-Next step: audit what the app actually calls against the HASS REST API surface and
-verify FakeHA covers it. In particular: bulk `GET /api/states` (used?) and the
-WebSocket event push path.
-
-### Phase 3 — EventProfile portability (most invasive, defer until closer to event)
+### 4. Phase 3 — EventProfile portability (most invasive, defer)
 
 Introduce `EventProfile.current` defaulting to a `burning_man` profile that
 reproduces today's exact values, then route personas/goals/geo through it
-incrementally; add a `regional` profile last. Snapshot current prompt/goal output
-and assert byte-identical after the layer lands. Keep geocoding — make it
-profile-driven, don't remove it. Guard with golden-master. **Skip until 4–6 weeks
-before a regional event.**
+incrementally; add a `regional` profile last. **Skip until 4–6 weeks before a
+regional event.**
 
-### Phase 4b — HASS custom-component migration (on-hardware, deferred)
+### 5. Phase 4b — HASS custom-component migration (on-hardware, deferred)
 
 `_async_handle_message`/`ChatLog`, strip hardcoded values; streaming TTS only if
 latency warrants. Do on actual Mac Mini hardware with a live HASS instance.
-The in-repo, clock-driven smoke test (5a) is done.

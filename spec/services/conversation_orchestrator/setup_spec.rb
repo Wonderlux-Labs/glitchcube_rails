@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe ConversationNewOrchestrator::Setup do
+RSpec.describe ConversationOrchestrator::Setup do
   let(:session_id) { 'test-session-123' }
   let(:context) { { user_input: 'Hello', timestamp: Time.current } }
   let(:current_persona) { :buddy }

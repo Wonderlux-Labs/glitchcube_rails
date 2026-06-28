@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator/prompt_builder.rb
-class ConversationNewOrchestrator::PromptBuilder
+# app/services/conversation_orchestrator/prompt_builder.rb
+class ConversationOrchestrator::PromptBuilder
   def self.call(conversation:, persona:, user_message:, context:)
     new(conversation: conversation, persona: persona, user_message: user_message, context: context).call
   end

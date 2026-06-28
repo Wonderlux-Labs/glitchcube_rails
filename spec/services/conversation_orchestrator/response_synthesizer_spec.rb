@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ConversationNewOrchestrator::ResponseSynthesizer do
+RSpec.describe ConversationOrchestrator::ResponseSynthesizer do
   let(:llm_response) do
     {
       "speech_text" => "I've turned on the lights for you.",

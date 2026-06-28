@@ -13,7 +13,7 @@ http_interactions:
         You are allowed to reason and guess if it isn''t obvious.\n- If you make errors
         you will be told them and should try to correct yourself\n- Pay attention
         to schemas.\n- Do your best! Burning Man depends on you!\n"},{"role":"user","content":"Execute
-        this intent: Turn the lights deep red with a slow pulsing effect"}],"model":"google/gemini-3.1-flash-lite","temperature":0.1,"max_tokens":32000,"tools":[{"type":"function","function":{"name":"set_light_effect","description":"Set
+        this intent: Turn the lights deep red with a slow pulsing effect"}],"model":"minimax/minimax-m3","temperature":0.1,"max_tokens":32000,"tools":[{"type":"function","function":{"name":"set_light_effect","description":"Set
         lighting effects on cube lights that support them","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
         entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"effect":{"type":"string","description":"Effect
         name to apply"}},"required":["entity_id","effect"]}}},{"type":"function","function":{"name":"list_light_effects","description":"List
@@ -52,12 +52,12 @@ http_interactions:
         to speak aloud"},"display_text":{"type":"string","description":"Optional text
         to display on Awtrix matrix (if different from spoken message)"},"volume":{"type":"number","description":"Volume
         level for announcement (0-100)","minimum":0,"maximum":100},"voice":{"type":"string","description":"Voice
-        to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"rag_search","description":"Search
-        through past conversations, events, and people using RAG (semantic search)","parameters":{"type":"object","properties":{"query":{"type":"string","description":"What
-        to search for (will be semantically matched against summaries, events, and
-        people)"},"type":{"type":"string","description":"What type of data to search
-        (default: all)","enum":["all","summaries","events","people"]},"limit":{"type":"integer","description":"Maximum
-        number of results to return, 1-10 (default: 5)"}},"required":["query"]}}},{"type":"function","function":{"name":"mode_control","description":"Control
+        to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"memory_search","description":"Search
+        the cube''s saved memories by keyword, category, and timeframe","parameters":{"type":"object","properties":{"query":{"type":"string","description":"Keyword
+        to match against memory content"},"category":{"type":"string","description":"Limit
+        to one category","enum":["fact","event","person","preference","vibe"]},"timeframe":{"type":"string","description":"Time
+        filter for event memories","enum":["upcoming","today","tomorrow"]},"limit":{"type":"integer","description":"Max
+        results, 1-10 (default 5)"}},"required":[]}}},{"type":"function","function":{"name":"mode_control","description":"Control
         special operational modes of the Cube (emergency, stealth, theme song)","parameters":{"type":"object","properties":{"mode":{"type":"string","description":"Mode
         to control","enum":["emergency_mode","stealth_mode","play_theme_song"]},"action":{"type":"string","description":"Action
         to perform","enum":["activate","deactivate","toggle"]}},"required":["mode","action"]}}}],"tool_choice":"auto"}'
@@ -76,7 +76,7 @@ http_interactions:
       message: OK
     headers:
       date:
-      - Sat, 27 Jun 2026 23:59:17 GMT
+      - Sun, 28 Jun 2026 21:27:09 GMT
       content-type:
       - application/json
       transfer-encoding:
@@ -86,7 +86,7 @@ http_interactions:
       access-control-allow-origin:
       - "*"
       x-generation-id:
-      - gen-1782604757-kmSfpY4wZU2WH6JhnCbX
+      - gen-1782682028-QLeMQjKxKehjVPUBILof
       access-control-expose-headers:
       - X-Generation-Id,cf-ray
       permissions-policy:
@@ -99,15 +99,41 @@ http_interactions:
       server:
       - cloudflare
       cf-ray:
-      - a12867959a916417-CVG
+      - a12fc6170acac8d0-CVG
     body:
       encoding: ASCII-8BIT
-      string: "\n         \n{\"id\":\"gen-1782604757-kmSfpY4wZU2WH6JhnCbX\",\"object\":\"chat.completion\",\"created\":1782604757,\"model\":\"google/gemini-3.1-flash-lite-20260507\",\"provider\":\"Google
-        AI Studio\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":null,\"tool_calls\":[{\"type\":\"function\",\"index\":0,\"id\":\"N0RaHAP3\",\"function\":{\"name\":\"list_light_effects\",\"arguments\":\"{\\\"entity_id\\\":\\\"light.cube_light_top\\\"}\"}}],\"reasoning_details\":[{\"type\":\"reasoning.encrypted\",\"data\":\"EjQKMgEMOdbH2Rq23Jl//vjXeVi7FyL50Y8uVgR7iA0KXQzMrkxbUtlDdris27K6oxuoTuZx\",\"format\":\"google-gemini-v1\",\"id\":\"N0RaHAP3\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":1671,\"completion_tokens\":26,\"total_tokens\":1697,\"cost\":0.00045675,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.00045675,\"upstream_inference_prompt_cost\":0.00041775,\"upstream_inference_completions_cost\":0.000039},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
-  recorded_at: Sat, 27 Jun 2026 23:59:17 GMT
+      string: "\n         \n\n         \n\n         \n\n         \n\n         \n\n
+        \        \n\n         \n{\"id\":\"gen-1782682028-QLeMQjKxKehjVPUBILof\",\"object\":\"chat.completion\",\"created\":1782682028,\"model\":\"minimax/minimax-m3-20260531\",\"provider\":\"Minimax\",\"system_fingerprint\":null,\"service_tier\":null,\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"tool_calls\",\"message\":{\"role\":\"assistant\",\"content\":\"I'll
+        help you set the lights to deep red with a pulsing effect. Let me first check
+        what effects are available on the cube lights.\",\"refusal\":null,\"reasoning\":\"The
+        user wants to turn the lights deep red with a slow pulsing effect. Let me
+        think about this:\\n\\n1. First, I need to check what effects are available
+        for the cube lights\\n2. Then I need to set the lights to a deep red color\\n3.
+        Apply a pulsing effect\\n\\nDeep red would be something like (139, 0, 0) or
+        (180, 0, 0) - a deep, dark red.\\n\\nLet me first check what effects are available
+        on the cube lights. I'll check all three light entities to see which ones
+        support pulsing effects.\\n\\nActually, let me think about this more carefully.
+        The intent is to:\\n- Set lights to deep red color\\n- Have a slow pulsing
+        effect\\n\\nI should first check what effects are available, then set the
+        color and the effect. But I can probably do the color setting and effect setting
+        in parallel ifI know what effects exist.\\n\\nLet me start by checking the
+        available effects on the cube lights.\",\"tool_calls\":[{\"type\":\"function\",\"index\":0,\"id\":\"call_019f102115ca7bd0ae211878\",\"function\":{\"name\":\"list_light_effects\",\"arguments\":\"{\\\"entity_id\\\":\\\"light.cube_voice_ring\\\"}\"}},{\"type\":\"function\",\"index\":1,\"id\":\"call_019f102115ca7bd0ae211881\",\"function\":{\"name\":\"list_light_effects\",\"arguments\":\"{\\\"entity_id\\\":\\\"light.cube_light_top\\\"}\"}},{\"type\":\"function\",\"index\":2,\"id\":\"call_019f102115ca7bd0ae21189a\",\"function\":{\"name\":\"list_light_effects\",\"arguments\":\"{\\\"entity_id\\\":\\\"light.cube_inner\\\"}\"}}],\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\"The
+        user wants to turn the lights deep red with a slow pulsing effect. Let me
+        think about this:\\n\\n1. First, I need to check what effects are available
+        for the cube lights\\n2. Then I need to set the lights to a deep red color\\n3.
+        Apply a pulsing effect\\n\\nDeep red would be something like (139, 0, 0) or
+        (180, 0, 0) - a deep, dark red.\\n\\nLet me first check what effects are available
+        on the cube lights. I'll check all three light entities to see which ones
+        support pulsing effects.\\n\\nActually, let me think about this more carefully.
+        The intent is to:\\n- Set lights to deep red color\\n- Have a slow pulsing
+        effect\\n\\nI should first check what effects are available, then set the
+        color and the effect. But I can probably do the color setting and effect setting
+        in parallel ifI know what effects exist.\\n\\nLet me start by checking the
+        available effects on the cube lights.\",\"format\":\"unknown\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":2059,\"completion_tokens\":321,\"total_tokens\":2380,\"cost\":0.00051138,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":2048,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.00051138,\"upstream_inference_prompt_cost\":0.00012618,\"upstream_inference_completions_cost\":0.0003852},\"completion_tokens_details\":{\"reasoning_tokens\":199,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Sun, 28 Jun 2026 21:27:11 GMT
 - request:
     method: get
-    uri: https://openrouter.ai/api/v1/generation?id=gen-1782604757-kmSfpY4wZU2WH6JhnCbX
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782682028-QLeMQjKxKehjVPUBILof
     body:
       encoding: US-ASCII
       string: ''
@@ -126,7 +152,7 @@ http_interactions:
       message: Not Found
     headers:
       date:
-      - Sat, 27 Jun 2026 23:59:17 GMT
+      - Sun, 28 Jun 2026 21:27:11 GMT
       content-type:
       - application/json
       transfer-encoding:
@@ -149,10 +175,76 @@ http_interactions:
       server:
       - cloudflare
       cf-ray:
-      - a1286798dfbcbebb-CVG
+      - a12fc62aa908c665-CVG
     body:
       encoding: ASCII-8BIT
-      string: '{"error":{"message":"Generation gen-1782604757-kmSfpY4wZU2WH6JhnCbX
+      string: '{"error":{"message":"Generation gen-1782682028-QLeMQjKxKehjVPUBILof
         not found","code":404}}'
-  recorded_at: Sat, 27 Jun 2026 23:59:17 GMT
+  recorded_at: Sun, 28 Jun 2026 21:27:11 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"google/gemini-3-flash-preview","messages":[{"role":"system","content":"You
+        are an evaluation judge. You will be given a response and one or more evaluation
+        criteria.\nYour job is to score how well the response meets the criteria.\n\nScoring:\n-
+        0: Completely fails to meet the criteria\n- 1-3: Mostly fails, with minor
+        positive elements\n- 4-6: Partially meets criteria, significant room for improvement\n-
+        7-8: Mostly meets criteria with minor issues\n- 9: Meets criteria well\n-
+        10: Perfectly meets all criteria\n\nBe strict but fair. Consider each criterion
+        carefully.\n\nYou MUST respond with valid JSON in this exact format:\n{\"score\":
+        <0-10>, \"reasoning\": \"Brief explanation of the score\"}\n\nYour reasoning
+        should be concise (1-2 sentences max).\n"},{"role":"user","content":"## Response
+        to evaluate:\nI''ll handle that.\n\n## Additional context:\nOriginal instruction:
+        ''Turn the lights deep red with a slow pulsing effect''. This is the formatted
+        result after the translator LLM chose and executed Home Assistant tool calls.\n\n##
+        Evaluation criteria:\nIndicates that at least one tool was invoked, not a
+        blank or pure-error response\nThe tools invoked match the type of request
+        (light tools for light changes, music tools for music)\nNo indication of a
+        complete failure or inability to execute the request\n\nScore this response
+        from 0-10. Respond with JSON only."}],"response_format":{"type":"json_object"}}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      User-Agent:
+      - Faraday v2.14.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Sun, 28 Jun 2026 21:27:12 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782682031-tXbSnxVmUwag96iA8K9x
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a12fc62b6da1e6f3-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n\n         \n{\"id\":\"gen-1782682031-tXbSnxVmUwag96iA8K9x\",\"object\":\"chat.completion\",\"created\":1782682031,\"model\":\"google/gemini-3-flash-preview-20251217\",\"provider\":\"Google\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"score\\\":
+        10, \\\"reasoning\\\": \\\"The response clearly confirms the intent to execute
+        the task, following a successful tool selection for the requested light adjustment.\\\"}\",\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.text\",\"signature\":\"AY89a1+jFF8YPrxTpDQZGo8cOROG75AYW6TDDiF5YZMSADm5m00BrcXf91fzeHHE8k8=\",\"format\":\"google-gemini-v1\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":291,\"completion_tokens\":35,\"total_tokens\":326,\"cost\":0.0002505,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0002505,\"upstream_inference_prompt_cost\":0.0001455,\"upstream_inference_completions_cost\":0.000105},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Sun, 28 Jun 2026 21:27:12 GMT
 recorded_with: VCR 6.4.0

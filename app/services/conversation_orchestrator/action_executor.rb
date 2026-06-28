@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator/action_executor.rb
-class ConversationNewOrchestrator::ActionExecutor
+# app/services/conversation_orchestrator/action_executor.rb
+class ConversationOrchestrator::ActionExecutor
   def self.call(llm_response:, session_id:, conversation_id:, user_message:)
     new(llm_response: llm_response, session_id: session_id, conversation_id: conversation_id, user_message: user_message).call
   end

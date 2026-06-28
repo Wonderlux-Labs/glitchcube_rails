@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ConversationNewOrchestrator::Finalizer do
+RSpec.describe ConversationOrchestrator::Finalizer do
   # Finalizer now persists metadata as a JSON string (metadata.to_json) rather
   # than a Hash, so assert against the parsed JSON instead of the raw value.
   def metadata_json_including(expected)

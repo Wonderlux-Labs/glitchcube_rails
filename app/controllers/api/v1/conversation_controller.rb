@@ -11,9 +11,9 @@ class Api::V1::ConversationController < Api::V1::BaseController
     Rails.logger.info "📋 Session ID: #{session_id}"
     Rails.logger.info "🔍 Context: #{context}"
 
-    Rails.logger.info "🔧 Using ConversationNewOrchestrator"
+    Rails.logger.info "🔧 Using ConversationOrchestrator"
 
-    result = ConversationNewOrchestrator.new(
+    result = ConversationOrchestrator.new(
       session_id: session_id,
       message: message,
       context: context

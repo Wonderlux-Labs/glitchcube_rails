@@ -97,7 +97,7 @@ class HaDataSync
   end
 
   def self.update_glitchcube_context(time_of_day, location, weather_summary, current_needs = nil)
-    # Enhances: data/homeassistant/template/glitchcube_context.yaml
+    # Enhances: deprecated/homeassistant/template/glitchcube_context.yaml
     # Target: sensor.glitchcube_context
     call_ha_service(
       "sensor",
@@ -234,7 +234,7 @@ class HaDataSync
 
   # Health & Monitoring
   def self.update_api_health(endpoint, response_time, status_code, last_success)
-    # Enhances: data/homeassistant/sensors/api_health.yaml
+    # Enhances: deprecated/homeassistant/sensors/api_health.yaml
     # Target: sensor.glitchcube_api_health
     status = status_code.to_i.between?(200, 299) ? "healthy" : "error"
 

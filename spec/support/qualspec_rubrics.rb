@@ -1,6 +1,13 @@
 # GlitchCube-specific qualspec rubrics. Loaded by quality_helper.rb only —
 # not part of the main rails_helper setup.
-# Built-in rubrics (:in_character, :tool_calling, :concise, etc.) come from qualspec itself.
+
+# Generic TTS-conciseness rubric. The cube's speech is spoken aloud, so anything
+# longer than a few sentences drags. Used by the persona specs alongside :cube_persona.
+Qualspec.define_rubric :concise do
+  criterion "Roughly 1-4 sentences — short enough to be spoken aloud without dragging"
+  criterion "No stage directions, action text in brackets, or markdown formatting"
+  criterion "Gets to the point rather than padding with filler"
+end
 
 Qualspec.define_rubric :cube_persona do
   criterion "Speaks in a voice clearly distinct from a generic AI assistant"

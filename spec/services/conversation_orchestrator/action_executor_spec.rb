@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ConversationNewOrchestrator::ActionExecutor do
+RSpec.describe ConversationOrchestrator::ActionExecutor do
   let(:session_id) { 'test_session_123' }
   let(:conversation_id) { 456 }
   let(:user_message) { 'Turn on the lights' }

@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator.rb
-class ConversationNewOrchestrator
+# app/services/conversation_orchestrator.rb
+class ConversationOrchestrator
   # Define component-specific error classes for better tracking
   class SetupError < StandardError; end
   class LlmError < StandardError; end
@@ -16,7 +16,7 @@ class ConversationNewOrchestrator
 
   # The main entry point that executes the conversation flow step-by-step.
   def call
-    Rails.logger.info "🧠 New Orchestration started for message: '#{@message}'"
+    Rails.logger.info "🧠 Orchestration started for message: '#{@message}'"
 
     # The entire flow is wrapped in a transaction to ensure data consistency
     result = ActiveRecord::Base.transaction do
@@ -34,7 +34,7 @@ class ConversationNewOrchestrator
       end
     end
 
-    Rails.logger.info "✅ New Orchestration finished."
+    Rails.logger.info "✅ Orchestration finished."
     result
   rescue => e
     # Handle errors outside transaction to avoid rollback of error response
@@ -129,7 +129,7 @@ class ConversationNewOrchestrator
 
   # Centralized error handling and logging.
   def log_and_handle_error(e)
-    Rails.logger.error "❌ New Orchestration failed: #{e.class} - #{e.message}"
+    Rails.logger.error "❌ Orchestration failed: #{e.class} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     # Return a generic, safe response to the client (e.g., Home Assistant)
     ConversationResponse.error(

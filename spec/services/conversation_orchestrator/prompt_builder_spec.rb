@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ConversationNewOrchestrator::PromptBuilder do
+RSpec.describe ConversationOrchestrator::PromptBuilder do
   let(:conversation) { instance_double(Conversation, id: 123, metadata_json: nil) }
   let(:persona) { instance_double(CubePersona, name: "Assistant") }
   let(:user_message) { "Turn on the lights" }

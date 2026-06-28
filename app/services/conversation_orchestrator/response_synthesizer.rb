@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator/response_synthesizer.rb
-class ConversationNewOrchestrator::ResponseSynthesizer
+# app/services/conversation_orchestrator/response_synthesizer.rb
+class ConversationOrchestrator::ResponseSynthesizer
   def self.call(llm_response:, action_results:, prompt_data:)
     new(llm_response: llm_response, action_results: action_results, prompt_data: prompt_data).call
   end

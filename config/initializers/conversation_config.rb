@@ -1,4 +1,4 @@
-# Configuration for ConversationNewOrchestrator system
+# Configuration for ConversationOrchestrator system
 Rails.application.configure do
   # Conversation staleness timeout - how long before a conversation is considered stale
   config.conversation_stale_timeout = 5.minutes

@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator/llm_intention.rb
-class ConversationNewOrchestrator::LlmIntention
+# app/services/conversation_orchestrator/llm_intention.rb
+class ConversationOrchestrator::LlmIntention
   def self.call(prompt_data:, user_message:, model:)
     new(prompt_data: prompt_data, user_message: user_message, model: model).call
   end
@@ -47,10 +47,25 @@ class ConversationNewOrchestrator::LlmIntention
     ServiceResult.success({ llm_response: response.structured_output })
   rescue => e
     ConversationLogger.error("LLM Intention", e.message, { model: @model, user_message: @user_message })
-    ServiceResult.failure("LLM intention call failed: #{e.message}")
+    # The brain LLM is the ONE place we degrade gracefully instead of failing
+    # loudly (see CLAUDE.md): if OpenRouter errors, the cube must still speak
+    # rather than go silent or surface a stack-trace error. Return a synthetic
+    # narrative so the rest of the pipeline finishes normally and the turn is
+    # persisted. Validation failures above still fail loudly — those are bugs.
+    ServiceResult.success({ llm_response: fallback_narrative })
   end
 
   private
+
+  def fallback_narrative
+    {
+      "speech_text" => "I'm having trouble thinking right now — give me a moment.",
+      "continue_conversation" => false,
+      "inner_thoughts" => "Brain LLM call failed; spoke a graceful fallback so I'm not silent.",
+      "environment_instruction" => "",
+      "search_memories" => []
+    }
+  end
 
   def build_messages
     messages = []

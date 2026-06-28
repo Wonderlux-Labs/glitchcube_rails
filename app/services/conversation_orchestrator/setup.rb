@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator/setup.rb
-class ConversationNewOrchestrator::Setup
+# app/services/conversation_orchestrator/setup.rb
+class ConversationOrchestrator::Setup
   def self.call(session_id:, context:)
     new(session_id: session_id, context: context).call
   end

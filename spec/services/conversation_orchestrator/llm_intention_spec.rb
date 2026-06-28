@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe ConversationNewOrchestrator::LlmIntention, type: :service do
+RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
   # The real LlmService.call_with_structured_output returns an OpenRouter
   # response object (responds to #content / #structured_output / #model /
   # #usage), not a bare Hash. This builds an equivalent stand-in so specs
@@ -157,16 +157,24 @@ RSpec.describe ConversationNewOrchestrator::LlmIntention, type: :service do
     end
 
     context "error handling" do
+      # The brain LLM (OpenRouter) is the one place we degrade gracefully rather
+      # than failing loudly: a runtime failure must NOT make the cube go silent or
+      # surface a stack-trace error response. Instead LlmIntention returns a
+      # synthetic narrative with fallback speech so the pipeline finishes and the
+      # cube still says something. The error is still logged loudly.
       context "when LlmService raises an error" do
         before do
           allow(LlmService).to receive(:call_with_structured_output)
             .and_raise(StandardError.new("OpenRouter API timeout"))
         end
 
-        it "returns failure with error message" do
-          expect(result).to be_failure
-          expect(result.error).to include("LLM intention call failed")
-          expect(result.error).to include("OpenRouter API timeout")
+        it "returns success with a graceful fallback narrative (cube isn't silent)" do
+          expect(result).to be_success
+          narrative = result.data[:llm_response]
+          expect(narrative["speech_text"]).to be_present
+          expect(narrative["continue_conversation"]).to be(false)
+          # No environment action should be dispatched on a brain failure.
+          expect(narrative["environment_instruction"]).to eq("")
         end
 
         it "logs the error via ConversationLogger" do

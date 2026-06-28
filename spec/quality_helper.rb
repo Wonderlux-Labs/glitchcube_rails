@@ -41,7 +41,6 @@ RSpec.configure do |config|
 end
 
 Qualspec::RSpec.configure do |config|
-  config.api_key = ENV["OPENROUTER_API_KEY"]
   config.default_threshold = 7
   config.vcr_cassette_dir = "spec/cassettes/qualspec"
   config.record_mode = :new_episodes

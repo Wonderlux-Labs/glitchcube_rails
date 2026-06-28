@@ -1,5 +1,5 @@
-# app/services/conversation_new_orchestrator/finalizer.rb
-class ConversationNewOrchestrator::Finalizer
+# app/services/conversation_orchestrator/finalizer.rb
+class ConversationOrchestrator::Finalizer
   def self.call(state:, user_message:)
     new(state: state, user_message: user_message).call
   end

@@ -22,12 +22,12 @@ table is the answer.
 | World state (continuity) | **Rails** (file) → HASS mirror | `storage/world_state.md`, `sensor.glitchcube_world_state` | Short curated blob injected every turn; rewritten by reflection. |
 | Long-term memory | **Rails** | `Memory` (plain columns) | Discrete facts; plain Rails search, no embeddings (see Continuity). |
 | Policy / persona behavior | **Rails** | persona YAML, prompt builders | The only place behavior logic is versioned. No goal system. |
-| Decisions (what to say, what to do) | **Rails** | `ConversationNewOrchestrator` | The brain. |
+| Decisions (what to say, what to do) | **Rails** | `ConversationOrchestrator` | The brain. |
 | Pending action/query results across turns | **Rails** | `conversation.metadata_json` | `pending_ha_results`, `pending_query_results` — surfaced next turn. |
 
 ## Conversation pipeline (two LLM roles)
 
-`POST /api/v1/conversation` → `ConversationNewOrchestrator` runs six steps in a
+`POST /api/v1/conversation` → `ConversationOrchestrator` runs six steps in a
 transaction: **Setup → PromptBuilder → LlmIntention → ActionExecutor →
 ResponseSynthesizer → Finalizer**.
 

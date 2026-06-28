@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# Harness scenario (A1): drives the REAL ConversationNewOrchestrator end-to-end
+# Harness scenario (A1): drives the REAL ConversationOrchestrator end-to-end
 # with FakeHomeAssistant injected and a canned brain LLM. Asserts on observable
 # OUTPUT — what the cube says and does — not on internal mocks. Doubles as a
 # golden-master of the happy path (brain → translator dispatch → persistence).
@@ -52,7 +52,7 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
   after { HomeAssistantService.reset_instance! }
 
   it "speaks the brain's words and routes the environment change through the single translator" do
-    response = ConversationNewOrchestrator.new(
+    response = ConversationOrchestrator.new(
       session_id: session_id,
       message: "make it spooky in here",
       context: { device_id: "cube_voice", language: "en" }

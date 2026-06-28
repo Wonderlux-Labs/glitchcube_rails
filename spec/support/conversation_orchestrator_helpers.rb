@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module ConversationOrchestratorHelpers
-  # Mock helpers for ConversationNewOrchestrator
+  # Mock helpers for ConversationOrchestrator
   # Based on the actual Finalizer.format_for_hass structure
 
   def mock_orchestrator_success(speech_text: "Test response", continue_conversation: false, async_tools: [], sync_tools: [])
-    # ConversationNewOrchestrator returns the hass_response hash directly
+    # ConversationOrchestrator returns the hass_response hash directly
     build_hass_response(
       speech_text: speech_text,
       continue_conversation: continue_conversation,
@@ -19,7 +19,7 @@ module ConversationOrchestratorHelpers
   end
 
   def stub_orchestrator_call(result)
-    allow_any_instance_of(ConversationNewOrchestrator).to receive(:call).and_return(result)
+    allow_any_instance_of(ConversationOrchestrator).to receive(:call).and_return(result)
   end
 
   # Helper to create response structure that matches controller expectations
