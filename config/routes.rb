@@ -48,12 +48,6 @@ Rails.application.routes.draw do
       get "gps/cube_current_loc", to: "gps#cube_current_loc"
       get "gps/landmarks", to: "gps#landmarks"
 
-      # Burning Man quest routes
-      namespace :burning_man do
-        post "quest/progress", to: "burning_man#update_quest_progress"
-        get "quest/status", to: "burning_man#quest_status"
-      end
-
       # GIS/Map data routes
       resources :gis, only: [] do
         collection do
@@ -98,7 +92,7 @@ Rails.application.routes.draw do
     resources :memories, only: [ :index, :show ] do
       collection do
         get :search
-        get :by_type
+        get :by_category
       end
     end
 
@@ -116,28 +110,9 @@ Rails.application.routes.draw do
     get "system", to: "system#index"
     get "system/health", to: "system#health"
 
-    resources :people, only: [ :index, :show, :edit, :update, :destroy ] do
-      collection do
-        get :search
-      end
-    end
-
-    resources :events, only: [ :index, :show ] do
-      collection do
-        get :timeline
-        get :search
-      end
-    end
-
     resources :summaries, only: [ :index, :show ] do
       collection do
         get :analytics
-        get :search
-      end
-    end
-
-    resources :facts, only: [ :index, :show ] do
-      collection do
         get :search
       end
     end

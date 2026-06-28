@@ -30,14 +30,9 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
 
   config.before(:each) do
-    # Stub embedding writes/reads — no OpenAI embedding calls in quality specs
-    [ Event, Summary, ConversationMemory, Fact, Person ].each do |klass|
-      allow_any_instance_of(klass).to receive(:upsert_to_vectorsearch)
-      allow(klass).to receive(:similarity_search).and_return(klass.none)
-    end
     # Don't execute background jobs during quality turns
     allow(EnvironmentDirectorJob).to receive(:perform_later)
-    allow(MemoryStoreJob).to receive(:perform_later)
+    allow(MemorySearchJob).to receive(:perform_later)
   end
 
   config.after(:each) do

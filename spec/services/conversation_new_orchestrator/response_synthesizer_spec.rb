@@ -9,8 +9,7 @@ RSpec.describe ConversationNewOrchestrator::ResponseSynthesizer do
       "continue_conversation" => false,
       "inner_thoughts" => "User requested light control",
       "current_mood" => "helpful",
-      "pressing_questions" => nil,
-      "goal_progress" => nil
+      "pressing_questions" => nil
     }
   end
 
@@ -76,19 +75,18 @@ RSpec.describe ConversationNewOrchestrator::ResponseSynthesizer do
       let(:action_results) do
         {
           sync_results: {
-            "rag_search" => { success: true, message: "Found 3 lighting rules" }
+            "memory_search" => { success: true, message: "Found 3 lighting rules" }
           },
           delegated_intents: []
         }
       end
 
       before do
-        allow(Tools::Registry).to receive(:tool_intent).with("rag_search").and_return(:query)
+        allow(Tools::Registry).to receive(:tool_intent).with("memory_search").and_return(:query)
         allow(LlmService).to receive(:call_with_tools).and_return(
           double(content: "I've turned on the lights based on your preferences I found.")
         )
       end
-
     end
 
     context "with the brain's own memory_search results" do
@@ -129,14 +127,14 @@ RSpec.describe ConversationNewOrchestrator::ResponseSynthesizer do
       let(:action_results) do
         {
           sync_results: {
-            "rag_search" => { success: true, message: "Found settings" }
+            "memory_search" => { success: true, message: "Found settings" }
           },
           delegated_intents: []
         }
       end
 
       before do
-        allow(Tools::Registry).to receive(:tool_intent).with("rag_search").and_return(:query)
+        allow(Tools::Registry).to receive(:tool_intent).with("memory_search").and_return(:query)
         allow(LlmService).to receive(:call_with_tools).and_raise(StandardError.new("LLM error"))
       end
 

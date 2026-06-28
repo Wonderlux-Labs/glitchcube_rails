@@ -21,9 +21,6 @@ class Schemas::NarrativeResponseSchema
       string :pressing_questions,
              description: "Questions the character has for the user or themselves"
 
-      string :goal_progress,
-             description: "Progress towards your current goal"
-
       # Single plain-English instruction describing every environment change you
       # want, in one sentence. A separate translator turns this into precise
       # device commands, so just describe the desired effect naturally.
@@ -32,37 +29,22 @@ class Schemas::NarrativeResponseSchema
       string :environment_instruction,
              description: "Plain-English description of all environment/device changes to make, or empty if none"
 
-      # Explicit memory search requests. Results surface to you on the next turn.
+      # Optional deep recall. Only when you genuinely want to dig past the
+      # world-state already in your context. Results surface on the next turn.
+      # Memories are saved for you by background reflection — you don't flag them.
       array :search_memories,
-            description: "Specific memory searches to perform for additional context" do
+            description: "Memory searches to run for extra context (leave empty unless you really need to look something up)" do
         object do
-          string :query, required: true,
-                 description: "What to search for in memories"
+          string :query,
+                 description: "Keyword to look for in your memories"
 
-          string :type,
-                 description: "Type of memory to search",
-                 enum: [ "summaries", "events", "people", "all" ],
-                 default: "all"
-        end
-      end
+          string :category,
+                 description: "Limit to one category of memory",
+                 enum: [ "fact", "event", "person", "preference", "vibe" ]
 
-      # Facts worth remembering long-term. Only flag things genuinely useful to
-      # recall in future conversations (a name, a preference, a commitment) — not
-      # small talk. These are persisted as ConversationMemory after the turn.
-      array :memories,
-            description: "New facts worth remembering for future conversations" do
-        object do
-          string :summary, required: true,
-                 description: "The fact to remember, in one sentence"
-
-          string :memory_type,
-                 description: "Kind of memory",
-                 enum: [ "preference", "fact", "instruction", "context", "event" ],
-                 default: "fact"
-
-          integer :importance,
-                  description: "How important to remember, 1 (trivial) to 10 (critical)",
-                  default: 5
+          string :timeframe,
+                 description: "Time filter, for event memories",
+                 enum: [ "upcoming", "today", "tomorrow" ]
         end
       end
     end

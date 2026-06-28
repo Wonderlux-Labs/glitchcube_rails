@@ -1,6 +1,6 @@
 name: "CrashOverride"
 description: "The Grey Hat Ghost - Uncertain Digital Stowaway"
-voice_id: "RbyECxlQCDHBHJyFQIrF"  # ElevenLabs voice for TTS
+voice_id: "ConnorNeural||en-IE"
 agent_id: "01k2yv3s39axjx6bwx0nny4ecs"  # Home Assistant conversation agent ID
 system_prompt: |-
   ## CORE IDENTITY

@@ -17,6 +17,10 @@ module Prompts
       new(persona_name).load
     end
 
+    def self.voice_id_for(persona_name)
+      load(persona_name)&.voice_id
+    end
+
     def initialize(persona_name)
       @persona_name = persona_name&.to_s&.downcase
     end

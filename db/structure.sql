@@ -154,42 +154,6 @@ ALTER SEQUENCE public.conversation_logs_id_seq OWNED BY public.conversation_logs
 
 
 --
--- Name: conversation_memories; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.conversation_memories (
-    id bigint NOT NULL,
-    session_id character varying NOT NULL,
-    summary text NOT NULL,
-    memory_type character varying NOT NULL,
-    importance integer NOT NULL,
-    metadata text,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    embedding public.vector(1536)
-);
-
-
---
--- Name: conversation_memories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.conversation_memories_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: conversation_memories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.conversation_memories_id_seq OWNED BY public.conversation_memories.id;
-
-
---
 -- Name: conversations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -208,7 +172,8 @@ CREATE TABLE public.conversations (
     flow_data text,
     metadata text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    reflected_at timestamp(6) without time zone
 );
 
 
@@ -229,79 +194,6 @@ CREATE SEQUENCE public.conversations_id_seq
 --
 
 ALTER SEQUENCE public.conversations_id_seq OWNED BY public.conversations.id;
-
-
---
--- Name: events; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.events (
-    id bigint NOT NULL,
-    title character varying DEFAULT 'Event'::character varying NOT NULL,
-    description text,
-    event_time timestamp(6) without time zone,
-    location character varying,
-    importance integer,
-    extracted_from_session character varying,
-    metadata text,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    address character varying,
-    embedding public.vector(1536)
-);
-
-
---
--- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.events_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
-
-
---
--- Name: facts; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.facts (
-    id bigint NOT NULL,
-    "heard_it_from?" character varying,
-    text text NOT NULL,
-    metadata text,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    embedding public.vector(1536)
-);
-
-
---
--- Name: facts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.facts_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: facts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.facts_id_seq OWNED BY public.facts.id;
 
 
 --
@@ -346,6 +238,43 @@ ALTER SEQUENCE public.landmarks_id_seq OWNED BY public.landmarks.id;
 
 
 --
+-- Name: memories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.memories (
+    id bigint NOT NULL,
+    content text NOT NULL,
+    category character varying NOT NULL,
+    importance integer NOT NULL,
+    metadata text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    embedding public.vector(1536),
+    emotion character varying,
+    occurs_at timestamp(6) without time zone
+);
+
+
+--
+-- Name: memories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.memories_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: memories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.memories_id_seq OWNED BY public.memories.id;
+
+
+--
 -- Name: messages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -381,43 +310,6 @@ CREATE SEQUENCE public.messages_id_seq
 --
 
 ALTER SEQUENCE public.messages_id_seq OWNED BY public.messages.id;
-
-
---
--- Name: people; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.people (
-    id bigint NOT NULL,
-    name character varying NOT NULL,
-    description text NOT NULL,
-    relationship character varying,
-    last_seen_at timestamp(6) without time zone,
-    extracted_from_session character varying NOT NULL,
-    metadata text,
-    embedding public.vector(1536),
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: people_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.people_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: people_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.people_id_seq OWNED BY public.people.id;
 
 
 --
@@ -886,31 +778,10 @@ ALTER TABLE ONLY public.conversation_logs ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- Name: conversation_memories id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.conversation_memories ALTER COLUMN id SET DEFAULT nextval('public.conversation_memories_id_seq'::regclass);
-
-
---
 -- Name: conversations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.conversations ALTER COLUMN id SET DEFAULT nextval('public.conversations_id_seq'::regclass);
-
-
---
--- Name: events id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.events_id_seq'::regclass);
-
-
---
--- Name: facts id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.facts ALTER COLUMN id SET DEFAULT nextval('public.facts_id_seq'::regclass);
 
 
 --
@@ -921,17 +792,17 @@ ALTER TABLE ONLY public.landmarks ALTER COLUMN id SET DEFAULT nextval('public.la
 
 
 --
+-- Name: memories id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.memories ALTER COLUMN id SET DEFAULT nextval('public.memories_id_seq'::regclass);
+
+
+--
 -- Name: messages id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.messages_id_seq'::regclass);
-
-
---
--- Name: people id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.people ALTER COLUMN id SET DEFAULT nextval('public.people_id_seq'::regclass);
 
 
 --
@@ -1050,35 +921,11 @@ ALTER TABLE ONLY public.conversation_logs
 
 
 --
--- Name: conversation_memories conversation_memories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.conversation_memories
-    ADD CONSTRAINT conversation_memories_pkey PRIMARY KEY (id);
-
-
---
 -- Name: conversations conversations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
-
-
---
--- Name: events events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.events
-    ADD CONSTRAINT events_pkey PRIMARY KEY (id);
-
-
---
--- Name: facts facts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.facts
-    ADD CONSTRAINT facts_pkey PRIMARY KEY (id);
 
 
 --
@@ -1090,19 +937,19 @@ ALTER TABLE ONLY public.landmarks
 
 
 --
+-- Name: memories memories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.memories
+    ADD CONSTRAINT memories_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
-
-
---
--- Name: people people_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.people
-    ADD CONSTRAINT people_pkey PRIMARY KEY (id);
 
 
 --
@@ -1281,34 +1128,6 @@ CREATE INDEX index_conversation_logs_on_session_id ON public.conversation_logs U
 
 
 --
--- Name: index_conversation_memories_on_created_at; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_conversation_memories_on_created_at ON public.conversation_memories USING btree (created_at);
-
-
---
--- Name: index_conversation_memories_on_importance; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_conversation_memories_on_importance ON public.conversation_memories USING btree (importance);
-
-
---
--- Name: index_conversation_memories_on_memory_type; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_conversation_memories_on_memory_type ON public.conversation_memories USING btree (memory_type);
-
-
---
--- Name: index_conversation_memories_on_session_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_conversation_memories_on_session_id ON public.conversation_memories USING btree (session_id);
-
-
---
 -- Name: index_conversations_on_ended_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1323,6 +1142,13 @@ CREATE INDEX index_conversations_on_persona ON public.conversations USING btree 
 
 
 --
+-- Name: index_conversations_on_reflected_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_reflected_at ON public.conversations USING btree (reflected_at);
+
+
+--
 -- Name: index_conversations_on_session_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1334,27 +1160,6 @@ CREATE UNIQUE INDEX index_conversations_on_session_id ON public.conversations US
 --
 
 CREATE INDEX index_conversations_on_started_at ON public.conversations USING btree (started_at);
-
-
---
--- Name: index_events_on_embedding; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_events_on_embedding ON public.events USING hnsw (embedding public.vector_cosine_ops);
-
-
---
--- Name: index_events_on_event_time; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_events_on_event_time ON public.events USING btree (event_time);
-
-
---
--- Name: index_events_on_importance; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_events_on_importance ON public.events USING btree (importance);
 
 
 --
@@ -1393,6 +1198,34 @@ CREATE INDEX index_landmarks_on_name ON public.landmarks USING btree (name);
 
 
 --
+-- Name: index_memories_on_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_memories_on_category ON public.memories USING btree (category);
+
+
+--
+-- Name: index_memories_on_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_memories_on_created_at ON public.memories USING btree (created_at);
+
+
+--
+-- Name: index_memories_on_importance; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_memories_on_importance ON public.memories USING btree (importance);
+
+
+--
+-- Name: index_memories_on_occurs_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_memories_on_occurs_at ON public.memories USING btree (occurs_at);
+
+
+--
 -- Name: index_messages_on_conversation_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1418,34 +1251,6 @@ CREATE INDEX index_messages_on_created_at ON public.messages USING btree (create
 --
 
 CREATE INDEX index_messages_on_role ON public.messages USING btree (role);
-
-
---
--- Name: index_people_on_embedding; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_people_on_embedding ON public.people USING hnsw (embedding public.vector_cosine_ops);
-
-
---
--- Name: index_people_on_extracted_from_session; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_people_on_extracted_from_session ON public.people USING btree (extracted_from_session);
-
-
---
--- Name: index_people_on_last_seen_at; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_people_on_last_seen_at ON public.people USING btree (last_seen_at);
-
-
---
--- Name: index_people_on_name; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_people_on_name ON public.people USING btree (name);
 
 
 --
@@ -1756,6 +1561,9 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 SET search_path TO "$user", public, topology;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260628000003'),
+('20260628000002'),
+('20260628000001'),
 ('20250821071759'),
 ('20250821071706'),
 ('20250820232800'),

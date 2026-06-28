@@ -1,17 +1,17 @@
 <% content_for :layout, 'admin' %>
 
-<h1>🧠 Conversation Memories</h1>
+<h1>🧠 Memories</h1>
 
 <div style="margin-bottom: 20px;">
   <%= link_to 'All', admin_memories_path, class: 'btn' %>
-  <% @memory_types.each do |type| %>
-    <%= link_to "#{type.humanize} (#{@type_counts[type] || 0})", 
-        admin_memories_path(type: type), class: 'btn' %>
+  <% (@categories || Memory::CATEGORIES).each do |category| %>
+    <%= link_to "#{category.humanize} (#{(@category_counts || {})[category] || 0})",
+        by_category_admin_memories_path(category: category), class: 'btn' %>
   <% end %>
 </div>
 
 <div style="margin-bottom: 20px;">
-  <%= form_with url: admin_memories_search_path, method: :get, local: true do |f| %>
+  <%= form_with url: search_admin_memories_path, method: :get, local: true do |f| %>
     <%= f.text_field :q, placeholder: 'Search memories...', value: params[:q] %>
     <%= f.submit 'Search', class: 'btn' %>
   <% end %>
@@ -20,10 +20,11 @@
 <table>
   <thead>
     <tr>
-      <th>Type</th>
-      <th>Summary</th>
+      <th>Category</th>
+      <th>Content</th>
       <th>Importance</th>
-      <th>Session</th>
+      <th>Emotion</th>
+      <th>Occurs At</th>
       <th>Created</th>
       <th>Actions</th>
     </tr>
@@ -31,18 +32,18 @@
   <tbody>
     <% @memories.each do |memory| %>
       <tr>
-        <td><%= memory.memory_type.humanize %></td>
-        <td><%= memory.summary.truncate(100) %></td>
+        <td><%= memory.category&.humanize %></td>
+        <td><%= memory.content.truncate(100) %></td>
         <td>
-          <span style="color: <%= memory.high_importance? ? '#00ff00' : memory.medium_importance? ? '#ffff00' : '#666' %>">
+          <span style="color: <%= memory.importance >= 7 ? '#00ff00' : memory.importance >= 4 ? '#ffff00' : '#666' %>">
             <%= memory.importance %>/10
           </span>
         </td>
-        <td><%= memory.session_id[0..8] %>...</td>
+        <td><%= memory.emotion %></td>
+        <td><%= memory.occurs_at&.strftime('%m/%d %H:%M') %></td>
         <td><%= memory.created_at.strftime('%m/%d %H:%M') %></td>
         <td>
           <%= link_to 'View', admin_memory_path(memory), class: 'btn' %>
-          <%= link_to 'Conversation', admin_conversation_path(memory.conversation), class: 'btn' %>
         </td>
       </tr>
     <% end %>
@@ -51,6 +52,6 @@
 
 <% if @memories.empty? %>
   <p style="color: #666; text-align: center; margin: 40px 0;">
-    No memories found. Memories are created automatically from finished conversations.
+    No memories found.
   </p>
 <% end %>

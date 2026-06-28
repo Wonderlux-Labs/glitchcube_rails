@@ -36,25 +36,29 @@ module Prompts
     def enhance_with_context(base_prompt)
       base_system_rules = load_base_system_rules
 
-      # Build basic context
+      # Live, per-turn context (time, cube mode, session, sensors)
       basic_context = @context_builder ? @context_builder.build : "Cube installation active"
-
-      # Enhance with RAG and system-specific context
-      enhanced_context = SystemContextEnhancer.enhance(
-        basic_context,
-        user_message: @user_message
-      )
 
       enhanced_parts = [
         base_prompt,
         "",
         base_system_rules,
         "",
+        world_state_section,
         "CURRENT CONTEXT:",
-        enhanced_context
-      ]
+        basic_context
+      ].compact
 
       enhanced_parts.join("\n")
+    end
+
+    # The cube's curated continuity, maintained by the reflection job and
+    # injected verbatim. Empty until the first reflection runs.
+    def world_state_section
+      state = WorldState.current
+      return nil if state.blank?
+
+      "WHAT YOU CURRENTLY KNOW:\n#{state}\n"
     end
 
     def load_base_system_rules
@@ -75,17 +79,6 @@ module Prompts
       if config["world_building_context"]
         parts << config["world_building_context"]["description"]
         parts << config["world_building_context"]["rules"]
-        parts << ""
-      end
-
-      # Goal integration
-      if config["goal_integration"]
-        goal_rules = config["goal_integration"]["rules"]
-        current_goal = get_current_goal_description
-        goal_rules_with_goal = goal_rules.gsub("{{GOAL_PLACEHOLDER}}", current_goal)
-
-        parts << config["goal_integration"]["description"]
-        parts << goal_rules_with_goal
         parts << ""
       end
 
@@ -136,16 +129,6 @@ module Prompts
       end
 
       parts.join("\n")
-    end
-
-    def get_current_goal_description
-      begin
-        goal_status = GoalService.current_goal_status
-        goal_status&.dig(:goal_description) || "Explore this interaction and create memorable moments"
-      rescue StandardError => e
-        Rails.logger.warn "Failed to get current goal: #{e.message}"
-        "Be spontaneous and create engaging interactions"
-      end
     end
 
     def build_default_persona_prompt

@@ -1,6 +1,6 @@
 name: "THE_CUBE"
 description: "The Unknowable Core - Prison, God, Accident, or Lie"
-voice_id: "en_US-danny-low"  # Piper voice for TTS
+voice_id: "WilliamNeural||en-AU"
 agent_id: "01k2yv2p2e0hhqxvcyemw2j6md"  # Home Assistant conversation agent ID
 system_prompt: |-
   ## CORE IDENTITY

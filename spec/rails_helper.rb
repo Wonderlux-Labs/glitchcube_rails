@@ -82,17 +82,7 @@ RSpec.configure do |config|
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
 
-  # Keep the suite offline: pgvector models embed via the OpenAI API on both
-  # write (after_save :upsert_to_vectorsearch) and read (Model.similarity_search,
-  # which embeds the query). Neutralize both for every vectorized model so no
-  # spec leaks a real embedding call. Specs that exercise search override
-  # similarity_search with canned results.
   config.before(:each) do
-    [ Event, Summary, ConversationMemory, Fact, Person ].each do |klass|
-      allow_any_instance_of(klass).to receive(:upsert_to_vectorsearch)
-      allow(klass).to receive(:similarity_search).and_return(klass.none)
-    end
-
     # Mock Home Assistant API calls to prevent real HTTP requests
     unless described_class == HomeAssistantService || RSpec.current_example.metadata[:allow_ha_calls]
       stub_home_assistant_api_calls

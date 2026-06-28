@@ -10,8 +10,7 @@ RSpec.describe Schemas::NarrativeResponseSchema do
       expect(schema.name).to eq('narrative_response')
     end
 
-    it 'defines required fields correctly' do
-      # Test the schema structure by accessing its properties
+    it 'is an OpenRouter::Schema' do
       expect(schema).to be_a(OpenRouter::Schema)
     end
 
@@ -20,68 +19,39 @@ RSpec.describe Schemas::NarrativeResponseSchema do
     end
   end
 
-  describe 'schema validation with OpenRouter' do
-    let(:schema) { described_class.schema }
+  describe 'expected structured output shape' do
+    let(:valid_output) do
+      {
+        "speech_text" => "Hello there, welcome to my domain!",
+        "continue_conversation" => true,
+        "inner_thoughts" => "This person seems interesting",
+        "current_mood" => "curious",
+        "pressing_questions" => "What brings you here?",
+        "environment_instruction" => "Make the lights warm and welcoming and play something ambient",
+        "search_memories" => [
+          { "query" => "music", "category" => "preference", "timeframe" => "upcoming" }
+        ]
+      }
+    end
 
-    context 'with valid structured output' do
-      let(:valid_output) do
-        {
-          "speech_text" => "Hello there, welcome to my domain!",
-          "continue_conversation" => true,
-          "inner_thoughts" => "This person seems interesting",
-          "current_mood" => "curious",
-          "pressing_questions" => "What brings you here?",
-          "environment_instruction" => "Make the lights warm and welcoming and play something ambient",
-          "direct_tool_calls" => [
-            {
-              "tool_name" => "rag_search",
-              "parameters" => {
-                "query" => "fire spinning",
-                "type" => "events",
-                "limit" => 3
-              }
-            }
-          ],
-          "search_memories" => [
-            {
-              "query" => "previous conversations about music",
-              "type" => "summaries",
-              "limit" => 2
-            }
-          ]
-        }
-      end
+    it 'carries the required speech fields' do
+      expect(valid_output).to have_key("speech_text")
+      expect(valid_output).to have_key("continue_conversation")
+    end
 
-      it 'has all required fields' do
-        expect(valid_output).to have_key("speech_text")
-        expect(valid_output).to have_key("continue_conversation")
-      end
+    it 'carries a plain-English environment instruction' do
+      expect(valid_output["environment_instruction"]).to be_a(String).and be_present
+    end
 
-      it 'carries a plain-English environment instruction' do
-        expect(valid_output["environment_instruction"]).to be_a(String)
-        expect(valid_output["environment_instruction"]).to be_present
-      end
+    it 'no longer includes goal_progress or per-turn memories' do
+      expect(valid_output).not_to have_key("goal_progress")
+      expect(valid_output).not_to have_key("memories")
+    end
 
-      it 'has valid direct tool calls structure' do
-        direct_tool_calls = valid_output["direct_tool_calls"]
-        expect(direct_tool_calls).to be_an(Array)
-
-        direct_tool_calls.each do |tool_call|
-          expect(tool_call).to have_key("tool_name")
-          expect(tool_call).to have_key("parameters")
-          expect([ "rag_search", "get_light_state", "display_notification" ]).to include(tool_call["tool_name"])
-        end
-      end
-
-      it 'has valid search memories structure' do
-        search_memories = valid_output["search_memories"]
-        expect(search_memories).to be_an(Array)
-
-        search_memories.each do |search|
-          expect(search).to have_key("query")
-          expect(search["type"]).to be_in([ "summaries", "events", "people", "all" ]) if search["type"]
-          expect(search["limit"]).to be_between(1, 10) if search["limit"]
-        end
+    it 'uses the new search_memories shape (query/category/timeframe)' do
+      valid_output["search_memories"].each do |search|
+        expect(search["category"]).to be_in(Memory::CATEGORIES) if search["category"]
+        expect(search["timeframe"]).to be_in(%w[upcoming today tomorrow]) if search["timeframe"]
       end
     end
 
@@ -90,15 +60,12 @@ RSpec.describe Schemas::NarrativeResponseSchema do
         {
           "speech_text" => "Sure thing.",
           "continue_conversation" => false,
-          "direct_tool_calls" => [],
           "search_memories" => []
         }
       end
 
       it 'works with minimal required fields only' do
         expect(minimal_output).to have_key("speech_text")
-        expect(minimal_output).to have_key("continue_conversation")
-        expect(minimal_output["direct_tool_calls"]).to be_an(Array)
         expect(minimal_output["search_memories"]).to be_an(Array)
       end
     end

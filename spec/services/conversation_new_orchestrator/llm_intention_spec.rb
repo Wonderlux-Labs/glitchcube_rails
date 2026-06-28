@@ -146,7 +146,7 @@ RSpec.describe ConversationNewOrchestrator::LlmIntention, type: :service do
           response_data = result.data[:llm_response]
 
           # These fields are optional - should be nil or present
-          optional_fields = %w[current_mood pressing_questions goal_progress environment_instruction search_memories]
+          optional_fields = %w[current_mood pressing_questions environment_instruction search_memories]
           optional_fields.each do |field|
             if response_data.key?(field)
               expect(response_data[field]).not_to eq("")

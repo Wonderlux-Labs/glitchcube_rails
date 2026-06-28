@@ -1,9 +1,9 @@
-# app/jobs/memory_search_job.rb
-#
-# Runs RAG memory searches requested by the brain LLM and stores results in
+# frozen_string_literal: true
+
+# Runs the memory searches the brain requested and stores results in
 # conversation.metadata_json["pending_query_results"] for injection next turn.
-# Async so the embedding call never blocks the spoken response — same
-# speak-first, act-async policy as EnvironmentDirectorJob and MemoryStoreJob.
+# Async so deep recall never blocks the spoken response — same speak-first,
+# act-async policy as EnvironmentDirectorJob.
 class MemorySearchJob < ApplicationJob
   queue_as :default
 
@@ -14,15 +14,21 @@ class MemorySearchJob < ApplicationJob
     limit = Rails.configuration.memory_search_limit
     results = {}
 
-    Array(searches).each_with_index do |search_request, index|
-      query = search_request["query"] || search_request[:query]
-      type  = search_request["type"]  || search_request[:type]  || "all"
-      next if query.blank?
+    Array(searches).each_with_index do |search, index|
+      search = search.symbolize_keys if search.respond_to?(:symbolize_keys)
+      query = search[:query]
+      next if query.blank? && search[:category].blank? && search[:timeframe].blank?
 
       begin
-        result = Tools::Registry.execute_tool("rag_search", query: query, type: type, limit: limit)
+        result = Tools::Registry.execute_tool(
+          "memory_search",
+          query: query,
+          category: search[:category],
+          timeframe: search[:timeframe],
+          limit: limit
+        )
         results["memory_search_#{index + 1}"] = result
-        Rails.logger.info "🧠 Async memory search: #{query} (#{type}) — #{result[:total_results] || 0} results"
+        Rails.logger.info "🧠 Async memory search: #{query} — #{result[:total_results] || 0} results"
       rescue => e
         Rails.logger.error "❌ Async memory search failed: #{query} — #{e.message}"
         results["memory_search_#{index + 1}"] = { success: false, error: e.message, query: query }
@@ -31,12 +37,12 @@ class MemorySearchJob < ApplicationJob
 
     return if results.empty?
 
-    summary = results.map do |key, r|
-      if r[:success] == false
-        "#{key}: search failed — #{r[:error]}"
+    summary = results.map do |key, result|
+      if result[:success] == false
+        "#{key}: search failed — #{result[:error]}"
       else
-        hits = Array(r[:results]).map { |m| m[:summary] }.join("; ")
-        "#{key} (#{r[:total_results]} results): #{hits}"
+        hits = Array(result[:results]).map { |memory| memory[:content] }.join("; ")
+        "#{key} (#{result[:total_results]} results): #{hits}"
       end
     end.join("\n")
 

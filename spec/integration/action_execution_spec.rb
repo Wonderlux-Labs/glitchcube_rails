@@ -33,10 +33,12 @@ RSpec.describe "Action Execution Integration", type: :integration do
   describe "ActionExecutor" do
     let(:orchestrator) { ConversationNewOrchestrator.new(session_id: session_id, message: "test message", context: context) }
 
-    it "executes memory searches via search_memories" do
+    it "enqueues memory searches via search_memories (async, surfaces next turn)" do
+      allow(MemorySearchJob).to receive(:perform_later)
+
       llm_response = {
         "search_memories" => [
-          { "query" => "fire spinning", "type" => "events" }
+          { "query" => "fire spinning", "category" => "event", "timeframe" => "upcoming" }
         ]
       }
 
@@ -48,8 +50,11 @@ RSpec.describe "Action Execution Integration", type: :integration do
       )
 
       expect(result.success?).to be true
-      expect(result.data[:sync_results]).to have_key("memory_search_1")
-      expect(result.data[:sync_results]["memory_search_1"]).to have_key(:success)
+      expect(result.data[:sync_results]).to eq({})
+      expect(MemorySearchJob).to have_received(:perform_later).with(
+        conversation_id: session_id,
+        searches: llm_response["search_memories"]
+      )
     end
 
     it "dispatches a single environment_instruction to the translator job" do
@@ -72,10 +77,11 @@ RSpec.describe "Action Execution Integration", type: :integration do
 
     it "handles mixed memory search and an environment instruction" do
       allow(EnvironmentDirectorJob).to receive(:perform_later)
+      allow(MemorySearchJob).to receive(:perform_later)
 
       llm_response = {
         "search_memories" => [
-          { "query" => "music discussion", "type" => "summaries" }
+          { "query" => "music discussion", "category" => "preference" }
         ],
         "environment_instruction" => "Dim the bedroom lights"
       }
@@ -88,7 +94,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
       )
 
       expect(result.success?).to be true
-      expect(result.data[:sync_results]).to have_key("memory_search_1")
+      expect(MemorySearchJob).to have_received(:perform_later)
       expect(result.data[:dispatched_environment]).to be true
       expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
         hash_including(instruction: "Dim the bedroom lights")
@@ -102,7 +108,7 @@ RSpec.describe "Action Execution Integration", type: :integration do
       mock_state = {
         action_results: {
           sync_results: {
-            "rag_search" => { success: true, results: [] },
+            "memory_search_1" => { success: true, results: [] },
             "weather_tool" => { success: true, data: {} }
           },
           dispatched_environment: true
@@ -112,10 +118,10 @@ RSpec.describe "Action Execution Integration", type: :integration do
       finalizer = ConversationNewOrchestrator::Finalizer.new(state: mock_state, user_message: "test")
       tool_analysis = finalizer.send(:analyze_tools)
 
-      expect(tool_analysis[:sync_tools]).to include("rag_search", "weather_tool")
+      expect(tool_analysis[:sync_tools]).to include("memory_search_1", "weather_tool")
       expect(tool_analysis[:environment_dispatched]).to be true
-      expect(tool_analysis[:query_tools]).to be_empty # no memory_search tools
-      expect(tool_analysis[:action_tools]).to include("weather_tool") # excludes rag_search
+      expect(tool_analysis[:query_tools]).to include("memory_search_1")
+      expect(tool_analysis[:action_tools]).to include("weather_tool") # excludes memory_search
     end
   end
 

@@ -16,8 +16,8 @@
     <p>Total: <%= @stats[:memories][:total] %></p>
     <p>High Importance: <%= @stats[:memories][:high_importance] %></p>
     <p>Recent: <%= @stats[:memories][:recent] %></p>
-    <% @stats[:memories][:by_type].each do |type, count| %>
-      <p><%= type.humanize %>: <%= count %></p>
+    <% @stats[:memories][:by_category].each do |category, count| %>
+      <p><%= category&.humanize %>: <%= count %></p>
     <% end %>
   </div>
 

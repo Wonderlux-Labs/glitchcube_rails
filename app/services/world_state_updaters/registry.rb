@@ -2,10 +2,9 @@ module WorldStateUpdaters
   # Explicit allowlist of world-state services that may be triggered *by name*
   # from the Home Assistant-facing endpoint and the admin UI.
   #
-  # Only no-argument `.call` services belong here. Services that require
-  # arguments (e.g. ConversationSummarizerService) or expose a different entry
-  # point (e.g. NarrativeConversationSyncService) are intentionally excluded and
-  # must be invoked by their own jobs/callers.
+  # Only no-argument `.call` services belong here. Services that expose a
+  # different entry point (e.g. NarrativeConversationSyncService) are
+  # intentionally excluded and must be invoked by their own jobs/callers.
   #
   # This replaces the previous `constantize` lookup, which could resolve and
   # invoke arbitrary classes from attacker-controlled input.

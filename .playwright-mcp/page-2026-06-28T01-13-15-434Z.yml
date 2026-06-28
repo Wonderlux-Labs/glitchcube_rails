@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - img "Home Assistant" [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - heading "Welcome home!" [level=1] [ref=e9]
+      - generic [ref=e11]:
+        - generic [ref=e14]:
+          - generic:
+            - generic:
+              - generic: Username
+          - textbox "Username" [ref=e16]:
+            - /placeholder: ""
+        - generic [ref=e20]:
+          - generic:
+            - generic:
+              - generic: Password
+          - generic [ref=e21]:
+            - textbox "Password" [ref=e22]:
+              - /placeholder: ""
+            - generic "Show password" [ref=e25]:
+              - button "Show password" [ref=e26] [cursor=pointer]:
+                - generic [ref=e28]:
+                  - img
+      - generic [ref=e30]:
+        - generic [ref=e32] [cursor=pointer]:
+          - generic [ref=e33]:
+            - checkbox "Keep me logged in" [checked]
+            - img [ref=e35]
+          - generic [ref=e37]: Keep me logged in
+        - link "Forgot password?" [ref=e38] [cursor=pointer]:
+          - /url: https://www.home-assistant.io/docs/locked_out/#forgot-password
+      - button "Log in" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: Log in
+    - generic [ref=e43]:
+      - button "English" [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: English
+        - generic:
+          - generic:
+            - img
+      - link "Help" [ref=e52] [cursor=pointer]:
+        - /url: https://www.home-assistant.io/docs/authentication/
+        - generic [ref=e53]: Help
+        - generic:
+          - generic:
+            - img

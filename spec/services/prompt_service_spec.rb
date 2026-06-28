@@ -14,29 +14,9 @@ RSpec.describe PromptService do
   # Mock external dependencies
   before do
     allow(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("active")
-    allow(HaDataSync).to receive(:low_power_mode?).and_return(false)
     allow(HaDataSync).to receive(:get_context_attribute).and_return(nil)
-    allow(HaDataSync).to receive(:extended_location).and_return("Burning Man")
-    allow(GoalService).to receive(:current_goal_status).and_return(nil)
     allow(CubePersona).to receive(:current_persona).and_return(persona)
-
-    # Mock Event model if it exists
-    if defined?(Event)
-      # Add missing scope methods to Event class
-      Event.class_eval do
-        scope :high_priority, -> { where(importance: 7..10) }
-        scope :soon, -> { within_hours(48) }
-      end
-    end
-
-    # Mock Summary model if it exists
-    if defined?(Summary)
-      allow(Summary).to receive(:similarity_search) { |*args| [] }
-      allow(Summary).to receive(:goal_completions).and_return(double(limit: []))
-    end
-
-    # Stub SystemContextEnhancer to return simple context
-    allow(Prompts::SystemContextEnhancer).to receive(:enhance).and_return("Enhanced test context")
+    allow(WorldState).to receive(:current).and_return("")
   end
 
   describe '.build_prompt_for' do

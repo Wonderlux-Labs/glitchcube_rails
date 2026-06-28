@@ -19,8 +19,9 @@ table is the answer.
 | Cube mode / battery / low-power | **HASS** | `input_select.cube_mode`, etc. | Read via `CubeData` sensor registry. |
 | GPS / location | **HASS** → Rails | `sensor.glitchcube_*` | `Gps::GpsTrackingService` reads; `LocationContextService` resolves to BRC geography. |
 | Conversation state + history | **Rails** | `ConversationLog`, `Conversation` (pgvector) | The brain's working memory of a session. |
-| Long-term memory | **Rails** | `ConversationMemory`, `Fact` (pgvector) | Semantic recall + brain-flagged storage (see Memory loop). |
-| Goals / policy / persona behavior | **Rails** | `GoalService`, persona YAML, prompt builders | The only place behavior logic is versioned. |
+| World state (continuity) | **Rails** (file) → HASS mirror | `storage/world_state.md`, `sensor.glitchcube_world_state` | Short curated blob injected every turn; rewritten by reflection. |
+| Long-term memory | **Rails** | `Memory` (plain columns) | Discrete facts; plain Rails search, no embeddings (see Continuity). |
+| Policy / persona behavior | **Rails** | persona YAML, prompt builders | The only place behavior logic is versioned. No goal system. |
 | Decisions (what to say, what to do) | **Rails** | `ConversationNewOrchestrator` | The brain. |
 | Pending action/query results across turns | **Rails** | `conversation.metadata_json` | `pending_ha_results`, `pending_query_results` — surfaced next turn. |
 
@@ -36,8 +37,8 @@ Two distinct LLM roles, configured independently in
 - **Brain** (`brain_model`, `DEFAULT_AI_MODEL`/`BRAIN_MODEL`): runs in
   `LlmIntention` with `NarrativeResponseSchema`. Returns `speech_text`, a single
   plain-English **`environment_instruction`** ("turn the lights orange and play
-  heavy metal"), inner state, optional `search_memories`, and optional
-  `memories` to remember. The brain never emits tool calls.
+  heavy metal"), inner state, and optional `search_memories` (opt-in deep recall).
+  The brain never emits tool calls and no longer flags memories — reflection does.
 - **Translator** (`translator_model`, `TOOL_CALLING_MODEL`): `ToolCallingService`,
   run at low temperature. Converts the one `environment_instruction` into
   validated HASS tool calls (with a retry/validation loop).
@@ -50,20 +51,20 @@ the translator + execution in the background. Results land in
 `pending_ha_results` and surface to the brain on the next turn. There is no
 per-domain agent fan-out — one brain, one translator.
 
-## Memory loop (recall → store)
+## Continuity (world state + reflection + memory)
 
-A minimal, event-ready loop — not a multi-job summarization pipeline:
+Three pieces, no multi-job summarization pipeline and no goal system. Full
+detail in [`continuity.md`](continuity.md).
 
-- **Proactive recall (read):** `Prompts::SystemContextEnhancer` injects recent
-  high-importance memories (`Memory::MemoryRecallService`) into the system prompt
-  each turn. Cheap — no per-turn embedding.
-- **On-demand recall (read):** the brain may request specific
-  `search_memories`; `ActionExecutor` runs them through `rag_search` and
-  `ResponseSynthesizer` defers the results into `pending_query_results` so they
-  surface on the next turn.
-- **Store (write):** the brain flags facts worth keeping in the schema's
-  `memories` field; `Finalizer` enqueues `MemoryStoreJob`, which persists them as
-  `ConversationMemory` (async, so the embedding write never blocks speech).
+- **World state (read every turn):** `WorldState.current` reads a short curated
+  blob from `storage/world_state.md` and the prompt injects it. Cheap — a file read.
+- **Reflection (the only writer):** `ReflectionService` (every 30 min) reads
+  conversations not yet reflected on, makes one structured LLM call, rewrites the
+  world state, and saves discrete `Memory` rows.
+- **Deep recall (opt-in read):** the brain may request `search_memories`;
+  `MemorySearchJob` runs `Tools::Query::MemorySearch` (plain Rails — keyword,
+  category, `occurs_at` window) and the results surface on the next turn via
+  `pending_query_results`. No embeddings.
 
 ## Testing the cube without hardware
 

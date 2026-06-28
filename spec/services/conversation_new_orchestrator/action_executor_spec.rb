@@ -12,21 +12,17 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
       let(:llm_response) do
         {
           "search_memories" => [
-            {
-              "query" => "previous light settings",
-              "tool_name" => "rag_search"
-            }
+            { "query" => "previous light settings", "category" => "preference", "timeframe" => "upcoming" }
           ]
         }
       end
 
-      before do
-        allow(Tools::Registry).to receive(:execute_tool)
-          .with("rag_search", query: "previous light settings", type: "all", limit: 3)
-          .and_return({ success: true, results: [ "Found 2 entries" ] })
-      end
+      it 'enqueues MemorySearchJob async and returns no inline results' do
+        expect(MemorySearchJob).to receive(:perform_later).with(
+          conversation_id: conversation_id,
+          searches: llm_response["search_memories"]
+        )
 
-      it 'executes memory searches and returns results' do
         result = described_class.call(
           llm_response: llm_response,
           session_id: session_id,
@@ -35,7 +31,7 @@ RSpec.describe ConversationNewOrchestrator::ActionExecutor do
         )
 
         expect(result.success?).to be true
-        expect(result.data[:sync_results]).to include("memory_search_1" => { success: true, results: [ "Found 2 entries" ] })
+        expect(result.data[:sync_results]).to eq({})
       end
     end
 

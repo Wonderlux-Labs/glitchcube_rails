@@ -35,8 +35,7 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
         continue_conversation: false,
         inner_thoughts: 'User requested lighting control',
         current_mood: 'helpful',
-        pressing_questions: nil,
-        goal_progress: nil
+        pressing_questions: nil
       },
       action_results: {
         sync_results: {
@@ -191,31 +190,6 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
       end
     end
 
-    context 'with brain-flagged memories' do
-      before do
-        state[:ai_response][:memories] = [
-          { 'summary' => 'User is named Dot', 'memory_type' => 'fact', 'importance' => 8 }
-        ]
-      end
-
-      it 'enqueues MemoryStoreJob to persist them async' do
-        expect(MemoryStoreJob).to receive(:perform_later).with(
-          session_id: session_id,
-          memories: state[:ai_response][:memories]
-        )
-
-        described_class.call(state: state, user_message: user_message)
-      end
-    end
-
-    context 'without flagged memories' do
-      it 'does not enqueue MemoryStoreJob' do
-        expect(MemoryStoreJob).not_to receive(:perform_later)
-
-        described_class.call(state: state, user_message: user_message)
-      end
-    end
-
     context 'when an error occurs during finalization' do
       before do
         allow(ConversationLog).to receive(:create!).and_raise(StandardError.new("Database error"))
@@ -243,8 +217,7 @@ RSpec.describe ConversationNewOrchestrator::Finalizer do
               inner_thoughts: nil,
               current_mood: nil,
               pressing_questions: nil,
-              continue_conversation_from_llm: nil,
-              goal_progress: nil
+              continue_conversation_from_llm: nil
             )
           )
         )

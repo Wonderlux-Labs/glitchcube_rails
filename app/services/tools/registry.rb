@@ -26,7 +26,7 @@ class Tools::Registry
         "make_announcement" => Tools::Communication::Announcement,
 
         # Query tools
-        "rag_search" => Tools::Query::RagSearch
+        "memory_search" => Tools::Query::MemorySearch
       }
     end
 
@@ -212,7 +212,7 @@ class Tools::Registry
         Tools::Communication::Announcement,
 
         # Query
-        Tools::Query::RagSearch
+        Tools::Query::MemorySearch
       ]
 
       case persona&.to_s&.downcase

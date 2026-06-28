@@ -1,7 +1,6 @@
 class Conversation < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_many :conversation_logs, foreign_key: :session_id, primary_key: :session_id, dependent: :destroy
-  has_many :conversation_memories, foreign_key: :session_id, primary_key: :session_id, dependent: :destroy
 
   validates :session_id, presence: true
 
@@ -9,6 +8,8 @@ class Conversation < ApplicationRecord
   scope :active, -> { where(ended_at: nil) }
   scope :by_persona, ->(persona) { where(persona: persona) }
   scope :finished, -> { where.not(ended_at: nil) }
+  # Finished conversations the reflection job hasn't processed yet.
+  scope :unreflected, -> { finished.where(reflected_at: nil) }
 
   def flow_data_json
     return {} if flow_data.blank?

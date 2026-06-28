@@ -57,6 +57,9 @@ class ConversationNewOrchestrator::ResponseSynthesizer
       speech_text = "I understand."
     end
 
+    persona_obj = Prompts::PersonaLoader.load(@prompt_data[:persona].to_s)
+    tts_voice, tts_language = persona_obj.tts_voice
+
     {
       id: response_id,
       text: speech_text,
@@ -68,7 +71,9 @@ class ConversationNewOrchestrator::ResponseSynthesizer
       environment_instruction: narrative[:environment_instruction],
       memories: narrative[:memories],
       success: true,
-      speech_text: speech_text  # Also include as :speech_text for compatibility
+      speech_text: speech_text,
+      voice: tts_voice,         # short Azure Neural name e.g. "GuyNeural"
+      tts_language: tts_language # locale e.g. "en-US" — must match voice
     }
   end
 

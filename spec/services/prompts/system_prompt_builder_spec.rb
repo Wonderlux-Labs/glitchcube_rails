@@ -23,22 +23,11 @@ RSpec.describe Prompts::SystemPromptBuilder do
       }
     })
 
-    # Mock context builder
-    allow(context_builder).to receive(:build).and_return("Basic context information")
+    # Mock context builder (skip when a context explicitly sets it to nil)
+    allow(context_builder).to receive(:build).and_return("Basic context information") if context_builder
 
-    # Mock SystemContextEnhancer
-    allow(Prompts::SystemContextEnhancer).to receive(:enhance).and_return("Enhanced context with RAG")
-
-    # Mock GoalService
-    allow(GoalService).to receive(:current_goal_status).and_return({
-      goal_description: "Have meaningful conversations"
-    })
-
-    # Mock Tools::Registry
-    allow(Tools::Registry).to receive(:tools_for_persona).and_return([
-      double(name: "Tools::Lights::TurnOn"),
-      double(name: "Tools::Sound::Play")
-    ])
+    # World state is empty unless a test stubs it
+    allow(WorldState).to receive(:current).and_return("")
   end
 
   describe '.build' do
@@ -79,17 +68,20 @@ RSpec.describe Prompts::SystemPromptBuilder do
         expect(subject).to include("Structured output description")
       end
 
-      it 'includes enhanced context' do
+      it 'includes the live current context' do
         expect(subject).to include("CURRENT CONTEXT:")
-        expect(subject).to include("Enhanced context with RAG")
+        expect(subject).to include("Basic context information")
       end
 
-      it 'calls SystemContextEnhancer with correct parameters' do
-        expect(Prompts::SystemContextEnhancer).to receive(:enhance).with(
-          "Basic context information",
-          user_message: user_message
-        )
-        subject
+      it 'injects the world state when present' do
+        allow(WorldState).to receive(:current).and_return("Three people asked about dreams tonight")
+        expect(subject).to include("WHAT YOU CURRENTLY KNOW:")
+        expect(subject).to include("Three people asked about dreams tonight")
+      end
+
+      it 'omits the world-state section when empty' do
+        allow(WorldState).to receive(:current).and_return("")
+        expect(subject).not_to include("WHAT YOU CURRENTLY KNOW:")
       end
     end
 
@@ -138,12 +130,8 @@ RSpec.describe Prompts::SystemPromptBuilder do
     context 'when context builder is nil' do
       let(:context_builder) { nil }
 
-      it 'uses default context' do
-        expect(Prompts::SystemContextEnhancer).to receive(:enhance).with(
-          "Cube installation active",
-          user_message: user_message
-        )
-        subject
+      it 'falls back to default context text' do
+        expect(subject).to include("Cube installation active")
       end
     end
   end
@@ -163,10 +151,6 @@ RSpec.describe Prompts::SystemPromptBuilder do
           "description" => "You exist in a unique world",
           "rules" => "Follow world-building rules"
         },
-        "goal_integration" => {
-          "description" => "Goals are important",
-          "rules" => "Current goal: {{GOAL_PLACEHOLDER}}"
-        },
         "character_integrity" => {
           "description" => "Stay in character",
           "rules" => [ "Never break character", "Be consistent" ]
@@ -185,8 +169,6 @@ RSpec.describe Prompts::SystemPromptBuilder do
 
       expect(result).to include("You exist in a unique world")
       expect(result).to include("Follow world-building rules")
-      expect(result).to include("Goals are important")
-      expect(result).to include("Current goal: Have meaningful conversations")
       expect(result).to include("Stay in character")
       expect(result).to include("- Never break character")
       expect(result).to include("- Be consistent")
@@ -195,51 +177,6 @@ RSpec.describe Prompts::SystemPromptBuilder do
       expect(result).to include("When to set false:")
       expect(result).to include("- Natural endpoint")
       expect(result).to include("Use your best judgment")
-    end
-
-    it 'replaces goal placeholder correctly' do
-      result = builder.send(:format_base_system_rules, config)
-      expect(result).to include("Current goal: Have meaningful conversations")
-      expect(result).not_to include("{{GOAL_PLACEHOLDER}}")
-    end
-  end
-
-  describe '#get_current_goal_description' do
-    let(:builder) do
-      described_class.new(
-        persona_instance: persona_instance,
-        context_builder: context_builder,
-        user_message: user_message
-      )
-    end
-
-    it 'returns current goal description' do
-      result = builder.send(:get_current_goal_description)
-      expect(result).to eq("Have meaningful conversations")
-    end
-
-    context 'when goal service returns nil' do
-      before do
-        allow(GoalService).to receive(:current_goal_status).and_return(nil)
-      end
-
-      it 'returns default goal' do
-        result = builder.send(:get_current_goal_description)
-        expect(result).to eq("Explore this interaction and create memorable moments")
-      end
-    end
-
-    context 'when goal service raises error' do
-      before do
-        allow(GoalService).to receive(:current_goal_status).and_raise(StandardError, "Service error")
-        allow(Rails.logger).to receive(:warn)
-      end
-
-      it 'logs warning and returns fallback' do
-        expect(Rails.logger).to receive(:warn).with(/Failed to get current goal/)
-        result = builder.send(:get_current_goal_description)
-        expect(result).to eq("Be spontaneous and create engaging interactions")
-      end
     end
   end
 end

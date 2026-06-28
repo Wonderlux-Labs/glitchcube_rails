@@ -1,0 +1,110 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"user","content":"Turn on lights with red color"}],"model":"google/gemini-3.1-flash-lite","temperature":0.1,"max_tokens":50,"tools":[{"type":"function","function":{"name":"set_light_state","description":"Unified
+        control for cube lights: turn on/off, set brightness, color, and transitions","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"state":{"type":"string","description":"Turn
+        light on or off pass on even if on to change state","enum":["on","off"]},"brightness":{"type":"number","description":"Brightness
+        percentage (0-100)","minimum":0,"maximum":100},"rgb_color":{"type":"string","description":"RGB
+        color as comma-separated string ''R,G,B'' values (0-255). Example: ''255,0,0''
+        for red, ''0,255,0'' for green"},"transition":{"type":"number","description":"Transition
+        time in seconds for smooth changes","minimum":0,"maximum":60}},"required":["entity_id","state"]}}}],"tool_choice":"auto"}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Sat, 27 Jun 2026 23:59:35 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782604774-dCU39U2LzJg0Iyw9TKP1
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1286801f9c4c8d0-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n{\"id\":\"gen-1782604774-dCU39U2LzJg0Iyw9TKP1\",\"object\":\"chat.completion\",\"created\":1782604774,\"model\":\"google/gemini-3.1-flash-lite-20260507\",\"provider\":\"Google
+        AI Studio\",\"system_fingerprint\":null,\"service_tier\":null,\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"length\",\"native_finish_reason\":\"MAX_TOKENS\",\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.text\",\"signature\":\"EjQKMgEMOdbHX8uSOUvxmLPF99Uip4/nG9/3SPnQ/Rz+NYgN62NyQWj0g7t/09Rnt8Mw50l3\",\"format\":\"google-gemini-v1\",\"index\":0}]}}]}"
+  recorded_at: Sat, 27 Jun 2026 23:59:35 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782604774-dCU39U2LzJg0Iyw9TKP1
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      date:
+      - Sat, 27 Jun 2026 23:59:35 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      cache-control:
+      - private, no-store
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1286807a9865c14-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782604774-dCU39U2LzJg0Iyw9TKP1
+        not found","code":404}}'
+  recorded_at: Sat, 27 Jun 2026 23:59:35 GMT
+recorded_with: VCR 6.4.0

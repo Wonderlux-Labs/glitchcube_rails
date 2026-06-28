@@ -12,7 +12,6 @@ class ConversationNewOrchestrator::Finalizer
   def call
     tool_analysis = analyze_tools
     store_conversation_log(tool_analysis)
-    store_flagged_memories
     end_conversation_if_needed(tool_analysis)
 
     hass_response = format_for_hass(tool_analysis)
@@ -39,7 +38,7 @@ class ConversationNewOrchestrator::Finalizer
       sync_tools: sync_results.keys,
       environment_dispatched: environment_dispatched,
       query_tools: sync_results.select { |k, v| k.include?("memory_search") }.keys,
-      action_tools: sync_results.keys.select { |tool| tool != "rag_search" }
+      action_tools: sync_results.keys.select { |tool| tool != "memory_search" }
     }
   end
 
@@ -63,7 +62,6 @@ class ConversationNewOrchestrator::Finalizer
         current_mood: @state[:ai_response][:current_mood],
         pressing_questions: @state[:ai_response][:pressing_questions],
         continue_conversation_from_llm: @state[:ai_response][:continue_conversation],
-        goal_progress: @state[:ai_response][:goal_progress],
         environment_instruction: @state[:ai_response][:environment_instruction]
       })
     end
@@ -83,15 +81,6 @@ class ConversationNewOrchestrator::Finalizer
       Rails.logger.error "❌ Failed to create conversation log: #{e.message}"
       # Don't re-raise - conversation should continue even if logging fails
     end
-  end
-
-  # Persist any facts the brain flagged worth remembering. Async so the embedding
-  # write never delays the spoken response (speak-first, act-async).
-  def store_flagged_memories
-    memories = @state.dig(:ai_response, :memories) || []
-    return if memories.empty?
-
-    MemoryStoreJob.perform_later(session_id: @state[:session_id], memories: memories)
   end
 
   def continue_conversation?(tool_analysis)

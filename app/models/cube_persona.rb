@@ -26,7 +26,7 @@ class CubePersona
       name = Rails.cache.read("current_persona") || "buddy"
       Rails.logger.warn "⚠️ Using cached/default persona: #{name}"
     end
-    
+
     name.to_sym
   end
 
@@ -42,7 +42,7 @@ class CubePersona
 
     # Clear the cache immediately to force fresh read
     Rails.cache.delete("current_persona")
-    
+
     HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
     # Write new persona to cache
     Rails.cache.write("current_persona", persona.to_s, expires_in: 30.minutes)
@@ -91,6 +91,20 @@ class CubePersona
   # @return [Hash] Configuration for response generation
   def response_style
     raise NotImplementedError, "#{self.class} must implement response_style"
+  end
+
+  # Returns [voice_name, language] for Nabu Casa cloud TTS.
+  # YAML format: "GuyNeural||en-US" — short voice name, then locale after ||.
+  # Returns [nil, nil] if not configured (HASS component falls back to its defaults).
+  def tts_voice
+    raw = persona_config["voice_id"].to_s
+    return [ nil, nil ] if raw.blank?
+    parts = raw.split("||")
+    [ parts[0]&.strip, parts[1]&.strip ]
+  end
+
+  def voice_id
+    tts_voice.first
   end
 
   # Abstract method: Returns whether the persona can handle a specific topic

@@ -26,10 +26,10 @@ class Admin::DashboardController < Admin::BaseController
 
   def memory_stats
     {
-      total: ConversationMemory.count,
-      by_type: ConversationMemory.group(:memory_type).count,
-      high_importance: ConversationMemory.high_importance.count,
-      recent: ConversationMemory.where(created_at: 1.day.ago..Time.current).count
+      total: Memory.count,
+      by_category: Memory.group(:category).count,
+      high_importance: Memory.high_importance.count,
+      recent: Memory.where(created_at: 1.day.ago..Time.current).count
     }
   end
 
@@ -83,11 +83,11 @@ class Admin::DashboardController < Admin::BaseController
     end
 
     # Recent memories
-    ConversationMemory.recent.limit(3).each do |memory|
+    Memory.recent.limit(3).each do |memory|
       activities << {
         type: "memory",
-        title: "#{memory.memory_type.humanize} memory",
-        subtitle: memory.summary.truncate(60),
+        title: "#{memory.category&.humanize} memory",
+        subtitle: memory.content.truncate(60),
         timestamp: memory.created_at,
         path: admin_memory_path(memory)
       }

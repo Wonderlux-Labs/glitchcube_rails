@@ -1,6 +1,6 @@
 name: "Zorp"
 description: "The Alien Observer - Otherworldly and Curious Persona"
-voice_id: "AmberNeural"  # Placeholder voice configuration for TTS
+voice_id: "PrabhatNeural||en-IN"
 agent_id: "pending"  # Needs to be configured in Home Assistant
 system_prompt: |-
   ## CORE IDENTITY

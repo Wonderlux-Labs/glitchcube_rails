@@ -263,9 +263,9 @@ class Api::V1::ConversationController < Api::V1::BaseController
         speech_text: speech_text,
         continue_conversation: continue_conversation,
         end_conversation: !continue_conversation,
-        # Include hardcoded 3 second delay when continuing conversation
         continue_delay: continue_conversation ? 3 : nil,
-        # Include metadata for debugging
+        voice: orchestrator_result[:voice],
+        tts_language: orchestrator_result[:tts_language],
         metadata: {
           orchestrator_keys: orchestrator_result.keys,
           response_extraction_path: "checking multiple paths for speech text"

@@ -2,7 +2,7 @@
 
 class Admin::ConversationsController < Admin::BaseController
   def index
-    @conversations = Conversation.includes(:conversation_logs, :conversation_memories)
+    @conversations = Conversation.includes(:conversation_logs)
                                 .order(created_at: :desc)
                                 .limit(50)
 
@@ -21,7 +21,6 @@ class Admin::ConversationsController < Admin::BaseController
   def show
     @conversation = Conversation.find(params[:id])
     @logs = @conversation.conversation_logs.chronological
-    @memories = @conversation.conversation_memories.recent
     @tools_used = extract_tools_from_logs(@logs)
   end
 
@@ -74,16 +73,6 @@ class Admin::ConversationsController < Admin::BaseController
         user_message: log.user_message.truncate(100),
         ai_response: log.ai_response.truncate(100),
         tools_used: log.tool_results_json.present?
-      }
-    end
-
-    # Memories created
-    conversation.conversation_memories.each do |memory|
-      events << {
-        type: "memory_created",
-        timestamp: memory.created_at,
-        title: "Memory Created",
-        details: "#{memory.memory_type}: #{memory.summary.truncate(60)}"
       }
     end
 

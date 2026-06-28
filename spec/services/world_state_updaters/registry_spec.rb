@@ -54,11 +54,10 @@ RSpec.describe WorldStateUpdaters::Registry do
       # allowlist.
 
       it 'rejects a real, fully-qualified service class name that is not allowlisted' do
-        # ConversationSummarizerService is a real WorldStateUpdaters service,
-        # intentionally excluded because it requires arguments.
-        expect(defined?(WorldStateUpdaters::ConversationSummarizerService)).to be_truthy
-        expect(described_class.fetch('WorldStateUpdaters::ConversationSummarizerService')).to be_nil
-        expect(described_class.fetch('ConversationSummarizerService')).to be_nil
+        # ReflectionService is a real, callable service, intentionally not on the
+        # world-state trigger allowlist.
+        expect(defined?(ReflectionService)).to be_truthy
+        expect(described_class.fetch('ReflectionService')).to be_nil
       end
 
       it 'rejects NarrativeConversationSyncService (real class, not on allowlist)' do
@@ -79,8 +78,8 @@ RSpec.describe WorldStateUpdaters::Registry do
         ]
 
         %w[
-          ConversationSummarizerService
-          WorldStateUpdaters::ConversationSummarizerService
+          ReflectionService
+          PromptService
           NarrativeConversationSyncService
           Kernel Object File HomeAssistantService User
         ].each do |name|
