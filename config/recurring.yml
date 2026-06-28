@@ -42,10 +42,8 @@ production:
   random_persona:
     class: Recurring::Persona::RandomPersonaJob
     schedule: "*/5"
-  gps_sensor_update:
-    class: Recurring::System::GpsSensorUpdateJob
-    schedule: "*/5 * * * *"   # Every 5 minutes
-    queue: default
+  # gps_sensor_update: disabled — no GPS hardware for regional
+  # class: Recurring::System::GpsSensorUpdateJob
 
   host_registration:
     class: Recurring::System::HostRegistrationJob
@@ -56,10 +54,8 @@ development:
   <<: *default
   
   # Development-specific overrides (faster intervals for testing)
-  gps_sensor_update:
-    class: Recurring::System::GpsSensorUpdateJob
-    schedule: "*/3 * * * *"   # Every 3 minutes in dev (faster)
-    queue: default
+  # gps_sensor_update: disabled — no GPS hardware for regional
+  # class: Recurring::System::GpsSensorUpdateJob
 
   host_registration:
     class: Recurring::System::HostRegistrationJob

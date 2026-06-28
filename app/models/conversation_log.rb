@@ -9,8 +9,6 @@ class ConversationLog < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
   scope :chronological, -> { order(created_at: :asc) }
 
-  # Automatically sync narrative data to Home Assistant after each conversation
-  after_commit :sync_narrative_data_to_ha, on: [ :create, :update ]
 
   def tool_results_json
     return {} if tool_results.blank?
@@ -34,12 +32,4 @@ class ConversationLog < ApplicationRecord
     self.metadata = hash.to_json
   end
 
-  private
-
-  def sync_narrative_data_to_ha
-    # Perform HA sync in background to avoid blocking the main thread
-    WorldStateUpdaters::NarrativeConversationSyncJob.perform_later(id)
-  rescue StandardError => e
-    Rails.logger.error "Failed to queue narrative sync job for conversation_log #{id}: #{e&.message}"
-  end
 end

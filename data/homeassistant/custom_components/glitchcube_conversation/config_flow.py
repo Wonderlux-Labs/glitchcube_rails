@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT
@@ -97,6 +97,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 
                 info = await validate_input(self.hass, user_input)
+            except AbortFlow:
+                raise
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except

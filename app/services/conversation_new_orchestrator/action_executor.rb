@@ -29,32 +29,15 @@ class ConversationNewOrchestrator::ActionExecutor
     memory_searches = @output.dig("search_memories") || []
     return {} if memory_searches.empty?
 
-    results = {}
-    memory_searches.each_with_index do |search_request, index|
-      query = search_request["query"]
-      type = search_request["type"] || "all"
-      limit = Rails.configuration.memory_search_limit
-
-      begin
-        search_result = Tools::Registry.execute_tool(
-          "rag_search",
-          query: query,
-          type: type,
-          limit: limit
-        )
-
-        search_key = "memory_search_#{index + 1}"
-        results[search_key] = search_result
-
-        Rails.logger.info "🧠 Memory search executed: #{query} (#{type}) - found #{search_result[:total_results] || 0} results"
-      rescue => e
-        Rails.logger.error "❌ Memory search failed: #{query} - #{e.message}"
-        search_key = "memory_search_#{index + 1}"
-        results[search_key] = { success: false, error: e.message, query: query }
-      end
-    end
-
-    results
+    # Enqueue async so embedding calls never block the spoken response.
+    # Results land in conversation.metadata_json["pending_query_results"]
+    # and are injected into the next turn's context.
+    MemorySearchJob.perform_later(
+      conversation_id: @conversation_id,
+      searches: memory_searches
+    )
+    Rails.logger.info "🔍 Enqueued #{memory_searches.size} memory search(es) async"
+    {}
   end
 
   # The brain LLM describes every environment change as one plain-English

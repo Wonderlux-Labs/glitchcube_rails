@@ -170,10 +170,7 @@ module Prompts
     end
 
     def get_current_location
-      HaDataSync.extended_location
-    rescue => e
-      Rails.logger.warn "Failed to get current location: #{e.message}"
-      nil
+      nil # GPS not available for regional events without geocoded map
     end
 
     def format_events_for_context(events)

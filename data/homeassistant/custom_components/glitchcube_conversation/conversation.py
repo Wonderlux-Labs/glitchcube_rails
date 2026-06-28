@@ -108,8 +108,12 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
                 glitchcube_host_state.state not in ["unknown", "unavailable", ""]):
                 
                 dynamic_host = glitchcube_host_state.state.strip()
-                port = self._config_entry.data.get("port", DEFAULT_PORT)
-                api_url = f"http://{dynamic_host}:{port}/api/v1/conversation"
+                # dynamic_host may already include the port (e.g. "192.168.68.50:4567")
+                if ":" in dynamic_host:
+                    api_url = f"http://{dynamic_host}/api/v1/conversation"
+                else:
+                    port = self._config_entry.data.get("port", DEFAULT_PORT)
+                    api_url = f"http://{dynamic_host}:{port}/api/v1/conversation"
                 _LOGGER.debug(f"Using dynamic host from input_text: {dynamic_host}")
                 return api_url
             else:
@@ -330,24 +334,25 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
     async def _handle_normal_response(self, conversation_data, user_input):
         """Handle standard synchronous responses."""
         response_text = self._extract_response_text(conversation_data)
-        
+
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response_text)
-        
+
         continue_conversation = conversation_data.get("continue_conversation", False)
-        
-        # Add configurable delay if continuing conversation to prevent rapid triggering
+
+        # Fire the re-trigger delay as a background task so HASS can display/speak
+        # the response immediately. The delay still suppresses rapid re-triggering
+        # but no longer blocks TTS or the Assist UI update.
         if continue_conversation:
-            delay_seconds = conversation_data.get("continue_delay", 3)  # Default 3 seconds
-            _LOGGER.info("⏰ Adding %s second delay before re-enabling conversation to prevent rapid triggering", delay_seconds)
-            await asyncio.sleep(delay_seconds)
-            
-            # Play sound alert when listening resumes
-            await self._play_listening_resume_sound()
-        
+            delay_seconds = conversation_data.get("continue_delay", 3)
+            async def _delayed_resume():
+                await asyncio.sleep(delay_seconds)
+                await self._play_listening_resume_sound()
+            self.hass.async_create_task(_delayed_resume())
+
         _LOGGER.info("📢 Normal response: %s...", response_text[:50])
         _LOGGER.info("Continue conversation: %s", continue_conversation)
-        
+
         return conversation.ConversationResult(
             conversation_id=user_input.conversation_id,
             response=intent_response,

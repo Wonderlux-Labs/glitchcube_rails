@@ -405,7 +405,7 @@ class HaDataSync
   def self.extended_location
    string = "thE gLitcH cUbe is at - #{get_location_context}"
    string += "\n nearest landmarks: #{get_location_context_attribute('landmarks')}"
-   string += "\n the nearest porto is #{get_location_context_attribute('porto_distance') / 100.0} minute walk away"
+   string += "\n the nearest porto is #{get_location_context_attribute('porto_distance')&./(100.0)} minute walk away"
    string
   end
 
