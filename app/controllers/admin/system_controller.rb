@@ -218,17 +218,7 @@ class Admin::SystemController < Admin::BaseController
   end
 
   def check_gps_service_health
-    begin
-      # Check if GPS tracking is working
-      if defined?(GpsTrackingService)
-        current_location = GpsTrackingService.current_location
-        { status: "healthy", message: "GPS tracking active", location: current_location }
-      else
-        { status: "unknown", message: "GPS service not available" }
-      end
-    rescue => e
-      { status: "unhealthy", message: e.message }
-    end
+    { status: "disabled", message: "GPS not active for stationary installation" }
   end
 
   # Utility methods

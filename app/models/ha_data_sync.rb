@@ -117,28 +117,6 @@ class HaDataSync
     Rails.logger.info "🎯 Context updated: #{time_of_day} at #{location}"
   end
 
-  # Goals & Persona Management
-  def self.update_current_goal(goal_text, importance, deadline = nil, progress = nil)
-    # Replaces: app/services/goal_service.rb:227,255
-    # Target: sensor.glitchcube_current_goal
-    call_ha_service(
-      "sensor",
-      "set_state",
-      "sensor.glitchcube_current_goal",
-      {
-        state: goal_text.truncate(50),
-        attributes: {
-          goal_text: goal_text,
-          importance: importance,
-          deadline: deadline&.iso8601,
-          progress: progress,
-          last_updated: Time.current.iso8601
-        }
-      }
-    )
-    Rails.logger.info "🎯 Goal updated: #{goal_text.truncate(50)}"
-  end
-
   def self.update_persona(persona_name, capabilities = [], restrictions = [])
     # Replaces: app/models/cube_persona.rb:22
     # Target: input_select.current_persona + sensor.persona_details
@@ -163,51 +141,6 @@ class HaDataSync
       }
     )
     Rails.logger.info "🎭 Persona updated: #{persona_name}"
-  end
-
-  # GPS & Location (currently in gps_controller/services)
-  def self.update_location(lat, lng, location_name, accuracy = nil)
-    # New sensor: sensor.glitchcube_location
-    # Attributes: latitude, longitude, location_name, accuracy, last_updated
-    call_ha_service(
-      "sensor",
-      "set_state",
-      "sensor.glitchcube_location",
-      {
-        state: location_name,
-        attributes: {
-          latitude: lat,
-          longitude: lng,
-          location_name: location_name,
-          accuracy: accuracy,
-          last_updated: Time.current.iso8601
-        }
-      }
-    )
-    Rails.logger.info "📍 Location updated: #{location_name}"
-  end
-
-  def self.update_proximity(nearby_landmarks, distance_to_landmarks = {})
-    # New sensor: sensor.glitchcube_proximity
-    # Attributes: nearby_landmarks, distances, closest_landmark
-    closest = distance_to_landmarks.min_by { |_, distance| distance }
-
-    call_ha_service(
-      "sensor",
-      "set_state",
-      "sensor.glitchcube_proximity",
-      {
-        state: closest&.first || "unknown",
-        attributes: {
-          nearby_landmarks: nearby_landmarks,
-          distances: distance_to_landmarks,
-          closest_landmark: closest&.first,
-          closest_distance: closest&.last,
-          last_updated: Time.current.iso8601
-        }
-      }
-    )
-    Rails.logger.info "🎯 Proximity updated: #{nearby_landmarks.count} landmarks"
   end
 
   # Tool & Action Tracking
@@ -348,18 +281,6 @@ class HaDataSync
     HomeAssistantService.entity("input_select.cube_mode")&.dig("state") || "conversation"
   end
 
-  def self.low_power_mode?
-    get_current_mode == "low_power" || get_current_mode == "battery_low"
-  end
-
-  def self.enter_low_power_mode(trigger_source = "battery_low")
-    update_cube_mode("low_power", trigger_source)
-  end
-
-  def self.exit_low_power_mode(trigger_source = "battery_restored")
-    update_cube_mode("conversation", trigger_source)
-  end
-
   # Entity access methods for reading data from Home Assistant
   def self.entity(entity_id)
     HomeAssistantService.entity(entity_id)
@@ -396,21 +317,6 @@ class HaDataSync
 
   def self.get_context_attribute(attribute)
     entity_attribute("sensor.glitchcube_context", attribute)
-  end
-
-  def self.get_location_context
-    entity("sensor.glitchcube_location_context")
-  end
-
-  def self.extended_location
-   string = "thE gLitcH cUbe is at - #{get_location_context}"
-   string += "\n nearest landmarks: #{get_location_context_attribute('landmarks')}"
-   string += "\n the nearest porto is #{get_location_context_attribute('porto_distance')&./(100.0)} minute walk away"
-   string
-  end
-
-  def self.get_location_context_attribute(attribute)
-    entity_attribute("sensor.glitchcube_location_context", attribute)
   end
 
   private

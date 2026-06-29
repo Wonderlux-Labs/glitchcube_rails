@@ -318,7 +318,6 @@ class Api::V1::ConversationController < Api::V1::BaseController
     when :jax then Personas::JaxPersona.new
     when :sparkle then Personas::SparklePersona.new
     when :zorp then Personas::ZorpPersona.new
-    when :lomi then Personas::LomiPersona.new
     when :crash then Personas::CrashPersona.new
     when :neon then Personas::NeonPersona.new
     when :mobius then Personas::MobiusPersona.new

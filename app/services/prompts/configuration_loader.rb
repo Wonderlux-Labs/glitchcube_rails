@@ -26,7 +26,7 @@ module Prompts
     end
 
     def load_base_system_config
-      config_path = Rails.root.join("lib", "prompts", "general", "base_system_prompt_optimized.yml")
+      config_path = Rails.root.join("lib", "prompts", "general", "base_system_prompt.yml")
 
       return nil unless File.exist?(config_path)
 

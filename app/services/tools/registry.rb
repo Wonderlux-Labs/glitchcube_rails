@@ -225,9 +225,6 @@ class Tools::Registry
       when "zorp"
         # Zorp gets all tools - analytical and experimental
         base_tool_classes + [ Tools::Modes::ModeControl ]
-      when "lomi"
-        # Lomi gets all tools - healing and nurturing
-        base_tool_classes + [ Tools::Modes::ModeControl ]
       else
         # Default persona gets all tools
         base_tool_classes + [ Tools::Modes::ModeControl ]

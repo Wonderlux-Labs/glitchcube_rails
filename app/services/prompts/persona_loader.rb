@@ -6,7 +6,6 @@ module Prompts
       "jax" => Personas::JaxPersona,
       "sparkle" => Personas::SparklePersona,
       "zorp" => Personas::ZorpPersona,
-      "lomi" => Personas::LomiPersona,
       "crash" => Personas::CrashPersona,
       "neon" => Personas::NeonPersona,
       "mobius" => Personas::MobiusPersona,

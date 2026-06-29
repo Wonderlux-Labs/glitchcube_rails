@@ -52,16 +52,6 @@ class CubeData
       time_context: "sensor.glitchcube_time_context"
     },
 
-    # Location & GPS
-    location: {
-      current: "sensor.glitchcube_location",
-      context: "sensor.glitchcube_location_context",
-      proximity: "sensor.glitchcube_proximity",
-      latitude: "sensor.glitchcube_latitude",
-      longitude: "sensor.glitchcube_longitude",
-      accuracy: "sensor.glitchcube_location_accuracy"
-    },
-
     # Persona & Mode Management
     persona: {
       current: "input_select.current_persona",
@@ -73,16 +63,7 @@ class CubeData
     # Cube Modes
     mode: {
       current: "input_select.cube_mode",
-      info: "sensor.cube_mode_info",
-      battery: "input_select.battery_level",
-      low_power: "binary_sensor.glitchcube_low_power_mode"
-    },
-
-    # Goals & Tasks
-    goals: {
-      current: "sensor.glitchcube_current_goal",
-      completed: "sensor.glitchcube_goals_completed",
-      pending: "sensor.glitchcube_goals_pending"
+      info: "sensor.cube_mode_info"
     },
 
     # Tool Execution Tracking

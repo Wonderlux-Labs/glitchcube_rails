@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Summary < ApplicationRecord
-  SUMMARY_TYPES = %w[reflection hourly daily intermediate session topic goal_completion consolidated].freeze
+  SUMMARY_TYPES = %w[reflection session].freeze
 
   validates :summary_text, presence: true
   validates :summary_type, presence: true, inclusion: { in: SUMMARY_TYPES }
@@ -36,27 +36,6 @@ class Summary < ApplicationRecord
   def duration_in_minutes
     return nil unless duration
     (duration / 60).round(2)
-  end
-
-  # Convenience scope for goal completions
-  def self.goal_completions
-    where(summary_type: "goal_completion")
-  end
-
-  # Get all completed goals with formatted data
-  def self.completed_goals
-    goal_completions.recent.map do |summary|
-      metadata = summary.metadata_json
-      {
-        goal_id: metadata["goal_id"],
-        goal_category: metadata["goal_category"],
-        description: summary.summary_text,
-        completed_at: summary.created_at,
-        duration: metadata["duration_seconds"],
-        completion_notes: metadata["completion_notes"],
-        expired: metadata["expired"]
-      }
-    end
   end
 
   # Plain keyword search over summaries — material for a future trend/long-term

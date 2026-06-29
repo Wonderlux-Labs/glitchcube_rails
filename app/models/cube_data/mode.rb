@@ -26,40 +26,6 @@ class CubeData::Mode < CubeData
       Rails.logger.info "🎭 Cube mode changed to: #{mode} (via #{trigger_source})"
     end
 
-    # Enter low power mode
-    def enter_low_power_mode(trigger_source = "battery_low")
-      update_mode("low_power", trigger_source)
-
-      # Update low power binary sensor if it exists
-      if sensor_exists?(:mode, :low_power)
-        write_sensor(sensor_id(:mode, :low_power), "on")
-      end
-    end
-
-    # Exit low power mode
-    def exit_low_power_mode(trigger_source = "battery_restored")
-      update_mode("conversation", trigger_source)
-
-      # Update low power binary sensor if it exists
-      if sensor_exists?(:mode, :low_power)
-        write_sensor(sensor_id(:mode, :low_power), "off")
-      end
-    end
-
-    # Update battery level
-    def update_battery_level(level)
-      write_sensor(sensor_id(:mode, :battery), level.to_s)
-
-      # Auto-enter low power mode if battery is critical
-      if level.to_i <= 10
-        enter_low_power_mode("critical_battery")
-      elsif level.to_i >= 20 && low_power_mode?
-        exit_low_power_mode("battery_recovered")
-      end
-
-      Rails.logger.debug "🔋 Battery level updated: #{level}%"
-    end
-
     # Get current mode
     def get_current_mode
       mode_data = read_sensor(sensor_id(:mode, :current))
@@ -71,12 +37,6 @@ class CubeData::Mode < CubeData
       read_sensor(sensor_id(:mode, :info))
     end
 
-    # Check if in low power mode
-    def low_power_mode?
-      current_mode = get_current_mode
-      current_mode == "low_power" || current_mode == "battery_low"
-    end
-
     # Check if in performance mode
     def performance_mode?
       # Check performance mode binary sensor if it exists
@@ -85,22 +45,6 @@ class CubeData::Mode < CubeData
 
       # Fallback to checking mode
       get_current_mode == "performance"
-    end
-
-    # Get battery level
-    def battery_level
-      battery_data = read_sensor(sensor_id(:mode, :battery))
-      battery_data&.dig("state")&.to_i || 100
-    end
-
-    # Check if battery is low
-    def battery_low?
-      battery_level <= 20
-    end
-
-    # Check if battery is critical
-    def battery_critical?
-      battery_level <= 10
     end
 
     # Get when mode was last changed

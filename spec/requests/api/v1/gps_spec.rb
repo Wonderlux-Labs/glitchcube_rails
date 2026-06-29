@@ -3,6 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Api::V1::Gps', type: :request do
+  pending "GPS disabled for stationary regional installation — restore for Burning Man"
   describe 'GET /api/v1/gps/location' do
     let(:mock_gps_service) { instance_double(Gps::GpsTrackingService) }
 
