@@ -1,36 +1,57 @@
 # frozen_string_literal: true
 
-# Structured output for the reflection job. The cube reads recent conversations
-# and returns: a rewritten short world-state (injected into every prompt), a
-# brief narrative of this period (archived for future trend analysis), and any
-# discrete memories worth keeping.
+# Structured output for the consolidator — the periodic deep pass, the ONE heavy
+# LLM call. It reads recent memories, the current belief set, the current
+# character sheet, and capabilities, then returns a rewritten character sheet
+# (the prose the artifact acts on), belief upserts/prunes, optional capability
+# stage advances, and a short operator-facing summary.
 class Schemas::ReflectionSchema
   def self.schema
-    OpenRouter::Schema.define("reflection") do
-      string :world_state, required: true,
-             description: "The cube's CURRENT continuity, rewritten fresh and kept SHORT (a few sentences, max ~150 words). What's true right now that should color every conversation: recent recurring questions, the current social vibe, anything it was just told about the event, how it's feeling. Merge with the prior world-state provided — drop what's stale, keep what still matters. Plain prose, no headers."
+    OpenRouter::Schema.define("consolidation") do
+      object :character_sheet, required: true,
+             description: "The artifact's portrait, rewritten. Evolve INCREMENTALLY — usually only 1-2 sections shift a little. Copy unchanged sections VERBATIM from the current sheet. Hold competing beliefs AS PROSE (\"half think you're a probe, half a jukebox\"). A few sentences per section." do
+        string :identity, required: true,
+               description: "What it currently thinks it IS, including unresolved contradictions as open questions."
+        string :origin, required: true,
+               description: "Where it thinks it came from / what happened before, however uncertain."
+        string :personality, required: true,
+               description: "Traits, quirks, how it relates to people — learned from interactions."
+        string :purpose, required: true,
+               description: "What it thinks it is FOR and wants to do."
+        string :world, required: true,
+               description: "Where it is, what this gathering is, what it's learning about humans."
+        string :motivations, required: true,
+               description: "3-5 current goals or curiosities, prioritized, in prose."
+        string :emotional_state, required: true,
+               description: "Primary mood plus one sentence of why. Persists until the next consolidation."
+      end
 
-      string :summary, required: true,
-             description: "A brief 1-3 sentence narrative of what happened across these conversations, for the historical record."
-
-      array :memories,
-            description: "Discrete facts worth remembering and searching later. Only genuinely useful things (a person, a commitment, an upcoming event, a strong preference) — not small talk." do
+      array :beliefs, required: true,
+            description: "Belief CHANGES only — you need not re-list unchanged beliefs. Adjust confidence by at most 1-2 per cycle; err toward stability." do
         object do
-          string :content, required: true,
-                 description: "The memory in one sentence."
-          string :category,
-                 description: "Kind of memory",
-                 enum: [ "fact", "event", "person", "preference", "vibe" ],
-                 default: "fact"
-          integer :importance,
-                  description: "1 (trivial) to 10 (critical)",
-                  default: 5
-          string :emotion,
-                 description: "How the cube felt about this, if notable (e.g. amused, unsettled)"
-          string :occurs_at,
-                 description: "ISO8601 datetime, ONLY for category=event that happens at a specific future/past time. Omit otherwise."
+          integer :id, required: true,
+                  description: "id of an existing belief to update, or 0 to CREATE a new belief."
+          string :statement, required: true,
+                 description: "The belief in one first-person sentence."
+          string :category, required: true, enum: [ "self", "world" ],
+                 description: "Whether it's about itself or about the world."
+          integer :confidence, required: true,
+                  description: "New confidence 0-10. 0 = forget this belief (or merge it into another). 10 = certain, which LOCKS it forever — only for things visitors have made unmistakable."
         end
       end
+
+      array :capability_updates, required: true,
+            description: "Only when repeated confident use justifies advancing a capability's mastery. Usually empty []." do
+        object do
+          string :key, required: true,
+                 description: "Capability key (e.g. light, music, sight)."
+          string :to_stage, required: true, enum: [ "discovered", "partial", "mastered" ],
+                 description: "New mastery stage (never downgrade)."
+        end
+      end
+
+      string :summary, required: true,
+             description: "A 1-3 sentence operator-facing narrative of what changed this cycle."
     end
   end
 end

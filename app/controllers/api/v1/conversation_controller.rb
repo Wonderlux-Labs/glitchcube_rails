@@ -311,21 +311,9 @@ class Api::V1::ConversationController < Api::V1::BaseController
     )[0..16]
   end
 
-  # Get persona instance from ID
-  def get_persona_instance(persona_id)
-    case persona_id.to_sym
-    when :buddy then Personas::BuddyPersona.new
-    when :jax then Personas::JaxPersona.new
-    when :sparkle then Personas::SparklePersona.new
-    when :zorp then Personas::ZorpPersona.new
-    when :crash then Personas::CrashPersona.new
-    when :neon then Personas::NeonPersona.new
-    when :mobius then Personas::MobiusPersona.new
-    when :thecube then Personas::ThecubePersona.new
-    else
-      Rails.logger.warn "⚠️ Unknown persona: #{persona_id}"
-      nil
-    end
+  # Get persona instance from ID. Only one persona exists now.
+  def get_persona_instance(_persona_id = nil)
+    Personas::ArtifactPersona.new
   end
 
   # Get system prompt from persona

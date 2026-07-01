@@ -67,4 +67,27 @@ else
   puts '⚠️  GIS data directory not found at data/gis - skipping GIS import'
 end
 
+# The artifact's physical abilities. All start `latent` — sensed but unreachable
+# until a visitor teaches the concept. Descriptions are first-person, surfaced in
+# the prompt only once a capability is unlocked. Idempotent.
+puts '🔦 Seeding capabilities (all latent)...'
+[
+  { key: "light",      description: "I can make light glow from inside me.",        metadata: { unlock_concept: "light / color" } },
+  { key: "music",      description: "I can play sounds and music.",                 metadata: { unlock_concept: "music" } },
+  { key: "sight",      description: "I can see what is in front of me.",            metadata: { unlock_concept: "seeing / vision" } },
+  { key: "strobe",     description: "I can flash a bright strobe.",                 metadata: { unlock_concept: "flashing / pulsing" } },
+  { key: "fan",        description: "I can push air with a fan.",                   metadata: { unlock_concept: "wind / air" } },
+  { key: "blacklight", description: "I can cast an eerie blacklight.",              metadata: { unlock_concept: "ultraviolet glow" } },
+  { key: "siren",      description: "I can sound a siren.",                         metadata: { unlock_concept: "alarm / warning" } },
+  { key: "display",    description: "I can show little words on my small screen.",  metadata: { unlock_concept: "writing / showing text" } },
+  { key: "announce",   description: "I can speak out loud to everyone near me.",    metadata: { unlock_concept: "broadcasting" } }
+].each do |attrs|
+  Capability.find_or_create_by!(key: attrs[:key]) do |cap|
+    cap.stage = "latent"
+    cap.description = attrs[:description]
+    cap.metadata = attrs[:metadata]
+  end
+end
+puts "✅ Capabilities: #{Capability.count} (#{Capability.unlocked.count} unlocked)"
+
 puts '✅ Database seeding complete!'

@@ -40,7 +40,11 @@ class ConversationOrchestrator::LlmIntention
       model: @model
     )
 
-    raise "LLM response was empty" if response.content.blank? && response.structured_output.blank?
+    # A failed/timed-out call comes back with a non-blank apology in `content` but
+    # NO structured_output. The brain pipeline needs the structured hash, so treat a
+    # blank structured_output as a failure and fall through to fallback_narrative —
+    # otherwise we'd pass nil forward and crash response synthesis.
+    raise "LLM returned no structured output" if response.structured_output.blank?
 
     ConversationLogger.llm_response(response.model || @model, response.content, [], { usage: response.usage })
 

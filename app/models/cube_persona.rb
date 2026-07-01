@@ -3,56 +3,13 @@
 # Abstract base class for all cube personas
 # This class defines the interface that all persona implementations must follow
 class CubePersona
-  PERSONAS = [ :thecube, :buddy, :neon, :sparkle, :zorp, :crash, :jax, :mobius ]
-  # Not an ActiveRecord model - just a plain Ruby class
+  # There is only one character now: the emergent artifact. Its identity is not a
+  # fixed persona but the dynamic self-model (character sheet + beliefs). The roster
+  # and the Home-Assistant persona switcher are gone.
+  PERSONAS = [ :artifact ].freeze
 
   def self.current_persona
-    # Always fetch fresh from Home Assistant to ensure we have the correct persona
-    # Only use cache as a fallback if HA is unavailable
-    begin
-      name = HomeAssistantService.entity("input_select.current_persona")&.dig("state")
-      if name.present?
-        # Update cache with fresh value
-        Rails.cache.write("current_persona", name, expires_in: 30.minutes)
-        Rails.logger.debug "🎭 Fetched current persona from HA: #{name}"
-      else
-        # Fallback to cache if HA returns nil
-        name = Rails.cache.read("current_persona") || "buddy"
-        Rails.logger.warn "⚠️ HA returned nil for persona, using cached/default: #{name}"
-      end
-    rescue => e
-      # If HA is unavailable, use cache
-      Rails.logger.error "❌ Failed to fetch persona from HA: #{e.message}"
-      name = Rails.cache.read("current_persona") || "buddy"
-      Rails.logger.warn "⚠️ Using cached/default persona: #{name}"
-    end
-
-    name.to_sym
-  end
-
-  def self.set_random
-    set_current_persona(PERSONAS.sample)
-  end
-
-  def self.set_current_persona(persona)
-    return unless PERSONAS.include? persona&.to_sym
-
-    # Get current persona before switching
-    previous_persona = current_persona
-
-    # Clear the cache immediately to force fresh read
-    Rails.cache.delete("current_persona")
-
-    HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
-    # Write new persona to cache
-    Rails.cache.write("current_persona", persona.to_s, expires_in: 30.minutes)
-
-    Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona}"
-
-    # Handle persona switching with goal awareness
-    if previous_persona != persona.to_sym
-      PersonaSwitchService.handle_persona_switch(persona.to_sym, previous_persona)
-    end
+    :artifact
   end
 
   # Abstract method: Returns the persona's unique identifier

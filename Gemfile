@@ -42,7 +42,7 @@ group :test do
 end
 
 gem "dotenv-rails"
-gem "open_router_enhanced", git: "https://www.github.com/estiens/open_router", branch: "main"
+gem "open_router_enhanced", "~> 2.2.1"
 gem "geocoder"
 
 gem "langchainrb_rails"

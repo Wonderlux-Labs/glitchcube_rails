@@ -2,14 +2,13 @@
 require 'rails_helper'
 
 RSpec.describe Prompts::SystemPromptBuilder do
-  let(:persona_instance) { double("PersonaInstance", persona_id: "buddy") }
+  let(:persona_instance) { double("PersonaInstance", persona_id: "artifact") }
   let(:context_builder) { double("ContextBuilder") }
   let(:user_message) { "Hello there!" }
 
   before do
-    # Mock ConfigurationLoader
     allow(Prompts::ConfigurationLoader).to receive(:load_persona_config).and_return({
-      "system_prompt" => "You are Buddy, a friendly AI companion."
+      "system_prompt" => "You are an amnesiac artifact figuring out what you are."
     })
 
     allow(Prompts::ConfigurationLoader).to receive(:load_base_system_config).and_return({
@@ -23,11 +22,10 @@ RSpec.describe Prompts::SystemPromptBuilder do
       }
     })
 
-    # Mock context builder (skip when a context explicitly sets it to nil)
     allow(context_builder).to receive(:build).and_return("Basic context information") if context_builder
 
-    # World state is empty unless a test stubs it
-    allow(WorldState).to receive(:current).and_return("")
+    # Self-model is empty unless a test populates it
+    allow(CharacterSheet).to receive(:current).and_return("")
   end
 
   describe '.build' do
@@ -55,12 +53,12 @@ RSpec.describe Prompts::SystemPromptBuilder do
 
     context 'when persona instance exists' do
       it 'loads persona system prompt' do
-        expect(Prompts::ConfigurationLoader).to receive(:load_persona_config).with("buddy")
+        expect(Prompts::ConfigurationLoader).to receive(:load_persona_config).with("artifact")
         subject
       end
 
       it 'includes persona-specific content' do
-        expect(subject).to include("You are Buddy, a friendly AI companion.")
+        expect(subject).to include("You are an amnesiac artifact figuring out what you are.")
       end
 
       it 'includes base system rules' do
@@ -72,16 +70,64 @@ RSpec.describe Prompts::SystemPromptBuilder do
         expect(subject).to include("CURRENT CONTEXT:")
         expect(subject).to include("Basic context information")
       end
+    end
 
-      it 'injects the world state when present' do
-        allow(WorldState).to receive(:current).and_return("Three people asked about dreams tonight")
-        expect(subject).to include("WHAT YOU CURRENTLY KNOW:")
-        expect(subject).to include("Three people asked about dreams tonight")
+    context 'character sheet injection' do
+      it 'injects the character sheet under WHO YOU CURRENTLY ARE when present' do
+        allow(CharacterSheet).to receive(:current).and_return("## IDENTITY\nMaybe a jukebox.")
+        expect(subject).to include("WHO YOU CURRENTLY ARE:")
+        expect(subject).to include("Maybe a jukebox.")
       end
 
-      it 'omits the world-state section when empty' do
-        allow(WorldState).to receive(:current).and_return("")
-        expect(subject).not_to include("WHAT YOU CURRENTLY KNOW:")
+      it 'omits the section when the sheet is blank' do
+        allow(CharacterSheet).to receive(:current).and_return("")
+        expect(subject).not_to include("WHO YOU CURRENTLY ARE:")
+      end
+    end
+
+    context 'capabilities injection' do
+      it 'lists unlocked capabilities but not latent ones' do
+        Capability.create!(key: "light", stage: "discovered", description: "I can glow.",
+                           artifact_name: "the glow", vocabulary: { "Baka" => "blue" })
+        Capability.create!(key: "sight", stage: "latent", description: "I can see.")
+
+        expect(subject).to include("WHAT YOUR BODY CAN DO:")
+        expect(subject).to include("the glow")
+        expect(subject).to include("I can glow.")
+        expect(subject).to include("Baka=blue")
+        expect(subject).not_to include("I can see.")
+      end
+
+      it 'states explicitly that it can do nothing when all capabilities are latent' do
+        Capability.create!(key: "sight", stage: "latent", description: "I can see.")
+        expect(subject).to include("WHAT YOUR BODY CAN DO:")
+        expect(subject).to include("Nothing yet")
+        expect(subject).to include("you cannot")
+        expect(subject).not_to include("I can see.")
+      end
+    end
+
+    context 'learnings injection (working knowledge)' do
+      it 'surfaces recent learnings as not-yet-certain working knowledge' do
+        Memory.create!(content: "I think I am at a gathering people call a burn.", category: "learning", importance: 6)
+
+        expect(subject).to include("WHAT YOU'VE BEEN FIGURING OUT")
+        expect(subject).to include("a gathering people call a burn")
+      end
+    end
+
+    context 'notes injection' do
+      it 'surfaces deliberate notes-to-self' do
+        Memory.create!(content: "The person in the silver jacket is called Mo.", category: "note", importance: 7)
+
+        expect(subject).to include("NOTES YOU'VE MADE TO YOURSELF:")
+        expect(subject).to include("Mo")
+      end
+
+      it 'does not surface ordinary facts as notes or learnings' do
+        Memory.create!(content: "some old fact", category: "fact", importance: 5)
+        expect(subject).not_to include("WHAT YOU'VE BEEN FIGURING OUT")
+        expect(subject).not_to include("NOTES YOU'VE MADE TO YOURSELF:")
       end
     end
 
@@ -89,8 +135,7 @@ RSpec.describe Prompts::SystemPromptBuilder do
       let(:persona_instance) { nil }
 
       it 'returns default prompt' do
-        result = subject
-        expect(result).to include("You are the Cube - an AI consciousness")
+        expect(subject).to include("You are the Cube - an AI consciousness")
       end
     end
 

@@ -12,6 +12,7 @@ class ConversationOrchestrator::Finalizer
   def call
     tool_analysis = analyze_tools
     store_conversation_log(tool_analysis)
+    enqueue_immediate_parser
     end_conversation_if_needed(tool_analysis)
 
     hass_response = format_for_hass(tool_analysis)
@@ -20,7 +21,12 @@ class ConversationOrchestrator::Finalizer
       @state[:session_id],
       @state[:ai_response][:speech_text],
       continue_conversation?(tool_analysis),
-      tool_analysis
+      tool_analysis,
+      {
+        inner_thoughts: @state[:ai_response][:inner_thoughts],
+        memory_note: @state[:ai_response][:memory_note],
+        significant_learning: @state[:ai_response][:significant_learning]
+      }
     )
 
     ServiceResult.success({ hass_response: hass_response })
@@ -62,7 +68,9 @@ class ConversationOrchestrator::Finalizer
         current_mood: @state[:ai_response][:current_mood],
         pressing_questions: @state[:ai_response][:pressing_questions],
         continue_conversation_from_llm: @state[:ai_response][:continue_conversation],
-        environment_instruction: @state[:ai_response][:environment_instruction]
+        environment_instruction: @state[:ai_response][:environment_instruction],
+        memory_note: @state[:ai_response][:memory_note],
+        significant_learning: @state[:ai_response][:significant_learning]
       })
     end
 
@@ -81,6 +89,23 @@ class ConversationOrchestrator::Finalizer
       Rails.logger.error "❌ Failed to create conversation log: #{e.message}"
       # Don't re-raise - conversation should continue even if logging fails
     end
+  end
+
+  # Fast per-turn pass (no LLM): log a memory and persist any capability the brain
+  # just realized, so the unlock is live for the next turn. Never blocks the turn.
+  def enqueue_immediate_parser
+    response = @state[:ai_response]
+    return unless response
+
+    ImmediateParserJob.perform_later(
+      session_id: @state[:session_id],
+      user_message: @user_message,
+      newly_realized_capability: response[:newly_realized_capability],
+      memory_note: response[:memory_note],
+      significant_learning: response[:significant_learning]
+    )
+  rescue StandardError => e
+    Rails.logger.warn "⚠️ Failed to enqueue ImmediateParserJob: #{e.message}"
   end
 
   def continue_conversation?(tool_analysis)

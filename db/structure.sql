@@ -83,6 +83,41 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: beliefs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.beliefs (
+    id bigint NOT NULL,
+    statement text NOT NULL,
+    category character varying NOT NULL,
+    confidence integer DEFAULT 1 NOT NULL,
+    locked boolean DEFAULT false NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: beliefs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.beliefs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: beliefs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.beliefs_id_seq OWNED BY public.beliefs.id;
+
+
+--
 -- Name: boundaries; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -116,6 +151,43 @@ CREATE SEQUENCE public.boundaries_id_seq
 --
 
 ALTER SEQUENCE public.boundaries_id_seq OWNED BY public.boundaries.id;
+
+
+--
+-- Name: capabilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.capabilities (
+    id bigint NOT NULL,
+    key character varying NOT NULL,
+    stage character varying DEFAULT 'latent'::character varying NOT NULL,
+    artifact_name character varying,
+    description text,
+    unlocked_params jsonb DEFAULT '[]'::jsonb NOT NULL,
+    vocabulary jsonb DEFAULT '{}'::jsonb NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: capabilities_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.capabilities_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: capabilities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.capabilities_id_seq OWNED BY public.capabilities.id;
 
 
 --
@@ -764,10 +836,24 @@ ALTER SEQUENCE public.summaries_id_seq OWNED BY public.summaries.id;
 
 
 --
+-- Name: beliefs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.beliefs ALTER COLUMN id SET DEFAULT nextval('public.beliefs_id_seq'::regclass);
+
+
+--
 -- Name: boundaries id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.boundaries ALTER COLUMN id SET DEFAULT nextval('public.boundaries_id_seq'::regclass);
+
+
+--
+-- Name: capabilities id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.capabilities ALTER COLUMN id SET DEFAULT nextval('public.capabilities_id_seq'::regclass);
 
 
 --
@@ -905,11 +991,27 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 
 --
+-- Name: beliefs beliefs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.beliefs
+    ADD CONSTRAINT beliefs_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: boundaries boundaries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.boundaries
     ADD CONSTRAINT boundaries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: capabilities capabilities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.capabilities
+    ADD CONSTRAINT capabilities_pkey PRIMARY KEY (id);
 
 
 --
@@ -1079,6 +1181,27 @@ CREATE INDEX idx_streets_geom_geography ON public.streets USING gist (((geom)::p
 
 
 --
+-- Name: index_beliefs_on_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_beliefs_on_category ON public.beliefs USING btree (category);
+
+
+--
+-- Name: index_beliefs_on_confidence; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_beliefs_on_confidence ON public.beliefs USING btree (confidence);
+
+
+--
+-- Name: index_beliefs_on_locked; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_beliefs_on_locked ON public.beliefs USING btree (locked);
+
+
+--
 -- Name: index_boundaries_on_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1111,6 +1234,20 @@ CREATE INDEX index_boundaries_on_geom ON public.boundaries USING gist (geom);
 --
 
 CREATE INDEX index_boundaries_on_name ON public.boundaries USING btree (name);
+
+
+--
+-- Name: index_capabilities_on_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_capabilities_on_key ON public.capabilities USING btree (key);
+
+
+--
+-- Name: index_capabilities_on_stage; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_capabilities_on_stage ON public.capabilities USING btree (stage);
 
 
 --
@@ -1561,6 +1698,8 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 SET search_path TO "$user", public, topology;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260629000002'),
+('20260629000001'),
 ('20260628000003'),
 ('20260628000002'),
 ('20260628000001'),

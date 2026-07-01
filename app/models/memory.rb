@@ -5,8 +5,10 @@
 # queries — no embeddings. The `embedding` column is retained but unused; lazy
 # background embedding can be reintroduced later as a single after_save hook.
 class Memory < ApplicationRecord
-  # Placeholder taxonomy — refine once we see what the reflector actually emits.
-  CATEGORIES = %w[fact event person preference vibe].freeze
+  # `note` is a deliberate note-to-self the cube chose to remember; `learning` is a
+  # fresh realization about itself or the world that hasn't (yet) become a belief.
+  # Both are written opt-in by the Immediate parser — most turns produce neither.
+  CATEGORIES = %w[fact event person preference vibe interaction note learning].freeze
   IMPORTANCE_RANGE = (1..10).freeze
 
   validates :content, presence: true

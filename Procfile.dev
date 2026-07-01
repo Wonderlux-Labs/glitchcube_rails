@@ -1,2 +1,2 @@
 web: bundle exec puma -C config/puma.rb -b tcp://0.0.0.0:4567 config.ru
-jobs: bin/jobs
+jobs: bin/jobs >> log/solid_queue.log 2>&1

@@ -58,6 +58,11 @@ Rails.application.configure do
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
 
+  # Keep the SolidQueue worker quiet — its polling queries and lifecycle chatter
+  # are noisy. The jobs process logs to log/solid_queue.log (see Procfile.dev);
+  # silencing polling keeps even that readable.
+  config.solid_queue.silence_polling = true
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 

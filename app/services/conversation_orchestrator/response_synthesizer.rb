@@ -22,8 +22,9 @@ class ConversationOrchestrator::ResponseSynthesizer
   def generate_final_response
     response_id = SecureRandom.uuid
 
-    # Extract narrative elements from structured output
-    structured_data = @llm_response.deep_stringify_keys
+    # Extract narrative elements from structured output. Guard against a nil
+    # response (defense in depth — LlmIntention already substitutes a fallback).
+    structured_data = (@llm_response || {}).deep_stringify_keys
     speech_text = structured_data["speech_text"]
     continue_conversation = structured_data["continue_conversation"] || false
 
@@ -35,6 +36,7 @@ class ConversationOrchestrator::ResponseSynthesizer
       pressing_questions: structured_data["pressing_questions"],
       goal_progress: structured_data["goal_progress"],
       environment_instruction: structured_data["environment_instruction"],
+      newly_realized_capability: structured_data["newly_realized_capability"],
       memories: structured_data["memories"] || [],
       speech_text: speech_text
     }
@@ -69,6 +71,9 @@ class ConversationOrchestrator::ResponseSynthesizer
       pressing_questions: narrative[:pressing_questions],
       goal_progress: narrative[:goal_progress],
       environment_instruction: narrative[:environment_instruction],
+      newly_realized_capability: structured_data["newly_realized_capability"],
+      memory_note: structured_data["memory"],
+      significant_learning: structured_data["significant_learning"],
       memories: narrative[:memories],
       success: true,
       speech_text: speech_text,

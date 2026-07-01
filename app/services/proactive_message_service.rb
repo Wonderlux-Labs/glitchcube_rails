@@ -41,7 +41,7 @@ class ProactiveMessageService
       trigger_type: @trigger_type,
       time: Time.current.strftime("%A %I:%M %p"),
       provided_context: @context,
-      world_state: WorldState.current.presence
+      character_sheet: CharacterSheet.current.presence
     }
 
     context
@@ -118,8 +118,8 @@ class ProactiveMessageService
   def format_additional_context(system_context)
     parts = []
 
-    if system_context[:world_state]
-      parts << "**What you currently know:** #{system_context[:world_state]}"
+    if system_context[:character_sheet]
+      parts << "**Who you currently are:** #{system_context[:character_sheet]}"
     end
 
     if system_context[:location]

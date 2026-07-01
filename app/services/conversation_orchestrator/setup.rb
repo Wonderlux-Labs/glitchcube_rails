@@ -68,16 +68,9 @@ class ConversationOrchestrator::Setup
   end
 
   def determine_persona
-    # Context override primarily for testing/dev purposes
-    if @context[:persona].present? && @context[:persona] != CubePersona.current_persona
-      Rails.logger.warn "🎭 Persona override in context: using #{@context[:persona]}"
-      @context[:persona]
-    else
-      # Always get fresh persona from system, not cache
-      current = CubePersona.current_persona
-      Rails.logger.info "🎭 Current persona determined: #{current}"
-      current
-    end
+    # There is only one character now. A context override is still honored for
+    # tests/dev, but normal operation is always the artifact.
+    @context[:persona].presence || CubePersona.current_persona
   end
 
   def build_initial_metadata

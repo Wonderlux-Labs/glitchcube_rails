@@ -111,10 +111,16 @@ class LlmService
       Rails.logger.debug { "   last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
-        # Prepare extras with OpenRouter-specific parameters
+        # Prepare extras with OpenRouter-specific parameters.
+        # NOTE: max_tokens here is the COMPLETION cap. The old default (64_000)
+        # exceeds most models' max output and makes providers reject the request
+        # with "Bad Request: Provider returned error" — for ANY model, native
+        # structured output or not (it's sent on every path). The brain's structured
+        # response is small, so default to a safe ceiling; callers needing more pass
+        # max_tokens explicitly (e.g. the consolidator passes 2500).
         extras = {
           temperature: options[:temperature] || 0.9,
-          max_tokens: options[:max_tokens] || 64_000
+          max_tokens: options[:max_tokens] || 4_000
         }.merge(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new

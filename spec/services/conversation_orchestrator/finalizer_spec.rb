@@ -80,7 +80,8 @@ RSpec.describe ConversationOrchestrator::Finalizer do
           session_id,
           'I have turned on the lights.',
           false, # continue_conversation
-          hash_including(:sync_tools, :environment_dispatched)
+          hash_including(:sync_tools, :environment_dispatched),
+          hash_including(inner_thoughts: 'User requested lighting control')
         )
       end
 

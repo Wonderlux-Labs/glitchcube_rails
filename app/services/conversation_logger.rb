@@ -90,10 +90,14 @@ class ConversationLogger
       logger.info ""
     end
 
-    def conversation_ended(session_id, final_response, continue_conversation, tool_analysis = {})
+    def conversation_ended(session_id, final_response, continue_conversation, tool_analysis = {}, narrative = {})
       logger.info "🎬 CONVERSATION ENDED"
       logger.info "   Session: #{session_id}"
       logger.info "   Final Response: #{final_response&.truncate(200)}"
+      # The cube's private side, surfaced here for manual smoke testing.
+      logger.info "   💭 Inner: #{narrative[:inner_thoughts]}" if narrative[:inner_thoughts].present?
+      logger.info "   📝 memory: #{narrative[:memory_note]}" if narrative[:memory_note].present?
+      logger.info "   ✨ sig_learning: #{narrative[:significant_learning]}" if narrative[:significant_learning].present?
       logger.info "   Continue: #{continue_conversation}"
       if tool_analysis.any?
         logger.info "   Tools Used: sync=#{tool_analysis[:sync_tools]&.length || 0}, async=#{tool_analysis[:async_tools]&.length || 0}"

@@ -12,14 +12,13 @@ RSpec.describe Summary, type: :model do
   end
 
   describe 'scopes' do
-    let!(:hourly_summary) { create(:summary, summary_type: 'hourly', start_time: 2.hours.ago) }
-    let!(:daily_summary) { create(:summary, summary_type: 'daily', start_time: 1.day.ago) }
-    let!(:session_summary) { create(:summary, summary_type: 'session') }
+    let!(:reflection_summary) { create(:summary, summary_type: 'reflection', start_time: 1.day.ago) }
+    let!(:session_summary) { create(:summary, summary_type: 'session', start_time: 2.hours.ago) }
 
     describe '.by_type' do
       it 'returns summaries of specific type' do
-        expect(Summary.by_type('hourly')).to contain_exactly(hourly_summary)
-        expect(Summary.by_type('daily')).to contain_exactly(daily_summary)
+        expect(Summary.by_type('reflection')).to contain_exactly(reflection_summary)
+        expect(Summary.by_type('session')).to contain_exactly(session_summary)
       end
     end
 
@@ -31,14 +30,13 @@ RSpec.describe Summary, type: :model do
 
     describe '.chronological' do
       it 'orders by start_time asc' do
-        expect(Summary.chronological.first).to eq(daily_summary)
+        expect(Summary.chronological.first).to eq(reflection_summary)
       end
     end
 
     describe 'dynamic scopes' do
       it 'creates scopes for each summary type' do
-        expect(Summary.hourly).to contain_exactly(hourly_summary)
-        expect(Summary.daily).to contain_exactly(daily_summary)
+        expect(Summary.reflection).to contain_exactly(reflection_summary)
         expect(Summary.session).to contain_exactly(session_summary)
       end
     end
@@ -116,31 +114,6 @@ RSpec.describe Summary, type: :model do
 
       it 'returns nil' do
         expect(summary.duration_in_minutes).to be_nil
-      end
-    end
-  end
-
-  describe 'goal completion functionality' do
-    let!(:goal_summary1) { create(:summary, summary_type: 'goal_completion', summary_text: 'Completed goal: Make friends', metadata: { goal_id: 'make_friends', goal_category: 'social_goals', duration_seconds: 1800 }.to_json) }
-    let!(:goal_summary2) { create(:summary, summary_type: 'goal_completion', summary_text: 'Completed goal: Find power', metadata: { goal_id: 'find_power', goal_category: 'safety_goals', duration_seconds: 600 }.to_json) }
-    let!(:hourly_summary) { create(:summary, summary_type: 'hourly') }
-
-    describe '.goal_completions' do
-      it 'returns only goal completion summaries' do
-        expect(Summary.goal_completions).to contain_exactly(goal_summary1, goal_summary2)
-      end
-    end
-
-    describe '.completed_goals' do
-      it 'returns formatted goal completion data' do
-        completed = Summary.completed_goals
-
-        expect(completed.length).to eq(2)
-
-        first_goal = completed.find { |g| g[:goal_id] == 'make_friends' }
-        expect(first_goal[:goal_category]).to eq('social_goals')
-        expect(first_goal[:description]).to eq('Completed goal: Make friends')
-        expect(first_goal[:duration]).to eq(1800)
       end
     end
   end

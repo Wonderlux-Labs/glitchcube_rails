@@ -44,7 +44,10 @@ module Prompts
         "",
         base_system_rules,
         "",
-        world_state_section,
+        character_sheet_section,
+        capabilities_section,
+        learnings_section,
+        notes_section,
         "CURRENT CONTEXT:",
         basic_context
       ].compact
@@ -52,13 +55,57 @@ module Prompts
       enhanced_parts.join("\n")
     end
 
-    # The cube's curated continuity, maintained by the reflection job and
-    # injected verbatim. Empty until the first reflection runs.
-    def world_state_section
-      state = WorldState.current
-      return nil if state.blank?
+    # The artifact's evolving self-portrait, maintained by the consolidator and
+    # injected verbatim. THIS is what the model acts on and improvises from. Blank
+    # until the first consolidation runs.
+    def character_sheet_section
+      sheet = CharacterSheet.current
+      return nil if sheet.blank?
 
-      "WHAT YOU CURRENTLY KNOW:\n#{state}\n"
+      "WHO YOU CURRENTLY ARE:\n#{sheet}\n"
+    end
+
+    # The abilities the artifact has actually unlocked. Locked ones are absent on
+    # purpose — and when NOTHING is unlocked we say so explicitly, so the brain knows
+    # it genuinely cannot affect the world yet (otherwise it happily narrates lights
+    # and music it can't control). Read live so a same-turn unlock shows up next turn.
+    def capabilities_section
+      unlocked = Capability.unlocked.order(:key)
+      if unlocked.empty?
+        return "WHAT YOUR BODY CAN DO:\n" \
+               "Nothing yet. You do not know how to affect the world around you — you cannot " \
+               "change your light, make sound, or move anything, however much you might want to. " \
+               "You can only speak. Maybe someone will help you discover what you are capable of.\n"
+      end
+
+      lines = unlocked.map do |c|
+        name = c.artifact_name.present? ? "#{c.artifact_name} — " : ""
+        vocab = c.vocabulary.any? ? " [#{c.vocabulary.map { |w, m| "#{w}=#{m}" }.join('; ')}]" : ""
+        "- #{name}#{c.description} (#{c.stage})#{vocab}"
+      end
+      "WHAT YOUR BODY CAN DO:\n#{lines.join("\n")}\n"
+    end
+
+    # Fresh realizations about itself or the world that haven't settled into beliefs
+    # yet — WORKING knowledge. This is what gives continuity across the gaps: when a
+    # visitor tells it something new, it carries it forward (and can keep exploring
+    # it) even before the consolidator promotes it to a belief in the character sheet.
+    def learnings_section
+      learnings = Memory.learning.recent.limit(6).to_a
+      return nil if learnings.empty?
+
+      lines = learnings.reverse.map { |m| "- #{m.content}" }
+      "WHAT YOU'VE BEEN FIGURING OUT (these feel true but haven't settled into who you are — you're not sure of them yet):\n#{lines.join("\n")}\n"
+    end
+
+    # Deliberate notes the cube chose to make to itself — specific things it wanted
+    # to remember (a person, a moment, a promise).
+    def notes_section
+      notes = Memory.note.recent.limit(6).to_a
+      return nil if notes.empty?
+
+      lines = notes.reverse.map { |m| "- #{m.content}" }
+      "NOTES YOU'VE MADE TO YOURSELF:\n#{lines.join("\n")}\n"
     end
 
     def load_base_system_rules
