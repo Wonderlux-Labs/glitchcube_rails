@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+
 #
 # GlitchCube persona distinctiveness evaluation.
 # Runs all 8 personas through 3 scenarios and judges them comparatively.

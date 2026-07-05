@@ -63,11 +63,10 @@ class ConversationOrchestrator::LlmIntention
 
   def fallback_narrative
     {
-      "speech_text" => "I'm having trouble thinking right now — give me a moment.",
+      "speech" => "I'm having trouble thinking right now — give me a moment.",
       "continue_conversation" => false,
-      "inner_thoughts" => "Brain LLM call failed; spoke a graceful fallback so I'm not silent.",
-      "environment_instruction" => "",
-      "search_memories" => []
+      "inner_monologue" => "Brain LLM call failed; spoke a graceful fallback so I'm not silent.",
+      "actions" => []
     }
   end
 

@@ -62,3 +62,7 @@ node_modules/
 
 # Playwright / browser automation logs
 .playwright-mcp/
+
+# Python bytecode (from deprecated HASS custom component snapshot)
+__pycache__/
+*.pyc

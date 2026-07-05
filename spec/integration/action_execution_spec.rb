@@ -33,35 +33,14 @@ RSpec.describe "Action Execution Integration", type: :integration do
   describe "ActionExecutor" do
     let(:orchestrator) { ConversationOrchestrator.new(session_id: session_id, message: "test message", context: context) }
 
-    it "enqueues memory searches via search_memories (async, surfaces next turn)" do
-      allow(MemorySearchJob).to receive(:perform_later)
-
-      llm_response = {
-        "search_memories" => [
-          { "query" => "fire spinning", "category" => "event", "timeframe" => "upcoming" }
-        ]
-      }
-
-      result = ConversationOrchestrator::ActionExecutor.call(
-        llm_response: llm_response,
-        session_id: session_id,
-        conversation_id: session_id,
-        user_message: "test message"
-      )
-
-      expect(result.success?).to be true
-      expect(result.data[:sync_results]).to eq({})
-      expect(MemorySearchJob).to have_received(:perform_later).with(
-        conversation_id: session_id,
-        searches: llm_response["search_memories"]
-      )
-    end
-
-    it "dispatches a single environment_instruction to the translator job" do
+    it "joins the brain's actions and dispatches them to the translator job" do
       allow(EnvironmentDirectorJob).to receive(:perform_later)
 
       result = ConversationOrchestrator::ActionExecutor.call(
-        llm_response: { "environment_instruction" => "Turn the lights orange and play heavy metal" },
+        llm_response: { "actions" => [
+          { "action_name" => "cube_light", "description" => "Turn the lights orange" },
+          { "action_name" => "sound", "description" => "play heavy metal" }
+        ] },
         session_id: session_id,
         conversation_id: session_id,
         user_message: "make it spooky"
@@ -70,47 +49,17 @@ RSpec.describe "Action Execution Integration", type: :integration do
       expect(result.success?).to be true
       # All environment changes go through one translator (no per-domain fan-out)
       expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-        hash_including(instruction: "Turn the lights orange and play heavy metal")
+        hash_including(instruction: "cube_light: Turn the lights orange; sound: play heavy metal")
       )
       expect(result.data[:dispatched_environment]).to be true
-    end
-
-    it "handles mixed memory search and an environment instruction" do
-      allow(EnvironmentDirectorJob).to receive(:perform_later)
-      allow(MemorySearchJob).to receive(:perform_later)
-
-      llm_response = {
-        "search_memories" => [
-          { "query" => "music discussion", "category" => "preference" }
-        ],
-        "environment_instruction" => "Dim the bedroom lights"
-      }
-
-      result = ConversationOrchestrator::ActionExecutor.call(
-        llm_response: llm_response,
-        session_id: session_id,
-        conversation_id: session_id,
-        user_message: "test message"
-      )
-
-      expect(result.success?).to be true
-      expect(MemorySearchJob).to have_received(:perform_later)
-      expect(result.data[:dispatched_environment]).to be true
-      expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-        hash_including(instruction: "Dim the bedroom lights")
-      )
     end
   end
 
   describe "Integration with Tool Analysis" do
-    it "properly categorizes tools in analysis" do
-      # This replaces the tool analysis test from the old spec
+    it "reports environment dispatch (persona turn runs no sync tools)" do
       mock_state = {
         action_results: {
-          sync_results: {
-            "memory_search_1" => { success: true, results: [] },
-            "weather_tool" => { success: true, data: {} }
-          },
+          sync_results: {},
           dispatched_environment: true
         }
       }
@@ -118,10 +67,8 @@ RSpec.describe "Action Execution Integration", type: :integration do
       finalizer = ConversationOrchestrator::Finalizer.new(state: mock_state, user_message: "test")
       tool_analysis = finalizer.send(:analyze_tools)
 
-      expect(tool_analysis[:sync_tools]).to include("memory_search_1", "weather_tool")
+      expect(tool_analysis[:sync_tools]).to eq([])
       expect(tool_analysis[:environment_dispatched]).to be true
-      expect(tool_analysis[:query_tools]).to include("memory_search_1")
-      expect(tool_analysis[:action_tools]).to include("weather_tool") # excludes memory_search
     end
   end
 

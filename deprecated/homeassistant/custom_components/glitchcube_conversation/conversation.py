@@ -126,14 +126,26 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         _LOGGER.info(f"No host configured and no dynamic host available, using fallback: {fallback_url}")
         return fallback_url
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
+    async def _async_handle_message(
+        self,
+        user_input: conversation.ConversationInput,
+        chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
-        """Process a conversation turn."""
+        """Process a conversation turn.
+
+        Modern conversation-entity entry point (replaces the deprecated
+        ``async_process``). The base class sets up ``chat_log`` and calls this.
+        We stay a thin proxy to the Rails brain, so we don't use the chat log's
+        LLM/tool machinery — but ``chat_log.conversation_id`` is the
+        framework-resolved id (never ``None``, even on the first turn), so we
+        use it for both our Rails session key and the returned result.
+        """
+        conversation_id = chat_log.conversation_id
+
         _LOGGER.info("=" * 60)
         _LOGGER.info("NEW CONVERSATION REQUEST")
         _LOGGER.info("User input: %s", user_input.text)
-        _LOGGER.info("Conversation ID: %s", user_input.conversation_id)
+        _LOGGER.info("Conversation ID: %s", conversation_id)
         _LOGGER.info("Device ID: %s", user_input.device_id)
         _LOGGER.info("Language: %s", user_input.language)
 
@@ -141,14 +153,14 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
             api_url = self._get_current_api_url()
             _LOGGER.info("Using API URL: %s", api_url)
 
-            session_id = f"voice_{user_input.conversation_id}"
+            session_id = f"voice_{conversation_id}"
             _LOGGER.info("Session ID: %s", session_id)
 
             payload = {
                 "message": user_input.text,
                 "context": {
                     "session_id": session_id,
-                    "conversation_id": user_input.conversation_id,
+                    "conversation_id": conversation_id,
                     "device_id": user_input.device_id,
                     "language": user_input.language,
                     "voice_interaction": True,
@@ -184,28 +196,32 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
 
                     if response_type == "immediate_speech_with_background_tools":
                         return await self._handle_immediate_speech_with_background_tools(
-                            conversation_data, user_input
+                            conversation_data, user_input, conversation_id
                         )
                     elif response_type == "error":
-                        return await self._handle_error_response(conversation_data, user_input)
+                        return await self._handle_error_response(
+                            conversation_data, user_input, conversation_id
+                        )
                     else:
-                        return await self._handle_normal_response(conversation_data, user_input)
+                        return await self._handle_normal_response(
+                            conversation_data, user_input, conversation_id
+                        )
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout calling Glitch Cube API")
-            return self._create_error_response(user_input, "I'm having trouble thinking right now. Please try again.")
+            return self._create_error_response(user_input, conversation_id, "I'm having trouble thinking right now. Please try again.")
 
         except aiohttp.ClientError as e:
             _LOGGER.error("Client error calling Glitch Cube API: %s", str(e))
-            return self._create_error_response(user_input, "I can't connect to my brain right now. Please try again.")
+            return self._create_error_response(user_input, conversation_id, "I can't connect to my brain right now. Please try again.")
 
         except ConversationError as e:
             _LOGGER.error("Conversation error: %s", str(e))
-            return self._create_error_response(user_input, "Something went wrong with my thinking. Please try again.")
+            return self._create_error_response(user_input, conversation_id, "Something went wrong with my thinking. Please try again.")
 
         except Exception as e:
             _LOGGER.exception("Unexpected error in conversation processing")
-            return self._create_error_response(user_input, "I encountered an unexpected error. Please try again.")
+            return self._create_error_response(user_input, conversation_id, "I encountered an unexpected error. Please try again.")
 
     def _extract_response_text(self, conversation_data):
         """Extract speech text from potentially nested response structure."""
@@ -228,7 +244,7 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         _LOGGER.debug("Extracted response text: %s", cleaned_text[:100])
         return cleaned_text
 
-    async def _handle_immediate_speech_with_background_tools(self, conversation_data, user_input):
+    async def _handle_immediate_speech_with_background_tools(self, conversation_data, user_input, conversation_id):
         """Handle immediate speech while tools execute in background."""
         speech_text = conversation_data.get("speech_text", "On it!")
         _LOGGER.info("🚀 Immediate speech (background tools running): %s", speech_text[:50])
@@ -237,12 +253,12 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         intent_response.async_set_speech(speech_text)
 
         return conversation.ConversationResult(
-            conversation_id=user_input.conversation_id,
+            conversation_id=conversation_id,
             response=intent_response,
             continue_conversation=True,
         )
 
-    async def _handle_error_response(self, conversation_data, user_input):
+    async def _handle_error_response(self, conversation_data, user_input, conversation_id):
         """Handle error responses with appropriate messaging."""
         error_text = conversation_data.get("speech_text", "I encountered an error.")
         error_details = conversation_data.get("error_details", "")
@@ -253,12 +269,12 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         intent_response.async_set_speech(error_text)
 
         return conversation.ConversationResult(
-            conversation_id=user_input.conversation_id,
+            conversation_id=conversation_id,
             response=intent_response,
             continue_conversation=False,
         )
 
-    async def _handle_normal_response(self, conversation_data, user_input):
+    async def _handle_normal_response(self, conversation_data, user_input, conversation_id):
         """Handle standard synchronous responses."""
         response_text = self._extract_response_text(conversation_data)
         continue_conversation = conversation_data.get("continue_conversation", False)
@@ -269,7 +285,7 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         intent_response.async_set_speech(response_text)
 
         return conversation.ConversationResult(
-            conversation_id=user_input.conversation_id,
+            conversation_id=conversation_id,
             response=intent_response,
             continue_conversation=continue_conversation,
         )
@@ -277,6 +293,7 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
     def _create_error_response(
         self,
         user_input: conversation.ConversationInput,
+        conversation_id: str,
         error_message: str
     ) -> conversation.ConversationResult:
         """Create an error response."""
@@ -284,7 +301,7 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         intent_response.async_set_speech(error_message)
 
         return conversation.ConversationResult(
-            conversation_id=user_input.conversation_id,
+            conversation_id=conversation_id,
             response=intent_response,
             continue_conversation=False,
         )

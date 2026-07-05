@@ -1,7 +1,7 @@
 # app/controllers/health_controller.rb
 class HealthController < ApplicationController
   # Reduce logging noise for frequent health checks
-  around_action :silence_health_logging, only: [:show]
+  around_action :silence_health_logging, only: [ :show ]
   def show
     health_data = {
       status: overall_status,

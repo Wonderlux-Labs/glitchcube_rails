@@ -8,42 +8,18 @@ RSpec.describe ConversationOrchestrator::ActionExecutor do
   let(:user_message) { 'Turn on the lights' }
 
   describe '.call' do
-    context 'with memory searches' do
+    context 'with actions for delegation' do
       let(:llm_response) do
-        {
-          "search_memories" => [
-            { "query" => "previous light settings", "category" => "preference", "timeframe" => "upcoming" }
-          ]
-        }
+        { "actions" => [
+          { "action_name" => "cube_light", "description" => "turn the kitchen lights orange" },
+          { "action_name" => "sound", "description" => "play heavy metal" }
+        ] }
       end
 
-      it 'enqueues MemorySearchJob async and returns no inline results' do
-        expect(MemorySearchJob).to receive(:perform_later).with(
-          conversation_id: conversation_id,
-          searches: llm_response["search_memories"]
-        )
-
-        result = described_class.call(
-          llm_response: llm_response,
-          session_id: session_id,
-          conversation_id: conversation_id,
-          user_message: user_message
-        )
-
-        expect(result.success?).to be true
-        expect(result.data[:sync_results]).to eq({})
-      end
-    end
-
-    context 'with an environment instruction for delegation' do
-      let(:llm_response) do
-        { "environment_instruction" => "turn the kitchen lights orange" }
-      end
-
-      it 'dispatches the instruction to EnvironmentDirectorJob and signals dispatched_environment' do
+      it 'flattens the actions and dispatches them to EnvironmentDirectorJob' do
         expect(EnvironmentDirectorJob).to receive(:perform_later).with(
           hash_including(
-            instruction: "turn the kitchen lights orange",
+            instruction: "cube_light: turn the kitchen lights orange; sound: play heavy metal",
             session_id: session_id,
             conversation_id: conversation_id,
             user_message: user_message
@@ -62,8 +38,8 @@ RSpec.describe ConversationOrchestrator::ActionExecutor do
       end
     end
 
-    context 'with a blank environment instruction' do
-      let(:llm_response) { { "environment_instruction" => "" } }
+    context 'with an empty actions array' do
+      let(:llm_response) { { "actions" => [] } }
 
       it 'does not dispatch and returns dispatched_environment: false' do
         expect(EnvironmentDirectorJob).not_to receive(:perform_later)

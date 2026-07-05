@@ -57,12 +57,9 @@ class WorldStateUpdaters::NarrativeConversationSyncService
         message_length: conversation_log.ai_response&.length || 0
       },
       narrative_metadata: {
-        inner_thoughts: extract_metadata_field(metadata, "inner_thoughts", "thoughts"),
-        current_mood: extract_metadata_field(metadata, "current_mood", "mood"),
-        pressing_questions: extract_metadata_field(metadata, "pressing_questions", "questions"),
-        goal_progress: extract_metadata_field(metadata, "goal_progress", "goal"),
+        inner_monologue: extract_metadata_field(metadata, "inner_monologue", "inner_thoughts", "thoughts"),
         continue_conversation: extract_continue_flag(metadata),
-        environment_instruction: extract_metadata_field(metadata, "environment_instruction")
+        actions: extract_metadata_field(metadata, "actions", "environment_instruction")
       },
       interaction_context: {
         total_messages: ConversationLog.where(session_id: conversation_log.session_id).count,
@@ -121,12 +118,10 @@ class WorldStateUpdaters::NarrativeConversationSyncService
     continue_flag = extract_continue_flag(metadata)
     return continue_flag unless continue_flag.nil?
 
-    # If no explicit flag, assume active if the cube acted on the environment or
-    # still has pressing questions.
-    environment_instruction = extract_metadata_field(metadata, "environment_instruction")
-    questions = extract_metadata_field(metadata, "pressing_questions", "questions")
+    # If no explicit flag, assume active if the cube acted on the environment.
+    actions = extract_metadata_field(metadata, "actions", "environment_instruction")
 
-    environment_instruction.present? || questions.present?
+    actions.present?
   end
 
   def sanitize_message(message)

@@ -33,9 +33,8 @@ RSpec.describe ConversationOrchestrator::Finalizer do
         text: 'I have turned on the lights.',
         speech_text: 'I have turned on the lights.',
         continue_conversation: false,
-        inner_thoughts: 'User requested lighting control',
-        current_mood: 'helpful',
-        pressing_questions: nil
+        inner_monologue: 'User requested lighting control',
+        actions: [ { 'action_name' => 'cube_light', 'description' => 'warm amber' } ]
       },
       action_results: {
         sync_results: {
@@ -67,8 +66,8 @@ RSpec.describe ConversationOrchestrator::Finalizer do
           tool_results: '{"lights.control":{"success":true,"message":"Light turned on"}}',
           metadata: metadata_json_including(
             response_id: 'response_123',
-            inner_thoughts: 'User requested lighting control',
-            current_mood: 'helpful'
+            inner_monologue: 'User requested lighting control',
+            actions: [ { 'action_name' => 'cube_light', 'description' => 'warm amber' } ]
           )
         )
       end
@@ -81,7 +80,7 @@ RSpec.describe ConversationOrchestrator::Finalizer do
           'I have turned on the lights.',
           false, # continue_conversation
           hash_including(:sync_tools, :environment_dispatched),
-          hash_including(inner_thoughts: 'User requested lighting control')
+          hash_including(inner_monologue: 'User requested lighting control')
         )
       end
 
@@ -169,28 +168,6 @@ RSpec.describe ConversationOrchestrator::Finalizer do
       end
     end
 
-    context 'with memory search tools' do
-      before do
-        state[:action_results][:sync_results]['memory_search.rag'] = {
-          success: true,
-          results: [ 'Found 2 entries' ]
-        }
-      end
-
-      it 'categorizes memory search as query tool' do
-        described_class.call(state: state, user_message: user_message)
-
-        # Verify that metadata includes the correct tool categorization
-        expect(ConversationLog).to have_received(:create!).with(
-          hash_including(
-            metadata: metadata_json_including(
-              sync_tools: array_including('lights.control', 'memory_search.rag')
-            )
-          )
-        )
-      end
-    end
-
     context 'when an error occurs during finalization' do
       before do
         allow(ConversationLog).to receive(:create!).and_raise(StandardError.new("Database error"))
@@ -215,9 +192,8 @@ RSpec.describe ConversationOrchestrator::Finalizer do
         expect(ConversationLog).to have_received(:create!).with(
           hash_including(
             metadata: metadata_json_including(
-              inner_thoughts: nil,
-              current_mood: nil,
-              pressing_questions: nil,
+              inner_monologue: nil,
+              actions: nil,
               continue_conversation_from_llm: nil
             )
           )

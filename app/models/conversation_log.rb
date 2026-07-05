@@ -31,5 +31,4 @@ class ConversationLog < ApplicationRecord
   def metadata_json=(hash)
     self.metadata = hash.to_json
   end
-
 end

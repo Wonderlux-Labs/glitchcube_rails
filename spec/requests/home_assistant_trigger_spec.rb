@@ -28,11 +28,11 @@ RSpec.describe "Home Assistant world state trigger", type: :request do
     end
 
     it "rejects a real world state service that is not on the allowlist" do
-      # ReflectionService is a real, callable service but must not be reachable
-      # by name through the world-state trigger endpoint.
-      expect(ReflectionService).not_to receive(:call)
+      # NarrativeConversationSyncService is a real world-state service but is not
+      # on the trigger allowlist, so the endpoint must not resolve it by name.
+      expect(defined?(WorldStateUpdaters::NarrativeConversationSyncService)).to be_truthy
 
-      trigger("ReflectionService")
+      trigger("NarrativeConversationSyncService")
 
       expect(response).to have_http_status(:not_found)
     end

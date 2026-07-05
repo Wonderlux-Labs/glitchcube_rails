@@ -120,10 +120,7 @@ class Admin::PromptsController < Admin::BaseController
   def get_model_usage_analytics
     # Get model usage from LLM service or conversation logs
     {
-      primary_model: Rails.configuration.brain_model,
-      translator_model: Rails.configuration.translator_model,
-      summarizer_model: Rails.configuration.summarizer_model,
-      backup_models: Rails.configuration.fallback_models || []
+      primary_model: Rails.configuration.ai_model
     }
   end
 
@@ -158,9 +155,7 @@ class Admin::PromptsController < Admin::BaseController
 
   def get_current_model_configuration
     {
-      brain: Rails.configuration.brain_model || "Not configured",
-      translator: Rails.configuration.translator_model || "Not configured",
-      summarizer: Rails.configuration.summarizer_model || "Not configured"
+      ai_model: Rails.configuration.ai_model || "Not configured"
     }
   end
 

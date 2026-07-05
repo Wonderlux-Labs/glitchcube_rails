@@ -113,10 +113,9 @@ class CubeData::Persona < CubeData
       last_time > within.ago
     end
 
-    # List available personas (would need to be configured)
+    # The persona roster, single source of truth on CubePersona.
     def available_personas
-      # This could read from HA or be configured elsewhere
-      %w[buddy crash jax mobius neon sparkle thecube zorp]
+      CubePersona::PERSONAS.map(&:to_s)
     end
 
     # Check if persona name is valid

@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-# A discrete thing the cube remembers. Created by the reflection job (not per
-# turn), searched on demand by Tools::Query::MemorySearch via plain Rails
-# queries — no embeddings. The `embedding` column is retained but unused; lazy
-# background embedding can be reintroduced later as a single after_save hook.
+# A discrete thing the cube remembers about people, events, or the world.
+# Searched on demand by MemorySearchService via plain Rails queries — no
+# embeddings. The `embedding` column is retained but unused. Writing is not wired
+# into the persona turn; a future background consolidator job owns population.
 class Memory < ApplicationRecord
-  # `note` is a deliberate note-to-self the cube chose to remember; `learning` is a
-  # fresh realization about itself or the world that hasn't (yet) become a belief.
-  # Both are written opt-in by the Immediate parser — most turns produce neither.
-  CATEGORIES = %w[fact event person preference vibe interaction note learning].freeze
+  CATEGORIES = %w[fact event person preference vibe].freeze
   IMPORTANCE_RANGE = (1..10).freeze
 
   validates :content, presence: true

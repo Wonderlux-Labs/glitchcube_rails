@@ -35,12 +35,7 @@
   <div style="margin-bottom: 30px;">
     <h2>Model Configuration</h2>
     <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444;">
-      <p><strong>Brain Model:</strong> <%= @model_usage[:primary_model] || 'Not configured' %></p>
-      <p><strong>Translator Model:</strong> <%= @model_usage[:translator_model] || 'Not configured' %></p>
-      <p><strong>Summarizer Model:</strong> <%= @model_usage[:summarizer_model] || 'Not configured' %></p>
-      <% if @model_usage[:backup_models].any? %>
-        <p><strong>Backup Models:</strong> <%= @model_usage[:backup_models].join(', ') %></p>
-      <% end %>
+      <p><strong>AI Model:</strong> <%= @model_usage[:primary_model] || 'Not configured' %></p>
     </div>
   </div>
 <% end %>

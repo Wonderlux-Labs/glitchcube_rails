@@ -11,18 +11,21 @@ class LlmService
       # precise tool-calling model); only sample from the pool when none given.
       default_pool = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ]
       # In test env, skip pool sampling so VCR cassettes stay stable
-      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.default_ai_model
+      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.ai_model
 
       tool_names = tools.map { |t| t.is_a?(Hash) ? (t.dig(:function, :name) || t.dig("function", "name")) : t.name }
       Rails.logger.info "🤖 LLM call with tools: #{model_to_use} (#{tools.length} tools)"
       Rails.logger.debug { "   tools: #{tool_names.join(', ')} | last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
-        # Prepare extras with OpenRouter-specific parameters
-        extras = {
-          temperature: options[:temperature] || 0.9,
-          max_tokens: options[:max_tokens] || 32000
-        }.merge(options.except(:temperature, :max_tokens))
+        # Prepare extras with OpenRouter-specific parameters.
+        # We do NOT set max_tokens — it's an optional completion cap and, on
+        # reasoning models, it's spent on reasoning tokens and starves the actual
+        # answer. Leave it unset so each provider uses its own (model-max) default.
+        # A caller can still pass one explicitly.
+        extras = { temperature: options[:temperature] || 0.9 }
+        extras[:max_tokens] = options[:max_tokens] if options[:max_tokens]
+        extras.merge!(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
 
@@ -105,23 +108,21 @@ class LlmService
     def call_with_structured_output(messages:, response_format:, model: nil, **options)
       default_pool = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ]
       # In test env, skip pool sampling so VCR cassettes stay stable
-      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.default_ai_model
+      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.ai_model
 
       Rails.logger.info "🤖 LLM structured-output call: #{model_to_use} (#{response_format.name})"
       Rails.logger.debug { "   last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
         # Prepare extras with OpenRouter-specific parameters.
-        # NOTE: max_tokens here is the COMPLETION cap. The old default (64_000)
-        # exceeds most models' max output and makes providers reject the request
-        # with "Bad Request: Provider returned error" — for ANY model, native
-        # structured output or not (it's sent on every path). The brain's structured
-        # response is small, so default to a safe ceiling; callers needing more pass
-        # max_tokens explicitly (e.g. the consolidator passes 2500).
-        extras = {
-          temperature: options[:temperature] || 0.9,
-          max_tokens: options[:max_tokens] || 4_000
-        }.merge(options.except(:temperature, :max_tokens))
+        # We do NOT set max_tokens. It's an optional completion cap; on reasoning
+        # models the reasoning tokens eat the cap and the structured answer comes
+        # back empty (finish_reason "stop", content ""), which we'd misread as a
+        # failure. Leave it unset so each provider uses its own (model-max) default.
+        # A caller can still pass one explicitly.
+        extras = { temperature: options[:temperature] || 0.9 }
+        extras[:max_tokens] = options[:max_tokens] if options[:max_tokens]
+        extras.merge!(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
 
@@ -167,21 +168,6 @@ class LlmService
         Rails.logger.error "❌ LLM structured-output call failed with #{model_to_use}: #{e.class} - #{e.message}"
         Rails.logger.debug { e.backtrace.first(5).join("\n") }
 
-        # Try fallback models
-        fallback_models = Rails.configuration.fallback_models || []
-        fallback_models.shuffle.each do |fallback_model|
-          begin
-            response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
-            Rails.logger.info "✅ Fallback model #{fallback_model} succeeded"
-            return response
-          rescue => fallback_error
-            Rails.logger.warn "❌ Fallback model #{fallback_model} failed: #{fallback_error.message}"
-            next
-          end
-        end
-
-        Rails.logger.error "💥 All LLM models failed (#{[ model_to_use, *fallback_models ].join(', ')}) - returning fallback response"
-
         # Return a mock response with error info
         OpenStruct.new(
           content: "I'm having trouble thinking right now. Please try again.",
@@ -209,7 +195,7 @@ class LlmService
 
     # Background LLM calls for various purposes (no tools)
     def background_call(prompt:, context: {}, model: nil, **options)
-      model_to_use = model || Rails.configuration.default_ai_model
+      model_to_use = model || Rails.configuration.ai_model
 
       Rails.logger.info "🧠 Background LLM call: #{model_to_use}"
       Rails.logger.debug "📝 Prompt: #{prompt.first(100)}..."
@@ -219,10 +205,10 @@ class LlmService
 
       begin
         client = OpenRouter::Client.new
-        extras = {
-          temperature: options[:temperature] || 0.3,
-          max_tokens: options[:max_tokens] || 5000
-        }.merge(options.except(:temperature, :max_tokens))
+        # max_tokens left unset (see note in call_with_structured_output).
+        extras = { temperature: options[:temperature] || 0.3 }
+        extras[:max_tokens] = options[:max_tokens] if options[:max_tokens]
+        extras.merge!(options.except(:temperature, :max_tokens))
 
         response = client.complete(
           messages,

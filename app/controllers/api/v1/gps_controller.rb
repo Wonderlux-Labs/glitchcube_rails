@@ -6,7 +6,7 @@ class Api::V1::GpsController < Api::V1::BaseController
     @silencer ||= ActiveSupport::LogSubscriber.new
   end
 
-  around_action :silence_gps_logging, only: [:location, :coords, :proximity]
+  around_action :silence_gps_logging, only: [ :location, :coords, :proximity ]
   def location
     begin
       # Get current location with full context

@@ -589,4 +589,160 @@ http_interactions:
         tokens, but can only afford 9477. To increase, visit https://openrouter.ai/settings/credits
         and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
   recorded_at: Mon, 29 Jun 2026 19:33:34 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are a technical tool execution
+        service. Your job is to translate natural language intent into precise tool
+        calls.\n\nUSER INTENT: Turn the lights purple and play something mystical
+        and ambient\n\nCONTEXT: {\"persona\":\"buddy\"}\n\nIMPORTANT RULES:\n- Use
+        EXACT parameter names from tool definitions\n- Make the precise tool calls
+        needed to fulfill the intent.\n- You are allowed to reason and guess if it
+        isn''t obvious.\n- If you make errors you will be told them and should try
+        to correct yourself\n- Pay attention to schemas.\n- Do your best! Burning
+        Man depends on you!\n"},{"role":"user","content":"Execute this intent: Turn
+        the lights purple and play something mystical and ambient"}],"model":"z-ai/glm-5.2","temperature":0.1,"max_tokens":32000,"tools":[{"type":"function","function":{"name":"set_light_effect","description":"Set
+        lighting effects on cube lights that support them","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"effect":{"type":"string","description":"Effect
+        name to apply"}},"required":["entity_id","effect"]}}},{"type":"function","function":{"name":"list_light_effects","description":"List
+        available effects for cube lights","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to check for available effects","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"get_light_state","description":"Get
+        current state, brightness, color, and available effects of cube lights. Shows
+        all possible effects that can be set.","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to check","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]}},"required":["entity_id"]}}},{"type":"function","function":{"name":"set_light_state","description":"Unified
+        control for cube lights: turn on/off, set brightness, color, and transitions","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"state":{"type":"string","description":"Turn
+        light on or off pass on even if on to change state","enum":["on","off"]},"brightness":{"type":"number","description":"Brightness
+        percentage (0-100)","minimum":0,"maximum":100},"rgb_color":{"type":"string","description":"RGB
+        color as comma-separated string ''R,G,B'' values (0-255). Example: ''255,0,0''
+        for red, ''0,255,0'' for green"},"transition":{"type":"number","description":"Transition
+        time in seconds for smooth changes","minimum":0,"maximum":60}},"required":["entity_id","state"]}}},{"type":"function","function":{"name":"display_notification","description":"Display
+        text notification on the Awtrix matrix display via MQTT script","parameters":{"type":"object","properties":{"text":{"type":"string","description":"Text
+        message to display on the matrix"},"duration":{"type":"number","description":"How
+        long to display the message in seconds (default: 30)","minimum":1,"maximum":60},"color":{"type":"string","description":"hex
+        code ie #ff0000 for red (defaults yellow but recommended)"},"wakeup":{"type":"boolean","description":"wakeup
+        screen if asleep (default true)"},"rainbow":{"type":"boolean","description":"rainbow
+        text! (default false)"}},"required":["text"]}}},{"type":"function","function":{"name":"play_music","description":"Play
+        music on the Cube''s jukebox with fuzzy search - can search by song, artist,
+        or any combination","parameters":{"type":"object","properties":{"media_id":{"type":"string","description":"REQUIRED:
+        The song you want to play - fuzzy search works, so can do ''Watermelon Man
+        by Herbie Hancock'' or ''Nirvana - Teen Spirit''. The more precise the better."},"artist":{"type":"string","description":"Optional:
+        Artist name to narrow down search results if getting funny results"},"album":{"type":"string","description":"Optional:
+        Album name to further narrow down search if needed"},"enqueue":{"type":"string","description":"Queue
+        mode: ''play'' (force play now), ''replace'' (replace queue and play), ''next''
+        (add after current), ''replace_next'' (default), ''add'' (end of queue)","enum":["play","replace","next","replace_next","add"]}},"required":["media_id"]}}},{"type":"function","function":{"name":"control_effects","description":"Control
+        brief environmental effects like fan, strobe lighting, blacklight, and siren
+        (all auto-toggle off)","parameters":{"type":"object","properties":{"effect":{"type":"string","description":"Effect
+        to control","enum":["fan","strobe","blacklight","siren"]},"action":{"type":"string","description":"Action
+        to perform (on/off/toggle)","enum":["on","off","toggle"]}},"required":["effect","action"]}}},{"type":"function","function":{"name":"make_announcement","description":"Make
+        spoken announcements using music_assistant with persona voice and optional
+        Awtrix display","parameters":{"type":"object","properties":{"message":{"type":"string","description":"Message
+        to speak aloud"},"display_text":{"type":"string","description":"Optional text
+        to display on Awtrix matrix (if different from spoken message)"},"volume":{"type":"number","description":"Volume
+        level for announcement (0-100)","minimum":0,"maximum":100},"voice":{"type":"string","description":"Voice
+        to use (will default to current persona voice)"}},"required":["message"]}}},{"type":"function","function":{"name":"memory_search","description":"Search
+        the cube''s saved memories by keyword, category, and timeframe","parameters":{"type":"object","properties":{"query":{"type":"string","description":"Keyword
+        to match against memory content"},"category":{"type":"string","description":"Limit
+        to one category","enum":["fact","event","person","preference","vibe"]},"timeframe":{"type":"string","description":"Time
+        filter for event memories","enum":["upcoming","today","tomorrow"]},"limit":{"type":"integer","description":"Max
+        results, 1-10 (default 5)"}},"required":[]}}},{"type":"function","function":{"name":"mode_control","description":"Control
+        special operational modes of the Cube (emergency, stealth, theme song)","parameters":{"type":"object","properties":{"mode":{"type":"string","description":"Mode
+        to control","enum":["emergency_mode","stealth_mode","play_theme_song"]},"action":{"type":"string","description":"Action
+        to perform","enum":["activate","deactivate","toggle"]}},"required":["mode","action"]}}}],"tool_choice":"auto"}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Wed, 01 Jul 2026 22:01:12 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782943270-uOS7s4l2LwGFbF00yorW
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a148b00d7ef5e6f3-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAp7ImlkIjoiZ2VuLTE3ODI5NDMyNzAtdU9TN3M0bDJMd0dGYkYwMHlvclciLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24iLCJjcmVhdGVkIjoxNzgyOTQzMjcwLCJtb2RlbCI6InotYWkvZ2xtLTUuMi0yMDI2MDYxNiIsInByb3ZpZGVyIjoiTm92aXRhIiwic3lzdGVtX2ZpbmdlcnByaW50IjpudWxsLCJzZXJ2aWNlX3RpZXIiOm51bGwsImNob2ljZXMiOlt7ImluZGV4IjowLCJsb2dwcm9icyI6bnVsbCwiZmluaXNoX3JlYXNvbiI6InRvb2xfY2FsbHMiLCJuYXRpdmVfZmluaXNoX3JlYXNvbiI6InRvb2xfY2FsbHMiLCJtZXNzYWdlIjp7InJvbGUiOiJhc3Npc3RhbnQiLCJjb250ZW50IjoiSSdsbCB0dXJuIGFsbCB0aHJlZSBjdWJlIGxpZ2h0cyBwdXJwbGUgYW5kIGtpY2sgb2ZmIHNvbWUgbXlzdGljYWwgYW1iaWVudCB0dW5lcyDigJQgYWxsIGF0IG9uY2UhIiwicmVmdXNhbCI6bnVsbCwicmVhc29uaW5nIjoiVGhlIHVzZXIgd2FudHMgdHdvIHRoaW5nczpcbjEuIFR1cm4gdGhlIGxpZ2h0cyBwdXJwbGUgLSBJIG5lZWQgdG8gc2V0IGFsbCB0aHJlZSBjdWJlIGxpZ2h0cyB0byBwdXJwbGUgKFJHQiBmb3IgcHVycGxlIGlzIGFyb3VuZCAxMjgsMCwxMjggb3IgNzUsMCwxMzApXG4yLiBQbGF5IHNvbWV0aGluZyBteXN0aWNhbCBhbmQgYW1iaWVudCAtIEknbGwgc2VhcmNoIGZvciBhbWJpZW50L215c3RpY2FsIG11c2ljXG5cbkxldCBtZSBtYWtlIGFsbCB0aGVzZSBjYWxscyBpbiBwYXJhbGxlbCBzaW5jZSB0aGV5J3JlIGluZGVwZW5kZW50LiIsInRvb2xfY2FsbHMiOlt7InR5cGUiOiJmdW5jdGlvbiIsImluZGV4IjowLCJpZCI6ImNoYXRjbXBsLXRvb2wtYWJjNTg5OThhZmQ5OGQwNiIsImZ1bmN0aW9uIjp7Im5hbWUiOiJzZXRfbGlnaHRfc3RhdGUiLCJhcmd1bWVudHMiOiJ7XCJlbnRpdHlfaWRcIjogXCJsaWdodC5jdWJlX3ZvaWNlX3JpbmdcIiwgXCJzdGF0ZVwiOiBcIm9uXCIsIFwidHJhbnNpdGlvblwiOiAzfSJ9fSx7InR5cGUiOiJmdW5jdGlvbiIsImluZGV4IjoxLCJpZCI6ImNoYXRjbXBsLXRvb2wtOTc1OGRlNmExNTc4NDdhZiIsImZ1bmN0aW9uIjp7Im5hbWUiOiJzZXRfbGlnaHRfc3RhdGUiLCJhcmd1bWVudHMiOiJ7XCJlbnRpdHlfaWRcIjogXCJsaWdodC5jdWJlX2xpZ2h0X3RvcFwiLCBcInN0YXRlXCI6IFwib25cIiwgXCJ0cmFuc2l0aW9uXCI6IDN9In19LHsidHlwZSI6ImZ1bmN0aW9uIiwiaW5kZXgiOjIsImlkIjoiY2hhdGNtcGwtdG9vbC05ZTNjZWFlNDk1ZmU0OGYxIiwiZnVuY3Rpb24iOnsibmFtZSI6InNldF9saWdodF9zdGF0ZSIsImFyZ3VtZW50cyI6IntcImVudGl0eV9pZFwiOiBcImxpZ2h0LmN1YmVfaW5uZXJcIiwgXCJzdGF0ZVwiOiBcIm9uXCIsIFwidHJhbnNpdGlvblwiOiAzfSJ9fSx7InR5cGUiOiJmdW5jdGlvbiIsImluZGV4IjozLCJpZCI6ImNoYXRjbXBsLXRvb2wtOGFhOGQ2OGE1Mjc2NTE2NSIsImZ1bmN0aW9uIjp7Im5hbWUiOiJwbGF5X211c2ljIiwiYXJndW1lbnRzIjoie1wibWVkaWFfaWRcIjogXCJteXN0aWNhbCBhbWJpZW50XCJ9In19XSwicmVhc29uaW5nX2RldGFpbHMiOlt7InR5cGUiOiJyZWFzb25pbmcudGV4dCIsInRleHQiOiJUaGUgdXNlciB3YW50cyB0d28gdGhpbmdzOlxuMS4gVHVybiB0aGUgbGlnaHRzIHB1cnBsZSAtIEkgbmVlZCB0byBzZXQgYWxsIHRocmVlIGN1YmUgbGlnaHRzIHRvIHB1cnBsZSAoUkdCIGZvciBwdXJwbGUgaXMgYXJvdW5kIDEyOCwwLDEyOCBvciA3NSwwLDEzMClcbjIuIFBsYXkgc29tZXRoaW5nIG15c3RpY2FsIGFuZCBhbWJpZW50IC0gSSdsbCBzZWFyY2ggZm9yIGFtYmllbnQvbXlzdGljYWwgbXVzaWNcblxuTGV0IG1lIG1ha2UgYWxsIHRoZXNlIGNhbGxzIGluIHBhcmFsbGVsIHNpbmNlIHRoZXkncmUgaW5kZXBlbmRlbnQuIiwiZm9ybWF0IjoidW5rbm93biIsImluZGV4IjowfV19fV0sInVzYWdlIjp7InByb21wdF90b2tlbnMiOjE3NDAsImNvbXBsZXRpb25fdG9rZW5zIjoxOTMsInRvdGFsX3Rva2VucyI6MTkzMywiY29zdCI6MC4wMDI3MDM3MTk2LCJpc19ieW9rIjpmYWxzZSwicHJvbXB0X3Rva2Vuc19kZXRhaWxzIjp7ImNhY2hlZF90b2tlbnMiOjAsImNhY2hlX3dyaXRlX3Rva2VucyI6MCwiYXVkaW9fdG9rZW5zIjowLCJ2aWRlb190b2tlbnMiOjB9LCJjb3N0X2RldGFpbHMiOnsidXBzdHJlYW1faW5mZXJlbmNlX2Nvc3QiOjAuMDAyNzAzNzE5NiwidXBzdHJlYW1faW5mZXJlbmNlX3Byb21wdF9jb3N0IjowLjAwMjAwNDgyOCwidXBzdHJlYW1faW5mZXJlbmNlX2NvbXBsZXRpb25zX2Nvc3QiOjAuMDAwNjk4ODkxNn0sImNvbXBsZXRpb25fdG9rZW5zX2RldGFpbHMiOnsicmVhc29uaW5nX3Rva2VucyI6NzgsImltYWdlX3Rva2VucyI6MCwiYXVkaW9fdG9rZW5zIjowfX19
+  recorded_at: Wed, 01 Jul 2026 22:01:24 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782943270-uOS7s4l2LwGFbF00yorW
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      date:
+      - Wed, 01 Jul 2026 22:01:24 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      cache-control:
+      - private, no-store
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a148b068f8bc55b4-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782943270-uOS7s4l2LwGFbF00yorW
+        not found","code":404}}'
+  recorded_at: Wed, 01 Jul 2026 22:01:24 GMT
 recorded_with: VCR 6.4.0

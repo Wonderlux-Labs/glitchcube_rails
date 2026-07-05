@@ -9,14 +9,9 @@ default: &default
     schedule: "0 * * * *"     # Every hour at the top of the hour
     queue: default
 
-  reflection:
-    class: Recurring::Reflection::ReflectionJob
-    schedule: "*/30 * * * *"  # Every 30 minutes — the consolidator (deep pass)
-    queue: default
-
-  artifact_decay:
-    class: Recurring::Artifact::DecayJob
-    schedule: "0 9 * * *"     # Daily at 9am — the amnesia loop (arithmetic, no LLM)
+  random_persona:
+    class: Recurring::Persona::RandomPersonaJob
+    schedule: "*/5 * * * *"   # Check every 5 min; switches once a 30–90 min interval elapses
     queue: default
 
 production:

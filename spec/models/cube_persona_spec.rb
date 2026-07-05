@@ -4,14 +4,27 @@ require 'rails_helper'
 
 RSpec.describe CubePersona, type: :model do
   describe '.current_persona' do
-    it 'is always the single emergent artifact' do
-      expect(CubePersona.current_persona).to eq(:artifact)
+    it 'reads the current persona from Home Assistant' do
+      allow(HomeAssistantService).to receive(:entity)
+        .with("input_select.current_persona")
+        .and_return({ "state" => "jax" })
+
+      expect(CubePersona.current_persona).to eq(:jax)
+    end
+
+    it 'falls back to a valid roster persona when HA is unavailable' do
+      allow(HomeAssistantService).to receive(:entity).and_return(nil)
+      Rails.cache.delete("current_persona")
+
+      expect(CubePersona::PERSONAS).to include(CubePersona.current_persona)
     end
   end
 
   describe 'PERSONAS' do
-    it 'contains only the artifact' do
-      expect(CubePersona::PERSONAS).to eq([ :artifact ])
+    it 'is the fun persona roster' do
+      expect(CubePersona::PERSONAS).to match_array(
+        %i[thecube buddy neon sparkle zorp crash jax mobius]
+      )
     end
   end
 

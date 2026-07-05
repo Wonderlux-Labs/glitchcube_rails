@@ -37,14 +37,11 @@ class ProactiveMessageService
   private
 
   def gather_system_context
-    context = {
+    {
       trigger_type: @trigger_type,
       time: Time.current.strftime("%A %I:%M %p"),
-      provided_context: @context,
-      character_sheet: CharacterSheet.current.presence
+      provided_context: @context
     }
-
-    context
   end
 
   def generate_with_llm(system_context)
@@ -117,10 +114,6 @@ class ProactiveMessageService
 
   def format_additional_context(system_context)
     parts = []
-
-    if system_context[:character_sheet]
-      parts << "**Who you currently are:** #{system_context[:character_sheet]}"
-    end
 
     if system_context[:location]
       parts << "**Location:** #{system_context[:location][:zone]} - #{system_context[:location][:address]}"

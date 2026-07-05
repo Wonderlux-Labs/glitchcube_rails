@@ -3,7 +3,7 @@ require 'rails_helper'
 
 RSpec.describe PromptService do
   let(:conversation) { create(:conversation) }
-  let(:persona) { 'artifact' }
+  let(:persona) { 'buddy' }
   let(:extra_context) { {} }
   let(:user_message) { "Hello there!" }
 
@@ -11,7 +11,6 @@ RSpec.describe PromptService do
     allow(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("active")
     allow(HaDataSync).to receive(:get_context_attribute).and_return(nil)
     allow(CubePersona).to receive(:current_persona).and_return(persona)
-    allow(CharacterSheet).to receive(:current).and_return("")
   end
 
   describe '.build_prompt_for' do
@@ -57,7 +56,7 @@ RSpec.describe PromptService do
       end
 
       it 'includes context information' do
-        expect(subject[:system_prompt]).to include('CURRENT CONTEXT:')
+        expect(subject[:system_prompt]).to include('# CURRENT CONTEXT')
       end
     end
 
@@ -117,7 +116,7 @@ RSpec.describe PromptService do
 
     context 'when persona is nil' do
       it 'defaults to current persona from CubePersona' do
-        expect(CubePersona).to receive(:current_persona).and_return('artifact')
+        expect(CubePersona).to receive(:current_persona).and_return('buddy')
 
         result = described_class.build_prompt_for(
           persona: nil,

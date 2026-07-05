@@ -81,17 +81,9 @@ class ConversationOrchestrator
   end
 
   def determine_model_for_conversation
-    # Use model from context, persona preference, or the brain role default
-    @context[:model] ||
-    get_persona_preferred_model ||
-    Rails.configuration.brain_model
-  end
-
-  def get_persona_preferred_model
-    # TODO: Different personas might prefer different models
-    # For now, all use default
-    # Future: return persona-specific models for different capabilities
-    nil
+    # A per-call override (context[:model]) wins — handy for smoke-testing a
+    # different model without touching config — otherwise the one configured model.
+    @context[:model] || Rails.configuration.ai_model
   end
 
   # Step 4: Execute the tools and actions identified by the LLM.

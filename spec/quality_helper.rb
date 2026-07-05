@@ -32,7 +32,6 @@ RSpec.configure do |config|
   config.before(:each) do
     # Don't execute background jobs during quality turns
     allow(EnvironmentDirectorJob).to receive(:perform_later)
-    allow(MemorySearchJob).to receive(:perform_later)
   end
 
   config.after(:each) do

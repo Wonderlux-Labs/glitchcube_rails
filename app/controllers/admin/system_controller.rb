@@ -161,7 +161,7 @@ class Admin::SystemController < Admin::BaseController
     # OpenRouter/LLM Services
     dependencies[:llm_service] = {
       status: check_llm_service_health[:status],
-      primary_model: Rails.configuration.brain_model || "Not configured"
+      primary_model: Rails.configuration.ai_model || "Not configured"
     }
 
     dependencies

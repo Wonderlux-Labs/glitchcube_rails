@@ -20,9 +20,8 @@ class ConversationOrchestrator::PromptBuilder
       user_message: @user_message
     )
 
-    # Check for and inject any pending results from a previous turn
+    # Check for and inject any pending HA results from a previous turn
     inject_previous_ha_results(prompt_data)
-    inject_previous_query_results(prompt_data)
     Rails.logger.debug("Prompt built: messages=#{prompt_data[:messages].size}, has_system=#{prompt_data[:system_prompt].present?}")
     ServiceResult.success(prompt_data)
   rescue => e
@@ -78,50 +77,9 @@ class ConversationOrchestrator::PromptBuilder
     if result["error"]
       "System note: You tried to '#{instruction}' but it failed: #{result['error']}"
     else
-      success_items = result.dig("ha_response", "response", "data", "success") || []
-      failed_items = result.dig("ha_response", "response", "data", "failed") || []
-
-      success_summary = success_items.map { |item| item["name"] || item["entity_id"] }.join(", ")
-      failed_summary = failed_items.map { |item| "#{item['name'] || item['entity_id']} (#{item['error']})" }.join(", ")
-
-      parts = []
-      parts << "#{success_summary} completed" if success_summary.present?
-      parts << "#{failed_summary} failed" if failed_summary.present?
-
-      "System note: You intended to '#{instruction}'. Result: #{parts.join(', ')}"
-    end
-  end
-
-  def inject_previous_query_results(prompt_data)
-    return unless @conversation.metadata_json
-
-    query_results = @conversation.metadata_json["pending_query_results"]
-    return unless query_results && query_results["results_summary"]
-
-    Rails.logger.info "🔍 Injecting query results from previous turn: #{query_results['tool_count']} tools"
-
-    # Create a system message with the query results
-    result_text = "System note: Previous query results from your last response: #{query_results['results_summary']}"
-    system_msg = { role: "system", content: result_text }
-
-    # Append to end of message history
-    prompt_data[:messages] << system_msg
-    Rails.logger.info "🔄 Injected query results: #{result_text}"
-
-    # Clear the pending query results now that we've injected them
-    clear_query_results
-  end
-
-  def clear_query_results
-    return unless @conversation.metadata_json
-
-    metadata = @conversation.metadata_json.dup
-    metadata.delete("pending_query_results")
-
-    begin
-      @conversation.update!(metadata_json: metadata)
-    rescue => e
-      Rails.logger.warn "Failed to clear query results: #{e.message}"
+      # ha_response is the Home Assistant agent's natural-language reply,
+      # captured by EnvironmentDirectorJob.
+      "System note: You intended to '#{instruction}'. Result: #{result['ha_response']}"
     end
   end
 end

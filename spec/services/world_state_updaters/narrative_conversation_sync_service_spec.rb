@@ -34,8 +34,8 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
           expect(entity_id).to eq('sensor.world_info')
           expect(state).to eq('narrative_updated')
           expect(attributes[:last_conversation][:persona]).to eq('buddy')
-          expect(attributes[:narrative_metadata][:inner_thoughts]).to eq('A new customer! I need to help them!')
-          expect(attributes[:narrative_metadata][:environment_instruction]).to eq('Make lights bright yellow')
+          expect(attributes[:narrative_metadata][:inner_monologue]).to eq('A new customer! I need to help them!')
+          expect(attributes[:narrative_metadata][:actions]).to eq('Make lights bright yellow')
         end
 
         described_class.sync_latest_conversation
@@ -60,9 +60,9 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
              ai_response: 'What kind of music? None of that electronic bullshit!',
              metadata: {
                persona: 'jax',
-               current_mood: 'grumpy',
-               pressing_questions: 'What constitutes real music?',
-               goal_progress: 'Convert humans to real music: 0/1'
+               inner_monologue: 'Another philistine asking for garbage',
+               continue_conversation: true,
+               actions: 'play some Led Zeppelin'
              }.to_json,
              tool_results: { music_tool: { success: true, track: 'Led Zeppelin - Stairway to Heaven' } }.to_json)
     end
@@ -77,9 +77,9 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
         expect(attributes[:last_conversation][:ai_response]).to include('electronic bullshit')
 
         # Check narrative metadata
-        expect(attributes[:narrative_metadata][:current_mood]).to eq('grumpy')
-        expect(attributes[:narrative_metadata][:pressing_questions]).to eq('What constitutes real music?')
-        expect(attributes[:narrative_metadata][:goal_progress]).to eq('Convert humans to real music: 0/1')
+        expect(attributes[:narrative_metadata][:inner_monologue]).to eq('Another philistine asking for garbage')
+        expect(attributes[:narrative_metadata][:actions]).to eq('play some Led Zeppelin')
+        expect(attributes[:narrative_metadata][:continue_conversation]).to be(true)
 
         # Check tool results (parsed from JSON, so string keys)
         expect(attributes[:tool_results]['music_tool']['track']).to eq('Led Zeppelin - Stairway to Heaven')
@@ -95,8 +95,8 @@ RSpec.describe WorldStateUpdaters::NarrativeConversationSyncService do
       conversation_log.update!(metadata: 'invalid json')
 
       expect(ha_service).to receive(:set_entity_state) do |entity_id, state, attributes|
-        expect(attributes[:narrative_metadata][:inner_thoughts]).to be_nil
-        expect(attributes[:narrative_metadata][:current_mood]).to be_nil
+        expect(attributes[:narrative_metadata][:inner_monologue]).to be_nil
+        expect(attributes[:narrative_metadata][:actions]).to be_nil
       end
 
       service.sync_conversation(conversation_log)

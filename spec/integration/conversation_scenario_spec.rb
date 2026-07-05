@@ -18,15 +18,17 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
     )
   end
 
-  # What the brain LLM "decides": a line to say + one plain-English environment
-  # instruction (the shape the translator consumes).
+  # What the brain LLM "decides": a line to say + a list of plain-English
+  # environment actions (the shape the translator consumes).
   let(:narrative) do
     {
-      "speech_text" => "Ooh, making it nice and spooky for you!",
+      "speech" => "Ooh, making it nice and spooky for you!",
       "continue_conversation" => true,
-      "inner_thoughts" => "spooky vibes incoming",
-      "current_mood" => "playful",
-      "environment_instruction" => "turn the lights deep orange and play spooky music"
+      "inner_monologue" => "spooky vibes incoming",
+      "actions" => [
+        { "action_name" => "cube_light", "description" => "turn the lights deep orange" },
+        { "action_name" => "sound", "description" => "play spooky music" }
+      ]
     }
   end
 
@@ -62,9 +64,9 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
     expect(response.to_s).to include("spooky")
 
     # All environment changes went through ONE translator job (no per-domain
-    # fan-out), carrying the brain's plain-English instruction verbatim.
+    # fan-out), carrying the brain's actions joined into one instruction.
     expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-      hash_including(instruction: "turn the lights deep orange and play spooky music")
+      hash_including(instruction: "cube_light: turn the lights deep orange; sound: play spooky music")
     )
 
     # The turn was persisted.

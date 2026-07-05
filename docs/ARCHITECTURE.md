@@ -13,58 +13,64 @@ table is the answer.
 | Concern | Owner | Where it lives | Notes |
 |---|---|---|---|
 | Wake word, STT, TTS | **HASS** | Voice pipeline + custom component | HASS hears and speaks; Rails never touches audio. |
-| Device actuation (lights, music, display, effects) | **HASS** | HASS entities/services | Rails *requests* changes via the translator; HASS performs them. |
+| Device actuation (lights, music, display, effects) | **HASS** | HASS entities/services | Rails emits a plain-English instruction; a dedicated HASS **action agent** decodes it to tool calls and performs them. |
 | Raw sensor + world events | **HASS** → Rails | `POST /ha/world_state/trigger` | HASS pushes state changes; `WorldStateUpdaters::Registry` (allowlist) routes them. |
 | Current persona | **HASS** (source of truth) | `input_select.current_persona` | `CubePersona.current_persona` reads HASS first; cached in Rails.cache (30 min). |
 | Cube mode / battery / low-power | **HASS** | `input_select.cube_mode`, etc. | Read via `CubeData` sensor registry. |
-| GPS / location | **HASS** → Rails | `sensor.glitchcube_*` | `Gps::GpsTrackingService` reads; `LocationContextService` resolves to BRC geography. |
-| Conversation state + history | **Rails** | `ConversationLog`, `Conversation` (pgvector) | The brain's working memory of a session. |
-| World state (continuity) | **Rails** (file) → HASS mirror | `storage/world_state.md`, `sensor.glitchcube_world_state` | Short curated blob injected every turn; rewritten by reflection. |
-| Long-term memory | **Rails** | `Memory` (plain columns) | Discrete facts; plain Rails search, no embeddings (see Continuity). |
-| Policy / persona behavior | **Rails** | persona YAML, prompt builders | The only place behavior logic is versioned. No goal system. |
+| GPS / location | — | `Gps::*`, `Landmark`/`Street` | **Dormant reference code** — not wired into anything live; empty tables. |
+| Conversation state + history | **Rails** | `ConversationLog`, `Conversation` | The brain's record of a session. |
+| World state (continuity) | **Rails** (file) | `storage/world_state.md`, `WorldState` | **Dormant** — service lingers but is no longer injected into prompts (amnesiacube). |
+| Long-term memory | **Rails** | `Memory`, `MemorySearchService` | **Dormant** — nothing writes or reads it in a turn (amnesiacube). |
+| Policy / persona behavior | **Rails** | persona config + prompt builders | The only place behavior logic is versioned. No goal system. |
 | Decisions (what to say, what to do) | **Rails** | `ConversationOrchestrator` | The brain. |
-| Pending action/query results across turns | **Rails** | `conversation.metadata_json` | `pending_ha_results`, `pending_query_results` — surfaced next turn. |
+| Pending action results across turns | **Rails** | `conversation.metadata_json` | `pending_ha_results` — action agent's reply, surfaced next turn. |
 
-## Conversation pipeline (two LLM roles)
+## Conversation pipeline (brain in Rails, tool-calling in HASS)
+
+**Full walkthrough with class names + the HASS-side two-agent design:
+[`conversation_flow.md`](conversation_flow.md).** In brief:
 
 `POST /api/v1/conversation` → `ConversationOrchestrator` runs six steps in a
 transaction: **Setup → PromptBuilder → LlmIntention → ActionExecutor →
 ResponseSynthesizer → Finalizer**.
 
-Two distinct LLM roles, configured independently in
-`config/initializers/config.rb` (all default to the same fast model today):
+Only **one** LLM role lives in Rails now — the brain. Tool-calling was moved out to
+a HASS conversation agent:
 
 - **Brain** (`brain_model`, `DEFAULT_AI_MODEL`/`BRAIN_MODEL`): runs in
-  `LlmIntention` with `NarrativeResponseSchema`. Returns `speech_text`, a single
-  plain-English **`environment_instruction`** ("turn the lights orange and play
-  heavy metal"), inner state, and optional `search_memories` (opt-in deep recall).
-  The brain never emits tool calls and no longer flags memories — reflection does.
-- **Translator** (`translator_model`, `TOOL_CALLING_MODEL`): `ToolCallingService`,
-  run at low temperature. Converts the one `environment_instruction` into
-  validated HASS tool calls (with a retry/validation loop).
-- **Summarizer** (`summarizer_model`, `SUMMARIZER_MODEL`): background
-  summarization.
+  `LlmIntention` via `LlmService.call_with_structured_output` +
+  `NarrativeResponseSchema`. Returns `speech`, `inner_monologue`,
+  `continue_conversation`, and a list of plain-English **`actions`**
+  (`{action_name, description}`). It never emits tool calls and carries no memory
+  fields (the cube is currently amnesiac — see Continuity).
+- **Action agent (HASS-side, not an in-Rails role):** `ActionExecutor` flattens
+  `actions` into one instruction and `EnvironmentDirectorJob` hands it to the HASS
+  agent `Rails.configuration.hass_action_agent` via
+  `HomeAssistantService#conversation_process`. That agent owns all tool-calling
+  (Assist API + exposed entities) and replies in natural language.
 
-**Speak-first, act-async:** speech is returned immediately; the
-`environment_instruction` is dispatched to `EnvironmentDirectorJob`, which runs
-the translator + execution in the background. Results land in
-`pending_ha_results` and surface to the brain on the next turn. There is no
-per-domain agent fan-out — one brain, one translator.
+There are also **per-persona HASS voice agents** (visitor-facing, one TTS voice
+each) that do wake word / STT / TTS. The visitor talks to those; the action agent
+never talks to a visitor.
 
-## Continuity (world state + reflection + memory)
+**Speak-first, act-async:** speech is returned immediately; the instruction is
+dispatched to `EnvironmentDirectorJob` in the background. The action agent's reply
+lands in `conversation.metadata_json["pending_ha_results"]` and is folded into the
+brain's context on the next turn. No per-domain fan-out, no in-Rails translator.
 
-Three pieces, no multi-job summarization pipeline and no goal system. Full
-detail in [`continuity.md`](continuity.md).
+## Continuity — currently removed ("amnesiacube")
 
-- **World state (read every turn):** `WorldState.current` reads a short curated
-  blob from `storage/world_state.md` and the prompt injects it. Cheap — a file read.
-- **Reflection (the only writer):** `ReflectionService` (every 30 min) reads
-  conversations not yet reflected on, makes one structured LLM call, rewrites the
-  world state, and saves discrete `Memory` rows.
-- **Deep recall (opt-in read):** the brain may request `search_memories`;
-  `MemorySearchJob` runs `Tools::Query::MemorySearch` (plain Rails — keyword,
-  category, `occurs_at` window) and the results surface on the next turn via
-  `pending_query_results`. No embeddings.
+The cube has **no working memory or continuity right now.** Reflection, per-turn
+memory recall/flagging, deep memory search, the multi-layer summarizers, and the
+goal system were all deleted. The brain schema has no memory fields and no
+world-state blob is injected into prompts.
+
+Still present but **dormant** (nothing writes or reads them in a turn): the
+`Memory` model, `MemorySearchService` (standalone plain-Rails query), and
+`WorldState`/`storage/world_state.md`. Re-introducing continuity is future work.
+
+`continuity.md` documents the **old** removed design and is banner-flagged as
+superseded — don't treat it as current.
 
 ## Testing the cube without hardware
 

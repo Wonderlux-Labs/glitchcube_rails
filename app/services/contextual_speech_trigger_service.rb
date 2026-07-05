@@ -28,7 +28,6 @@ class ContextualSpeechTriggerService
   def initialize
     @llm_service = LlmService
     @prompt_service = PromptService
-    @tool_calling_service = ToolCallingService.new
   end
 
   # Main method to trigger contextual speech
@@ -423,13 +422,20 @@ class ContextualSpeechTriggerService
     # Parse the response for metadata
     response_data = parse_response_metadata(llm_response)
 
-    # Run any environment instruction through the translator (single instruction).
+    # Hand any environment instruction to the Home Assistant conversation agent —
+    # same path as EnvironmentDirectorJob. There's no Conversation row here (this is
+    # a one-shot trigger, not a persona turn), so we call conversation_process
+    # directly rather than enqueuing the job.
     instruction = response_data[:environment_instruction]
     tool_results = {}
     if instruction.present?
-      Rails.logger.info "🔧 Executing environment instruction from contextual speech: #{instruction}"
+      Rails.logger.info "🎬 Handing environment instruction to HA agent from contextual speech: #{instruction}"
       begin
-        tool_results["environment"] = @tool_calling_service.execute_intent(instruction, context)
+        tool_results["environment"] = HomeAssistantService.instance.conversation_process(
+          text: instruction,
+          agent_id: Rails.configuration.hass_action_agent,
+          conversation_id: "cube_env_ctx_#{persona}"
+        )
       rescue StandardError => e
         Rails.logger.error "❌ Environment instruction execution failed: #{e.message}"
         tool_results["environment"] = { success: false, error: e.message }

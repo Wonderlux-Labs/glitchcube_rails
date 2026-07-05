@@ -146,7 +146,7 @@ RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
           response_data = result.data[:llm_response]
 
           # These fields are optional - should be nil or present
-          optional_fields = %w[current_mood pressing_questions environment_instruction search_memories]
+          optional_fields = %w[current_mood pressing_questions environment_instruction]
           optional_fields.each do |field|
             if response_data.key?(field)
               expect(response_data[field]).not_to eq("")
@@ -171,10 +171,10 @@ RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
         it "returns success with a graceful fallback narrative (cube isn't silent)" do
           expect(result).to be_success
           narrative = result.data[:llm_response]
-          expect(narrative["speech_text"]).to be_present
+          expect(narrative["speech"]).to be_present
           expect(narrative["continue_conversation"]).to be(false)
           # No environment action should be dispatched on a brain failure.
-          expect(narrative["environment_instruction"]).to eq("")
+          expect(narrative["actions"]).to eq([])
         end
 
         it "logs the error via ConversationLogger" do
@@ -194,7 +194,6 @@ RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
           result
         end
       end
-
     end
 
     context "parameter validation" do
@@ -435,8 +434,7 @@ RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
         {
           "speech_text" => "Oh, tonight? There's a fire-spinning circle near Center Camp around sunset.",
           "continue_conversation" => true,
-          "inner_thoughts" => "They want events — surface what I remember.",
-          "search_memories" => [ { "query" => "events tonight near Center Camp", "type" => "events" } ]
+          "inner_thoughts" => "They want events — surface what I remember."
         }
       end
 
@@ -475,7 +473,7 @@ RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
         expect(result.data[:llm_response]["speech_text"].length).to be > 10
       end
 
-      it "generates appropriate tool intentions for event queries" do
+      it "threads the continue_conversation flag through" do
         service = described_class.new(
           prompt_data: rich_prompt_data,
           user_message: user_message,
@@ -485,11 +483,7 @@ RSpec.describe ConversationOrchestrator::LlmIntention, type: :service do
         result = service.call
 
         expect(result).to be_success
-
-        # Might generate search intentions for events
-        if result.data[:llm_response]["search_memories"]
-          expect(result.data[:llm_response]["search_memories"]).to be_an(Array)
-        end
+        expect(result.data[:llm_response]["continue_conversation"]).to be(true)
       end
     end
   end

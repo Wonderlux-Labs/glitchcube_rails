@@ -209,10 +209,10 @@ RSpec.describe FakeHomeAssistant, type: :service do
 
     it "merges non-entity_id data into attributes on turn_on" do
       fake.set_state("light.cube_inner", "off", { existing: "kept" })
-      fake.call_service("light", "turn_on", { entity_id: "light.cube_inner", "rgb_color" => [255, 0, 0] })
+      fake.call_service("light", "turn_on", { entity_id: "light.cube_inner", "rgb_color" => [ 255, 0, 0 ] })
 
       attributes = fake.entity("light.cube_inner")["attributes"]
-      expect(attributes).to include("existing" => "kept", "rgb_color" => [255, 0, 0])
+      expect(attributes).to include("existing" => "kept", "rgb_color" => [ 255, 0, 0 ])
       expect(attributes).not_to have_key("entity_id")
     end
 
@@ -224,7 +224,7 @@ RSpec.describe FakeHomeAssistant, type: :service do
     end
 
     it "applies the effect to multiple entity_ids" do
-      fake.call_service("light", "turn_on", { entity_id: ["light.a", "light.b"] })
+      fake.call_service("light", "turn_on", { entity_id: [ "light.a", "light.b" ] })
 
       expect(fake.entity_state("light.a")).to eq("on")
       expect(fake.entity_state("light.b")).to eq("on")
@@ -234,7 +234,7 @@ RSpec.describe FakeHomeAssistant, type: :service do
       fake.set_state("light.cube_inner", "off")
       fake.call_service("light", "flash", { entity_id: "light.cube_inner" })
 
-      expect(fake.service_calls_for("light").map { |c| c[:service] }).to eq(["flash"])
+      expect(fake.service_calls_for("light").map { |c| c[:service] }).to eq([ "flash" ])
       expect(fake.entity_state("light.cube_inner")).to eq("off")
     end
   end
@@ -249,7 +249,7 @@ RSpec.describe FakeHomeAssistant, type: :service do
     it "filters recorded calls by domain" do
       light_calls = fake.service_calls_for("light")
 
-      expect(light_calls.map { |c| c[:service] }).to eq(["turn_on", "turn_off"])
+      expect(light_calls.map { |c| c[:service] }).to eq([ "turn_on", "turn_off" ])
     end
 
     it "accepts a symbol domain" do
@@ -427,7 +427,7 @@ RSpec.describe FakeHomeAssistant, type: :service do
     it "records class-level service calls on the fake", :allow_ha_calls do
       HomeAssistantService.call_service("light", "turn_off", { entity_id: "light.cube_inner" })
 
-      expect(fake.service_calls_for("light").map { |c| c[:service] }).to eq(["turn_off"])
+      expect(fake.service_calls_for("light").map { |c| c[:service] }).to eq([ "turn_off" ])
       expect(HomeAssistantService.entity_state("light.cube_inner")).to eq("off")
     end
 

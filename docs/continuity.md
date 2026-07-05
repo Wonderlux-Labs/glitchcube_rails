@@ -1,5 +1,21 @@
 # Continuity: world state, reflection, and memory
 
+> ⚠️ **SUPERSEDED — this describes a REMOVED design.** The "amnesiacube" refactor
+> deleted reflection (`ReflectionService` + its job + `ReflectionSchema`), deep
+> memory search (`MemorySearchJob` + `Tools::Query::MemorySearch`), per-turn memory
+> recall/flagging, and the summarizer stack. The brain schema no longer has memory
+> fields and **no world-state blob is injected into prompts today.**
+>
+> What still exists is **dormant**: the `Memory` model, `MemorySearchService`
+> (a standalone plain-Rails query, extracted from the old tool), and the `WorldState`
+> service + `storage/world_state.md` file. Nothing writes or reads them in a turn.
+>
+> The design below is kept as a **reference blueprint for re-introducing continuity
+> later** — it is NOT how the cube behaves now. For the current flow see
+> [`conversation_flow.md`](conversation_flow.md).
+
+---
+
 How the cube keeps a sense of "what's going on" across conversations. Deliberately
 small — three pieces, one background job, no embeddings, no goal system.
 

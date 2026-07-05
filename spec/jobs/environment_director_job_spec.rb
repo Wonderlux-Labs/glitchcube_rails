@@ -21,56 +21,42 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
     }
   end
 
-  # Stub the translator collaborator so no real LLM calls happen.
-  let(:tool_calling_service) { instance_double(ToolCallingService) }
+  # The job hands the instruction to a Home Assistant conversation agent. Drive the
+  # real path against FakeHomeAssistant and assert on what it was asked to do.
+  let(:agent_reply) { 'Done — lights are orange and the metal is blasting.' }
+  let(:fake_ha) do
+    FakeHomeAssistant.new(
+      conversation_response: { 'response' => { 'speech' => { 'plain' => { 'speech' => agent_reply } } } }
+    )
+  end
 
   before do
-    allow(ToolCallingService).to receive(:new).and_return(tool_calling_service)
-    allow(tool_calling_service).to receive(:execute_intent).and_return('adjusting the lighting completed')
-
+    HomeAssistantService.instance = fake_ha
     allow(Rails.logger).to receive(:info).and_call_original
     allow(Rails.logger).to receive(:error).and_call_original
   end
 
+  after { HomeAssistantService.reset_instance! }
+
   describe '#perform' do
-    it 'instantiates ToolCallingService with the session and conversation ids' do
-      expect(ToolCallingService).to receive(:new).with(
-        session_id: session_id,
-        conversation_id: conversation.id
-      ).and_return(tool_calling_service)
-
+    it 'sends the instruction to the HA action agent, scoped to the conversation' do
       described_class.new.perform(**job_params)
-    end
 
-    it 'calls execute_intent with the instruction and a context hash of persona + user_message' do
-      expect(tool_calling_service).to receive(:execute_intent).with(
-        instruction,
-        { persona: persona, user_message: user_message }
-      )
-
-      described_class.new.perform(**job_params)
-    end
-
-    it 'defaults persona to nil in the context when not provided' do
-      params = job_params.except(:persona)
-
-      expect(tool_calling_service).to receive(:execute_intent).with(
-        instruction,
-        { persona: nil, user_message: user_message }
-      )
-
-      described_class.new.perform(**params)
+      request = fake_ha.conversation_requests.last
+      expect(request[:text]).to eq(instruction)
+      expect(request[:agent_id]).to eq(Rails.configuration.hass_action_agent)
+      expect(request[:conversation_id]).to eq("cube_env_#{conversation.id}")
     end
 
     it 'logs the instruction it is processing' do
-      expect(Rails.logger).to receive(:info).with(/EnvironmentDirectorJob: #{Regexp.escape(instruction)}/)
+      expect(Rails.logger).to receive(:info).with(/EnvironmentDirectorJob.*#{Regexp.escape(instruction)}/)
 
       described_class.new.perform(**job_params)
     end
   end
 
   describe 'storing results on the conversation' do
-    it 'appends a pending_ha_results entry with the translator result' do
+    it "appends a pending_ha_results entry with the agent's reply" do
       described_class.new.perform(**job_params)
 
       pending = conversation.reload.metadata_json['pending_ha_results']
@@ -79,14 +65,14 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
       entry = pending.first
       expect(entry['instruction']).to eq(instruction)
       expect(entry['user_message']).to eq(user_message)
-      expect(entry['ha_response']).to eq('adjusting the lighting completed')
+      expect(entry['ha_response']).to eq(agent_reply)
       expect(entry['error']).to be_nil
       expect(entry['processed']).to be(false)
       expect(entry['timestamp']).to be_present
     end
 
     it 'appends to existing pending_ha_results without clobbering prior entries' do
-      conversation.update!(metadata_json: { 'pending_ha_results' => [{ 'existing' => true }] })
+      conversation.update!(metadata_json: { 'pending_ha_results' => [ { 'existing' => true } ] })
 
       described_class.new.perform(**job_params)
 
@@ -107,8 +93,7 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
 
   describe 'error handling' do
     before do
-      allow(tool_calling_service).to receive(:execute_intent)
-        .and_raise(StandardError, 'translator boom')
+      allow(fake_ha).to receive(:conversation_process).and_raise(StandardError, 'agent boom')
     end
 
     it 'rescues the error and does not propagate it' do
@@ -117,9 +102,9 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
       }.not_to raise_error
     end
 
-    it 'logs the failure message and a backtrace' do
-      expect(Rails.logger).to receive(:error).with(/EnvironmentDirectorJob failed: translator boom/)
-      expect(Rails.logger).to receive(:error).with(anything) # backtrace
+    it 'logs the failure message' do
+      expect(Rails.logger).to receive(:error).with(/EnvironmentDirectorJob failed: agent boom/)
+      allow(Rails.logger).to receive(:error).with(anything) # backtrace
 
       described_class.new.perform(**job_params)
     end
@@ -129,7 +114,7 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
 
       entry = conversation.reload.metadata_json['pending_ha_results'].first
       expect(entry['ha_response']).to be_nil
-      expect(entry['error']).to eq('translator boom')
+      expect(entry['error']).to eq('agent boom')
       expect(entry['instruction']).to eq(instruction)
       expect(entry['user_message']).to eq(user_message)
       expect(entry['processed']).to be(false)
@@ -142,11 +127,11 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
     end
 
     it 'runs from the enqueued job pipeline' do
-      expect(tool_calling_service).to receive(:execute_intent)
-
       perform_enqueued_jobs do
         described_class.perform_later(**job_params)
       end
+
+      expect(fake_ha.conversation_requests.last[:text]).to eq(instruction)
     end
   end
 end

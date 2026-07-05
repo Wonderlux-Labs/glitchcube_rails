@@ -11,8 +11,9 @@ module GlitchcubeRails
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
-    # Use SQL structure format instead of schema.rb for PostGIS compatibility
-    config.active_record.schema_format = :sql
+    # Ruby schema format. pgvector round-trips cleanly via the neighbor gem;
+    # PostGIS has been removed from the database layer.
+    config.active_record.schema_format = :ruby
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.

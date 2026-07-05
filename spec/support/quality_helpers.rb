@@ -1,13 +1,13 @@
 module QualityHelpers
   include ActiveJob::TestHelper
 
-  # Calls the brain LLM for real against a given persona and user input.
+  # Calls the conversation LLM for real against a given persona and user input.
   # Uses PromptBuilder to build a realistic system prompt, then calls LlmIntention
-  # with the configured brain_model.
+  # with the configured ai_model.
   #
   # Returns the NarrativeResponseSchema hash:
-  #   { "speech_text" => "...", "environment_instruction" => "...",
-  #     "inner_thoughts" => "...", "continue_conversation" => true, etc. }
+  #   { "speech" => "...", "inner_monologue" => "...", "continue_conversation" => true,
+  #     "actions" => [ { "action_name" => "cube_light", "description" => "..." } ] }
   #
   # Injects FakeHomeAssistant so no real HASS hardware is needed.
   def run_brain_turn(persona:, user_input:, session_id: nil)
@@ -36,7 +36,7 @@ module QualityHelpers
     llm_result = ConversationOrchestrator::LlmIntention.call(
       prompt_data: prompt_result.data,
       user_message: user_input,
-      model: Rails.configuration.brain_model
+      model: Rails.configuration.ai_model
     )
     elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0).round(2)
 
@@ -48,35 +48,5 @@ module QualityHelpers
   ensure
     HomeAssistantService.reset_instance!
     Conversation.where(session_id: sid).destroy_all rescue nil
-  end
-
-  # Runs a plain-English environment_instruction through the real translator LLM.
-  # Returns { result: <formatted string>, service_calls: <what FakeHA recorded> }.
-  # The service_calls array tells you which HASS domains the translator actually invoked.
-  def run_translator(instruction:, persona: "buddy")
-    fake_ha = FakeHomeAssistant.new(
-      persona: persona.to_s,
-      entities: {
-        "light.cube_inner" => { "state" => "on", "attributes" => {} },
-        "light.cube_outer" => { "state" => "on", "attributes" => {} }
-      }
-    )
-    HomeAssistantService.instance = fake_ha
-
-    t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    # Light/music tools are :async — execute_intent enqueues AsyncToolJob rather
-    # than calling HASS inline. Perform those jobs synchronously so the tools
-    # actually run against FakeHA and the device service calls are observable.
-    result = perform_enqueued_jobs do
-      ToolCallingService
-        .new(session_id: "quality_tx_#{SecureRandom.hex(4)}")
-        .execute_intent(instruction, { persona: persona })
-    end
-    elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0).round(2)
-
-    Rails.logger.info "[QUALITY] translator for '#{instruction[0..50]}': #{elapsed}s"
-    { result: result, service_calls: fake_ha.service_calls }
-  ensure
-    HomeAssistantService.reset_instance!
   end
 end

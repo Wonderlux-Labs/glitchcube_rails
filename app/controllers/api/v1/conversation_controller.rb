@@ -148,7 +148,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
       response = LlmService.call_with_structured_output(
         messages: messages,
         response_format: "text",
-        model: Rails.configuration.brain_model,
+        model: Rails.configuration.ai_model,
         temperature: 0.9
       )
 
@@ -199,8 +199,11 @@ class Api::V1::ConversationController < Api::V1::BaseController
     # HASS sends message in this structure (but be careful with proactive calls)
     message = params[:message] || params[:text] || ""
 
-    # Only try to dig into context if it's a hash
-    if message.blank? && params[:context].is_a?(Hash)
+    # Only try to dig into context if it's hash-like (a plain Hash in specs,
+    # ActionController::Parameters for real requests — neither is a Hash per
+    # is_a?, so check by duck type instead. Proactive calls send a bare string
+    # for context, which doesn't respond to #dig, so this correctly skips it.
+    if message.blank? && params[:context].respond_to?(:dig)
       message = params.dig(:context, :message) || ""
     end
 
@@ -209,7 +212,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
 
   def extract_session_id_from_payload
     # HASS sends session_id in context (but in proactive calls, context is a string)
-    session_id = if params[:context].is_a?(Hash)
+    session_id = if params[:context].respond_to?(:dig)
       params.dig(:context, :session_id)
     else
       params[:session_id]
@@ -311,9 +314,9 @@ class Api::V1::ConversationController < Api::V1::BaseController
     )[0..16]
   end
 
-  # Get persona instance from ID. Only one persona exists now.
-  def get_persona_instance(_persona_id = nil)
-    Personas::ArtifactPersona.new
+  # Get persona instance from ID. Defaults to the current persona.
+  def get_persona_instance(persona_id = nil)
+    Prompts::PersonaLoader.load((persona_id || CubePersona.current_persona).to_s)
   end
 
   # Get system prompt from persona

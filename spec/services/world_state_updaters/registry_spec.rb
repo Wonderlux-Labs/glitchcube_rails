@@ -54,10 +54,10 @@ RSpec.describe WorldStateUpdaters::Registry do
       # allowlist.
 
       it 'rejects a real, fully-qualified service class name that is not allowlisted' do
-        # ReflectionService is a real, callable service, intentionally not on the
-        # world-state trigger allowlist.
-        expect(defined?(ReflectionService)).to be_truthy
-        expect(described_class.fetch('ReflectionService')).to be_nil
+        # PersonaSwitchService is a real, callable service, intentionally not on
+        # the world-state trigger allowlist.
+        expect(defined?(PersonaSwitchService)).to be_truthy
+        expect(described_class.fetch('PersonaSwitchService')).to be_nil
       end
 
       it 'rejects NarrativeConversationSyncService (real class, not on allowlist)' do
@@ -78,7 +78,6 @@ RSpec.describe WorldStateUpdaters::Registry do
         ]
 
         %w[
-          ReflectionService
           PromptService
           NarrativeConversationSyncService
           Kernel Object File HomeAssistantService User

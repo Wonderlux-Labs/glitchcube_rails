@@ -12,11 +12,10 @@ class ConversationOrchestrator::ActionExecutor
   end
 
   def call
-    memory_search_results = execute_memory_searches
     dispatched = dispatch_environment_instruction
 
     ServiceResult.success({
-      sync_results: memory_search_results,
+      sync_results: {},
       dispatched_environment: dispatched
     })
   rescue => e
@@ -25,29 +24,20 @@ class ConversationOrchestrator::ActionExecutor
 
   private
 
-  def execute_memory_searches
-    memory_searches = @output.dig("search_memories") || []
-    return {} if memory_searches.empty?
-
-    # Enqueue async so embedding calls never block the spoken response.
-    # Results land in conversation.metadata_json["pending_query_results"]
-    # and are injected into the next turn's context.
-    MemorySearchJob.perform_later(
-      conversation_id: @conversation_id,
-      searches: memory_searches
-    )
-    Rails.logger.info "🔍 Enqueued #{memory_searches.size} memory search(es) async"
-    {}
-  end
-
-  # The brain LLM describes every environment change as one plain-English
-  # `environment_instruction` ("turn the lights orange and play heavy metal").
+  # The LLM describes environment changes as a list of structured actions,
+  # each { "action_name" => "cube_light", "description" => "warm amber, dim" }.
+  # The translator takes a single instruction, so we flatten them into one line.
+  #
+  # NOTE: how tools/actions get executed is being reworked — this keeps the
+  # current translator path wired without over-investing in it.
   def environment_instruction
-    @output.dig("environment_instruction").presence
+    Array(@output.dig("actions"))
+      .select { |a| a.is_a?(Hash) && a["description"].present? }
+      .map { |a| [ a["action_name"], a["description"] ].compact_blank.join(": ") }
+      .join("; ").presence
   end
 
-  # Replaces the old per-domain fan-out to Home Assistant conversation agents.
-  # All environment changes go through one translator (ToolCallingService) via
+  # All environment changes are handed to the Home Assistant conversation agent via
   # EnvironmentDirectorJob — speak first, act async. Returns true if dispatched.
   def dispatch_environment_instruction
     instruction = environment_instruction
