@@ -4,7 +4,9 @@
 # A small, bounded, layered memory (each blob capped):
 #
 #   1. Ambient world state — the HASS composite sensor (time, weather, …).
-#   2. Overall memory      — the latest `overall` summary (the whole event; shared).
+#   2. Overall memory      — the latest `overall` summary: the shared in-world story of the
+#                            whole event, plus any pending visitor threads and the current
+#                            cross-persona director note (steering every persona reads).
 #   3. Persona memory      — the CURRENT persona's latest `persona` summary + its
 #                            explicit self-steering note (injected so it self-corrects).
 #   4. Running memory      — the latest `interaction` summary + real-world facts (may be
@@ -45,10 +47,19 @@ module Prompts
     end
 
     def overall_summary_context
-      text = Summary.by_type("overall").recent.first&.summary_text
-      return nil if text.blank?
+      overall = Summary.by_type("overall").recent.first
+      return nil if overall&.summary_text.blank?
 
-      "The bigger picture (how this whole event has gone so far): #{clip(text)}"
+      meta = overall.metadata_json
+      parts = [ "The bigger picture (how this whole event has gone so far): #{clip(overall.summary_text)}" ]
+
+      threads = meta["active_threads"]
+      parts << "Still in the air (things visitors set up that you can pick up): #{clip(threads)}" if threads.present?
+
+      director = meta["director_note"]
+      parts << "A note to all of the cube's personas right now: #{clip(director)}" if director.present?
+
+      parts.join("\n")
     rescue => e
       warn_nil("overall summary", e)
     end

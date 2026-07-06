@@ -12,20 +12,19 @@
   </div>
 
   <div class="stat-box">
-    <h3>🧠 Memories</h3>
-    <p>Total: <%= @stats[:memories][:total] %></p>
-    <p>High Importance: <%= @stats[:memories][:high_importance] %></p>
-    <p>Recent: <%= @stats[:memories][:recent] %></p>
-    <% @stats[:memories][:by_category].each do |category, count| %>
-      <p><%= category&.humanize %>: <%= count %></p>
-    <% end %>
+    <h3>📝 Summaries</h3>
+    <p>Today: <%= @stats[:summaries][:today] %></p>
+    <p>This Week: <%= @stats[:summaries][:week] %></p>
+    <p>Overall updated: <%= @stats[:summaries][:latest_overall_at] ? time_ago_in_words(@stats[:summaries][:latest_overall_at]) + " ago" : "never" %></p>
+    <p>Interaction updated: <%= @stats[:summaries][:latest_interaction_at] ? time_ago_in_words(@stats[:summaries][:latest_interaction_at]) + " ago" : "never" %></p>
+    <p><%= link_to 'View Summaries', admin_summaries_path, class: 'btn' %></p>
   </div>
 
   <div class="stat-box">
     <h3>🌍 World State</h3>
     <p>Status: <%= @stats[:world_state][:status] %></p>
-    <% if @stats[:world_state][:last_weather_update] %>
-      <p>Weather Updated: <%= Time.parse(@stats[:world_state][:last_weather_update]).strftime('%H:%M') rescue 'Unknown' %></p>
+    <% if @stats[:world_state][:last_updated] %>
+      <p>Last Updated: <%= Time.parse(@stats[:world_state][:last_updated]).strftime('%H:%M') rescue 'Unknown' %></p>
     <% end %>
     <p>Total Sensors: <%= @stats[:world_state][:total_sensors] %></p>
   </div>
@@ -33,7 +32,7 @@
   <div class="stat-box">
     <h3>⚙️ Background Jobs</h3>
     <% @stats[:jobs].each do |job, frequency| %>
-      <p><%= job.humanize %>: <%= frequency %></p>
+      <p><%= job.to_s.humanize %>: <%= frequency %></p>
     <% end %>
     <p><%= link_to 'View Jobs Dashboard', '/jobs', class: 'btn' %></p>
   </div>

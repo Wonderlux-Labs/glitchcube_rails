@@ -56,7 +56,9 @@ class ConversationOrchestrator::Finalizer
       # continue_conversation, urgent_question, and whatever we add next). Dumped
       # verbatim so the log survives schema changes and the urgent_question
       # smoke-test surfaces in the admin timeline without extra plumbing.
-      narrative: @state[:llm_response]
+      narrative: @state[:llm_response],
+      # Token/cost usage for this turn's brain call (see LlmIntention#usage_for).
+      usage: @state[:usage]
     }
 
     # Add narrative metadata if available
@@ -77,12 +79,27 @@ class ConversationOrchestrator::Finalizer
         metadata: metadata.to_json
       )
       Rails.logger.info "📝 ConversationLog created for session: #{@state[:session_id]}"
+      accumulate_usage
     rescue ActiveRecord::ConnectionNotEstablished => e
       Rails.logger.warn "🗄️ Database connection issue - conversation log not saved: #{e.message}"
     rescue => e
       Rails.logger.error "❌ Failed to create conversation log: #{e.message}"
       # Don't re-raise - conversation should continue even if logging fails
     end
+  end
+
+  # Running totals on the conversation itself, so the admin log viewer can show
+  # a cost/token figure for the whole conversation without summing every turn.
+  def accumulate_usage
+    usage = @state[:usage]
+    return if usage.blank?
+
+    conversation = @state[:conversation]
+    return unless conversation
+
+    conversation.increment(:total_tokens, usage["total_tokens"].to_i)
+    conversation.increment(:total_cost, usage["cost"].to_f)
+    conversation.save!
   end
 
   def continue_conversation?(tool_analysis)

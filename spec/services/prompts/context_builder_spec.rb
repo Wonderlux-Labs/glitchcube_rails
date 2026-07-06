@@ -36,6 +36,16 @@ RSpec.describe Prompts::ContextBuilder do
         expect(subject).to include("The bigger picture")
         expect(subject).to include("The whole night has been rowdy.")
       end
+
+      it 'injects the cross-persona director note and pending visitor threads when present' do
+        create(:summary, summary_type: 'overall', summary_text: 'A rowdy night.',
+               metadata: { director_note: 'Devices are failing across the board.',
+                           active_threads: 'Laurie is back at midnight for a reading.' }.to_json,
+               created_at: 1.minute.ago)
+
+        expect(subject).to include("A note to all of the cube's personas right now: Devices are failing across the board.")
+        expect(subject).to include("Still in the air (things visitors set up that you can pick up): Laurie is back at midnight for a reading.")
+      end
     end
 
     context 'persona memory' do

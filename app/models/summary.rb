@@ -49,6 +49,31 @@ class Summary < ApplicationRecord
     (duration / 60).round(2)
   end
 
+  # Versioned chains: `persona` summaries version per-persona, `overall` versions
+  # globally. Same scope also works (harmlessly) for the rolling `interaction`
+  # type, which is naturally chronological even though it isn't "versioned".
+  def chain
+    scope = self.class.where(summary_type: summary_type)
+    scope = scope.where(persona_id: persona_id) if persona_id.present?
+    scope
+  end
+
+  def previous_version
+    chain.where("created_at < ?", created_at).order(created_at: :desc).first
+  end
+
+  def next_version
+    chain.where("created_at > ?", created_at).order(:created_at).first
+  end
+
+  def version_number
+    chain.where("created_at <= ?", created_at).count
+  end
+
+  def version_count
+    chain.count
+  end
+
   # Plain keyword search over summaries — material for a future trend/long-term
   # job. No embeddings.
   def self.text_search_fallback(question, limit: 10)

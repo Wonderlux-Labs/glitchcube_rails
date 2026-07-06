@@ -49,6 +49,15 @@ RSpec.describe PersonaSummarizerService do
       described_class.call("zorp")
     end
 
+    it "feeds the persona's character brief into the material" do
+      zorp.update!(persona_prompt: "You are Zorp, a cosmic oracle who curses freely.")
+      expect(LlmService).to receive(:call_with_structured_output) do |args|
+        expect(args[:messages].last[:content]).to include("cosmic oracle who curses freely")
+        double(structured_output: { "summary" => "ok" })
+      end
+      described_class.call("zorp")
+    end
+
     it "stores a self-steering ooc_note when present" do
       stub_llm(summary: "cosmic night", ooc_note: "You keep leaning on the butt-reading bit — vary it.")
       described_class.call("zorp")

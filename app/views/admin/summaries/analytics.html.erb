@@ -89,43 +89,29 @@
   </div>
 <% end %>
 
-<% if @recent_goals.any? %>
+<% if @recent_ooc_notes.any? %>
   <div style="margin-bottom: 30px;">
-    <h2>Recent Goal Completions</h2>
+    <h2>🛠️ Recent Steering Notes (OOC)</h2>
     <table>
       <thead>
         <tr>
-          <th>Goal</th>
-          <th>Category</th>
-          <th>Completed</th>
-          <th>Duration</th>
-          <th>Status</th>
+          <th>Type</th>
+          <th>Note</th>
+          <th>Created</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <% @recent_goals.each do |goal| %>
-          <% metadata = goal.metadata_json %>
+        <% @recent_ooc_notes.each do |summary| %>
           <tr>
-            <td><%= truncate(goal.summary_text, length: 80) %></td>
-            <td><%= metadata['goal_category']&.humanize || 'Unknown' %></td>
-            <td><%= goal.created_at.strftime('%m/%d %H:%M') %></td>
             <td>
-              <% if metadata['duration_seconds'] %>
-                <%= (metadata['duration_seconds'].to_f / 60).round(1) %>min
-              <% else %>
-                N/A
-              <% end %>
+              <%= summary.summary_type.humanize %>
+              <% if summary.persona %><br><small style="color: #666;"><%= summary.persona.name || summary.persona.slug %></small><% end %>
             </td>
+            <td><%= truncate(summary.metadata_json['ooc_note'], length: 150) %></td>
+            <td><%= summary.created_at.strftime('%m/%d %H:%M') %></td>
             <td>
-              <% if metadata['expired'] %>
-                <span style="color: #ff0000;">Expired</span>
-              <% else %>
-                <span style="color: #00ff00;">Completed</span>
-              <% end %>
-            </td>
-            <td>
-              <%= link_to 'View', admin_summary_path(goal), class: 'btn' %>
+              <%= link_to 'View', admin_summary_path(summary), class: 'btn' %>
             </td>
           </tr>
         <% end %>
@@ -158,12 +144,8 @@
       <p>• Type with highest message count: <strong><%= highest_msg_type[0].humanize %></strong> (<%= highest_msg_type[1] %> avg)</p>
     <% end %>
     
-    <% if @recent_goals.any? %>
-      <p>• Recent goal completions: <strong><%= @recent_goals.count %></strong></p>
-      <% expired_goals = @recent_goals.select { |g| g.metadata_json['expired'] } %>
-      <% if expired_goals.any? %>
-        <p>• Expired goals: <strong><%= expired_goals.count %></strong> out of <%= @recent_goals.count %></p>
-      <% end %>
+    <% if @recent_ooc_notes.any? %>
+      <p>• Recent steering notes needing attention: <strong><%= @recent_ooc_notes.count %></strong></p>
     <% end %>
   </div>
 </div>

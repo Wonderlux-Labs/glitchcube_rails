@@ -90,8 +90,25 @@ RSpec.describe Prompts::MessageHistoryBuilder do
       end
     end
 
-    context 'across sessions' do
-      let(:other) { create(:conversation) }
+    context 'persona scoping (no cross-persona bleed)' do
+      let(:other_persona) { create(:conversation, persona: "someone_else") }
+
+      before do
+        create(:conversation_log, conversation: other_persona, user_message: "different persona",
+               ai_response: "not me", created_at: 2.minutes.ago)
+        create(:conversation_log, conversation: conversation, user_message: "my turn",
+               ai_response: "here i am", created_at: 1.minute.ago)
+      end
+
+      it "includes only the current persona's turns" do
+        result = described_class.new(conversation: conversation).build
+        expect(result.map { |m| m[:content] }).to eq([ "my turn", "here i am" ])
+        expect(result.map { |m| m[:content] }).not_to include("different persona")
+      end
+    end
+
+    context 'across sessions of the same persona' do
+      let(:other) { create(:conversation) } # same default persona ("artifact")
 
       before do
         create(:conversation_log, conversation: other, user_message: "im leaving",

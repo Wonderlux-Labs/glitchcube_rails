@@ -2,12 +2,16 @@
 
 <h1>💬 Conversation Details</h1>
 
+<div style="margin-bottom: 20px;">
+  <%= link_to '← Back to Conversations', admin_conversations_path, class: 'btn' %>
+</div>
+
 <div class="stats">
   <div class="stat-box">
     <h3>📋 Overview</h3>
     <p><strong>Session ID:</strong> <%= @conversation.session_id %></p>
     <p><strong>Persona:</strong> <%= @conversation.persona %></p>
-    <p><strong>Status:</strong> 
+    <p><strong>Status:</strong>
       <span class="<%= @conversation.active? ? 'active-status' : 'finished-status' %>">
         <%= @conversation.active? ? 'Active' : 'Finished' %>
       </span>
@@ -22,58 +26,65 @@
   <div class="stat-box">
     <h3>📊 Stats</h3>
     <p><strong>Messages:</strong> <%= @logs.count %></p>
-    <p><strong>Tools Used:</strong> <%= @tools_used.sum { |t| t[:tools].count } %></p>
-    <p><strong>Total Tokens:</strong> <%= @conversation.total_tokens || 0 %></p>
-    <p><strong>Total Cost:</strong> $<%= @conversation.total_cost || 0 %></p>
+    <p><strong>Total Tokens:</strong> <%= @conversation.total_tokens %></p>
+    <p><strong>Total Cost:</strong> $<%= @conversation.total_cost %></p>
   </div>
 </div>
 
-<% if @tools_used.any? %>
-<h2>🔧 Tools Used</h2>
-<% @tools_used.each do |tool_event| %>
-  <div style="background: #333; padding: 10px; margin: 10px 0; border: 1px solid #555;">
-    <p><strong>Time:</strong> <%= tool_event[:timestamp].strftime('%H:%M:%S') %></p>
-    <% tool_event[:tools].each do |tool_name, result| %>
-      <p><strong>Tool:</strong> <%= tool_name %></p>
-      <pre><%= result.to_json.truncate(200) %></pre>
-    <% end %>
-  </div>
-<% end %>
-<% end %>
-
 <h2>💬 Conversation Flow</h2>
-<% @logs.each_with_index do |log, index| %>
-  <div style="background: #2a2a2a; padding: 15px; margin: 10px 0; border-left: 3px solid #00ff00;">
-    <p><strong>Exchange #<%= index + 1 %></strong> - <%= log.created_at.strftime('%H:%M:%S') %></p>
-    
-    <div style="background: #1a1a1a; padding: 10px; margin: 5px 0;">
-      <p><strong>👤 User:</strong></p>
-      <p><%= log.user_message %></p>
-    </div>
-    
-    <div style="background: #1a1a1a; padding: 10px; margin: 5px 0;">
-      <p><strong>🤖 AI:</strong></p>
-      <p><%= log.ai_response %></p>
-    </div>
-    
-    <% if log.tool_results_json.present? %>
-      <div style="background: #333; padding: 10px; margin: 5px 0;">
-        <p><strong>🔧 Tools:</strong></p>
-        <pre><%= JSON.pretty_generate(log.tool_results_json) %></pre>
-      </div>
-    <% end %>
+<p style="color: #666;">Turns and the HASS action-agent's results for this conversation, interleaved by timestamp (best-effort — reload to refresh, this page doesn't auto-update).</p>
 
-    <% narrative = log.metadata_json["narrative"] %>
-    <% if narrative.present? %>
-      <% if narrative["urgent_question"].present? %>
-        <div style="background: #4a3a00; padding: 10px; margin: 5px 0; border-left: 3px solid #ffcc00;">
-          <p><strong>🔮 urgent_question:</strong> <%= narrative["urgent_question"] %></p>
-        </div>
+<% turn_number = 0 %>
+<% @timeline.each do |event| %>
+  <% if event[:type] == :turn %>
+    <% turn_number += 1 %>
+    <% log = event[:log] %>
+    <div style="background: #2a2a2a; padding: 15px; margin: 10px 0; border-left: 3px solid #00ff00;">
+      <p><strong>Turn #<%= turn_number %></strong> - <%= log.created_at.strftime('%H:%M:%S') %>
+        <% if log.usage.present? %>
+          <span style="color: #666; font-size: 0.85em;">
+            (<%= log.usage['model'] %> · <%= log.usage['total_tokens'] %> tokens · $<%= log.usage['cost'] %>)
+          </span>
+        <% end %>
+      </p>
+
+      <div style="background: #1a1a1a; padding: 10px; margin: 5px 0;">
+        <p><strong>👤 User:</strong></p>
+        <p><%= log.user_message %></p>
+      </div>
+
+      <div style="background: #1a1a1a; padding: 10px; margin: 5px 0;">
+        <p><strong>🤖 AI:</strong></p>
+        <p><%= log.ai_response %></p>
+      </div>
+
+      <% narrative = log.metadata_json["narrative"] %>
+      <% if narrative.present? %>
+        <% if narrative["urgent_question"].present? %>
+          <div style="background: #4a3a00; padding: 10px; margin: 5px 0; border-left: 3px solid #ffcc00;">
+            <p><strong>🔮 urgent_question:</strong> <%= narrative["urgent_question"] %></p>
+          </div>
+        <% end %>
+        <details style="background: #333; padding: 10px; margin: 5px 0;">
+          <summary style="cursor: pointer;"><strong>🧠 Full brain narrative</strong></summary>
+          <pre><%= JSON.pretty_generate(narrative) %></pre>
+        </details>
       <% end %>
-      <details style="background: #333; padding: 10px; margin: 5px 0;">
-        <summary style="cursor: pointer;"><strong>🧠 Full brain narrative</strong></summary>
-        <pre><%= JSON.pretty_generate(narrative) %></pre>
-      </details>
-    <% end %>
-  </div>
+    </div>
+  <% else %>
+    <% result = event[:result] %>
+    <div style="background: #1a2a33; padding: 15px; margin: 10px 0; border-left: 3px solid #00ccff;">
+      <p><strong>🏠 Action agent result</strong> - <%= event[:timestamp]&.strftime('%H:%M:%S') %></p>
+      <p><strong>Instruction:</strong> <%= result['instruction'] %></p>
+      <% if result['error'].present? %>
+        <p style="color: #ff6666;"><strong>Error:</strong> <%= result['error'] %></p>
+      <% else %>
+        <p><strong>Result:</strong> <%= result['ha_response'] %></p>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if @timeline.empty? %>
+  <p style="color: #666;">No turns or action results yet.</p>
 <% end %>

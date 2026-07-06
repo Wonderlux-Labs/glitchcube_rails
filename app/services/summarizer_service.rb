@@ -26,7 +26,9 @@ class SummarizerService
     like: who came by, the vibe and how it's shifting, how the conversations are going,
     anything memorable worth carrying forward. Write it naturally, the way the cube would
     remember its night — not a checklist. A paragraph or two; a sentence is fine if little
-    happened. Keep operational/steering observations OUT of here — those go in `ooc_note`.
+    happened. This gets injected back into the cube's memory as in-world narrative, so keep it
+    in-world: anything about how a persona is PERFORMING (a tic, drift, device trouble, what to
+    adjust) belongs in `ooc_note`, never here.
 
     `real_world_facts` — concrete, true-about-the-world things the cube learned that would
     matter in later conversations: names people gave, plans and events they mention (a party
@@ -34,14 +36,19 @@ class SummarizerService
     places, art. Just the facts, brief. Leave empty if nothing concrete came up. (Pulling
     these out separately from the story tends to surface the useful specifics.)
 
-    `ooc_note` — a private, out-of-character note to the humans running the installation and
-    to the cube's future self. The ONLY place for steering. Flag things like:
-      • the cube's actions/devices repeatedly failing — it keeps trying to change the
-        lights/music/marquee and nothing happens — a real functional problem, not flavor
+    `ooc_note` — a note to the cube's own future self / the personas (there is no human
+    operator — this is prompt-steering the LLMs read directly). The ONLY place for steering.
+    Flag things like:
+      • how visitors seem to be RESPONDING — delighted and engaged, or bored, confused,
+        annoyed, or drifting off. If a move keeps landing WELL, note to keep leaning on it;
+        if visitors repeatedly react the same negative way, that's a strong signal to adjust
+      • the cube repeatedly trying to change the lights/music/marquee and getting nothing
+        back — if that's clearly happening in the interactions, note it (don't assume it;
+        read it off what actually occurred)
       • a tic, loop, or catchphrase a persona overuses; characters slipping or blurring
       • a move that keeps landing badly, or anyone who seemed genuinely distressed
-    Direct and actionable ("You keep… — ease off it"). NOT part of the story. Empty on most
-    runs.
+    Direct and actionable ("You keep… — ease off it"). NOT part of the story. Only write a note
+    when something genuinely actionable emerged; otherwise leave it empty.
   PROMPT
 
   def self.call
@@ -92,12 +99,10 @@ class SummarizerService
       #{previous&.summary_text.presence || '(none yet — this is the first summary)'}
 
       RECENT INTERACTIONS (oldest first):
-      #{transcript(logs)}
-    MATERIAL
-  end
+      #{SummaryTranscript::LEGEND}
 
-  def transcript(logs)
-    logs.map { |log| "Visitor: #{log.user_message}\nCube: #{log.ai_response}" }.join("\n\n")
+      #{SummaryTranscript.render(logs)}
+    MATERIAL
   end
 
   def persist(summary_text, narrative, logs)

@@ -25,11 +25,13 @@ class PersonaSummarizerService
     still matters, add what's new, let trivia go. Keep it comfortably under ~180 words.
 
     `ooc_note` — explicit self-direction this persona will READ before its next conversations
-    and act on. Flag what to adjust: a bit, phrase, or move it's been overusing ("you keep
-    leaning on X — vary it"), something landing badly, or a strength to keep leaning into.
-    Crucially, if a prior note flagged something and it's since improved, AMEND it ("you were
-    overusing X, but your last stint was well-balanced"). Direct, second person, actionable.
-    Empty only if there's genuinely nothing to steer.
+    and act on. FIRST, hold this stint up against the persona's CHARACTER BRIEF below and flag
+    any drift from who it's meant to be (e.g. meant to be foul-mouthed but went polite, or warm
+    but turned cold). THEN flag a bit/phrase/move it's overusing ("you keep leaning on X — vary
+    it"), something landing badly, or a strength worth keeping. Crucially, if a prior note
+    flagged something and it's since improved, AMEND it
+    ("you were overusing X, but your last stint was well-balanced") rather than repeating a
+    stale "never do this." Direct, second person, actionable. Empty only if nothing to steer.
   PROMPT
 
   def self.call(persona_slug)
@@ -91,14 +93,20 @@ class PersonaSummarizerService
     <<~MATERIAL
       PERSONA: #{persona.name || persona.slug}
 
+      CHARACTER BRIEF (who this persona is MEANT to be — judge on-model/off-model against this):
+      #{persona.persona_prompt.presence || '(no brief on file)'}
+
       YOUR CURRENT SELF-SUMMARY (amend/extend — may be empty):
       #{previous&.summary_text.presence || '(none yet — this is your first)'}
 
       YOUR PRIOR SELF-DIRECTION (amend if things changed — may be empty):
       #{previous&.metadata_json&.dig('ooc_note').presence || '(none)'}
 
-      YOUR CONVERSATIONS THIS STINT (oldest first):
-      #{logs.map { |l| "Visitor: #{l.user_message}\nYou: #{l.ai_response}" }.join("\n\n")}
+      YOUR CONVERSATIONS THIS STINT (oldest first; "attempted device actions" show what you
+      tried to do to the lights/sound/marquee that turn):
+      #{SummaryTranscript::LEGEND}
+
+      #{SummaryTranscript.render(logs)}
     MATERIAL
   end
 

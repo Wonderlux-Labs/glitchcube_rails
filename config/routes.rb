@@ -82,12 +82,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root "dashboard#index"
 
-    resources :conversations, only: [ :index, :show ] do
-      member do
-        get :timeline
-        get :tools
-      end
-    end
+    resources :conversations, only: [ :index, :show ]
 
     resources :memories, only: [ :index, :show ] do
       collection do

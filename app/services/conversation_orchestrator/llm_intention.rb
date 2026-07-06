@@ -54,7 +54,7 @@ class ConversationOrchestrator::LlmIntention
     # whether recall is worth building. See docs/conversation_flow.md.
     log_urgent_question(response.structured_output["urgent_question"])
 
-    ServiceResult.success({ llm_response: response.structured_output })
+    ServiceResult.success({ llm_response: response.structured_output, usage: usage_for(response) })
   rescue => e
     ConversationLogger.error("LLM Intention", e.message, { model: @model, user_message: @user_message })
     # The brain LLM is the ONE place we degrade gracefully instead of failing
@@ -62,10 +62,25 @@ class ConversationOrchestrator::LlmIntention
     # rather than go silent or surface a stack-trace error. Return a synthetic
     # narrative so the rest of the pipeline finishes normally and the turn is
     # persisted. Validation failures above still fail loudly — those are bugs.
-    ServiceResult.success({ llm_response: fallback_narrative })
+    ServiceResult.success({ llm_response: fallback_narrative, usage: nil })
   end
 
   private
+
+  # Tag on which model actually answered (a timeout can fall back to a
+  # different model than requested) so the admin conversation log can show it.
+  def usage_for(response)
+    u = response.usage
+    return nil if u.blank?
+
+    {
+      "model" => response.model || @model,
+      "prompt_tokens" => u["prompt_tokens"],
+      "completion_tokens" => u["completion_tokens"],
+      "total_tokens" => u["total_tokens"],
+      "cost" => u["cost"]
+    }
+  end
 
   def log_urgent_question(question)
     return if question.blank?

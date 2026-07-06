@@ -133,7 +133,10 @@ class LlmService
           extras: extras
         )
 
-        Rails.logger.info "✅ LLM response: #{response.model} | structured=#{response.structured_output.present?} | usage=#{response.usage}"
+        u = response.usage || {}
+        Rails.logger.info "✅ LLM response: #{response.model} | structured=#{response.structured_output.present?} | " \
+                          "tokens prompt=#{u['prompt_tokens']} completion=#{u['completion_tokens']} total=#{u['total_tokens']} | " \
+                          "cost=$#{u['cost']}"
         Rails.logger.debug { "   content: #{response.content&.truncate(300)}" }
 
         response
@@ -247,7 +250,7 @@ class LlmService
 
     # Check if LLM service is configured and available
     def available?
-      OpenRouter.configured?
+      OpenRouter.configuration.access_token.present?
     end
 
     private

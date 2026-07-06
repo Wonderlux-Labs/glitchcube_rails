@@ -78,6 +78,7 @@ class ConversationOrchestrator
     )
     raise LlmError, llm_result.error unless llm_result.success?
     @state[:llm_response] = llm_result.data[:llm_response]
+    @state[:usage] = llm_result.data[:usage]
   end
 
   def determine_model_for_conversation

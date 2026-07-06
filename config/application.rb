@@ -31,6 +31,10 @@ module GlitchcubeRails
     config.time_zone = "Eastern Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Referenced by the admin dashboard and BackendHealthService for uptime —
+    # was read in both places but never actually set.
+    config.booted_at = Time.current
+
     # Clear all SolidQueue jobs on Rails start (persistence not important)
     config.after_initialize do
       if defined?(SolidQueue::Job)

@@ -3,9 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe OverallSummarizerService do
-  def stub_llm(summary:, ooc_note: nil)
-    payload = { "summary" => summary }
-    payload["ooc_note"] = ooc_note unless ooc_note.nil?
+  def stub_llm(narrative:, director_note: nil, active_threads: nil)
+    payload = { "shared_narrative" => narrative }
+    payload["director_note"] = director_note unless director_note.nil?
+    payload["active_threads"] = active_threads unless active_threads.nil?
     allow(LlmService).to receive(:call_with_structured_output).and_return(double(structured_output: payload))
   end
 
@@ -22,7 +23,7 @@ RSpec.describe OverallSummarizerService do
     end
 
     it "creates the single overall summary from the interaction summaries" do
-      stub_llm(summary: "Overall: a salty-then-cosmic night.")
+      stub_llm(narrative: "Overall: a salty-then-cosmic night.")
 
       result = described_class.call
 
@@ -41,24 +42,31 @@ RSpec.describe OverallSummarizerService do
         expect(material).to include("Crash was salty at 3am")
         expect(material).to include("watch the repeated catchphrase")
         expect(material).to include("Party at the Corral at 2am")
-        double(structured_output: { "summary" => "ok" })
+        double(structured_output: { "shared_narrative" => "ok" })
       end
 
       described_class.call
     end
 
-    it "stores a system-wide ooc_note when present" do
-      stub_llm(summary: "overall", ooc_note: "Devices appear broken across the board — actions keep failing.")
+    it "stores a system-wide director_note when present" do
+      stub_llm(narrative: "overall", director_note: "Devices appear broken across the board — actions keep failing.")
       described_class.call
-      expect(Summary.by_type("overall").first.metadata_json["ooc_note"])
+      expect(Summary.by_type("overall").first.metadata_json["director_note"])
         .to eq("Devices appear broken across the board — actions keep failing.")
+    end
+
+    it "stores active_threads (pending visitor business) when present" do
+      stub_llm(narrative: "overall", active_threads: "Laurie is coming back at midnight for a reading.")
+      described_class.call
+      expect(Summary.by_type("overall").first.metadata_json["active_threads"])
+        .to eq("Laurie is coming back at midnight for a reading.")
     end
   end
 
   context "subsequent run — evolving the overall (versioned)" do
     it "creates a new version reading the latest as its base, folding only newer summaries" do
       interaction("old stuff", created_at: 10.minutes.ago)
-      stub_llm(summary: "v1")
+      stub_llm(narrative: "v1")
       described_class.call
       expect(Summary.by_type("overall").recent.first.summary_text).to eq("v1")
 
@@ -69,7 +77,7 @@ RSpec.describe OverallSummarizerService do
         expect(material).to include("v1")             # latest overall handed back in
         expect(material).to include("new stuff happened")
         expect(material).not_to include("old stuff")  # already folded
-        double(structured_output: { "summary" => "v2" })
+        double(structured_output: { "shared_narrative" => "v2" })
       end
 
       result = described_class.call

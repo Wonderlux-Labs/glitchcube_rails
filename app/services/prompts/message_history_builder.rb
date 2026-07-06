@@ -17,11 +17,12 @@ module Prompts
       @since = since || Rails.configuration.history_window_minutes.minutes.ago
     end
 
-    # A rolling window of the cube's most recent interactions ACROSS sessions,
-    # bounded by BOTH a time window and a turn cap: recent bleed when people are
-    # actively around, nothing once the cube's been idle past the window (summaries
-    # will carry longer-term continuity). Ordered chronologically as user →
-    # assistant per turn, with a soft break wherever the session id changes.
+    # A rolling window of the CURRENT PERSONA's most recent interactions, bounded by
+    # both a time window and a turn cap. Scoped to the current persona so raw history
+    # never bleeds one character's voice into another — on a persona switch this is
+    # naturally empty (that persona hasn't spoken in the window), and cross-persona
+    # continuity comes from the summaries, not raw transcripts. Ordered user →
+    # assistant per turn, with a soft break wherever the session id (visitor) changes.
     def build
       return [] unless @conversation
 
@@ -41,11 +42,17 @@ module Prompts
 
     private
 
-    # Most recent turns from ALL sessions within the time window, capped, back in
-    # chronological order.
+    # Most recent turns of the CURRENT PERSONA within the time window, capped, back in
+    # chronological order. Scoped by persona (via the conversation) so another
+    # character's transcript never bleeds into this one.
     def recent_logs
-      ConversationLog.where("created_at >= ?", @since)
-                     .recent
+      persona = @conversation.persona
+      return [] if persona.blank?
+
+      ConversationLog.joins(:conversation)
+                     .where(conversations: { persona: persona })
+                     .where("conversation_logs.created_at >= ?", @since)
+                     .order("conversation_logs.created_at DESC")
                      .limit(@limit)
                      .to_a
                      .reverse

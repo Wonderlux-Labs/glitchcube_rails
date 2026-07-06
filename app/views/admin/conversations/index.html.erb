@@ -8,6 +8,15 @@
   <%= link_to 'Finished', admin_conversations_path(status: 'finished'), class: 'btn' %>
 </div>
 
+<div style="margin-bottom: 20px;">
+  <%= form_with url: admin_conversations_path, method: :get, local: true do |form| %>
+    <%= hidden_field_tag :status, params[:status] if params[:status].present? %>
+    <%= form.select :persona,
+          options_for_select([['All personas', '']] + @personas.map { |p| [p.name || p.slug, p.slug] }, params[:persona]),
+          {}, { onchange: "this.form.submit()" } %>
+  <% end %>
+</div>
+
 <table>
   <thead>
     <tr>
@@ -16,6 +25,8 @@
       <th>Status</th>
       <th>Messages</th>
       <th>Duration</th>
+      <th>Tokens</th>
+      <th>Cost</th>
       <th>Started</th>
       <th>Actions</th>
     </tr>
@@ -30,6 +41,8 @@
         </td>
         <td><%= conversation.conversation_logs.count %></td>
         <td><%= conversation.duration&.round(2) || 'N/A' %>s</td>
+        <td><%= conversation.total_tokens %></td>
+        <td>$<%= conversation.total_cost %></td>
         <td><%= conversation.started_at&.strftime('%m/%d %H:%M') %></td>
         <td>
           <%= link_to 'View', admin_conversation_path(conversation), class: 'btn' %>

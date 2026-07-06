@@ -4,6 +4,12 @@ class Admin::SummariesController < Admin::BaseController
   before_action :set_summary, only: [ :show ]
 
   def index
+    @latest_overall = Summary.overall.recent.first
+    @latest_interaction = Summary.interaction.recent.first
+    @latest_persona_summaries = Persona.active.order(:name).index_with do |persona|
+      persona.summaries.persona.order(:created_at).last
+    end
+
     @summaries = Summary.recent
 
     # Filtering by type
@@ -29,7 +35,11 @@ class Admin::SummariesController < Admin::BaseController
       @summaries = @summaries.where("summary_text ILIKE ? OR metadata ILIKE ?", search_term, search_term)
     end
 
-    @summaries = @summaries.page(params[:page]).per(25)
+    @page = [ params[:page].to_i, 1 ].max
+    @per_page = 25
+    @total_count = @summaries.count
+    @total_pages = (@total_count.to_f / @per_page).ceil
+    @summaries = @summaries.limit(@per_page).offset((@page - 1) * @per_page)
 
     # Stats for dashboard
     @stats = {
@@ -42,18 +52,21 @@ class Admin::SummariesController < Admin::BaseController
 
   def show
     @metadata = @summary.metadata_json
-    @related_summaries = Summary.where(summary_type: @summary.summary_type)
+    @previous_summary = @summary.previous_version
+    @next_summary = @summary.next_version
+    @version_number = @summary.version_number
+    @version_count = @summary.version_count
+
+    @related_summaries = @summary.chain
                                 .where.not(id: @summary.id)
                                 .recent
                                 .limit(5)
   end
 
   def analytics
-    @summary_trends = Summary.group(:summary_type)
-                            .group_by_day(:created_at, last: 30)
-                            .count
-
-    @recent_activity = Summary.group_by_day(:created_at, last: 7).count
+    # No groupdate gem in this app — group by day with a plain SQL DATE() truncation.
+    @summary_trends = Summary.where(created_at: 30.days.ago..Time.current).group(:summary_type).count
+    @recent_activity = group_by_day(Summary.where(created_at: 7.days.ago..Time.current))
 
     @type_distribution = Summary.group(:summary_type).count
 
@@ -67,8 +80,12 @@ class Admin::SummariesController < Admin::BaseController
                            .average("EXTRACT(EPOCH FROM (end_time - start_time))")
                            .transform_values { |v| (v&./ 60)&.round(1) } # Convert to minutes
 
-    # Recent goal completions
-    @recent_goals = Summary.goal_completions.recent.limit(10)
+    # Recent director/persona steering notes (ooc_note) across all types — the
+    # current equivalent of "things worth an operator's attention".
+    @recent_ooc_notes = Summary.where("metadata ILIKE ?", "%\"ooc_note\":%")
+                              .recent
+                              .limit(10)
+                              .select { |s| s.metadata_json["ooc_note"].present? }
   end
 
   def search
@@ -94,6 +111,10 @@ class Admin::SummariesController < Admin::BaseController
   end
 
   private
+
+  def group_by_day(scope)
+    scope.group("DATE(created_at)").count.transform_keys { |k| k.is_a?(String) ? Date.parse(k) : k }
+  end
 
   def set_summary
     @summary = Summary.find(params[:id])
