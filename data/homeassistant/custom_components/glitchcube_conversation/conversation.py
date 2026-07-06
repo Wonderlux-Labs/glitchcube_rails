@@ -25,6 +25,10 @@ from .const import (
     CONTINUE_KEY,
     MEDIA_KEY,
     SUPPORTED_LANGUAGES,
+    ASSIST_SATELLITE_ENTITY_ID,
+    CONTINUATION_CHIME_MEDIA_ID,
+    REOPEN_LISTENING_TIMEOUT_SEC,
+    REOPEN_LISTENING_POLL_INTERVAL_SEC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -252,11 +256,7 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(speech_text)
 
-        return conversation.ConversationResult(
-            conversation_id=conversation_id,
-            response=intent_response,
-            continue_conversation=True,
-        )
+        return self._finalize_conversation_result(conversation_id, intent_response, True)
 
     async def _handle_error_response(self, conversation_data, user_input, conversation_id):
         """Handle error responses with appropriate messaging."""
@@ -284,11 +284,71 @@ class GlitchCubeConversationEntity(conversation.ConversationEntity):
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response_text)
 
+        return self._finalize_conversation_result(conversation_id, intent_response, continue_conversation)
+
+    def _finalize_conversation_result(self, conversation_id, intent_response, should_continue):
+        """Build the ConversationResult for a turn.
+
+        Always returns continue_conversation=False to HA's native pipeline.
+        HA's own continue_conversation flag reopens the STT window on the
+        pipeline/core side as soon as it hands the reply off to the satellite
+        — not once the device actually finishes playing it — which is why
+        listening could reopen out of sync with playback, or silently fail to
+        reopen at all. Instead, when `should_continue` is true, we schedule a
+        background task that waits for the satellite to actually finish (state
+        back to "idle") and then reopens listening via
+        assist_satellite.start_conversation, which goes through ESPHome's
+        send_voice_assistant_announcement_await_response(...,
+        start_conversation=True) — a handshake that waits for the device's own
+        playback-finished acknowledgment before handing off to the firmware to
+        re-listen.
+        """
+        if should_continue:
+            self.hass.async_create_background_task(
+                self._reopen_listening_after_idle(),
+                "glitchcube_reopen_listening",
+            )
+
         return conversation.ConversationResult(
             conversation_id=conversation_id,
             response=intent_response,
-            continue_conversation=continue_conversation,
+            continue_conversation=False,
         )
+
+    async def _wait_for_satellite_idle(self):
+        """Poll the satellite's state until it reports idle, or give up after a timeout."""
+        elapsed = 0.0
+        while elapsed < REOPEN_LISTENING_TIMEOUT_SEC:
+            state = self.hass.states.get(ASSIST_SATELLITE_ENTITY_ID)
+            if state and state.state == "idle":
+                return True
+            await asyncio.sleep(REOPEN_LISTENING_POLL_INTERVAL_SEC)
+            elapsed += REOPEN_LISTENING_POLL_INTERVAL_SEC
+        return False
+
+    async def _reopen_listening_after_idle(self):
+        """Reopen listening once the satellite finishes playing its current reply."""
+        became_idle = await self._wait_for_satellite_idle()
+        if not became_idle:
+            _LOGGER.warning(
+                "Satellite %s never returned to idle within %ss; skipping continuation reopen",
+                ASSIST_SATELLITE_ENTITY_ID, REOPEN_LISTENING_TIMEOUT_SEC,
+            )
+            return
+
+        try:
+            await self.hass.services.async_call(
+                "assist_satellite",
+                "start_conversation",
+                {
+                    "entity_id": ASSIST_SATELLITE_ENTITY_ID,
+                    "start_media_id": CONTINUATION_CHIME_MEDIA_ID,
+                },
+                blocking=True,
+            )
+            _LOGGER.info("🔁 Reopened listening via assist_satellite.start_conversation")
+        except Exception as e:
+            _LOGGER.error("Failed to reopen listening via start_conversation: %s", e)
 
     def _create_error_response(
         self,
