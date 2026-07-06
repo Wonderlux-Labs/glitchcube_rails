@@ -1,0 +1,33 @@
+play_music_on_jukebox:
+  fields:
+    query:
+      selector:
+        text:
+      required: true
+      name: query
+    queue:
+      selector:
+        select:
+          options:
+          - replace
+          - replace_next
+      default: replace
+  sequence:
+  - action: music_assistant.play_media
+    metadata: {}
+    target:
+      entity_id: media_player.jukebox
+    data:
+      media_id: '{{query}}'
+      media_type: track
+      enqueue: '{{queue}}'
+  alias: Play Music on Jukebox
+  description: This is the best way to play music on the jukebox. Query is a fuzzy
+    search param that will find the best match, generally it should be something like
+    Nirvana - Smells Like Teen Spirit, but you could also use Artist - Album - Title
+    if you want. If you get the title name slightly wrong it is pretty forgiving.
+    Queue is an optional param, by default it is set to replace and will start playing
+    automatically. If there is currently a song playing, and you want to queue up
+    the next song, you can use replace_next. We don't want to run very long queues,
+    so you will either be playing immediately or just choosing the next song, by default
+    it uses replace

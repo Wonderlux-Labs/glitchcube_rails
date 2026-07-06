@@ -13,6 +13,7 @@ class ConversationOrchestrator::Finalizer
     tool_analysis = analyze_tools
     store_conversation_log(tool_analysis)
     end_conversation_if_needed(tool_analysis)
+    dispatch_cube_state_update
 
     hass_response = format_for_hass(tool_analysis)
 
@@ -100,6 +101,15 @@ class ConversationOrchestrator::Finalizer
     conversation.increment(:total_tokens, usage["total_tokens"].to_i)
     conversation.increment(:total_cost, usage["cost"].to_f)
     conversation.save!
+  end
+
+  # Push this turn's speech + inner_monologue to HASS for display — async,
+  # never blocks the response on a HASS round-trip.
+  def dispatch_cube_state_update
+    CubeStateUpdateJob.perform_later(
+      speech: @state.dig(:ai_response, :speech_text),
+      inner_monologue: @state.dig(:ai_response, :inner_monologue)
+    )
   end
 
   def continue_conversation?(tool_analysis)

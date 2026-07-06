@@ -1,0 +1,33 @@
+# GlitchCube cube-state sensor (source of truth; deployed to
+# HASS /config/templates/glitchcube_cube_state.yaml)
+#
+# Rails fires the `glitchcube_cube_state_update` event once per conversation
+# turn (see app/jobs/cube_state_update_job.rb) carrying the full `speech` and
+# `inner_monologue` text. This is a trigger-based template sensor rather than
+# an input_text because input_text is capped at 255 chars — these attributes
+# can hold as much text as the turn produced, for a future display (captions
+# for hard-of-hearing visitors, or the inner monologue if a persona is
+# personality-full enough to be fun to show). Not the world-state sensor —
+# that's ambient environment context read INTO the brain; this is the brain's
+# own turn output, read OUT for display.
+#
+# Clearing/rotating these on a timer is handled by a HASS automation, not here.
+#
+# Lives in templates/ (not packages/) so it's a plain YAML file alongside
+# automations.yaml/scripts.yaml — included via `template: !include_dir_merge_list
+# templates/` in configuration.yaml. This is a bare list (no `template:` key)
+# because !include_dir_merge_list merges the lists from every file in the
+# directory into the one top-level `template:` key itself.
+
+- trigger:
+    - platform: event
+      event_type: glitchcube_cube_state_update
+  sensor:
+    - name: "Cube State"
+      unique_id: glitchcube_cube_state
+      icon: mdi:cube-outline
+      state: "{{ (trigger.event.data.speech | default('', true))[:255] }}"
+      attributes:
+        speech: "{{ trigger.event.data.speech | default('', true) }}"
+        inner_monologue: "{{ trigger.event.data.inner_monologue | default('', true) }}"
+        updated_at: "{{ now().isoformat() }}"

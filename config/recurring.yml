@@ -4,11 +4,6 @@ default: &default
     schedule: every minute
     queue: default
 
-  weather_forecast_update:
-    class: Recurring::Content::WeatherForecastSummarizerJob
-    schedule: "0 * * * *"     # Every hour at the top of the hour
-    queue: default
-
   random_persona:
     class: Recurring::Persona::RandomPersonaJob
     schedule: "*/5 * * * *"   # Check every 5 min; switches once a 30–90 min interval elapses

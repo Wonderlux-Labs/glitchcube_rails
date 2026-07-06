@@ -65,7 +65,6 @@ class Admin::DashboardController < Admin::BaseController
     {
       interaction_summary: "Every 10 min",
       overall_summary: "Hourly",
-      weather_forecast_update: "Hourly",
       random_persona: "Checks every 5 min",
       conversation_timeout_monitor: "Every minute"
     }

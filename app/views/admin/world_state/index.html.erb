@@ -28,7 +28,7 @@
       <% end %>
     <% else %>
       <p style="color: #ff6666;">❌ World state sensor not found</p>
-      <p>May need to trigger weather service first</p>
+      <p>This sensor is written by a manual service trigger below, or not at all — see World State Services</p>
     <% end %>
   </div>
 
@@ -85,4 +85,4 @@
 <p>Use the REST API directly:</p>
 <pre>curl -X POST http://localhost:4567/ha/world_state/trigger \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -d "service_class=WeatherForecastSummarizerService"</pre>
+  -d "service_class=BackendHealthService"</pre>

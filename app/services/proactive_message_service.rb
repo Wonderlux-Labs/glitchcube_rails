@@ -175,7 +175,7 @@ class ProactiveMessageService
     when "sage"
       "assist_satellite.sage_voice"
     else
-      "assist_satellite.square_voice" # buddy default
+      "assist_satellite.cube_cube_voice_assist_satellite" # buddy default
     end
   end
 
@@ -183,7 +183,7 @@ class ProactiveMessageService
     {
       message: "System active and ready.",
       persona: "buddy",
-      satellite_entity: "assist_satellite.square_voice",
+      satellite_entity: "assist_satellite.cube_cube_voice_assist_satellite",
       should_announce: true
     }
   end

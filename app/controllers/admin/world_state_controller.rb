@@ -39,7 +39,12 @@ class Admin::WorldStateController < Admin::BaseController
   private
 
   def get_world_state_sensor
-    HomeAssistantService.entity("sensor.world_state")
+    # sensor.glitchcube_world_state is the live, HASS-templated ambient context
+    # sensor read by Prompts::ContextBuilder every turn (see
+    # data/homeassistant/packages/glitchcube_world_state.yaml). The old
+    # sensor.world_state was a Rails-pushed blob written only by the now-deleted
+    # hourly weather summarizer job — don't resurrect that name here.
+    HomeAssistantService.entity("sensor.glitchcube_world_state")
   rescue StandardError => e
     Rails.logger.error "Failed to get world state sensor: #{e.message}"
     nil

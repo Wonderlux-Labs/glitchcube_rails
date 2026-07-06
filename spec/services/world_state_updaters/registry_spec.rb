@@ -16,11 +16,6 @@ RSpec.describe WorldStateUpdaters::Registry do
           .to eq(WorldStateUpdaters::BackendHealthService)
       end
 
-      it 'resolves "WeatherForecastSummarizerService" to the correct service class' do
-        expect(described_class.fetch('WeatherForecastSummarizerService'))
-          .to eq(WorldStateUpdaters::WeatherForecastSummarizerService)
-      end
-
       it 'returns classes that actually respond to .call (the trigger contract)' do
         described_class.names.each do |name|
           expect(described_class.fetch(name)).to respond_to(:call)
@@ -60,9 +55,9 @@ RSpec.describe WorldStateUpdaters::Registry do
         expect(described_class.fetch('PersonaSwitchService')).to be_nil
       end
 
-      it 'rejects NarrativeConversationSyncService (real class, not on allowlist)' do
-        expect(defined?(WorldStateUpdaters::NarrativeConversationSyncService)).to be_truthy
-        expect(described_class.fetch('NarrativeConversationSyncService')).to be_nil
+      it 'rejects LlmService (real class, not on allowlist)' do
+        expect(defined?(LlmService)).to be_truthy
+        expect(described_class.fetch('LlmService')).to be_nil
       end
 
       it 'rejects a dangerous core class name' do
@@ -73,13 +68,12 @@ RSpec.describe WorldStateUpdaters::Registry do
 
       it 'never returns a class that is not one of the explicitly allowlisted classes' do
         allowed = [
-          WorldStateUpdaters::BackendHealthService,
-          WorldStateUpdaters::WeatherForecastSummarizerService
+          WorldStateUpdaters::BackendHealthService
         ]
 
         %w[
           PromptService
-          NarrativeConversationSyncService
+          LlmService
           Kernel Object File HomeAssistantService User
         ].each do |name|
           result = described_class.fetch(name)
@@ -93,7 +87,7 @@ RSpec.describe WorldStateUpdaters::Registry do
   describe '.names' do
     it 'returns the list of allowlisted names' do
       expect(described_class.names)
-        .to contain_exactly('BackendHealthService', 'WeatherForecastSummarizerService')
+        .to contain_exactly('BackendHealthService')
     end
 
     it 'returns only strings' do
@@ -114,8 +108,7 @@ RSpec.describe WorldStateUpdaters::Registry do
 
     it 'maps each allowlisted string key to its corresponding class' do
       expect(described_class::TRIGGERABLE).to eq(
-        'BackendHealthService' => WorldStateUpdaters::BackendHealthService,
-        'WeatherForecastSummarizerService' => WorldStateUpdaters::WeatherForecastSummarizerService
+        'BackendHealthService' => WorldStateUpdaters::BackendHealthService
       )
     end
   end

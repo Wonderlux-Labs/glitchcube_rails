@@ -110,6 +110,15 @@ RSpec.describe ConversationOrchestrator::Finalizer do
 
         expect(result.data[:hass_response]).to include(:end_conversation)
       end
+
+      it 'dispatches the speech and inner_monologue to CubeStateUpdateJob' do
+        expect(CubeStateUpdateJob).to receive(:perform_later).with(
+          speech: 'I have turned on the lights.',
+          inner_monologue: 'User requested lighting control'
+        )
+
+        described_class.call(state: state, user_message: user_message)
+      end
     end
 
     context 'with continue_conversation true' do

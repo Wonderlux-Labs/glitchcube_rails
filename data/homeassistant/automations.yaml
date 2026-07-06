@@ -17,9 +17,7 @@
         data:
           option: buddy-glitch
         target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.home_assistant_voice_09739d_assistant_2
+          entity_id: select.cube_cube_voice_assistant
     - conditions:
       - condition: state
         entity_id: input_select.current_persona
@@ -29,9 +27,7 @@
         data:
           option: jax-glitch
         target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.home_assistant_voice_09739d_assistant_2
+          entity_id: select.cube_cube_voice_assistant
     - conditions:
       - condition: state
         entity_id: input_select.current_persona
@@ -41,15 +37,11 @@
         data:
           option: neon-glitch
         target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.home_assistant_voice_09739d_assistant_2
+          entity_id: select.cube_cube_voice_assistant
     default:
     - action: select.select_option
       data:
         option: preferred
       target:
-        entity_id:
-        - select.home_assistant_voice_09739d_assistant
-        - select.home_assistant_voice_09739d_assistant_2
+        entity_id: select.cube_cube_voice_assistant
   mode: single

@@ -89,8 +89,8 @@ class Api::V1::ConversationController < Api::V1::BaseController
         error: "Failed to start conversation: #{e.message}",
         data: {
           response_type: "error",
-          satellite_entity: satellite_entity,
-          message: proactive_message
+          satellite_entity: result[:satellite_entity],
+          message: result[:message]
         }
       }
     end
@@ -164,7 +164,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
         {
           message: announcement,
           voice: persona_voice,
-          entity_id: "media_player.square_voice"
+          entity_id: "media_player.cube_cube_voice_media_player"
         }
       )
 
