@@ -6,10 +6,10 @@ namespace :config do
   # Configuration constants
   REMOTE_HOST = "root@glitch.local"
   REMOTE_CONFIG_PATH = "/config"
-  # The in-repo HASS config snapshot now lives under deprecated/ (see deprecated/README.md).
-  # It has drifted from the live box and is reference-only — this sync task is retained
-  # but points at the snapshot's real location rather than the old data/ path.
-  LOCAL_CONFIG_PATH = "deprecated/homeassistant"
+  # The curated, current GlitchCube HASS files we actually run live here (see
+  # data/homeassistant/README.md). Note: this is a SUBSET of the box's /config, so a
+  # blanket pull would drag in HAOS defaults — prefer pushing specific files.
+  LOCAL_CONFIG_PATH = "data/homeassistant"
 
   # Sync patterns - consistent across all commands
   SYNC_EXCLUDES = [

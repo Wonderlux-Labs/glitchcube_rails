@@ -1,5 +1,9 @@
 # Deprecated — Home Assistant config snapshots
 
+> The **current** files we actually run on the HASS box live in
+> `data/homeassistant/` (curated: packages, automations, the custom conversation
+> component). This directory is the OLD, drifted grab-bag — reference only.
+
 These are **reference snapshots**, not live config. Rails never loads anything in
 here — they're kept around because some of them are still useful to copy from when
 configuring a HASS instance (sensors, templates, scripts, dashboards, automations).

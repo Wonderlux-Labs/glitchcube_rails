@@ -62,5 +62,18 @@
         <pre><%= JSON.pretty_generate(log.tool_results_json) %></pre>
       </div>
     <% end %>
+
+    <% narrative = log.metadata_json["narrative"] %>
+    <% if narrative.present? %>
+      <% if narrative["urgent_question"].present? %>
+        <div style="background: #4a3a00; padding: 10px; margin: 5px 0; border-left: 3px solid #ffcc00;">
+          <p><strong>🔮 urgent_question:</strong> <%= narrative["urgent_question"] %></p>
+        </div>
+      <% end %>
+      <details style="background: #333; padding: 10px; margin: 5px 0;">
+        <summary style="cursor: pointer;"><strong>🧠 Full brain narrative</strong></summary>
+        <pre><%= JSON.pretty_generate(narrative) %></pre>
+      </details>
+    <% end %>
   </div>
 <% end %>

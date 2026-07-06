@@ -31,7 +31,11 @@ class CubePersona
   end
 
   def self.set_random
-    set_current_persona(PERSONAS.sample)
+    # Only rotate among active personas (Persona.active); fall back to the full list
+    # if none are seeded/active.
+    pool = Persona.active.pluck(:slug).map(&:to_sym)
+    pool = PERSONAS if pool.empty?
+    set_current_persona(pool.sample)
   end
 
   def self.set_current_persona(persona)

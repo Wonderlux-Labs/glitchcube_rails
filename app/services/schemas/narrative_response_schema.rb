@@ -34,6 +34,9 @@ class Schemas::NarrativeResponseSchema
 
       boolean :continue_conversation, required: true,
               description: "Whether to keep listening without a wake word. Err toward true; false only when the conversation has clearly ended (a goodbye) or the input is environmental noise, not someone talking to you."
+
+      string :urgent_question, required: false,
+             description: "OPTIONAL and EXPENSIVE — leave this out on almost every turn. Only fill it in if you genuinely need to recall something from your past interactions to respond well (e.g. a returning visitor references something you can't place, or someone asks what happened earlier). Put ONE plain-English question here; it triggers a slow background search across everything you've experienced, and any answer arrives a turn or two later, not right now. Use sparingly — most turns don't need it."
     end
   end
 end

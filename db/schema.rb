@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_05_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -98,21 +98,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_000001) do
     t.index ["occurs_at"], name: "index_memories_on_occurs_at"
   end
 
-  create_table "messages", force: :cascade do |t|
-    t.integer "completion_tokens"
-    t.text "content", null: false
-    t.bigint "conversation_id", null: false
-    t.decimal "cost", precision: 10, scale: 6
+  create_table "personas", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "agent_id"
     t.datetime "created_at", null: false
-    t.text "metadata"
-    t.string "model_used"
-    t.integer "prompt_tokens"
-    t.string "role", null: false
+    t.text "description"
+    t.string "name"
+    t.jsonb "offline_responses", default: {}
+    t.text "persona_prompt"
+    t.string "slug", null: false
     t.datetime "updated_at", null: false
-    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
-    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
-    t.index ["created_at"], name: "index_messages_on_created_at"
-    t.index ["role"], name: "index_messages_on_role"
+    t.string "voice_id"
+    t.index ["slug"], name: "index_personas_on_slug", unique: true
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -256,20 +253,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_000001) do
     t.datetime "end_time"
     t.integer "message_count", null: false
     t.text "metadata"
+    t.bigint "persona_id"
     t.datetime "start_time"
     t.text "summary_text", null: false
     t.string "summary_type", null: false
     t.datetime "updated_at", null: false
     t.index ["end_time"], name: "index_summaries_on_end_time"
+    t.index ["persona_id"], name: "index_summaries_on_persona_id"
     t.index ["start_time"], name: "index_summaries_on_start_time"
     t.index ["summary_type"], name: "index_summaries_on_summary_type"
   end
 
-  add_foreign_key "messages", "conversations"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "summaries", "personas"
 end

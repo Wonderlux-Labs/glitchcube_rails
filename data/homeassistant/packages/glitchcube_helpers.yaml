@@ -1,0 +1,46 @@
+# GlitchCube helper entities
+# Loaded via packages/glitchcube_helpers.yaml
+
+input_select:
+  current_persona:
+    name: Current Persona
+    options:
+      - buddy
+      - jax
+      - zorp
+      - sparkle
+      - neon
+      - crash
+      - thecube
+      - mobius
+    initial: buddy
+    icon: mdi:robot
+
+  cube_mode:
+    name: Cube Mode
+    options:
+      - conversation
+      - performance
+      - low_power
+      - idle
+    initial: conversation
+    icon: mdi:cube-outline
+
+input_text:
+  glitchcube_host:
+    name: GlitchCube Host
+    initial: "192.168.68.50:4567"
+    max: 255
+    icon: mdi:server-network
+
+  glitchcube_breaking_news:
+    name: GlitchCube Breaking News
+    initial: ""
+    max: 255
+    icon: mdi:newspaper
+
+  backend_health_status:
+    name: Backend Health Status
+    initial: "unknown"
+    max: 255
+    icon: mdi:heart-pulse

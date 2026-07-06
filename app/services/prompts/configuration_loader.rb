@@ -24,18 +24,26 @@ module Prompts
       File.read(path).strip
     end
 
+    # Persona config comes from the DB (Persona, seeded from the YAMLs). Falls back to
+    # the YAML on disk if the row isn't seeded yet, so nothing breaks pre-seed.
     def load_persona_config(persona_id)
-      persona_id_str = persona_id.to_s
-      config_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id_str}.yml")
+      persona = Persona[persona_id]
+      return persona.to_config_hash if persona
 
+      load_persona_yaml(persona_id)
+    rescue StandardError => e
+      Rails.logger.error "Error loading persona config for #{persona_id}: #{e.message}"
+      load_persona_yaml(persona_id)
+    end
+
+    def load_persona_yaml(persona_id)
+      config_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id}.yml")
       return nil unless File.exist?(config_path)
 
-      begin
-        YAML.load_file(config_path)
-      rescue StandardError => e
-        Rails.logger.error "Error loading persona config for #{persona_id}: #{e.message}"
-        nil
-      end
+      YAML.load_file(config_path)
+    rescue StandardError => e
+      Rails.logger.error "Error loading persona YAML for #{persona_id}: #{e.message}"
+      nil
     end
   end
 end

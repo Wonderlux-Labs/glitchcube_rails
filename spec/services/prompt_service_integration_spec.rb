@@ -8,6 +8,8 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
   before do
     # Mock CubePersona to avoid HA calls
     allow(CubePersona).to receive(:current_persona).and_return(:buddy)
+    allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+      .and_return({ "attributes" => { "content" => "It is late and quiet." } })
   end
 
   describe "real-world error scenarios that should be caught" do
@@ -75,35 +77,27 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
   end
 
   describe "context building edge cases" do
-    it "handles very long contexts gracefully" do
-      large_extra_context = {
-        tool_results: (1..50).map { |i| [ "tool_#{i}", { success: true, message: "Result #{i}" * 100 } ] }.to_h
-      }
+    it "caps a very long running-memory summary rather than letting it sprawl" do
+      create(:summary, summary_type: "interaction",
+             summary_text: "so much happened " * 200, created_at: 1.minute.ago) # ~3400 chars
 
-      service = described_class.new(
-        persona: "buddy",
-        conversation: conversation,
-        extra_context: large_extra_context
-      )
+      service = described_class.new(persona: "buddy", conversation: conversation, extra_context: {})
 
       expect { service.build }.not_to raise_error
-      result = service.build
-      expect(result[:context]).to be_present
-      expect(result[:context].length).to be > 1000
+      ctx = service.build[:context]
+      expect(ctx).to include("Recently")
+      expect(ctx.length).to be < 1500 # each memory blob is clipped (~900), no sprawl
     end
 
-    it "handles special characters in context gracefully" do
+    it "handles special characters in history gracefully" do
       special_conversation = create(:conversation, session_id: "test-session-éñ中文🎭")
+      create(:conversation_log, conversation: special_conversation,
+             user_message: "héllo 🎭", ai_response: "hí", created_at: 30.seconds.ago)
 
-      service = described_class.new(
-        persona: "buddy",
-        conversation: special_conversation,
-        extra_context: { source: "test with émojis 🎯 and unicode" }
-      )
+      service = described_class.new(persona: "buddy", conversation: special_conversation, extra_context: {})
 
       expect { service.build }.not_to raise_error
-      result = service.build
-      expect(result[:context]).to include("test with émojis 🎯 and unicode")
+      expect(service.build[:messages].map { |m| m[:content] }).to include("héllo 🎭")
     end
   end
 end

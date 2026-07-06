@@ -16,11 +16,7 @@ class PromptService
     @user_message = user_message
 
     @persona_instance = Prompts::PersonaLoader.load(@persona_name)
-    @context_builder = Prompts::ContextBuilder.new(
-      conversation: @conversation,
-      extra_context: @extra_context,
-      user_message: @user_message
-    )
+    @context_builder = Prompts::ContextBuilder.new(persona: @persona_name)
   end
 
   def build

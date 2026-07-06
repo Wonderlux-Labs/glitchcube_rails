@@ -5,174 +5,111 @@ RSpec.describe Prompts::MessageHistoryBuilder do
   let(:conversation) { create(:conversation) }
 
   describe '.build' do
-    it 'delegates to instance method with default limit' do
+    it 'delegates to the instance' do
       expect_any_instance_of(described_class).to receive(:build).and_return([])
-
-      result = described_class.build(conversation)
-      expect(result).to eq([])
+      expect(described_class.build(conversation)).to eq([])
     end
 
-    it 'accepts custom limit' do
-      expect(described_class).to receive(:new).with(conversation: conversation, limit: 5).and_call_original
+    it 'passes an explicit limit through' do
+      expect(described_class).to receive(:new)
+        .with(conversation: conversation, limit: 5, since: nil).and_call_original
       described_class.build(conversation, limit: 5)
     end
   end
 
   describe '#build' do
-    context 'when conversation is nil' do
-      let(:conversation) { nil }
-
-      it 'returns empty array' do
-        result = described_class.new(conversation: conversation, limit: 10).build
-        expect(result).to eq([])
-      end
+    it 'returns [] when conversation is nil' do
+      expect(described_class.new(conversation: nil).build).to eq([])
     end
 
-    context 'when conversation has no logs' do
-      it 'returns empty array' do
-        result = described_class.new(conversation: conversation, limit: 10).build
-        expect(result).to eq([])
-      end
+    it 'returns [] when there are no recent logs' do
+      expect(described_class.new(conversation: conversation).build).to eq([])
     end
 
-    context 'when conversation has logs' do
+    context 'with recent logs in one session' do
       before do
-        # Create conversation logs in chronological order
-        create(:conversation_log,
-               conversation: conversation,
-               user_message: "Hello",
-               ai_response: "Hi there!",
-               created_at: 3.minutes.ago)
-        create(:conversation_log,
-               conversation: conversation,
-               user_message: "How are you?",
-               ai_response: "I'm doing great!",
-               created_at: 2.minutes.ago)
-        create(:conversation_log,
-               conversation: conversation,
-               user_message: "What's your name?",
-               ai_response: "I'm Buddy!",
-               created_at: 1.minute.ago)
+        create(:conversation_log, conversation: conversation, user_message: "Hello",
+               ai_response: "Hi there!", created_at: 3.minutes.ago)
+        create(:conversation_log, conversation: conversation, user_message: "How are you?",
+               ai_response: "I'm doing great!", created_at: 2.minutes.ago)
+        create(:conversation_log, conversation: conversation, user_message: "What's your name?",
+               ai_response: "I'm Buddy!", created_at: 1.minute.ago)
       end
 
-      it 'returns formatted messages in correct order' do
-        result = described_class.new(conversation: conversation, limit: 10).build
+      it 'returns each turn as user then assistant, in chronological order' do
+        result = described_class.new(conversation: conversation).build
 
-        # Should have 6 messages total (3 logs × 2 messages each)
-        expect(result.length).to eq(6)
-
-        # Check actual order (reverse applies to individual messages, not pairs)
-        # Order: T1_ai, T1_user, T2_ai, T2_user, T3_ai, T3_user
-        expect(result[0]).to eq({ role: "assistant", content: "Hi there!" })
-        expect(result[1]).to eq({ role: "user", content: "Hello" })
-        expect(result[2]).to eq({ role: "assistant", content: "I'm doing great!" })
-        expect(result[3]).to eq({ role: "user", content: "How are you?" })
-        expect(result[4]).to eq({ role: "assistant", content: "I'm Buddy!" })
-        expect(result[5]).to eq({ role: "user", content: "What's your name?" })
+        expect(result).to eq([
+          { role: "user", content: "Hello" },
+          { role: "assistant", content: "Hi there!" },
+          { role: "user", content: "How are you?" },
+          { role: "assistant", content: "I'm doing great!" },
+          { role: "user", content: "What's your name?" },
+          { role: "assistant", content: "I'm Buddy!" }
+        ])
       end
 
-      it 'respects the limit parameter' do
+      it 'respects an explicit turn cap (keeps the most recent)' do
         result = described_class.new(conversation: conversation, limit: 2).build
-
-        # Should return only the most recent 2 logs (4 messages)
-        expect(result.length).to eq(4)
-
-        # Should be the most recent logs (T2_ai, T2_user, T3_ai, T3_user)
-        expect(result[0]).to eq({ role: "assistant", content: "I'm doing great!" })
-        expect(result[1]).to eq({ role: "user", content: "How are you?" })
-        expect(result[2]).to eq({ role: "assistant", content: "I'm Buddy!" })
-        expect(result[3]).to eq({ role: "user", content: "What's your name?" })
-      end
-
-      it 'handles limit of 1' do
-        result = described_class.new(conversation: conversation, limit: 1).build
-
-        # Should return only the most recent log (2 messages) (T3_ai, T3_user)
-        expect(result.length).to eq(2)
-        expect(result[0]).to eq({ role: "assistant", content: "I'm Buddy!" })
-        expect(result[1]).to eq({ role: "user", content: "What's your name?" })
-      end
-
-      it 'formats each log as user and assistant messages' do
-        result = described_class.new(conversation: conversation, limit: 10).build
-
-        # Due to reverse, alternating pattern is assistant/user (not user/assistant)
-        result.each_with_index do |message, index|
-          if index.even?
-            expect(message[:role]).to eq("assistant")
-          else
-            expect(message[:role]).to eq("user")
-          end
-          expect(message[:content]).to be_present
-        end
+        expect(result.map { |m| m[:content] }).to eq(
+          [ "How are you?", "I'm doing great!", "What's your name?", "I'm Buddy!" ]
+        )
       end
     end
 
-    context 'with many logs beyond limit' do
+    context 'time window' do
       before do
-        # Create 15 logs
-        15.times do |i|
-          create(:conversation_log,
-                 conversation: conversation,
-                 user_message: "Message #{i}",
-                 ai_response: "Response #{i}",
-                 created_at: (15 - i).minutes.ago)
-        end
+        create(:conversation_log, conversation: conversation, user_message: "ancient",
+               ai_response: "old reply", created_at: 30.minutes.ago)
+        create(:conversation_log, conversation: conversation, user_message: "fresh",
+               ai_response: "new reply", created_at: 1.minute.ago)
       end
 
-      it 'limits results to specified number of logs' do
-        result = described_class.new(conversation: conversation, limit: 5).build
-
-        # Should return 5 most recent logs (10 messages)
-        expect(result.length).to eq(10)
-
-        # Should be the most recent 5 logs (but reversed individual messages)
-        # Most recent logs are 14, 13, 12, 11, 10 -> reverse gives Response 10, Message 10, Response 11, Message 11...
-        expect(result[0][:content]).to eq("Response 10")
-        expect(result[1][:content]).to eq("Message 10")
-        expect(result[8][:content]).to eq("Response 14")
-        expect(result[9][:content]).to eq("Message 14")
+      it 'excludes turns older than the window (default 10 min)' do
+        result = described_class.new(conversation: conversation).build
+        expect(result.map { |m| m[:content] }).to eq([ "fresh", "new reply" ])
       end
 
-      it 'uses default limit of 10' do
-        result = described_class.new(conversation: conversation, limit: 10).build
-
-        # Should return 10 most recent logs (20 messages)
-        expect(result.length).to eq(20)
+      it 'includes older turns if the window is widened' do
+        result = described_class.new(conversation: conversation, since: 1.hour.ago).build
+        expect(result.map { |m| m[:content] }).to include("ancient", "fresh")
       end
     end
 
-    context 'message ordering' do
+    context 'default cap' do
       before do
-        create(:conversation_log,
-               conversation: conversation,
-               user_message: "First",
-               ai_response: "First response",
-               created_at: 2.minutes.ago)
-        create(:conversation_log,
-               conversation: conversation,
-               user_message: "Second",
-               ai_response: "Second response",
-               created_at: 1.minute.ago)
-      end
-
-      it 'ensures messages are in chronological order' do
-        result = described_class.new(conversation: conversation, limit: 10).build
-
-        expect(result[0]).to eq({ role: "assistant", content: "First response" })
-        expect(result[1]).to eq({ role: "user", content: "First" })
-        expect(result[2]).to eq({ role: "assistant", content: "Second response" })
-        expect(result[3]).to eq({ role: "user", content: "Second" })
-      end
-
-      it 'maintains user-assistant pairing' do
-        result = described_class.new(conversation: conversation, limit: 10).build
-
-        # Each pair should be adjacent assistant->user (due to reverse)
-        (0...result.length).step(2) do |i|
-          expect(result[i][:role]).to eq("assistant")
-          expect(result[i + 1][:role]).to eq("user") if result[i + 1]
+        20.times do |i|
+          create(:conversation_log, conversation: conversation, user_message: "m#{i}",
+                 ai_response: "r#{i}", created_at: (20 - i).seconds.ago)
         end
+      end
+
+      it 'caps at the configured limit (12 turns = 24 messages)' do
+        result = described_class.new(conversation: conversation).build
+        expect(result.length).to eq(24)
+      end
+    end
+
+    context 'across sessions' do
+      let(:other) { create(:conversation) }
+
+      before do
+        create(:conversation_log, conversation: other, user_message: "im leaving",
+               ai_response: "bye!", created_at: 3.minutes.ago)
+        create(:conversation_log, conversation: conversation, user_message: "hi again",
+               ai_response: "oh, you're back", created_at: 1.minute.ago)
+      end
+
+      it 'pulls turns from other recent sessions and marks the boundary' do
+        result = described_class.new(conversation: conversation).build
+
+        expect(result).to eq([
+          { role: "user", content: "im leaving" },
+          { role: "assistant", content: "bye!" },
+          { role: "system", content: described_class::SESSION_BREAK },
+          { role: "user", content: "hi again" },
+          { role: "assistant", content: "oh, you're back" }
+        ])
       end
     end
   end

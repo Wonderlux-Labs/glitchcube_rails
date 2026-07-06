@@ -48,6 +48,12 @@ class ConversationOrchestrator::LlmIntention
 
     ConversationLogger.llm_response(response.model || @model, response.content, [], { usage: response.usage })
 
+    # Phase-0 smoke test for opt-in deep recall: the brain may raise an
+    # `urgent_question` when it wants to recall something from past interactions.
+    # For now we only LOG what gets asked (no retrieval wired yet) so we can judge
+    # whether recall is worth building. See docs/conversation_flow.md.
+    log_urgent_question(response.structured_output["urgent_question"])
+
     ServiceResult.success({ llm_response: response.structured_output })
   rescue => e
     ConversationLogger.error("LLM Intention", e.message, { model: @model, user_message: @user_message })
@@ -60,6 +66,13 @@ class ConversationOrchestrator::LlmIntention
   end
 
   private
+
+  def log_urgent_question(question)
+    return if question.blank?
+
+    # Distinctive tag so we can grep what personas actually ask for.
+    Rails.logger.info "🔮 [urgent_question] (deep-recall probe, retrieval not yet wired): #{question}"
+  end
 
   def fallback_narrative
     {

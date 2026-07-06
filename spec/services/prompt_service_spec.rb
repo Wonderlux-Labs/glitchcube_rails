@@ -8,8 +8,8 @@ RSpec.describe PromptService do
   let(:user_message) { "Hello there!" }
 
   before do
-    allow(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("active")
-    allow(HaDataSync).to receive(:get_context_attribute).and_return(nil)
+    allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+      .and_return({ "attributes" => { "content" => "It is late and quiet." } })
     allow(CubePersona).to receive(:current_persona).and_return(persona)
   end
 
@@ -39,13 +39,8 @@ RSpec.describe PromptService do
       subject
     end
 
-    it 'creates ContextBuilder with correct parameters' do
-      expect(Prompts::ContextBuilder).to receive(:new).with(
-        conversation: conversation,
-        extra_context: extra_context,
-        user_message: user_message
-      ).and_call_original
-
+    it 'creates ContextBuilder for the current persona' do
+      expect(Prompts::ContextBuilder).to receive(:new).with(persona: persona).and_call_original
       subject
     end
 

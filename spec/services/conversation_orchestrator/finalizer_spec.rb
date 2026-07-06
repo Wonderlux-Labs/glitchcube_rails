@@ -72,6 +72,22 @@ RSpec.describe ConversationOrchestrator::Finalizer do
         )
       end
 
+      it 'dumps the full brain narrative (with urgent_question) into metadata' do
+        narrative = {
+          'speech' => 'I have turned on the lights.',
+          'inner_monologue' => 'User requested lighting control',
+          'actions' => [],
+          'continue_conversation' => false,
+          'urgent_question' => 'Have I met this person before?'
+        }
+
+        described_class.call(state: state.merge(llm_response: narrative), user_message: user_message)
+
+        expect(ConversationLog).to have_received(:create!).with(
+          hash_including(metadata: metadata_json_including(narrative: narrative))
+        )
+      end
+
       it 'logs conversation ended event' do
         described_class.call(state: state, user_message: user_message)
 

@@ -1,89 +1,92 @@
 # app/services/prompts/context_builder.rb
+#
+# Builds the "# CURRENT CONTEXT" block injected into the system prompt each turn.
+# A small, bounded, layered memory (each blob capped):
+#
+#   1. Ambient world state — the HASS composite sensor (time, weather, …).
+#   2. Overall memory      — the latest `overall` summary (the whole event; shared).
+#   3. Persona memory      — the CURRENT persona's latest `persona` summary + its
+#                            explicit self-steering note (injected so it self-corrects).
+#   4. Running memory      — the latest `interaction` summary + real-world facts (may be
+#                            from a different persona after a switch — that's fine).
+#
+# Most turns don't need any of this, but when present it's what gives the cube continuity.
 module Prompts
   class ContextBuilder
-    def self.build(conversation:, extra_context: {}, user_message: nil)
-      new(conversation: conversation, extra_context: extra_context, user_message: user_message).build
+    WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
+    MAX_BLOB = 900 # truncation backstop so no single memory blob can bloat the prompt
+
+    def self.build(persona: nil)
+      new(persona: persona).build
     end
 
-    def initialize(conversation:, extra_context:, user_message: nil)
-      @conversation = conversation
-      @extra_context = extra_context
-      @user_message = user_message
+    def initialize(persona: nil)
+      @persona = persona&.to_s
     end
 
     def build
-      context_parts = []
-
-      # Basic context
-      context_parts << "Time: #{Time.current.strftime('%l:%M %p on %A')}"
-
-      # Additional context
-      context_parts << build_cube_mode_context if build_cube_mode_context.present?
-      context_parts << build_session_context if build_session_context.present?
-      context_parts << build_source_context if build_source_context.present?
-      context_parts << build_tool_results_context if build_tool_results_context.present?
-      context_parts << build_time_context_from_ha if build_time_context_from_ha.present?
-
-      context_parts.compact.join("\n")
+      [
+        world_state_context,
+        overall_summary_context,
+        persona_summary_context,
+        recent_summary_context
+      ].compact.join("\n\n")
     end
 
     private
 
-    def build_cube_mode_context
-      @cube_mode_context ||= begin
-        cube_mode = HaDataSync.entity_state("sensor.cube_mode")
-        return nil if cube_mode.blank? || cube_mode == "unavailable"
+    def world_state_context
+      content = HomeAssistantService.entity(WORLD_STATE_SENSOR)&.dig("attributes", "content")
+      return nil if content.blank?
 
-        "Cube mode: #{cube_mode}"
-      rescue => e
-        Rails.logger.warn "⚠️ Could not fetch sensor.cube_mode state for context: #{e.message}"
-        nil
-      end
+      "Right now: #{content.squish}"
+    rescue => e
+      warn_nil("#{WORLD_STATE_SENSOR}", e)
     end
 
-    def build_session_context
-      return nil unless @conversation
+    def overall_summary_context
+      text = Summary.by_type("overall").recent.first&.summary_text
+      return nil if text.blank?
 
-      [
-        "Session: #{@conversation.session_id}",
-        "Message count: #{@conversation.messages.count}",
-        "Should end?: Think about wrapping up if we are over 10 messages or so!"
-      ].join("\n")
+      "The bigger picture (how this whole event has gone so far): #{clip(text)}"
+    rescue => e
+      warn_nil("overall summary", e)
     end
 
-    def build_source_context
-      return nil unless @extra_context[:source]
+    def persona_summary_context
+      persona = @persona.present? && Persona[@persona]
+      return nil unless persona
 
-      "Source: #{@extra_context[:source]}"
+      summary = persona.summaries.where(summary_type: "persona").order(:created_at).last
+      return nil if summary&.summary_text.blank?
+
+      parts = [ "What you (#{persona.name || @persona}) remember from your recent time on the cube: #{clip(summary.summary_text)}" ]
+      note = summary.metadata_json["ooc_note"]
+      parts << "A note to yourself: #{clip(note)}" if note.present?
+      parts.join("\n")
+    rescue => e
+      warn_nil("persona summary", e)
     end
 
-    def build_tool_results_context
-      return nil unless @extra_context[:tool_results]&.any?
+    def recent_summary_context
+      summary = Summary.by_type("interaction").recent.first
+      return nil if summary&.summary_text.blank?
 
-      results = @extra_context[:tool_results].map do |tool_name, result|
-        status = result[:success] ? "✅ SUCCESS" : "❌ FAILED"
-        "  #{tool_name}: #{status} - #{result[:message] || result[:error]}"
-      end
-
-      "Recent tool results:\n#{results.join("\n")}"
+      parts = [ "Recently (your running memory of the last little while): #{clip(summary.summary_text)}" ]
+      facts = summary.metadata_json["real_world_facts"]
+      parts << "Things you've picked up about tonight: #{clip(facts)}" if facts.present?
+      parts.join("\n")
+    rescue => e
+      warn_nil("recent summary", e)
     end
 
-    def build_time_context_from_ha
-      begin
-        time_of_day = HaDataSync.get_context_attribute("time_of_day")
-        day_of_week = HaDataSync.get_context_attribute("day_of_week")
-        location = HaDataSync.get_context_attribute("current_location")
+    def clip(text)
+      text.to_s.squish.truncate(MAX_BLOB)
+    end
 
-        return nil unless time_of_day
-
-        time_context = "Current time context: It is #{time_of_day}"
-        time_context += " on #{day_of_week}" if day_of_week
-        time_context += " at #{location}" if location
-        time_context
-      rescue => e
-        Rails.logger.warn "Failed to inject time context: #{e.message}"
-        nil
-      end
+    def warn_nil(what, error)
+      Rails.logger.warn "⚠️ Could not load #{what} for context: #{error.message}"
+      nil
     end
   end
 end

@@ -50,6 +50,24 @@
   </div>
 </div>
 
+<% if @metadata['real_world_facts'].present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>📌 Real-world facts learned</h2>
+    <div style="background: #1a2a1a; padding: 15px; border-left: 3px solid #00cc66;">
+      <%= simple_format(@metadata['real_world_facts']) %>
+    </div>
+  </div>
+<% end %>
+
+<% if @metadata['ooc_note'].present? %>
+  <div style="margin-bottom: 30px;">
+    <h2>🛠️ Operator note (OOC)</h2>
+    <div style="background: #4a3a00; padding: 15px; border-left: 3px solid #ffcc00;">
+      <%= simple_format(@metadata['ooc_note']) %>
+    </div>
+  </div>
+<% end %>
+
 <% if @metadata.any? %>
   <div style="margin-bottom: 30px;">
     <h2>Metadata</h2>

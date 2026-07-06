@@ -2,117 +2,76 @@
 require 'rails_helper'
 
 RSpec.describe Prompts::ContextBuilder do
-  let(:conversation) { create(:conversation) }
-  let(:extra_context) { {} }
-  let(:user_message) { "Hello there!" }
-
-  # Mock external dependencies
-  before do
-    allow(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("active")
-    allow(HaDataSync).to receive(:get_context_attribute).and_return(nil)
-    allow(Time).to receive(:current).and_return(Time.parse("2025-08-23 14:30:00 UTC"))
-  end
+  before { allow(HomeAssistantService).to receive(:entity).and_return(nil) }
 
   describe '.build' do
-    it 'delegates to instance method' do
-      expect_any_instance_of(described_class).to receive(:build).and_return("test context")
-
-      result = described_class.build(
-        conversation: conversation,
-        extra_context: extra_context,
-        user_message: user_message
-      )
-
-      expect(result).to eq("test context")
+    it 'delegates to the instance' do
+      expect_any_instance_of(described_class).to receive(:build).and_return("ctx")
+      expect(described_class.build(persona: "buddy")).to eq("ctx")
     end
   end
 
   describe '#build' do
-    subject do
-      described_class.new(
-        conversation: conversation,
-        extra_context: extra_context,
-        user_message: user_message
-      ).build
-    end
+    subject { described_class.new(persona: persona_slug).build }
+    let(:persona_slug) { nil }
 
-    it 'includes basic time context' do
-      expect(subject).to include("Time:")
-      expect(subject).to include("2:30 PM on Saturday")
-    end
-
-    it 'builds session context when conversation exists' do
-      expect(subject).to include("Session: #{conversation.session_id}")
-      expect(subject).to include("Message count: #{conversation.messages.count}")
-      expect(subject).to include("Should end?: Think about wrapping up")
-    end
-
-    context 'when conversation is nil' do
-      let(:conversation) { nil }
-
-      it 'still includes basic time context' do
-        expect(subject).to include("Time:")
+    context 'world state' do
+      it 'injects the world-state sensor content verbatim' do
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_return({ "attributes" => { "content" => "It is 12:55 AM and it is dark out." } })
+        expect(subject).to include("Right now: It is 12:55 AM and it is dark out.")
       end
 
-      it 'does not include session context' do
-        expect(subject).not_to include("Session:")
-      end
-    end
-
-    context 'cube mode context' do
-      it 'includes cube mode when available' do
-        expect(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("performance")
-        expect(subject).to include("Cube mode: performance")
-      end
-
-      it 'excludes cube mode when unavailable' do
-        expect(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("unavailable")
-        expect(subject).not_to include("Cube mode:")
-      end
-
-      it 'handles cube mode errors gracefully' do
-        expect(HaDataSync).to receive(:entity_state).and_raise(StandardError, "Connection failed")
-        expect(Rails.logger).to receive(:warn).with(/Could not fetch sensor.cube_mode/)
-
+      it 'fails open when the fetch raises' do
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_raise(StandardError, "HASS down")
+        expect(Rails.logger).to receive(:warn).with(/Could not load sensor.glitchcube_world_state/)
         expect { subject }.not_to raise_error
       end
     end
 
-    context 'source context' do
-      let(:extra_context) { { source: 'web_interface' } }
-
-      it 'includes source information' do
-        expect(subject).to include('Source: web_interface')
+    context 'overall memory' do
+      it 'injects the latest overall summary' do
+        create(:summary, summary_type: 'overall', summary_text: 'The whole night has been rowdy.', created_at: 1.minute.ago)
+        expect(subject).to include("The bigger picture")
+        expect(subject).to include("The whole night has been rowdy.")
       end
     end
 
-    context 'tool results context' do
-      let(:extra_context) do
-        {
-          tool_results: {
-            'lights.turn_on' => { success: true, message: 'Lights turned on successfully' },
-            'sound.play' => { success: false, error: 'Audio file not found' }
-          }
-        }
+    context 'persona memory' do
+      let(:persona_slug) { "zorp" }
+      let!(:zorp) { Persona.create!(slug: "zorp", name: "Zorp") }
+
+      it 'injects the current persona summary and its self-steering note' do
+        create(:summary, persona: zorp, summary_type: 'persona',
+               summary_text: 'You did a lot of cosmic readings.',
+               metadata: { ooc_note: 'Ease off the butt-readings.' }.to_json,
+               created_at: 1.minute.ago)
+
+        expect(subject).to include("What you (Zorp) remember")
+        expect(subject).to include("You did a lot of cosmic readings.")
+        expect(subject).to include("A note to yourself: Ease off the butt-readings.")
       end
 
-      it 'includes tool results' do
-        expect(subject).to include('Recent tool results:')
-        expect(subject).to include('lights.turn_on: ✅ SUCCESS - Lights turned on successfully')
-        expect(subject).to include('sound.play: ❌ FAILED - Audio file not found')
+      it 'injects nothing persona-specific when no persona is given' do
+        create(:summary, persona: zorp, summary_type: 'persona', summary_text: 'zorp memory', created_at: 1.minute.ago)
+        result = described_class.new(persona: nil).build
+        expect(result).not_to include("remember from your recent time")
       end
     end
 
-    context 'time context from Home Assistant' do
-      before do
-        allow(HaDataSync).to receive(:get_context_attribute).with("time_of_day").and_return("afternoon")
-        allow(HaDataSync).to receive(:get_context_attribute).with("day_of_week").and_return("Friday")
-        allow(HaDataSync).to receive(:get_context_attribute).with("current_location").and_return("Center Camp")
+    context 'running memory' do
+      it 'injects the latest interaction summary and its real-world facts' do
+        create(:summary, summary_type: 'interaction', summary_text: 'busy night',
+               metadata: { real_world_facts: 'Dance party at the Corral at 2am.' }.to_json,
+               created_at: 1.minute.ago)
+        expect(subject).to include("Recently (your running memory")
+        expect(subject).to include("Things you've picked up about tonight: Dance party at the Corral at 2am.")
       end
+    end
 
-      it 'includes time context from Home Assistant' do
-        expect(subject).to include('Current time context: It is afternoon on Friday at Center Camp')
-      end
+    it 'returns an empty string when nothing is available' do
+      expect(subject).to eq("")
     end
   end
 end

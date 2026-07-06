@@ -1,0 +1,46 @@
+# GlitchCube core input helpers
+# Rails reads/writes these to drive persona, mode, and dynamic host routing.
+
+input_select:
+  current_persona:
+    name: Current Persona
+    options:
+      - buddy
+      - jax
+      - zorp
+      - sparkle
+      - crash
+      - neon
+      - thecube
+      - mobius
+    initial: buddy
+    icon: mdi:robot
+
+  cube_mode:
+    name: Cube Mode
+    options:
+      - conversation
+      - performance
+      - low_power
+      - maintenance
+    initial: conversation
+    icon: mdi:cube-outline
+
+input_text:
+  glitchcube_host:
+    name: GlitchCube Host
+    initial: "192.168.68.50:4567"
+    max: 100
+    icon: mdi:server-network
+
+  backend_health_status:
+    name: Backend Health Status
+    initial: "unknown"
+    max: 255
+    icon: mdi:heart-pulse
+
+  glitchcube_breaking_news:
+    name: Breaking News
+    initial: "[]"
+    max: 255
+    icon: mdi:newspaper

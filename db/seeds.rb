@@ -12,4 +12,25 @@
 # when re-enabling GPS for a Burning Man deployment.
 puts '⏭️  GIS/location seeding disabled (PostGIS not installed this iteration)'
 
+# Personas — seeded from the persona YAMLs (lib/prompts/personas/*.yml). Idempotent:
+# config fields are refreshed from the YAML each run, but a manually-toggled `active`
+# flag on an existing row is preserved (we only default active: true on create).
+persona_files = Dir[Rails.root.join('lib', 'prompts', 'personas', '*.yml')]
+persona_files.each do |path|
+  slug = File.basename(path, '.yml')
+  config = YAML.load_file(path) || {}
+  persona = Persona.find_or_initialize_by(slug: slug)
+  persona.assign_attributes(
+    name: config['name'],
+    description: config['description'],
+    voice_id: config['voice_id'],
+    agent_id: config['agent_id'],
+    persona_prompt: config['persona_prompt'],
+    offline_responses: config['offline_responses'] || {}
+  )
+  persona.active = true if persona.new_record? # preserve manual active toggles on existing rows
+  persona.save!
+end
+puts "✅ Seeded #{persona_files.size} personas (#{Persona.active.count} active)"
+
 puts '✅ Database seeding complete!'

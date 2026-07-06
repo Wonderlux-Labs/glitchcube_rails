@@ -6,6 +6,9 @@ class PersonaSwitchService
     def handle_persona_switch(new_persona_id, previous_persona_id = nil)
       Rails.logger.info "🎭 Persona switch: #{previous_persona_id || 'unknown'} → #{new_persona_id}"
 
+      # Summarize the OUTGOING persona's just-finished stint (memory + self-steering).
+      PersonaSummarizerJob.perform_later(previous_persona_id.to_s) if previous_persona_id.present?
+
       begin
         # End any active conversations to ensure new conversation starts fresh
         end_active_conversations

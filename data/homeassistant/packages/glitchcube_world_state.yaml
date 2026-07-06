@@ -1,0 +1,36 @@
+# GlitchCube world-state composite sensor  (source of truth; deployed to
+# HASS /config/packages/glitchcube_world_state.yaml)
+#
+# The cube's Rails brain reads the `content` attribute each turn and injects it
+# into the persona prompt as ambient context. Templated entirely on the HASS
+# side so that as more devices come online we just extend THIS template — no
+# Rails change needed.
+#
+#   state   — short human summary (must stay < 255 chars for HASS)
+#   content — a plain-English paragraph the brain reads verbatim
+#
+# Today it composites weather + time + day/night. Future: append cube-light
+# state, now-playing, motion, etc. right here as those devices come online.
+
+template:
+  - sensor:
+      - name: "GlitchCube World State"
+        unique_id: glitchcube_world_state
+        icon: mdi:earth
+        state: >-
+          {%- set w = states('weather.forecast_home') -%}
+          {%- set t = state_attr('weather.forecast_home', 'temperature') -%}
+          {%- if w in ['unknown', 'unavailable', none] -%}
+            Weather unknown
+          {%- else -%}
+            {{ w | replace('_', ' ') | capitalize }}{% if t is not none %}, {{ t }}°F{% endif %}
+          {%- endif -%}
+        attributes:
+          content: >-
+            {%- set w = states('weather.forecast_home') -%}
+            {%- set t = state_attr('weather.forecast_home', 'temperature') -%}
+            {%- set h = state_attr('weather.forecast_home', 'humidity') -%}
+            {%- set ws = state_attr('weather.forecast_home', 'wind_speed') -%}
+            {%- set daytime = is_state('sun.sun', 'above_horizon') -%}
+            It is {{ now().strftime('%-I:%M %p') }} on {{ now().strftime('%A') }} and it is {{ 'daytime' if daytime else 'dark out' }}.
+            {%- if w not in ['unknown', 'unavailable', none] %} The weather is {{ w | replace('_', ' ') }}{% if t is not none %}, around {{ t }}°F{% endif %}{% if h is not none %} with {{ h }}% humidity{% endif %}{% if ws is not none %} and winds near {{ ws | round }} mph{% endif %}.{% endif %}

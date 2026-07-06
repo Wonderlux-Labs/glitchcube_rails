@@ -51,7 +51,12 @@ class ConversationOrchestrator::Finalizer
     metadata = {
       sync_tools: tool_analysis[:sync_tools],
       environment_dispatched: tool_analysis[:environment_dispatched],
-      response_id: @state[:ai_response][:id]
+      response_id: @state[:ai_response][:id],
+      # Full raw brain narrative (speech, inner_monologue, actions,
+      # continue_conversation, urgent_question, and whatever we add next). Dumped
+      # verbatim so the log survives schema changes and the urgent_question
+      # smoke-test surfaces in the admin timeline without extra plumbing.
+      narrative: @state[:llm_response]
     }
 
     # Add narrative metadata if available
