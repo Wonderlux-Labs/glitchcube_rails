@@ -39,8 +39,14 @@ CLAUDE.md
 
 # macOS
 .DS_Store
+._*
 .AppleDouble
 .LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
 
 # Editor / IDE
 .vscode/
@@ -55,6 +61,8 @@ capybara-*.html
 rerun.txt
 spec/tmp
 .rspec_status
+.byebug_history
+/coverage
 
 # Node
 node_modules/
