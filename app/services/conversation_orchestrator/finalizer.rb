@@ -54,8 +54,8 @@ class ConversationOrchestrator::Finalizer
       environment_dispatched: tool_analysis[:environment_dispatched],
       response_id: @state[:ai_response][:id],
       # Full raw brain narrative (speech, inner_monologue, actions,
-      # continue_conversation, urgent_question, and whatever we add next). Dumped
-      # verbatim so the log survives schema changes and the urgent_question
+      # continue_conversation, ooc_questions, and whatever we add next). Dumped
+      # verbatim so the log survives schema changes and the ooc_questions
       # smoke-test surfaces in the admin timeline without extra plumbing.
       narrative: @state[:llm_response],
       # Token/cost usage for this turn's brain call (see LlmIntention#usage_for).
@@ -81,6 +81,7 @@ class ConversationOrchestrator::Finalizer
       )
       Rails.logger.info "📝 ConversationLog created for session: #{@state[:session_id]}"
       accumulate_usage
+      SummaryTriggers.after_turn(@state[:conversation]&.persona)
     rescue ActiveRecord::ConnectionNotEstablished => e
       Rails.logger.warn "🗄️ Database connection issue - conversation log not saved: #{e.message}"
     rescue => e

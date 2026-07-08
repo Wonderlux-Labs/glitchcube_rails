@@ -35,7 +35,7 @@ RSpec.describe CubePerformance, type: :service do
         # Assertions track the current CubePerformance.standup_comedy copy.
         prompt = service.instance_variable_get(:@prompt)
         expect(prompt).to include('stand-up comedy routine')
-        expect(prompt).to include('Burning Man')
+        expect(prompt).to include('Lakes of Fire')
         expect(prompt).to include('running gags')
         expect(prompt).to include('callbacks to previous jokes')
       end
@@ -167,7 +167,7 @@ RSpec.describe CubePerformance, type: :service do
 
         prompt = service.instance_variable_get(:@prompt)
         expect(prompt).to include('series of poems')
-        expect(prompt).to include('Burning Man, technology, and human connection')
+        expect(prompt).to include('the burn, technology, and human connection')
         expect(prompt).to include('Silly limericks')
         expect(prompt).to include('Beat poetry')
         expect(prompt).to include('Haikus')

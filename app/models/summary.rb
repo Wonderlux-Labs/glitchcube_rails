@@ -4,15 +4,19 @@ class Summary < ApplicationRecord
   # persona summaries belong to a persona; recent/overall summaries do not.
   belongs_to :persona, optional: true
 
-  # `interaction` — the rolling every-N-minutes interaction summary (SummarizerService).
-  # `overall`     — the evolving long-term summary folding interaction summaries together
+  # `interaction` — a per-persona, factual chunk summary written every N turns and flushed
+  #                 on persona switch (SummarizerService); belongs_to the persona it covers.
+  # `overall`     — the evolving long-term digest folding handoff reports together
   #                 (OverallSummarizerService); versioned, latest is "the" overall.
   # `persona`     — a persona's own evolving memory + self-steering, written when its stint
   #                 ends (PersonaSummarizerService); versioned, belongs_to a persona.
+  # `handoff`     — a neutral, journalistic recap of a persona's just-ended stint, written
+  #                 alongside the `persona` summary for the OTHER personas to read and for the
+  #                 overall to fold; belongs_to the persona whose stint it recaps.
   #   (Note: none named "recent" — that would collide with the `.recent` ordering scope,
   #   since a per-type scope is defined for every SUMMARY_TYPE below.)
   # `reflection`/`session` predate the amnesiacube refactor.
-  SUMMARY_TYPES = %w[interaction overall persona reflection session].freeze
+  SUMMARY_TYPES = %w[interaction overall persona handoff reflection session].freeze
 
   validates :summary_text, presence: true
   validates :summary_type, presence: true, inclusion: { in: SUMMARY_TYPES }

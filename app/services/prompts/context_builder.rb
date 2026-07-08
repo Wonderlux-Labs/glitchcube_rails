@@ -1,22 +1,24 @@
 # app/services/prompts/context_builder.rb
 #
 # Builds the "# CURRENT CONTEXT" block injected into the system prompt each turn.
-# A small, bounded, layered memory (each blob capped):
+# Ordered broad → specific → live, so the model reads background before foreground:
 #
-#   1. Ambient world state — the HASS composite sensor (time, weather, …).
-#   2. Overall memory      — the latest `overall` summary: the shared in-world story of the
-#                            whole event, plus any pending visitor threads and the current
-#                            cross-persona director note (steering every persona reads).
-#   3. Persona memory      — the CURRENT persona's latest `persona` summary + its
-#                            explicit self-steering note (injected so it self-corrects).
-#   4. Running memory      — the latest `interaction` summary + real-world facts (may be
-#                            from a different persona after a switch — that's fine).
+#   1. The bigger picture     — the latest structural `overall` digest (world board of durable
+#                               facts, recurring visitors, threads, optional director note).
+#   2. The cube's recent      — the last 2 neutral `handoff` reports (what other personas just
+#      history                   did), persona-labeled with their Eastern-time ranges.
+#   3. Your own past          — the CURRENT persona's latest `persona` summary + self-steering.
+#   4. Your current session   — this persona's current-stint interaction chunks (since it woke).
+#   5. Live now               — the HASS composite sensor (time, weather); the most volatile
+#                               state, kept LAST, closest to the raw message history that follows.
 #
-# Most turns don't need any of this, but when present it's what gives the cube continuity.
+# The overall digest is NOT truncated (its length is steered by the overall summarizer's own
+# prompt); the shorter blobs keep a loose `clip` backstop.
 module Prompts
   class ContextBuilder
     WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
-    MAX_BLOB = 900 # truncation backstop so no single memory blob can bloat the prompt
+    MAX_BLOB = 900 # loose truncation backstop for the short blobs (handoff/persona/chunk)
+    CURRENT_SESSION_CHUNKS = 4
 
     def self.build(persona: nil)
       new(persona: persona).build
@@ -28,42 +30,45 @@ module Prompts
 
     def build
       [
-        world_state_context,
         overall_summary_context,
+        recent_history_context,
         persona_summary_context,
-        recent_summary_context
+        current_session_context,
+        world_state_context
       ].compact.join("\n\n")
     end
 
     private
 
-    def world_state_context
-      content = HomeAssistantService.entity(WORLD_STATE_SENSOR)&.dig("attributes", "content")
-      return nil if content.blank?
-
-      "Right now: #{content.squish}"
-    rescue => e
-      warn_nil("#{WORLD_STATE_SENSOR}", e)
-    end
-
+    # 1. The structural digest — rendered as a scannable "world board". Not clipped.
     def overall_summary_context
       overall = Summary.by_type("overall").recent.first
       return nil if overall&.summary_text.blank?
 
       meta = overall.metadata_json
-      parts = [ "The bigger picture (how this whole event has gone so far): #{clip(overall.summary_text)}" ]
-
-      threads = meta["active_threads"]
-      parts << "Still in the air (things visitors set up that you can pick up): #{clip(threads)}" if threads.present?
-
-      director = meta["director_note"]
-      parts << "A note to all of the cube's personas right now: #{clip(director)}" if director.present?
-
+      parts = [ "## The bigger picture", overall.summary_text.to_s.strip ]
+      section(parts, "Durable places / camps / event facts", meta["durable_facts"])
+      section(parts, "Recurring visitors", meta["recurring_visitors"])
+      section(parts, "Still in the air", meta["active_threads"])
+      section(parts, "A note to all of the cube's personas right now", meta["director_note"])
       parts.join("\n")
     rescue => e
       warn_nil("overall summary", e)
     end
 
+    # 2. The last two handoffs — neutral, so the current persona doesn't inherit another's voice.
+    def recent_history_context
+      handoffs = Summary.by_type("handoff").recent.limit(2).to_a
+      return nil if handoffs.empty?
+
+      lines = [ "The cube's recent history (what happened on the cube just before you woke up):" ]
+      handoffs.reverse_each { |h| lines << "• #{clip(SummaryRenderer.handoff(h))}" } # oldest of the two first
+      lines.join("\n")
+    rescue => e
+      warn_nil("recent history", e)
+    end
+
+    # 3. This persona's own evolving memory + self-steering note.
     def persona_summary_context
       persona = @persona.present? && Persona[@persona]
       return nil unless persona
@@ -79,16 +84,46 @@ module Prompts
       warn_nil("persona summary", e)
     end
 
-    def recent_summary_context
-      summary = Summary.by_type("interaction").recent.first
-      return nil if summary&.summary_text.blank?
+    # 4. The current stint's interaction chunks (since this persona's last fold).
+    def current_session_context
+      persona = @persona.present? && Persona[@persona]
+      return nil unless persona
 
-      parts = [ "Recently (your running memory of the last little while): #{clip(summary.summary_text)}" ]
-      facts = summary.metadata_json["real_world_facts"]
-      parts << "Things you've picked up about tonight: #{clip(facts)}" if facts.present?
-      parts.join("\n")
+      chunks = current_stint_chunks(persona)
+      return nil if chunks.empty?
+
+      lines = [ "Your current session so far (what's happened since you woke up this time):" ]
+      chunks.each { |c| lines << clip(SummaryRenderer.interaction_chunk(c)) }
+      lines.join("\n\n")
     rescue => e
-      warn_nil("recent summary", e)
+      warn_nil("current session", e)
+    end
+
+    # 5. Ambient live state — kept last, closest to the raw message history.
+    def world_state_context
+      content = HomeAssistantService.entity(WORLD_STATE_SENSOR)&.dig("attributes", "content")
+      return nil if content.blank?
+
+      "Right now: #{content.squish}"
+    rescue => e
+      warn_nil("#{WORLD_STATE_SENSOR}", e)
+    end
+
+    def current_stint_chunks(persona)
+      # Boundary is the last fold's `folded_through_at` cursor — the same cursor the persona
+      # summarizer uses, so "current session" is exactly the chunks not yet folded into a summary.
+      since = persona.summaries.where(summary_type: "persona").order(:created_at).last
+                     &.metadata_json&.dig("folded_through_at")
+      scope = Summary.interaction.where(persona_id: persona.id)
+      scope = scope.where("created_at > ?", Time.zone.parse(since)) if since.present?
+      scope.order(:start_time).last(CURRENT_SESSION_CHUNKS)
+    end
+
+    def section(parts, heading, body)
+      return if body.blank?
+
+      parts << "\n## #{heading}"
+      parts << body.to_s.strip
     end
 
     def clip(text)

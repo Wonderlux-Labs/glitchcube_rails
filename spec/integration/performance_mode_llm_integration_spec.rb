@@ -95,7 +95,7 @@ RSpec.describe 'Performance Mode LLM Integration', type: :integration do
 
         expect(captured_context[:performance_prompt]).to include('stand-up comedy routine')
         expect(captured_context[:performance_prompt]).to include('BUDDY')
-        expect(captured_context[:performance_prompt]).to include('Burning Man')
+        expect(captured_context[:performance_prompt]).to include('Lakes of Fire')
         expect(captured_context[:performance_context]).to eq(mock_context)
       end
 

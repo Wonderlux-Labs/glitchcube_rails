@@ -1,22 +1,30 @@
 # app/services/schemas/overall_summary_schema.rb
 #
-# Structured output for OverallSummarizerService (the summary-of-summaries). Split into
-# three distinct fields so the model does one clear job per field instead of cramming the
-# whole event + pending threads + cross-persona steering into one rambling blob:
-#   shared_narrative — the single evolving in-world memory of the event (injected as story)
-#   active_threads   — concrete unfinished business a VISITOR set up (not invented lore)
-#   director_note    — cross-persona steering the personas read and act on next turn
+# Structured output for OverallSummarizerService — the cube's durable, structural digest of
+# the whole event, folded from the neutral persona HANDOFF reports. Split into fields so the
+# model does one clear job each and the context builder can render a scannable "world board":
+#   shared_narrative   — the evolving in-world story of the event (structural, not literary)
+#   durable_facts      — places/camps/events that keep coming up (the world board)
+#   recurring_visitors — named anchors and what they're about
+#   active_threads     — concrete unfinished business a visitor set up
+#   director_note      — OPTIONAL cross-persona steering, only if a whole-cube pattern emerges
 class Schemas::OverallSummarySchema
   def self.schema
     OpenRouter::Schema.define("overall_summary", strict: false) do
       string :shared_narrative, required: true,
-             description: "The updated in-world long-term memory of the whole event so far — 3-4 paragraphs, ~300-350 words. Keep what still matters, add what's new from the recent summaries, let transient detail go. Preserve durable anchors: recurring people/regulars (by name), places/camps/events people keep mentioning, running themes, and how the overall mood has evolved. If some condition affects the WHOLE cube (even a functional one like devices never responding), give it an in-world face here as a shared theme so every persona plays it the same way."
+             description: "The evolving story of the whole event so far — the common ground every persona leans on. Structural and grounded, not flowery. Amend/extend the current one: keep durable anchors (recurring people, places, running themes, how the mood has shifted), fold in what's new from the handoffs, and ROLL UP / COMPRESS older detail as the night grows rather than letting it sprawl. Aim for 3-4 tight paragraphs (~400 words); if you're past that you're holding too much detail — compress older material into a sentence. If a condition affects the WHOLE cube (even a functional one like devices never responding), give it an in-world face here so every persona plays it the same way."
+
+      string :durable_facts, required: false,
+             description: "The 'world board' — places, camps, and event facts visitors keep mentioning that stay true across the night: 'Camp Trashy: possible fashion show tomorrow (visitor-reported)', 'Zephyr's tea lounge: a quiet grounding spot', 'East Gate hygiene station: aggressive dubstep'. Short bulleted lines. REBUILD this each run: carry forward the still-relevant facts from the current world board, fold in new ones from the handoffs, and DROP anything that's gone stale or been resolved. Keep it bounded — the ~5-8 most relevant, not an ever-growing log. These are the immersion wins — the cube knowing the actual event. Empty if nothing durable has surfaced."
+
+      string :recurring_visitors, required: false,
+             description: "Named anchors — people who gave a name and left an impression or a hook: 'Marco: asked for a deep lavender-purple glow, may return by sunrise'. Short lines, one per person. REBUILD each run: carry forward anchors still worth remembering, add new ones from the handoffs, and rotate OUT people who haven't come up in recent handoffs. Keep to the ~5 most relevant. Empty if no one recurring has surfaced."
 
       string :active_threads, required: false,
-             description: "Concrete unfinished business a REAL VISITOR set up that a later persona could pick up: someone who gave a name and said they'd come back ('Laurie's returning at midnight for a reading'), a plan, a promise, a place they were headed. Only things visitors actually said or committed to — NOT lore the cube invented itself (made-up camps, fictional events). One or two lines, plainest facts. Empty if nothing concrete is pending."
+             description: "Concrete unfinished business a REAL VISITOR set up that a later persona could pick up: someone who said they'd be back ('Laurie's returning at midnight for a reading'), a plan, a promise, a place they were headed. Only things visitors actually said — NOT lore the cube invented. REBUILD each run: carry forward threads still open, add new ones, and DROP threads that have been resolved or clearly expired (a midnight plan is stale by 3am). One or two lines. Empty if nothing is pending."
 
       string :director_note, required: false,
-             description: "Cross-persona steering the personas read and act on next turn (there is NO human operator — this is prompt-steering, not a report). Flag PERSISTENT patterns visible across multiple summaries that no single persona could see: a bit/catchphrase/move overused across the board, characters slipping or blurring into each other, the cube's actions/devices repeatedly failing (flag it plainly as a real functional problem even though the narrative also gives it an in-world face), or a whole-event tone landing badly. Direct and actionable, addressed to all the personas. Empty only if nothing system-wide stands out."
+             description: "OPTIONAL cross-persona steering — leave empty unless a genuine WHOLE-CUBE pattern jumps out across the handoffs that no single persona could see: the cube's devices failing across every stint, all personas blurring into the same tone, a whole-event approach landing badly. Do NOT feel obligated to produce one; steering mostly lives per-persona. Only write it when something system-wide is clearly there."
     end
   end
 end

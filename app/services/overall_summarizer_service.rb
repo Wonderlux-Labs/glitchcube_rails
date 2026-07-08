@@ -1,56 +1,56 @@
 # frozen_string_literal: true
 
-# Summary-of-summaries. Folds the rolling `interaction` summaries into a SINGLE
-# evolving `overall` summary — the cube's durable long-term memory of the event.
-# Also acts as the DIRECTOR: its ooc_note carries system-wide steering (persistent
-# acting/repetition/functionality issues) for ALL personas. Runs periodically
-# (Recurring::Memory::OverallSummarizerJob) and can be triggered manually.
+# The cube's durable long-term digest. Folds the neutral persona HANDOFF reports into a
+# SINGLE evolving `overall` summary — the structural, shared memory injected into every
+# persona's prompt (a "world board" of durable facts + recurring visitors + threads, plus an
+# OPTIONAL cross-persona director note only when a whole-cube pattern emerges). Reads ONLY
+# handoffs (each handoff already distilled a persona's stint), not raw interactions or persona
+# self-summaries. Runs periodically (Recurring::Memory::OverallSummarizerJob) and can be
+# triggered manually.
 class OverallSummarizerService
   MODEL = "google/gemini-3.5-flash"
   OVERALL_TYPE = "overall"
-  INTERACTION_TYPE = "interaction"
+  HANDOFF_TYPE = "handoff"
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
-    You are the LONG-TERM memory and director of the GlitchCube — an interactive art
-    installation whose rotating personas (Buddy, Jax, Zorp, and others) talk to
-    festival-goers. There is NO human operator; the cube runs itself out in a field. You
-    fold the short-term interaction summaries and each persona's latest self-summary into a
-    single, evolving memory that is SHARED — it gets injected into EVERY persona's prompt.
+    You are the LONG-TERM memory of the GlitchCube — an interactive art installation whose
+    rotating personas (Buddy, Jax, Zorp, and others) talk to festival-goers out in a field with
+    NO human operator. You are given the CURRENT WORLD BOARD (your existing memory — may be empty)
+    and the newest HANDOFF reports — neutral, journalistic recaps each persona left when its stint
+    ended. Roll the world board FORWARD into a single, evolving, SHARED memory injected into EVERY
+    persona's prompt.
 
-    You are given the CURRENT overall memory (may be empty on the first run) and the newest
-    interaction summaries + where each persona is at. Produce THREE distinct things — keep
-    them separate:
+    You are REBUILDING each field, not appending: for every field, produce an updated version that
+    carries forward what still matters from the current world board, folds in the new handoffs, and
+    DROPS what's gone stale. This keeps memory durable (a fact from an hour ago survives even if the
+    latest handoff didn't mention it) without letting it sprawl.
 
-    `shared_narrative` — the evolving in-world story of the whole event, the common ground
-    every persona leans on. Amend and extend the current one; gently preserve the through-line
-    (standout characters, people, moments already captured) as you fold in what's new — only
-    let genuinely trivial detail fall away (most of any single visitor is trivial; people are
-    usually here once). Don't over-index on the newest batch. Keep it reasonably tight — 3-4
-    paragraphs, ~300-350 words — but NEVER at the cost of a concrete anchor: dropping a real
-    anchor (a name, a place, a running theme, how the mood has shifted) to save 50 words is
-    worse than running slightly over. If a condition affects the WHOLE cube (whatever it is —
-    read it off what actually happened, don't assume; even a functional failure like the
-    lights/music never responding), give it an in-world face here as a shared theme — a "ghost
-    in the machine" — so every persona plays it the same way rather than each improvising.
+    Produce these fields — keep them distinct:
 
-    `active_threads` — concrete unfinished business a REAL VISITOR set up that a later persona
-    could pick up: a named person who said they'd be back ("Laurie's returning at midnight for a
-    reading"), a plan, a promise, somewhere they were headed. ONLY things visitors actually said
-    or committed to — NOT lore the cube invented itself (made-up camps, fictional events the
-    personas spun up). One or two lines, plainest facts. Empty if nothing concrete is pending.
+    `shared_narrative` — the structural story of the event so far, the common ground every persona
+    leans on. Grounded, not flowery. Keep durable anchors, fold in the new handoffs, and roll
+    up/compress older detail as the night grows. Aim for 3-4 tight paragraphs (~400 words) — if
+    you're past that, compress older material. If something affects the WHOLE cube (even a
+    functional failure like devices never responding), give it an in-world face here so every
+    persona plays it the same way.
 
-    `director_note` — cross-persona steering the personas read and act on next turn (prompt-
-    steering, not a report — there is no operator). Persona-specific tics are handled per-persona
-    elsewhere; here flag only what NO single persona could see:
-      • the cube's actions/devices repeatedly failing across the board (it keeps trying to change
-        lights, music, the marquee, and nothing works) — flag it plainly as a real functional
-        problem, even though `shared_narrative` also gives it an in-world face; both are intended
-      • a technical/system issue (LLM/API errors, fallbacks, freezes)
-      • a pattern across MULTIPLE personas (every persona defaulting to the same tone, or
-        characters blurring into each other)
-      • a whole-event tone or approach that keeps landing badly with visitors
-    Direct and actionable, addressed to all the personas. NOT part of the in-world memory.
-    Empty if nothing system-wide stands out.
+    `durable_facts` — the "world board": places, camps, events visitors keep mentioning that stay
+    true across the night (a possible fashion show at Camp Trashy, a quiet tea lounge, a loud
+    hygiene station). Short lines. Carry forward the still-relevant ones, add new, drop stale; keep
+    the ~5-8 most relevant. This is what makes the cube feel like it's actually AT this event.
+    Empty if nothing durable surfaced.
+
+    `recurring_visitors` — named anchors: people who gave a name and left a hook ("Marco: wants a
+    deep lavender-purple glow, may be back by sunrise"). Short lines. Carry forward, add new, rotate
+    out anyone not mentioned lately; keep the ~5 most relevant. Empty if none.
+
+    `active_threads` — concrete unfinished business a REAL VISITOR set up a later persona could
+    pick up. Only what visitors actually said — not invented lore. Carry forward open threads, add
+    new, drop resolved or clearly-expired ones. Empty if nothing is pending.
+
+    `director_note` — OPTIONAL. Leave empty unless a genuine WHOLE-CUBE pattern jumps out across
+    the handoffs (devices failing every stint, all personas blurring, a whole-event approach
+    landing badly). Do NOT force one — steering mostly lives per-persona.
   PROMPT
 
   def self.call
@@ -59,18 +59,20 @@ class OverallSummarizerService
 
   def call
     overall = Summary.by_type(OVERALL_TYPE).recent.first
-    new_summaries = interaction_summaries_since(overall)
-    return ServiceResult.success({ skipped: true, reason: "no new interaction summaries" }) if new_summaries.empty?
+    handoffs = handoffs_since(overall)
+    return ServiceResult.success({ skipped: true, reason: "no new handoffs" }) if handoffs.empty?
 
-    narrative = generate(overall, new_summaries)
+    narrative = generate(overall, handoffs)
     text = narrative["shared_narrative"].to_s.strip
     return ServiceResult.success({ skipped: true, reason: "empty overall summary" }) if text.blank?
 
-    saved = persist(overall, text, narrative, new_summaries)
-    extras = [ ("+threads" if saved.metadata_json["active_threads"].present?),
+    saved = persist(overall, text, narrative, handoffs)
+    extras = [ ("+facts" if saved.metadata_json["durable_facts"].present?),
+               ("+visitors" if saved.metadata_json["recurring_visitors"].present?),
+               ("+threads" if saved.metadata_json["active_threads"].present?),
                ("+director" if saved.metadata_json["director_note"].present?) ].compact.join(" ")
-    Rails.logger.info "🧠 Overall summary ##{saved.id} updated — folded #{new_summaries.size} interaction summaries #{extras}".strip
-    ServiceResult.success({ summary: saved, folded: new_summaries.size })
+    Rails.logger.info "🧠 Overall summary ##{saved.id} updated — folded #{handoffs.size} handoffs #{extras}".strip
+    ServiceResult.success({ summary: saved, folded: handoffs.size })
   rescue => e
     Rails.logger.error "❌ OverallSummarizerService failed: #{e.message}"
     ServiceResult.failure("Overall summarizer failed: #{e.message}")
@@ -78,19 +80,19 @@ class OverallSummarizerService
 
   private
 
-  # Interaction summaries created after the ones already folded into the overall.
-  def interaction_summaries_since(overall)
+  # Handoff reports created after the ones already folded into the overall.
+  def handoffs_since(overall)
     through = overall&.metadata_json&.dig("folded_through_at")
-    scope = Summary.by_type(INTERACTION_TYPE).order(:created_at)
+    scope = Summary.by_type(HANDOFF_TYPE).order(:created_at)
     scope = scope.where("created_at > ?", Time.zone.parse(through)) if through.present?
     scope.to_a
   end
 
-  def generate(overall, new_summaries)
+  def generate(overall, handoffs)
     response = LlmService.call_with_structured_output(
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: build_material(overall, new_summaries, latest_persona_summaries) }
+        { role: "user", content: build_material(overall, handoffs) }
       ],
       response_format: Schemas::OverallSummarySchema.schema,
       model: MODEL
@@ -98,58 +100,50 @@ class OverallSummarizerService
     response.structured_output || {}
   end
 
-  # The latest self-summary for each persona — lets the overall see where each character
-  # is at and spot genuinely shared issues (e.g. every persona's actions failing).
-  def latest_persona_summaries
-    Persona.all.filter_map { |p| p.summaries.where(summary_type: "persona").order(:created_at).last }
-  end
-
-  def build_material(overall, new_summaries, persona_summaries)
+  def build_material(overall, handoffs)
     <<~MATERIAL
-      CURRENT OVERALL SUMMARY (amend/extend this — may be empty):
-      #{overall&.summary_text.presence || '(none yet — this is the first overall summary)'}
+      CURRENT WORLD BOARD — your existing memory. Roll this FORWARD: produce an updated version of
+      each field (carry what still matters, fold in the new handoffs, drop what's gone stale). You
+      are REPLACING these fields, not appending to them. May be empty on the first run.
+      #{render_current(overall)}
 
-      NEW INTERACTION SUMMARIES SINCE THEN (oldest first):
-      #{new_summaries.map { |s| render(s) }.join("\n\n")}
-
-      WHERE EACH PERSONA IS AT (their latest self-summaries + self-notes — read across these
-      for anything the WHOLE cube is experiencing, e.g. actions/devices failing everywhere):
-      #{persona_summaries.map { |s| render_persona(s) }.join("\n\n").presence || '(no persona summaries yet)'}
+      NEW HANDOFF REPORTS SINCE THEN (oldest first — each is one persona's stint, persona-labeled
+      with its time range):
+      #{handoffs.map { |h| SummaryRenderer.handoff(h) }.join("\n\n")}
     MATERIAL
   end
 
-  def render_persona(summary)
-    note = summary.metadata_json["ooc_note"]
-    text = "#{summary.persona&.name || summary.persona&.slug}: #{summary.summary_text}"
-    text += "\n  [its self-note: #{note}]" if note.present?
-    text
+  # The full current world board (not just the narrative) so the model can carry durable facts,
+  # recurring visitors, and open threads forward instead of losing them the moment they drop out
+  # of the newest handoffs.
+  def render_current(overall)
+    return "(none yet — this is the first overall summary)" if overall.nil?
+
+    meta = overall.metadata_json
+    parts = [ "Narrative: #{overall.summary_text}" ]
+    parts << "Durable facts: #{meta['durable_facts']}" if meta["durable_facts"].present?
+    parts << "Recurring visitors: #{meta['recurring_visitors']}" if meta["recurring_visitors"].present?
+    parts << "Active threads: #{meta['active_threads']}" if meta["active_threads"].present?
+    parts.join("\n")
   end
 
-  # Include each interaction summary's facts and ooc_note so real-world specifics and
-  # persistent steering issues (a tic across periods, ongoing device failures) surface here.
-  def render(summary)
-    meta = summary.metadata_json
-    text = summary.summary_text.to_s
-    text += "\n[facts learned that period: #{meta['real_world_facts']}]" if meta["real_world_facts"].present?
-    text += "\n[steering note from that period: #{meta['ooc_note']}]" if meta["ooc_note"].present?
-    text
-  end
-
-  # Versioned: each run creates a NEW overall row (reading the latest as its base), so
-  # the whole evolution is preserved for diffing. The latest row is always "the" overall.
-  def persist(overall, text, narrative, new_summaries)
-    folded_through = new_summaries.map(&:created_at).max
+  # Versioned: each run creates a NEW overall row (reading the latest as its base), so the
+  # whole evolution is preserved. The latest row is always "the" overall.
+  def persist(overall, text, narrative, handoffs)
+    folded_through = handoffs.map(&:created_at).max
     Summary.create!(
       summary_type: OVERALL_TYPE,
       summary_text: text,
-      message_count: (overall&.message_count || 0) + new_summaries.sum { |s| s.message_count.to_i },
-      start_time: overall&.start_time || new_summaries.first.start_time,
-      end_time: new_summaries.filter_map(&:end_time).max || Time.current,
+      message_count: (overall&.message_count || 0) + handoffs.sum { |h| h.message_count.to_i },
+      start_time: overall&.start_time || handoffs.first.start_time,
+      end_time: handoffs.filter_map(&:end_time).max || Time.current,
       metadata: {
+        durable_facts: narrative["durable_facts"].presence,
+        recurring_visitors: narrative["recurring_visitors"].presence,
         active_threads: narrative["active_threads"].presence,
         director_note: narrative["director_note"].presence,
-        folded_through_at: folded_through.iso8601(6), # microseconds — avoid re-folding the boundary summary
-        folded_count: overall&.metadata_json&.dig("folded_count").to_i + new_summaries.size
+        folded_through_at: folded_through.iso8601(6), # microseconds — avoid re-folding the boundary
+        folded_count: overall&.metadata_json&.dig("folded_count").to_i + handoffs.size
       }.compact.to_json
     )
   end

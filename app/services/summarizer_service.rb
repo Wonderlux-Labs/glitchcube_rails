@@ -1,84 +1,84 @@
 # frozen_string_literal: true
 
-# Rolling interaction summarizer. Runs every ~10 minutes (Recurring::Memory::SummarizerJob):
-# reads the conversation turns since the last summary, makes ONE structured LLM call,
-# and writes a short "running memory" Summary row (type `interaction`) plus an optional
-# out-of-character operator note. Only the single most recent prior summary is fed in
-# for continuity — deliberately light. See docs/conversation_flow.md.
+# Per-persona interaction summarizer. Writes a short, FACTUAL "chunk" of the current
+# persona's stint. Triggered every ~N turns by SummaryTriggers (not on a timer) and flushed
+# once more when a persona hands off (from PersonaSummarizerService). Each chunk is scoped to
+# ONE persona's conversations — never cross-persona — and carries no steering: performance
+# notes live in the persona summary, system-wide notes in the overall. See docs/conversation_flow.md.
 class SummarizerService
   MODEL = "google/gemini-3.5-flash"
   SUMMARY_TYPE = "interaction"
 
-  # On the very first run (no prior summary) look back this far for material.
+  # On the very first run for a persona (no prior chunk) look back this far for material.
   FIRST_RUN_LOOKBACK = 1.hour
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
-    You are the running memory of the GlitchCube — an interactive AI art installation
-    that talks to festival-goers through a rotating cast of personas (Buddy, Jax, Zorp,
-    and others). Every ~10 minutes you read the most recent interactions and update the
-    cube's short-term memory so it keeps a sense of continuity between conversations,
-    even as personas and visitors change. (The cube knows it is one cube wearing many
-    personas, so shifts between them are fine — note who was on if it matters.)
+    You are the running memory of the GlitchCube — an interactive AI art installation that
+    talks to festival-goers through a rotating cast of personas (Buddy, Jax, Zorp, and others).
+    Right now ONE persona is on the cube, and you are writing a short factual note about the
+    latest chunk of its conversations so the cube keeps continuity as its stint goes on.
 
-    You produce THREE separate things. Keep them distinct:
+    This note is FACTUAL, not a critique. Do NOT judge how well the persona is performing, and
+    do NOT write in character — that happens elsewhere. Produce three separate things:
 
-    `summary` — a short, honest, in-world account of what these interactions were actually
-    like: who came by, the vibe and how it's shifting, how the conversations are going,
-    anything memorable worth carrying forward. Write it naturally, the way the cube would
-    remember its night — not a checklist. A paragraph or two; a sentence is fine if little
-    happened. This gets injected back into the cube's memory as in-world narrative, so keep it
-    in-world: anything about how a persona is PERFORMING (a tic, drift, device trouble, what to
-    adjust) belongs in `ooc_note`, never here.
+    `summary` — ~50-120 words, plainly: what just happened, who came by, the gist of the
+    conversations, and what the cube physically ATTEMPTED (lights, music, marquee) and whether
+    it seemed to land. Just enough for a later reader to know what went on this chunk.
 
-    `real_world_facts` — concrete, true-about-the-world things the cube learned that would
-    matter in later conversations: names people gave, plans and events they mention (a party
-    at the Corral later, the burn at midnight), what's happening around the event, camps,
-    places, art. Just the facts, brief. Leave empty if nothing concrete came up. (Pulling
-    these out separately from the story tends to surface the useful specifics.)
+    `real_world_facts` — concrete true-about-the-world things the cube learned that would matter
+    in later conversations: names people gave, plans/events they mention (a party at the Corral
+    at 2am, the burn at midnight), camps, places, art around the event. Just the facts, brief.
+    Leave empty if nothing concrete came up.
 
-    `ooc_note` — a note to the cube's own future self / the personas (there is no human
-    operator — this is prompt-steering the LLMs read directly). The ONLY place for steering.
-    Flag things like:
-      • how visitors seem to be RESPONDING — delighted and engaged, or bored, confused,
-        annoyed, or drifting off. If a move keeps landing WELL, note to keep leaning on it;
-        if visitors repeatedly react the same negative way, that's a strong signal to adjust
-      • the cube repeatedly trying to change the lights/music/marquee and getting nothing
-        back — if that's clearly happening in the interactions, note it (don't assume it;
-        read it off what actually occurred)
-      • a tic, loop, or catchphrase a persona overuses; characters slipping or blurring
-      • a move that keeps landing badly, or anyone who seemed genuinely distressed
-    Direct and actionable ("You keep… — ease off it"). NOT part of the story. Only write a note
-    when something genuinely actionable emerged; otherwise leave it empty.
+    `active_threads` — unfinished business a REAL VISITOR set up that a later turn or persona
+    could pick up: a named person who said they'd be back, a plan, a promise, somewhere they
+    were headed. Only what visitors actually said — not lore the cube invented. Empty if none.
   PROMPT
 
-  def self.call
-    new.call
+  def self.call(persona_slug)
+    new(persona_slug).call
+  end
+
+  def initialize(persona_slug)
+    @slug = persona_slug.to_s
   end
 
   def call
-    previous = Summary.by_type(SUMMARY_TYPE).recent.first
-    logs = logs_since(previous)
+    persona = Persona[@slug]
+    return ServiceResult.failure("Unknown persona: #{@slug}") unless persona
+
+    previous = latest_chunk(persona)
+    logs = logs_since(persona, previous)
     return ServiceResult.success({ skipped: true, reason: "no new interactions" }) if logs.empty?
 
     narrative = generate(logs, previous)
     summary_text = narrative["summary"].to_s.strip
     return ServiceResult.success({ skipped: true, reason: "empty summary" }) if summary_text.blank?
 
-    summary = persist(summary_text, narrative, logs)
+    summary = persist(persona, summary_text, narrative, logs)
     extras = [ ("+facts" if summary.metadata_json["real_world_facts"].present?),
-               ("+ooc" if summary.metadata_json["ooc_note"].present?) ].compact.join(" ")
-    Rails.logger.info "📝 Summary ##{summary.id} written from #{logs.size} turns #{extras}".strip
+               ("+threads" if summary.metadata_json["active_threads"].present?) ].compact.join(" ")
+    Rails.logger.info "📝 Interaction chunk ##{summary.id} for #{@slug} from #{logs.size} turns #{extras}".strip
     ServiceResult.success({ summary: summary })
   rescue => e
-    Rails.logger.error "❌ SummarizerService failed: #{e.message}"
+    Rails.logger.error "❌ SummarizerService(#{@slug}) failed: #{e.message}"
     ServiceResult.failure("Summarizer failed: #{e.message}")
   end
 
   private
 
-  def logs_since(previous)
+  def latest_chunk(persona)
+    Summary.interaction.where(persona_id: persona.id).recent.first
+  end
+
+  # This persona's conversation logs since its last chunk was written.
+  def logs_since(persona, previous)
     since = previous&.end_time || FIRST_RUN_LOOKBACK.ago
-    ConversationLog.where("created_at > ?", since).chronological.to_a
+    ConversationLog.joins(:conversation)
+                   .where(conversations: { persona: persona.slug })
+                   .where("conversation_logs.created_at > ?", since)
+                   .chronological
+                   .to_a
   end
 
   def generate(logs, previous)
@@ -95,8 +95,8 @@ class SummarizerService
 
   def build_material(logs, previous)
     <<~MATERIAL
-      PREVIOUS RUNNING MEMORY (for continuity — may be empty):
-      #{previous&.summary_text.presence || '(none yet — this is the first summary)'}
+      PREVIOUS CHUNK (for continuity — may be empty):
+      #{previous&.summary_text.presence || '(none yet — this is the first chunk this stint)'}
 
       RECENT INTERACTIONS (oldest first):
       #{SummaryTranscript::LEGEND}
@@ -105,8 +105,9 @@ class SummarizerService
     MATERIAL
   end
 
-  def persist(summary_text, narrative, logs)
+  def persist(persona, summary_text, narrative, logs)
     Summary.create!(
+      persona: persona,
       summary_type: SUMMARY_TYPE,
       summary_text: summary_text,
       message_count: logs.size,
@@ -114,7 +115,7 @@ class SummarizerService
       end_time: logs.last.created_at,
       metadata: {
         real_world_facts: narrative["real_world_facts"].presence,
-        ooc_note: narrative["ooc_note"].presence
+        active_threads: narrative["active_threads"].presence
       }.compact.to_json
     )
   end

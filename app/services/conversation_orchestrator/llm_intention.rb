@@ -48,11 +48,11 @@ class ConversationOrchestrator::LlmIntention
 
     ConversationLogger.llm_response(response.model || @model, response.content, [], { usage: response.usage })
 
-    # Phase-0 smoke test for opt-in deep recall: the brain may raise an
-    # `urgent_question` when it wants to recall something from past interactions.
-    # For now we only LOG what gets asked (no retrieval wired yet) so we can judge
-    # whether recall is worth building. See docs/conversation_flow.md.
-    log_urgent_question(response.structured_output["urgent_question"])
+    # Smoke test: the brain may surface `ooc_questions` — out-of-character questions
+    # for a director/programmer about its character or the project. Nothing is wired
+    # to answer them yet; we only LOG them so we can see whether personas ask anything
+    # worth folding into steering later. See docs/conversation_flow.md.
+    log_ooc_questions(response.structured_output["ooc_questions"])
 
     ServiceResult.success({ llm_response: response.structured_output, usage: usage_for(response) })
   rescue => e
@@ -82,11 +82,11 @@ class ConversationOrchestrator::LlmIntention
     }
   end
 
-  def log_urgent_question(question)
-    return if question.blank?
+  def log_ooc_questions(questions)
+    return if questions.blank?
 
-    # Distinctive tag so we can grep what personas actually ask for.
-    Rails.logger.info "🔮 [urgent_question] (deep-recall probe, retrieval not yet wired): #{question}"
+    # Distinctive tag so we can grep what personas actually want to ask.
+    Rails.logger.info "🎬 [ooc_questions] (collected only, nothing wired to answer): #{questions}"
   end
 
   def fallback_narrative

@@ -77,16 +77,18 @@ RSpec.describe PromptService, "integration scenarios", type: :service do
   end
 
   describe "context building edge cases" do
-    it "caps a very long running-memory summary rather than letting it sprawl" do
-      create(:summary, summary_type: "interaction",
-             summary_text: "so much happened " * 200, created_at: 1.minute.ago) # ~3400 chars
+    it "clips a very long current-session interaction chunk rather than letting it sprawl" do
+      buddy = Persona.create!(slug: "buddy", name: "Buddy")
+      create(:summary, summary_type: "interaction", persona: buddy,
+             summary_text: "so much happened " * 200, # ~3400 chars
+             start_time: 5.minutes.ago, end_time: 1.minute.ago, created_at: 1.minute.ago)
 
       service = described_class.new(persona: "buddy", conversation: conversation, extra_context: {})
 
       expect { service.build }.not_to raise_error
       ctx = service.build[:context]
-      expect(ctx).to include("Recently")
-      expect(ctx.length).to be < 1500 # each memory blob is clipped (~900), no sprawl
+      expect(ctx).to include("Your current session so far")
+      expect(ctx.length).to be < 1500 # the chunk blob is clipped (~900), no sprawl
     end
 
     it "handles special characters in history gracefully" do

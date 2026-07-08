@@ -18,17 +18,17 @@ RSpec.describe Schemas::NarrativeResponseSchema do
   describe 'the emitted JSON schema shape' do
     let(:props) { described_class.schema.to_h.dig(:schema, :properties) }
 
-    it 'exposes the narrative keys including the optional urgent_question probe' do
-      expect(props.keys).to contain_exactly(:speech, :inner_monologue, :actions, :continue_conversation, :urgent_question)
+    it 'exposes the narrative keys including the optional ooc_questions field' do
+      expect(props.keys).to contain_exactly(:speech, :inner_monologue, :actions, :continue_conversation, :ooc_questions)
     end
 
-    it 'types urgent_question as a string' do
-      expect(props[:urgent_question][:type]).to eq('string')
+    it 'types ooc_questions as a string' do
+      expect(props[:ooc_questions][:type]).to eq('string')
     end
 
     # The DSL marks every field required; optionality in practice comes from
     # strict: false (the model may return it blank/omit it, and we treat blank as
-    # "no question" — see LlmIntention#log_urgent_question).
+    # "no question" — see LlmIntention#log_ooc_questions).
     it 'is non-strict so optional fields can be left blank' do
       expect(described_class.schema.to_h[:strict]).to be(false)
     end

@@ -90,5 +90,6 @@ The `/admin/summaries` screens browse all three tiers (timeline, per-persona, an
 
 - `Memory` (`app/models/memory.rb`) + `MemorySearchService` — plain-Rails deep-recall query,
   not wired into a turn.
-- `urgent_question` (optional field on `NarrativeResponseSchema`) — opt-in deep-recall probe,
-  **Phase 0 = log-only** (`LlmIntention#log_urgent_question`); no retrieval wired yet.
+- `ooc_questions` (optional field on `NarrativeResponseSchema`) — a persona's out-of-character
+  questions for a director/programmer, **collected only** (`LlmIntention#log_ooc_questions`);
+  nothing wired to answer them. A smoke test for what personas want to ask.

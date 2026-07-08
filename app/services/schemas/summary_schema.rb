@@ -1,20 +1,23 @@
 # app/services/schemas/summary_schema.rb
 #
-# Structured output for SummarizerService. Three separable pieces:
-#   summary          — the in-world running memory (how the conversations are going)
+# Structured output for SummarizerService — a per-persona, factual interaction CHUNK.
+# Purely factual: what happened, who was involved, what emerged, what the cube attempted.
+# Steering deliberately lives elsewhere (persona summary + overall), NOT here — a chunk
+# every ~12 turns should not be judging performance, or the cube over-steers itself.
+#   summary          — the factual account of the chunk
 #   real_world_facts — concrete facts learned (names, plans, events, places)
-#   ooc_note         — out-of-character steering note (the seed of "director steering")
+#   active_threads   — unfinished business a visitor set up that a later turn could pick up
 class Schemas::SummarySchema
   def self.schema
     OpenRouter::Schema.define("interaction_summary", strict: false) do
       string :summary, required: true,
-             description: "A short, honest in-world account of what these interactions were actually like — who came by, the vibe and how it's shifting, how conversations are going, anything memorable. Write it naturally, the way the cube would remember its night; not a checklist. A paragraph or two; a sentence is fine if little happened."
+             description: "A short, FACTUAL account (~50-120 words) of this chunk of conversation: what just happened, who was involved, and what the cube physically attempted (lights/music/marquee) and whether it seemed to work. Plain and concrete — NOT a performance critique, NOT in-character flourish. Just what a later reader would need to know what went on."
 
       string :real_world_facts, required: false,
-             description: "Concrete, true-about-the-world things the cube learned that would matter in later conversations: names people gave, plans/events they mention (a party at the Corral later, the burn at midnight), what's happening around the event, camps/places/art. Just the facts, brief — a few lines. Empty if nothing concrete came up. (Keeping this separate from the story tends to surface useful specifics.)"
+             description: "Concrete, true-about-the-world things the cube learned that would matter later: names people gave, plans/events they mention (a party at the Corral at 2am, the burn at midnight), camps/places/art around the event. Just the facts, brief. Empty if nothing concrete came up."
 
-      string :ooc_note, required: false,
-             description: "A private out-of-character note to the humans running the installation and the cube's future self — the ONLY place for steering. Flag: the cube's actions/devices repeatedly failing (a real functional problem, not flavor), a tic/loop/catchphrase a persona overuses, characters slipping or blurring, a move landing badly, or anyone genuinely distressed. Direct and actionable. Empty on most runs."
+      string :active_threads, required: false,
+             description: "Unfinished business a REAL VISITOR set up that a later turn or persona could pick up: someone who gave a name and said they'd be back, a plan, a promise, a place they were headed. Only things visitors actually said or committed to — not lore the cube invented. One or two lines. Empty if nothing is pending."
     end
   end
 end

@@ -20,7 +20,7 @@ RSpec.describe ConversationOrchestrator::Finalizer do
     end
   end
 
-  let(:conversation) { instance_double(Conversation, id: 123, active?: true, end!: nil) }
+  let(:conversation) { instance_double(Conversation, id: 123, active?: true, end!: nil, persona: "buddy") }
   let(:session_id) { 'test_session_123' }
   let(:user_message) { 'Turn on the lights' }
 
@@ -48,6 +48,7 @@ RSpec.describe ConversationOrchestrator::Finalizer do
   describe '.call' do
     before do
       allow(ConversationLog).to receive(:create!)
+      allow(SummaryTriggers).to receive(:after_turn) # summarization triggers are not this spec's concern
       allow(ConversationLogger).to receive(:conversation_ended)
       allow(ConversationResponse).to receive(:action_done).and_return(
         double(to_home_assistant_response: { response_type: 'action_done' })
@@ -72,13 +73,13 @@ RSpec.describe ConversationOrchestrator::Finalizer do
         )
       end
 
-      it 'dumps the full brain narrative (with urgent_question) into metadata' do
+      it 'dumps the full brain narrative (with ooc_questions) into metadata' do
         narrative = {
           'speech' => 'I have turned on the lights.',
           'inner_monologue' => 'User requested lighting control',
           'actions' => [],
           'continue_conversation' => false,
-          'urgent_question' => 'Have I met this person before?'
+          'ooc_questions' => 'Am I meant to be this cheerful, or should I have more edge?'
         }
 
         described_class.call(state: state.merge(llm_response: narrative), user_message: user_message)

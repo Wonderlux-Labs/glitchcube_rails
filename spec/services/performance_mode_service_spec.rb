@@ -515,7 +515,7 @@ RSpec.describe PerformanceModeService, type: :service do
       it 'returns comedy prompt for comedy type' do
         prompt = service.send(:default_prompt_for_type, 'comedy')
         expect(prompt).to include('stand-up comedy routine')
-        expect(prompt).to include('Burning Man')
+        expect(prompt).to include('Lakes of Fire')
         expect(prompt).to include('BUDDY persona')
       end
 
@@ -561,7 +561,7 @@ RSpec.describe PerformanceModeService, type: :service do
 
       it 'extracts themes from previous segments' do
         themes = service.send(:extract_themes_from_previous_segments)
-        expect(themes).to include('burning man')
+        expect(themes).to include('the burn')
         expect(themes).to include('space adventures')
         expect(themes).to include('customer service')
       end

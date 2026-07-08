@@ -2,23 +2,24 @@
 
 module Recurring
   module Memory
-    # Every ~10 minutes: write a rolling "running memory" summary of recent
-    # interactions (SummarizerService). Registered in config/recurring.yml.
+    # Write a factual interaction CHUNK for one persona's current stint
+    # (SummarizerService). Enqueued per-persona every ~N turns by SummaryTriggers —
+    # no longer a cron job.
     class SummarizerJob < ApplicationJob
       queue_as :default
 
-      def perform
-        result = SummarizerService.call
+      def perform(persona_slug)
+        result = SummarizerService.call(persona_slug)
 
         if result.success?
           data = result.data
           if data[:skipped]
-            Rails.logger.info "📝 SummarizerJob skipped: #{data[:reason]}"
+            Rails.logger.info "📝 SummarizerJob(#{persona_slug}) skipped: #{data[:reason]}"
           else
-            Rails.logger.info "📝 SummarizerJob wrote Summary ##{data[:summary].id}"
+            Rails.logger.info "📝 SummarizerJob(#{persona_slug}) wrote Summary ##{data[:summary].id}"
           end
         else
-          Rails.logger.error "📝 SummarizerJob failed: #{result.error}"
+          Rails.logger.error "📝 SummarizerJob(#{persona_slug}) failed: #{result.error}"
         end
       end
     end

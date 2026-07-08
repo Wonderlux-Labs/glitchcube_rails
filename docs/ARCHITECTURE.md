@@ -21,7 +21,7 @@ table is the answer.
 | Conversation state + history | **Rails** | `ConversationLog`, `Conversation` | The brain's record of a session. |
 | Continuity / memory | **Rails** | `Summary` (three-tier summarizer), `Prompts::ContextBuilder` | **Live** — `interaction`/`persona`/`overall` summaries injected into every turn's `# CURRENT CONTEXT`. See [`memory.md`](memory.md). |
 | Ambient world state | **HASS** → Rails | `sensor.glitchcube_world_state` | **Live** — composite HASS sensor injected each turn by `ContextBuilder`. (The old `WorldState`/`storage/world_state.md` service is dormant/superseded.) |
-| Deep-recall long-term memory | **Rails** | `Memory`, `MemorySearchService` | **Dormant** — plain-Rails recall query + `urgent_question` probe scaffolded but not wired into a turn (the summarizer covers continuity today). |
+| Deep-recall long-term memory | **Rails** | `Memory`, `MemorySearchService` | **Dormant** — plain-Rails recall query not wired into a turn (the summarizer covers continuity today). |
 | Policy / persona behavior | **Rails** | persona config + prompt builders | The only place behavior logic is versioned. No goal system. |
 | Decisions (what to say, what to do) | **Rails** | `ConversationOrchestrator` | The brain. |
 | Pending action results across turns | **Rails** | `conversation.metadata_json` | `pending_ha_results` — action agent's reply, surfaced next turn. |

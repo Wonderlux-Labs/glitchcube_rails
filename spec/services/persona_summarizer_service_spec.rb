@@ -5,93 +5,103 @@ require 'rails_helper'
 RSpec.describe PersonaSummarizerService do
   let!(:zorp) { Persona.create!(slug: "zorp", name: "Zorp") }
 
-  def stub_llm(summary:, ooc_note: nil)
-    payload = { "summary" => summary }
+  def stub_llm(summary:, ooc_note: nil, handoff_report: "Zorp did some cosmic readings for a few visitors.")
+    payload = { "summary" => summary, "handoff_report" => handoff_report }
     payload["ooc_note"] = ooc_note unless ooc_note.nil?
     allow(LlmService).to receive(:call_with_structured_output)
       .and_return(double(structured_output: payload))
   end
 
-  def convo_with_logs(persona_slug:, prefix:, count: 2, at: 2.minutes.ago)
-    convo = create(:conversation, persona: persona_slug)
-    count.times do |i|
-      create(:conversation_log, conversation: convo,
-             user_message: "#{prefix}-u#{i}", ai_response: "#{prefix}-a#{i}", created_at: at + i.seconds)
-    end
-    convo
+  # A persona interaction chunk (what the fold now reads), scoped to a persona.
+  def chunk(persona, text, facts: nil, threads: nil, at: 2.minutes.ago, mc: 3)
+    create(:summary, summary_type: "interaction", persona: persona, summary_text: text,
+           metadata: { real_world_facts: facts, active_threads: threads }.compact.to_json,
+           start_time: at, end_time: at + 1.minute, created_at: at, message_count: mc)
   end
 
-  context "first run" do
+  # Prevent the internal flush from doing real work unless a test wants it.
+  before { allow(SummarizerService).to receive(:call) }
+
+  context "a stint with interaction chunks" do
     before do
-      convo_with_logs(persona_slug: "zorp", prefix: "ZORP", at: 2.minutes.ago)
-      convo_with_logs(persona_slug: "buddy", prefix: "BUDDY", at: 2.minutes.ago) # different persona — must be excluded
+      chunk(zorp, "ZORP chunk one", at: 3.minutes.ago)
+      chunk(zorp, "ZORP chunk two", at: 2.minutes.ago)
     end
 
-    it "writes a versioned persona summary from ONLY that persona's conversations" do
-      stub_llm(summary: "You leaned cosmic and did some readings.")
+    it "flushes the tail turns before folding" do
+      expect(SummarizerService).to receive(:call).with("zorp")
+      stub_llm(summary: "You leaned cosmic.")
+      described_class.call("zorp")
+    end
+
+    it "writes a persona summary AND a neutral handoff row in one run" do
+      stub_llm(summary: "You leaned cosmic and did some readings.",
+               handoff_report: "Zorp read a few visitors and it landed well.")
 
       result = described_class.call("zorp")
 
       expect(result.success?).to be(true)
-      s = zorp.summaries.where(summary_type: "persona").last
-      expect(s.summary_text).to eq("You leaned cosmic and did some readings.")
-      expect(s.persona).to eq(zorp)
-      expect(s.message_count).to eq(2) # zorp's 2 logs only, not buddy's
+      persona_row = zorp.summaries.where(summary_type: "persona").last
+      handoff_row = zorp.summaries.where(summary_type: "handoff").last
+      expect(persona_row.summary_text).to eq("You leaned cosmic and did some readings.")
+      expect(persona_row.persona).to eq(zorp)
+      expect(handoff_row.summary_text).to eq("Zorp read a few visitors and it landed well.")
+      expect(handoff_row.persona).to eq(zorp)
+      expect(persona_row.message_count).to eq(6) # two chunks × 3
     end
 
-    it "feeds only this persona's logs into the material" do
-      expect(LlmService).to receive(:call_with_structured_output) do |args|
-        material = args[:messages].last[:content]
-        expect(material).to include("ZORP-u0")
-        expect(material).not_to include("BUDDY")
-        double(structured_output: { "summary" => "ok" })
-      end
-      described_class.call("zorp")
-    end
-
-    it "feeds the persona's character brief into the material" do
+    it "feeds the persona's chunks and character brief into the material" do
       zorp.update!(persona_prompt: "You are Zorp, a cosmic oracle who curses freely.")
       expect(LlmService).to receive(:call_with_structured_output) do |args|
-        expect(args[:messages].last[:content]).to include("cosmic oracle who curses freely")
-        double(structured_output: { "summary" => "ok" })
+        material = args[:messages].last[:content]
+        expect(material).to include("ZORP chunk one")
+        expect(material).to include("cosmic oracle who curses freely")
+        double(structured_output: { "summary" => "ok", "handoff_report" => "recap" })
       end
       described_class.call("zorp")
     end
 
-    it "stores a self-steering ooc_note when present" do
+    it "stores a self-steering ooc_note on the persona row when present" do
       stub_llm(summary: "cosmic night", ooc_note: "You keep leaning on the butt-reading bit — vary it.")
       described_class.call("zorp")
       expect(zorp.summaries.where(summary_type: "persona").last.metadata_json["ooc_note"])
         .to eq("You keep leaning on the butt-reading bit — vary it.")
     end
+
+    it "does not write a handoff when the model omits the report" do
+      stub_llm(summary: "cosmic night", handoff_report: "  ")
+      described_class.call("zorp")
+      expect(zorp.summaries.where(summary_type: "handoff")).to be_empty
+      expect(zorp.summaries.where(summary_type: "persona").count).to eq(1)
+    end
   end
 
   context "subsequent run — versioned + boundary" do
-    it "creates a new version, folding its prior self and only newer conversations" do
-      convo_with_logs(persona_slug: "zorp", prefix: "OLD", at: 20.minutes.ago)
+    it "folds only chunks newer than the last fold" do
+      chunk(zorp, "OLD chunk", at: 20.minutes.ago)
       stub_llm(summary: "v1")
       described_class.call("zorp")
       expect(zorp.summaries.where(summary_type: "persona").last.summary_text).to eq("v1")
 
-      convo_with_logs(persona_slug: "zorp", prefix: "NEW", at: 1.minute.ago)
+      chunk(zorp, "NEW chunk", at: 1.minute.ago)
 
       expect(LlmService).to receive(:call_with_structured_output) do |args|
         material = args[:messages].last[:content]
-        expect(material).to include("v1")   # prior self-summary handed back in
-        expect(material).to include("NEW")
-        expect(material).not_to include("OLD") # already folded
-        double(structured_output: { "summary" => "v2" })
+        expect(material).to include("v1")        # prior self-summary handed back in
+        expect(material).to include("NEW chunk")
+        expect(material).not_to include("OLD chunk") # already folded
+        double(structured_output: { "summary" => "v2", "handoff_report" => "recap v2" })
       end
 
       described_class.call("zorp")
 
       persona_summaries = zorp.summaries.where(summary_type: "persona").order(:created_at)
-      expect(persona_summaries.count).to eq(2)          # versioned
+      expect(persona_summaries.count).to eq(2)
       expect(persona_summaries.last.summary_text).to eq("v2")
     end
   end
 
-  it "skips when the persona had no conversations" do
+  it "skips when the persona had no chunks" do
     result = described_class.call("zorp")
     expect(result.data[:skipped]).to be(true)
     expect(zorp.summaries.where(summary_type: "persona")).to be_empty

@@ -123,9 +123,10 @@ Also injected under CURRENT CONTEXT:
   is 1:01 AM and dark out. The weather is partlycloudy, ~72°F…". Templated on the HASS side
   (source in `data/homeassistant/templates/glitchcube_world_state.yaml`) so it extends as
   devices come online, no Rails change. Fail-open.
-- **`urgent_question` probe.** The brain schema has an optional `urgent_question` field for
-  opt-in deep recall. **Phase 0: log-only** — `LlmIntention#log_urgent_question` logs it
-  but no retrieval is wired yet.
+- **`ooc_questions` probe.** The brain schema has an optional `ooc_questions` field where a
+  persona can raise an out-of-character question (about its character, for a director, or for
+  the project's programmer). **Collected only** — `LlmIntention#log_ooc_questions` logs it;
+  nothing is wired to answer it. A smoke test to see what personas actually want to ask.
 
 Dormant (reference only): `Memory` + `MemorySearchService`, and the old reflection/
 `WorldState` design in [continuity.md](./continuity.md) (banner-flagged superseded).
