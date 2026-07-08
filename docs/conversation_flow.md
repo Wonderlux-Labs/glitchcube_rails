@@ -106,23 +106,30 @@ The old **in-Rails tool stack** (`ToolCallingService`, `ToolExecutor`,
 — it now lives under `deprecated/tool_calling/` (see its README). The action agent
 replaced it wholesale; Rails emits plain English and HASS does the tool-calling.
 
-On memory/continuity, the cube is mostly **"amnesiac"**: reflection, per-turn memory
-recall/flagging, deep memory search, and the multi-layer summarizers were removed.
-`Memory` and `MemorySearchService` exist but are **dormant**. See the banner in
-[continuity.md](./continuity.md). Two lightweight pieces are being (re)introduced:
+## Memory & continuity
 
-- **Ambient world state (live).** `Prompts::ContextBuilder` reads one HASS composite
-  template sensor (`sensor.glitchcube_world_state`, its `content` attribute) each turn
-  and injects it under CURRENT CONTEXT — e.g. "It is 1:01 AM and dark out. The weather
-  is partlycloudy, ~72°F…". Templated on the HASS side (source in
-  `data/homeassistant/packages/glitchcube_world_state.yaml`) so it extends as devices come online,
-  no Rails change. Fail-open.
-- **`urgent_question` probe (smoke test).** The brain schema has an optional
-  `urgent_question` field for opt-in deep recall. **Phase 0: log-only** — when the
-  persona raises one, `LlmIntention#log_urgent_question` logs it (tag `[urgent_question]`)
-  but no retrieval is wired yet. It's a measurement to see whether recall is worth
-  building before we build it.
+Continuity is a **three-tier summarizer** — see [`memory.md`](./memory.md) for the full
+picture. In brief: `interaction` (running, every 10 min), `persona` (per persona, on
+switch), and `overall` (big-picture/director, hourly) `Summary` rows are written by
+`SummarizerService` / `PersonaSummarizerService` / `OverallSummarizerService`, and
+`Prompts::ContextBuilder` folds the latest of each into `# CURRENT CONTEXT` every turn.
+Each carries an in-world narrative (`summary_text`) plus an OOC steering side-channel in
+`metadata` (`ooc_note` / `director_note` / `active_threads` / `real_world_facts`).
+
+Also injected under CURRENT CONTEXT:
+
+- **Ambient world state (live).** `ContextBuilder` reads one HASS composite template
+  sensor (`sensor.glitchcube_world_state`, its `content` attribute) each turn — e.g. "It
+  is 1:01 AM and dark out. The weather is partlycloudy, ~72°F…". Templated on the HASS side
+  (source in `data/homeassistant/templates/glitchcube_world_state.yaml`) so it extends as
+  devices come online, no Rails change. Fail-open.
+- **`urgent_question` probe.** The brain schema has an optional `urgent_question` field for
+  opt-in deep recall. **Phase 0: log-only** — `LlmIntention#log_urgent_question` logs it
+  but no retrieval is wired yet.
+
+Dormant (reference only): `Memory` + `MemorySearchService`, and the old reflection/
+`WorldState` design in [continuity.md](./continuity.md) (banner-flagged superseded).
 
 Conversation history is a **rolling window across sessions** (`MessageHistoryBuilder`,
-last ~15 turns, soft session-break markers) — the cube half-remembers recent people
-rather than resetting per conversation.
+default 12 turns / 10 min, persona-scoped, soft session-break markers) — the cube
+half-remembers recent people rather than resetting per conversation.

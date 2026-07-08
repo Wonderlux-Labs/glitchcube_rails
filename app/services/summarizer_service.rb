@@ -2,7 +2,7 @@
 
 # Rolling interaction summarizer. Runs every ~10 minutes (Recurring::Memory::SummarizerJob):
 # reads the conversation turns since the last summary, makes ONE structured LLM call,
-# and writes a short "running memory" Summary row (type `recent`) plus an optional
+# and writes a short "running memory" Summary row (type `interaction`) plus an optional
 # out-of-character operator note. Only the single most recent prior summary is fed in
 # for continuity — deliberately light. See docs/conversation_flow.md.
 class SummarizerService

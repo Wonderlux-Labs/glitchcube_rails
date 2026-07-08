@@ -31,3 +31,182 @@ play_music_on_jukebox:
     the next song, you can use replace_next. We don't want to run very long queues,
     so you will either be playing immediately or just choosing the next song, by default
     it uses replace
+
+# --- DEV mocks -------------------------------------------------------------------
+# Safe stand-ins for the real audio actions: instead of actually playing anything,
+# each just records the requested query/effect into an input_text so we can SEE what
+# the HASS action agent chose to call, without waking a house. Expose THESE to Assist
+# (and unexpose the real play_music_on_jukebox above) while testing. Wire up real
+# behavior and hide the dev ones later.
+
+play_song_on_jukebox_dev:
+  alias: Play Song on Jukebox (dev)
+  description: >-
+    Play a specific, named song front and center on the cube's jukebox. `query` is a
+    fuzzy search — give it a song as "Title by Artist" (e.g. "Under Pressure by Queen"),
+    or "Artist - Album - Title" if you want to be precise. Be as specific as you can and
+    we'll find the best match; slightly-wrong titles are forgiving. Use this to actually
+    play a song, not for background ambiance.
+  fields:
+    query:
+      name: Query
+      description: The song to play, e.g. "Ol' 55 by Tom Waits" or "Nirvana - Nevermind - Come As You Are"
+      required: true
+      example: "Play That Funky Music by Wild Cherry"
+      selector:
+        text:
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.dev_jukebox_song
+    data:
+      value: "{{ query }}"
+
+play_mood_music_dev:
+  alias: Play Mood Music (dev)
+  description: >-
+    Put on background mood music for ambiance. Searchable across most of Spotify — give a
+    vibe, genre, or a specific track/artist as `query`. This plays quietly UNDER the
+    conversation (it ducks its own volume so you can still be heard), so it's texture, not
+    a front-and-center song. Use it to set a mood, not to feature a track.
+  fields:
+    query:
+      name: Query
+      description: The vibe or track for background music, e.g. "slow dark ambient", "lo-fi beats", or "Boards of Canada"
+      required: true
+      example: "moody late-night jazz"
+      selector:
+        text:
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.dev_mood_music
+    data:
+      value: "{{ query }}"
+
+play_sound_effect_dev:
+  alias: Play Sound Effect (dev)
+  description: >-
+    Fire a short sound effect / stinger for comic or dramatic accent. Pick one of the
+    available effects. Use sparingly, as punctuation — not as background music.
+  fields:
+    effect:
+      name: Effect
+      description: Which sound effect to play
+      required: true
+      selector:
+        select:
+          options:
+          - chime
+          - tada
+          - sad trombone
+          - siren
+          - airhorn
+          - record scratch
+          - crickets
+          - drumroll
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.dev_sound_effect
+    data:
+      value: "{{ effect }}"
+
+loudspeaker_announcement:
+  alias: Loudspeaker Announcement (dev)
+  description: >-
+    Read a message aloud over the cube's loudspeakers — much louder than the normal
+    speaking voice, for the rare dramatic moment. Optionally start the message with a
+    chime sound to grab attention first.
+  fields:
+    message:
+      name: Message
+      description: The message to read aloud over the loudspeakers
+      required: true
+      example: "Attention. Dance time has been officially declared."
+      selector:
+        text:
+    prepend_with_chime:
+      name: Prepend with chime
+      description: Start the announcement with a chime sound
+      required: false
+      default: false
+      selector:
+        boolean:
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.announcement
+    data:
+      value: "{{ message }}"
+
+search_jukebox:
+  alias: Search Jukebox
+  description: >-
+    Search the jukebox catalog for tracks WITHOUT playing anything — use it to check what's
+    available or pin down the exact track before you play it. `query` is required; optionally
+    narrow with `artist` and/or `album`. Returns up to 5 matching tracks.
+  fields:
+    query:
+      name: Query
+      description: What to search for — a song title or keywords
+      required: true
+      example: "closing time tom waits"
+      selector:
+        text:
+    artist:
+      name: Artist
+      description: Optional — restrict results to this artist
+      required: false
+      selector:
+        text:
+    album:
+      name: Album
+      description: Optional — restrict results to this album
+      required: false
+      selector:
+        text:
+  sequence:
+  - action: music_assistant.search
+    data: >-
+      {{ {"config_entry_id": "01KW61TG3CGY2SHG5CH6WEKZMM", "limit": 5, "media_type": ["track"], "name": query}
+         | combine({"artist": artist} if artist | default('') else {})
+         | combine({"album": album} if album | default('') else {}) }}
+    response_variable: results
+  - stop: "search complete"
+    response_variable: results
+
+set_marquee_text_dev:
+  alias: Set Marquee Text (dev)
+  description: >-
+    Set the text on the cube's scrolling marquee sign. Provide the `message`; optionally a
+    `color` and whether it should `blink`. Use it to put words on the sign — promos, jokes,
+    heckles, fourth-wall breaks, whatever you want people to read.
+  fields:
+    message:
+      name: Message
+      description: The text to show on the marquee (keep it under ~255 chars)
+      required: true
+      example: "JAX DOESN'T PLAY THAT"
+      selector:
+        text:
+    color:
+      name: Color
+      description: Optional — color for the text, e.g. "hot pink"
+      required: false
+      selector:
+        text:
+    blink:
+      name: Blink
+      description: Whether the text should blink
+      required: false
+      default: false
+      selector:
+        boolean:
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.marquee_text
+    data:
+      value: "{% if color | default('') %}{{ color }} - {% endif %}{{ message }}"
+

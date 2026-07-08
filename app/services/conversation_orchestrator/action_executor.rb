@@ -1,14 +1,15 @@
 # app/services/conversation_orchestrator/action_executor.rb
 class ConversationOrchestrator::ActionExecutor
-  def self.call(llm_response:, session_id:, conversation_id:, user_message:)
-    new(llm_response: llm_response, session_id: session_id, conversation_id: conversation_id, user_message: user_message).call
+  def self.call(llm_response:, session_id:, conversation_id:, user_message:, persona: nil)
+    new(llm_response: llm_response, session_id: session_id, conversation_id: conversation_id, user_message: user_message, persona: persona).call
   end
 
-  def initialize(llm_response:, session_id:, conversation_id:, user_message:)
+  def initialize(llm_response:, session_id:, conversation_id:, user_message:, persona: nil)
     @output = llm_response || {}
     @session_id = session_id
     @conversation_id = conversation_id
     @user_message = user_message
+    @persona = persona
   end
 
   def call
@@ -50,7 +51,7 @@ class ConversationOrchestrator::ActionExecutor
       session_id: @session_id,
       conversation_id: @conversation_id,
       user_message: @user_message,
-      persona: @output.dig("persona")
+      persona: @persona.to_s.presence
     )
     true
   end

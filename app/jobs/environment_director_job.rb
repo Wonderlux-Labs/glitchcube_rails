@@ -27,24 +27,26 @@ class EnvironmentDirectorJob < ApplicationJob
 
     reply = extract_agent_reply(response)
     Rails.logger.info "🏠 Action agent replied: #{reply}"
-    ConversationLogger.ha_agent_reply(instruction, reply)
+    ConversationLogger.ha_agent_reply(instruction, reply, persona: persona)
 
     store_results(
       conversation_id: conversation_id,
       user_message: user_message,
       instruction: instruction,
-      result: reply
+      result: reply,
+      persona: persona
     )
   rescue StandardError => e
     Rails.logger.error "❌ EnvironmentDirectorJob failed: #{e.message}"
     Rails.logger.error e.backtrace.first(10).join("\n")
-    ConversationLogger.ha_agent_reply(instruction, nil, error: e.message)
+    ConversationLogger.ha_agent_reply(instruction, nil, error: e.message, persona: persona)
     store_results(
       conversation_id: conversation_id,
       user_message: user_message,
       instruction: instruction,
       result: nil,
-      error: e.message
+      error: e.message,
+      persona: persona
     )
   end
 
@@ -64,7 +66,7 @@ class EnvironmentDirectorJob < ApplicationJob
 
   # Append to conversation.metadata_json["pending_ha_results"] so the next
   # conversation turn can inject the outcome (PromptBuilder#inject_previous_ha_results).
-  def store_results(conversation_id:, user_message:, instruction:, result:, error: nil)
+  def store_results(conversation_id:, user_message:, instruction:, result:, error: nil, persona: nil)
     conversation = Conversation.find_by(id: conversation_id)
     return unless conversation
 
@@ -73,6 +75,7 @@ class EnvironmentDirectorJob < ApplicationJob
 
     pending << {
       timestamp: Time.current.iso8601,
+      persona: persona,
       user_message: user_message,
       instruction: instruction,
       ha_response: result,

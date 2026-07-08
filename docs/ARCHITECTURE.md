@@ -19,8 +19,9 @@ table is the answer.
 | Cube mode / battery / low-power | **HASS** | `input_select.cube_mode`, etc. | Read via `CubeData` sensor registry. |
 | GPS / location | — | `Gps::*`, `Landmark`/`Street` | **Dormant reference code** — not wired into anything live; empty tables. |
 | Conversation state + history | **Rails** | `ConversationLog`, `Conversation` | The brain's record of a session. |
-| World state (continuity) | **Rails** (file) | `storage/world_state.md`, `WorldState` | **Dormant** — service lingers but is no longer injected into prompts (amnesiacube). |
-| Long-term memory | **Rails** | `Memory`, `MemorySearchService` | **Dormant** — nothing writes or reads it in a turn (amnesiacube). |
+| Continuity / memory | **Rails** | `Summary` (three-tier summarizer), `Prompts::ContextBuilder` | **Live** — `interaction`/`persona`/`overall` summaries injected into every turn's `# CURRENT CONTEXT`. See [`memory.md`](memory.md). |
+| Ambient world state | **HASS** → Rails | `sensor.glitchcube_world_state` | **Live** — composite HASS sensor injected each turn by `ContextBuilder`. (The old `WorldState`/`storage/world_state.md` service is dormant/superseded.) |
+| Deep-recall long-term memory | **Rails** | `Memory`, `MemorySearchService` | **Dormant** — plain-Rails recall query + `urgent_question` probe scaffolded but not wired into a turn (the summarizer covers continuity today). |
 | Policy / persona behavior | **Rails** | persona config + prompt builders | The only place behavior logic is versioned. No goal system. |
 | Decisions (what to say, what to do) | **Rails** | `ConversationOrchestrator` | The brain. |
 | Pending action results across turns | **Rails** | `conversation.metadata_json` | `pending_ha_results` — action agent's reply, surfaced next turn. |
@@ -42,7 +43,8 @@ a HASS conversation agent:
   `NarrativeResponseSchema`. Returns `speech`, `inner_monologue`,
   `continue_conversation`, and a list of plain-English **`actions`**
   (`{action_name, description}`). It never emits tool calls and carries no memory
-  fields (the cube is currently amnesiac — see Continuity).
+  fields — continuity comes from the summaries injected into its prompt, not its
+  output (see Continuity).
 - **Action agent (HASS-side, not an in-Rails role):** `ActionExecutor` flattens
   `actions` into one instruction and `EnvironmentDirectorJob` hands it to the HASS
   agent `Rails.configuration.hass_action_agent` via
@@ -58,19 +60,25 @@ dispatched to `EnvironmentDirectorJob` in the background. The action agent's rep
 lands in `conversation.metadata_json["pending_ha_results"]` and is folded into the
 brain's context on the next turn. No per-domain fan-out, no in-Rails translator.
 
-## Continuity — currently removed ("amnesiacube")
+## Continuity — the three-tier summarizer
 
-The cube has **no working memory or continuity right now.** Reflection, per-turn
-memory recall/flagging, deep memory search, the multi-layer summarizers, and the
-goal system were all deleted. The brain schema has no memory fields and no
-world-state blob is injected into prompts.
+Continuity is a **layered summarizer** (this replaced the old reflection/`WorldState`
+design). Three tiers write `Summary` rows and `Prompts::ContextBuilder` folds the latest of
+each into every turn's `# CURRENT CONTEXT`, plus the live HASS world-state sensor:
 
-Still present but **dormant** (nothing writes or reads them in a turn): the
-`Memory` model, `MemorySearchService` (standalone plain-Rails query), and
-`WorldState`/`storage/world_state.md`. Re-introducing continuity is future work.
+- **`interaction`** (running memory, every 10 min), **`persona`** (per persona, on switch),
+  **`overall`** (big-picture/director, hourly). Each carries an in-world narrative
+  (`summary_text`) plus an OOC steering side-channel in `metadata` (`ooc_note` /
+  `director_note` / `active_threads` / `real_world_facts`).
 
-`continuity.md` documents the **old** removed design and is banner-flagged as
-superseded — don't treat it as current.
+Full detail: [`memory.md`](memory.md). Reflection, per-turn recall/flagging, deep memory
+search, and the goal system remain deleted; the brain schema has no memory fields (continuity
+comes from the injected summaries, not the brain's output).
+
+Still present but **dormant** (nothing writes or reads them in a turn): the `Memory` model +
+`MemorySearchService` (plain-Rails deep-recall query) and the old `WorldState` /
+`storage/world_state.md`. `continuity.md` documents the **old** removed reflection design and
+is banner-flagged superseded — don't treat it as current.
 
 ## Testing the cube without hardware
 

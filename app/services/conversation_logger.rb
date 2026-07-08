@@ -120,8 +120,8 @@ class ConversationLogger
 
     # What the HASS conversation agent (the tool caller) reported back after we
     # handed it this turn's actions. Async, so it lands between turns in the log.
-    def ha_agent_reply(instruction, reply, error: nil)
-      logger.info "🏠 HA AGENT REPLY (tool caller)"
+    def ha_agent_reply(instruction, reply, error: nil, persona: nil)
+      logger.info "🏠 HA AGENT REPLY (tool caller)#{" [#{persona}]" if persona.present?}"
       logger.info "   Sent:  #{instruction}"
       if error
         logger.info "   ⚠️  Error: #{error}"

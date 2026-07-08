@@ -1,5 +1,12 @@
 # app/services/conversation_orchestrator.rb
 class ConversationOrchestrator
+  # OpenRouter model-fallback chain for the brain call. Passing an array makes the
+  # open_router_enhanced gem send `models: [...]` + `route: "fallback"`, so OpenRouter
+  # only drops to the next model when the previous one *errors* (provider down, etc.) —
+  # not on a merely weak reply. The primary is the configured `ai_model`; append more
+  # fallbacks here as we vet them.
+  FALLBACK_MODELS = [ "deepseek/deepseek-v4-flash" ].freeze
+
   # Define component-specific error classes for better tracking
   class SetupError < StandardError; end
   class LlmError < StandardError; end
@@ -83,8 +90,11 @@ class ConversationOrchestrator
 
   def determine_model_for_conversation
     # A per-call override (context[:model]) wins — handy for smoke-testing a
-    # different model without touching config — otherwise the one configured model.
-    @context[:model] || Rails.configuration.ai_model
+    # different model without touching config — otherwise the configured model
+    # followed by its fallback chain (see FALLBACK_MODELS).
+    return @context[:model] if @context[:model]
+
+    [ Rails.configuration.ai_model, *FALLBACK_MODELS ].uniq
   end
 
   # Step 4: Execute the tools and actions identified by the LLM.
@@ -93,7 +103,8 @@ class ConversationOrchestrator
       llm_response: @state[:llm_response],
       session_id: @state[:session_id],
       conversation_id: @state[:conversation].id,
-      user_message: @message
+      user_message: @message,
+      persona: @state[:persona]
     )
     raise ActionError, action_result.error unless action_result.success?
     @state[:action_results] = action_result.data

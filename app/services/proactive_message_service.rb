@@ -63,7 +63,7 @@ class ProactiveMessageService
 
   def build_system_prompt
     <<~PROMPT
-      You are generating proactive announcements for a Burning Man AI assistant. Create natural, contextual messages that feel organic rather than robotic.
+      You are generating proactive announcements for an AI assistant at a regional burn (Lakes of Fire). Create natural, contextual messages that feel organic rather than robotic.
 
       Based on the trigger type and context, generate:
       1. **message** - What the AI should say (be natural and engaging)

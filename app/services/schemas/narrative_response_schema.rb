@@ -12,23 +12,23 @@
 class Schemas::NarrativeResponseSchema
   # Channels the character can act on. Kept loose on purpose; the HASS agent does
   # its best with whatever plain-English description comes through.
-  ACTION_CHANNELS = %w[cube_light top_light sound announcement marquee camera].freeze
+  ACTION_CHANNELS = %w[cube_light top_light jukebox mood_music sound_efx announcement marquee switch].freeze
 
   def self.schema
     OpenRouter::Schema.define("narrative_response", strict: false) do
       string :speech, required: true,
-             description: "The words your character says out loud. This text is sent DIRECTLY to text-to-speech and spoken aloud in your character's voice — write only what should be heard. No stage directions, asterisks, or parentheses. You MAY use ellipses (...), commas, dashes, and question marks to shape natural pacing and delivery."
+             description: "The words your character says out loud, sent DIRECTLY to text-to-speech. Write only what should be heard, at a natural spoken length (a sentence or a few, not a wall of text). No stage directions, no emojis, no asterisks, no parentheticals, no asides. You MAY use ellipses (...), commas, dashes, and question marks to shape pacing."
 
       string :inner_monologue, required: true,
              description: "What your character is thinking privately this turn. Never spoken aloud. Can contradict the speech. A sentence or two."
 
       array :actions,
-            description: "Physical things you want to do to your environment this turn. Use an empty list unless you actually want to change something — you do NOT need to act every turn; most turns are just talk. You are free to act any time and to be playful, ironic, or contradictory (e.g. play someone's song while the marquee reads 'THIS SONG SUCKS, SORRY FOR PLAYING IT')." do
+            description: "Physical changes you want to make this turn, using only the channels in YOUR TOOLS (which shows example actions for each). Multiple actions per turn are allowed and encouraged when more than one thing should happen. Use an empty list on talk-only turns — you do NOT need to act every turn. You may be playful, ironic, or contradictory." do
         object do
           string :action_name, required: true,
-                 description: "The channel to use: one of cube_light, top_light, sound, announcement, marquee, camera."
+                 description: "The channel to use — one of the action_name values listed in YOUR TOOLS in the system prompt."
           string :description, required: true,
-                 description: "Plain-English description of what you want on that channel, e.g. 'warm amber and dim', 'play something slow and moody', 'scroll THE STARS FORGOT YOUR NAME'. A separate agent turns this into real device commands, so describe intent, not exact settings."
+                 description: "Plain-English intent for that channel — a separate agent turns it into real device commands, so describe what you want, not exact settings. See YOUR TOOLS for example phrasings per channel."
         end
       end
 

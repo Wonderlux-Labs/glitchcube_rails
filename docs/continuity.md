@@ -3,16 +3,21 @@
 > ⚠️ **SUPERSEDED — this describes a REMOVED design.** The "amnesiacube" refactor
 > deleted reflection (`ReflectionService` + its job + `ReflectionSchema`), deep
 > memory search (`MemorySearchJob` + `Tools::Query::MemorySearch`), per-turn memory
-> recall/flagging, and the summarizer stack. The brain schema no longer has memory
-> fields and **no world-state blob is injected into prompts today.**
+> recall/flagging, and this `WorldState`/`Memory` continuity stack.
 >
-> What still exists is **dormant**: the `Memory` model, `MemorySearchService`
+> **Continuity today is the three-tier summarizer — see [`memory.md`](memory.md).** That
+> is the live system: `interaction` / `persona` / `overall` `Summary` rows injected by
+> `Prompts::ContextBuilder`, plus the live HASS world-state sensor. (Note: a world-state
+> blob *is* injected now — but from the HASS `sensor.glitchcube_world_state`, not the
+> `WorldState` service / `storage/world_state.md` file described below, which are dormant.)
+>
+> What still exists but is **dormant**: the `Memory` model, `MemorySearchService`
 > (a standalone plain-Rails query, extracted from the old tool), and the `WorldState`
 > service + `storage/world_state.md` file. Nothing writes or reads them in a turn.
 >
-> The design below is kept as a **reference blueprint for re-introducing continuity
-> later** — it is NOT how the cube behaves now. For the current flow see
-> [`conversation_flow.md`](conversation_flow.md).
+> The design below is kept only as a **reference blueprint** for a possible future
+> reflection/`Memory` revival — it is NOT how the cube behaves now. For the current turn
+> flow see [`conversation_flow.md`](conversation_flow.md).
 
 ---
 

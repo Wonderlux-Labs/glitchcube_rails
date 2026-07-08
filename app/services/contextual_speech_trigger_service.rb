@@ -233,7 +233,7 @@ class ContextualSpeechTriggerService
       - Daily transition (sunrise, sunset, midnight, etc.)
       - Event timing (art burns, ceremonies, performances)
       - Personal milestone (time since arrival, goal deadlines)
-      - Burning Man schedule milestone
+      - Burn event schedule milestone
 
       Consider:
       - How does this time milestone affect your character?

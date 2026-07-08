@@ -20,9 +20,11 @@ module Prompts
       @user_message = user_message
     end
 
+    TOOLS_PLACEHOLDER = "{{TOOLS}}"
+
     def build
       [
-        ConfigurationLoader.base_system_prompt,
+        base_system_prompt_with_tools,
         persona_prompt,
         current_context_section,
         ConfigurationLoader.end_system_prompt
@@ -30,6 +32,40 @@ module Prompts
     end
 
     private
+
+    # The base prompt carries a `{{TOOLS}}` placeholder under its "# YOUR TOOLS" heading;
+    # fill it with the current persona's allowed tools (from tools.yml).
+    def base_system_prompt_with_tools
+      base = ConfigurationLoader.base_system_prompt
+      return base unless base&.include?(TOOLS_PLACEHOLDER)
+
+      base.sub(TOOLS_PLACEHOLDER, tools_section)
+    end
+
+    def tools_section
+      catalog = ConfigurationLoader.tools_config
+      lines = ConfigurationLoader.persona_tools(persona_id).filter_map do |slug|
+        tool = catalog[slug.to_s]
+        next unless tool
+
+        channels = Array(tool["action_names"]).join(", ")
+        suffix = channels.present? ? " (action_name: #{channels})" : ""
+        [ " - **#{tool['name']}** — #{tool['description']}#{suffix}", *tool_examples(tool) ].join("\n")
+      end
+      return "You have no special tools available right now." if lines.empty?
+
+      lines.join("\n")
+    end
+
+    # Concrete action-JSON examples for one tool, rendered as indented `e.g. {…}` lines
+    # so the persona sees the exact shape and phrasing style for that channel.
+    def tool_examples(tool)
+      Array(tool["examples"]).filter_map do |ex|
+        next unless ex.is_a?(Hash) && ex["description"].present?
+
+        "     e.g. {\"action_name\": #{ex['action_name'].to_json}, \"description\": #{ex['description'].to_json}}"
+      end
+    end
 
     def persona_prompt
       config = ConfigurationLoader.load_persona_config(persona_id)

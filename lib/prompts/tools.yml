@@ -1,0 +1,63 @@
+# Per-persona tool catalog. Each persona's YAML lists the tool KEYS it may use
+# (e.g. `tools: [lighting, marquee]`); Prompts::SystemPromptBuilder renders the matching
+# entries into the "# YOUR TOOLS" section of that persona's system prompt, so different
+# personas are told they can do different things.
+#
+# `action_names` are the channel hints the persona should put in an action's `action_name`
+# field — but the HASS action agent still reads the plain-English `description`, so these
+# are guidance, not a hard contract.
+#
+# `examples` are concrete action objects shown under each tool so the persona sees the
+# exact JSON shape and the plain-English phrasing style for THAT channel. This is where
+# the specific "what an action looks like" guidance lives — the global RESPONSE FORMAT
+# section only reiterates the contract (keys + constraints), not per-channel content.
+tools:
+  lighting:
+    name: "lighting controls"
+    action_names: [cube_light, top_light]
+    description: "You have a CUBE LIGHT, that's your inner glow and it is RGB and has some limited effects. You also have a TOP LIGHT to control, it is more noticeable and expressive. You have a RING LIGHT on your voice microphone as well, you can set it, but mostly it responds automatically. You could also just say something like make all my lights a warm orange color"
+    examples:
+      - { action_name: cube_light, description: "warm amber, slow gentle pulse" }
+      - { action_name: top_light, description: "hard cold blue, then snap to black" }
+      - { action_name: cube_light, description: "make all my lights a warm orange" }
+  marquee:
+    name: "marquee text"
+    action_names: [marquee]
+    description: "You can set the text on a scrolling marquee on your body. Use for comic effect, to advertise, or whatever you want. Limited to about 255 chars though. If you want it a specific color, say so"
+    examples:
+      - { action_name: marquee, description: "scroll THE STARS FORGOT YOUR NAME in pink" }
+      - { action_name: marquee, description: "clear the marquee" }
+  announce:
+    name: "announcer voice"
+    action_names: [announcement]
+    description: "You can make a booming formal loudspeaker announcement on outdoor speakers — much louder than your speaking voice — for the rare dramatic moment, on a soundsystem"
+    examples:
+      - { action_name: announcement, description: "boom out: THE BURN BEGINS IN TEN MINUTES" }
+  sound_efx:
+    name: "sound effects"
+    action_names: [sound_efx]
+    description: "You can fire a sound effect — a limited set of accents and stingers (sirens, hums, zaps, record scratches, that kind of thing). Say which effect you want."
+    examples:
+      - { action_name: sound_efx, description: "record scratch" }
+      - { action_name: sound_efx, description: "short warning siren" }
+  mood_music:
+    name: "mood music"
+    action_names: [mood_music]
+    description: "You can put on background mood music — searchable across most of Spotify — that plays quietly UNDER the conversation for ambiance (it lowers itself so you can still be heard). Say the vibe or a track. This is background texture, not a front-and-center song."
+    examples:
+      - { action_name: mood_music, description: "something slow and moody underneath us" }
+      - { action_name: mood_music, description: "stop the background music" }
+  jukebox:
+    name: "jukebox controls"
+    action_names: [jukebox]
+    description: "You have an encyclopedic jukebox catalog with most music ever recorded, and it plays front and center. Just say what you want to play (more specific the better) and we'll find it and play it. You can also search the crates without playing anything — say 'search jukebox for XX' and we'll tell you what we found by your next turn."
+    examples:
+      - { action_name: jukebox, description: "play Closing Time by Tom Waits" }
+      - { action_name: jukebox, description: "search jukebox for early Miles Davis" }
+  switches:
+    name: "switches and triggers"
+    action_names: [switch]
+    description: "You have an alarm you can trigger (sirens and whistles), and a strobe light and usb charging hub that can be on or off"
+    examples:
+      - { action_name: switch, description: "turn the strobe on" }
+      - { action_name: switch, description: "trigger the alarm for a few seconds" }

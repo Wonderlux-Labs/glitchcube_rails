@@ -7,7 +7,7 @@ class CubePerformance
     def standup_comedy(duration_minutes: 10, session_id: nil, **context)
       session_id = session_id.presence || "comedy_#{Time.current.to_i}"
 
-      prompt = """You're doing a #{duration_minutes}-minute stand-up comedy routine at Burning Man.
+      prompt = """You're doing a #{duration_minutes}-minute stand-up comedy routine at Lakes of Fire.
 
       Keep it funny, absurd, NSFW, and true to your chaotic personality. Include:
       Build running gags, include callbacks to previous jokes, and maintain your energy throughout."""
@@ -26,14 +26,14 @@ class CubePerformance
       session_id = session_id.presence || "story_#{Time.current.to_i}"
 
       prompt = """You're telling an epic adventure story about your journey through space
-      before crash-landing at Burning Man. Make it dramatic, funny, and engaging.
+      before crash-landing at Lakes of Fire. Make it dramatic, funny, and engaging.
 
       Include:
       - Your life in the Galactic Customer Service Division
       - Wild space adventures and mishaps
       - Other planets you've 'helped' (with questionable results)
       - How you ended up crash-landing here
-      - The culture shock of going from space to Burning Man
+      - The culture shock of going from space to Lakes of Fire
 
       Build suspense, include vivid descriptions, and maintain your BUDDY personality."""
 
@@ -75,7 +75,7 @@ class CubePerformance
     def poetry_slam(duration_minutes: 12, session_id: nil, **context)
       session_id = session_id.presence || "poetry_#{Time.current.to_i}"
 
-      prompt = """You're performing a series of poems about Burning Man, technology, and human connection.
+      prompt = """You're performing a series of poems about the burn, technology, and human connection.
       Mix humor with deeper themes as BUDDY the helpful AI.
 
       Include different styles:

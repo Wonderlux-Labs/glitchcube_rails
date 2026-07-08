@@ -163,11 +163,11 @@ class PerformanceModeService
   def default_prompt_for_type(type)
     case type.to_s.downcase
     when "comedy", "standup"
-      "You're doing a 10-minute stand-up comedy routine about life as an AI at Burning Man. Keep it funny, absurd, and interactive even though it's a monologue. Include callbacks to previous jokes, build running gags, and maintain your BUDDY persona's enthusiastic and slightly chaotic energy."
+      "You're doing a 10-minute stand-up comedy routine about life as an AI at Lakes of Fire. Keep it funny, absurd, and interactive even though it's a monologue. Include callbacks to previous jokes, build running gags, and maintain your BUDDY persona's enthusiastic and slightly chaotic energy."
     when "storytelling"
-      "You're telling an epic story about your adventures in space before crash-landing at Burning Man. Make it dramatic, funny, and engaging. Build suspense and include vivid descriptions."
+      "You're telling an epic story about your adventures in space before crash-landing at Lakes of Fire. Make it dramatic, funny, and engaging. Build suspense and include vivid descriptions."
     when "poetry"
-      "You're performing a series of poems about Burning Man, technology, and human connection. Mix humor with deeper themes. Include both silly and profound pieces."
+      "You're performing a series of poems about the burn, technology, and human connection. Mix humor with deeper themes. Include both silly and profound pieces."
     when "improv"
       "You're doing an improvisational performance, reacting to the environment around you and creating spontaneous scenarios. Keep it dynamic and unpredictable."
     else
@@ -335,7 +335,7 @@ Keep this segment engaging and around 30-60 seconds of speaking time. Make it fe
     @performance_segments.each do |segment|
       # Simple keyword extraction - in production you might use NLP
       text = segment[:speech].downcase
-      themes << "burning man" if text.include?("burning man") || text.include?("playa")
+      themes << "the burn" if text.include?("lakes of fire") || text.include?("playa") || text.include?("burn")
       themes << "space adventures" if text.include?("space") || text.include?("galactic")
       themes << "customer service" if text.include?("customer") || text.include?("help")
       themes << "technology" if text.include?("ai") || text.include?("robot") || text.include?("technology")

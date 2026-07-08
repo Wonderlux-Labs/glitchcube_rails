@@ -39,3 +39,27 @@
           {%- set daytime = is_state('sun.sun', 'above_horizon') -%}
           It is {{ now().strftime('%-I:%M %p') }} on {{ now().strftime('%A') }} and it is {{ 'daytime' if daytime else 'dark out' }}.
           {%- if w not in ['unknown', 'unavailable', none] %} The weather is {{ w | replace('_', ' ') }}{% if t is not none %}, around {{ t }}°F{% endif %}{% if h is not none %} with {{ h }}% humidity{% endif %}{% if ws is not none %} and winds near {{ ws | round }} mph{% endif %}.{% endif %}
+          {#- Your ring light (the LED ring on top of the cube) -#}
+          {%- set ring = 'light.cube_cube_voice_led_ring' -%}
+          {%- if is_state(ring, 'on') -%}
+            {%- set hs = state_attr(ring, 'hs_color') -%}
+            {%- set hue = hs[0] if hs else 0 -%}
+            {%- set sat = hs[1] if hs else 0 -%}
+            {%- set bri = state_attr(ring, 'brightness') or 255 -%}
+            {%- if sat < 12 -%}{%- set color = 'soft white' -%}
+            {%- elif hue < 15 or hue >= 345 -%}{%- set color = 'red' -%}
+            {%- elif hue < 45 -%}{%- set color = 'orange' -%}
+            {%- elif hue < 70 -%}{%- set color = 'yellow' -%}
+            {%- elif hue < 160 -%}{%- set color = 'green' -%}
+            {%- elif hue < 200 -%}{%- set color = 'teal' -%}
+            {%- elif hue < 260 -%}{%- set color = 'blue' -%}
+            {%- elif hue < 290 -%}{%- set color = 'purple' -%}
+            {%- else -%}{%- set color = 'pink' -%}{%- endif -%}
+            {{ ' Your ring light is on and glowing ' ~ ('dim ' if bri < 80 else '') ~ color ~ '.' }}
+          {%- else %} Your ring light is off.{%- endif -%}
+          {#- The jukebox -#}
+          {%- set jb = 'media_player.jukebox' -%}
+          {%- set jbs = states(jb) -%}
+          {%- if jbs == 'playing' %} The jukebox is playing{% if state_attr(jb, 'media_title') %} "{{ state_attr(jb, 'media_title') }}"{% if state_attr(jb, 'media_artist') %} by {{ state_attr(jb, 'media_artist') }}{% endif %}{% endif %}.
+          {%- elif jbs == 'paused' %} The jukebox is paused.
+          {%- else %} The jukebox is quiet right now.{%- endif -%}
