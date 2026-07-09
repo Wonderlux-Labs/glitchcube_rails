@@ -13,6 +13,21 @@
 ActiveRecord::Schema[8.1].define(version: 2026_07_08_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "vector"
+
+  create_table "boundaries", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "boundary_type", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.jsonb "properties", default: {}
+    t.datetime "updated_at", null: false
+    t.index ["active", "boundary_type"], name: "index_boundaries_on_active_and_boundary_type"
+    t.index ["active"], name: "index_boundaries_on_active"
+    t.index ["boundary_type"], name: "index_boundaries_on_boundary_type"
+    t.index ["name"], name: "index_boundaries_on_name"
+  end
 
   create_table "conversation_logs", force: :cascade do |t|
     t.text "ai_response", null: false
@@ -49,10 +64,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_000001) do
     t.index ["started_at"], name: "index_conversations_on_started_at"
   end
 
+  create_table "landmarks", force: :cascade do |t|
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "icon"
+    t.string "landmark_type"
+    t.decimal "latitude", precision: 10, scale: 8, null: false
+    t.decimal "longitude", precision: 11, scale: 8, null: false
+    t.string "name", null: false
+    t.jsonb "properties", default: {}
+    t.integer "radius_meters", default: 30
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_landmarks_on_active"
+    t.index ["landmark_type"], name: "index_landmarks_on_landmark_type"
+    t.index ["latitude", "longitude"], name: "index_landmarks_on_latitude_and_longitude"
+    t.index ["name"], name: "index_landmarks_on_name"
+  end
+
   create_table "memories", force: :cascade do |t|
     t.string "category", null: false
     t.text "content", null: false
     t.datetime "created_at", null: false
+    t.vector "embedding", limit: 1536
     t.string "emotion"
     t.integer "importance", null: false
     t.text "metadata"
@@ -200,8 +234,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_000001) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "streets", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.jsonb "properties", default: {}
+    t.string "street_type", null: false
+    t.datetime "updated_at", null: false
+    t.integer "width", default: 30
+    t.index ["active", "street_type"], name: "index_streets_on_active_and_street_type"
+    t.index ["active"], name: "index_streets_on_active"
+    t.index ["name"], name: "index_streets_on_name"
+    t.index ["street_type"], name: "index_streets_on_street_type"
+  end
+
   create_table "summaries", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.vector "embedding", limit: 1536
     t.datetime "end_time"
     t.integer "message_count", null: false
     t.text "metadata"

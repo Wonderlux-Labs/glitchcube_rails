@@ -45,6 +45,9 @@ gem "dotenv-rails"
 gem "open_router_enhanced", "~> 2.2"
 gem "geocoder"
 
-gem "langchainrb_rails"
-gem "neighbor"
+# Vector search / embeddings are not used in this version. Re-enable these
+# (plus the enable_extension "vector" migration and the embedding columns)
+# if/when memory search comes back.
+# gem "langchainrb_rails"
+# gem "neighbor"
 gem "ruby-openai"
