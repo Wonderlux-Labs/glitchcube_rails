@@ -77,13 +77,34 @@ RSpec.describe SummarizerService do
              summary_text: 'earlier: someone named Mars', end_time: 10.minutes.ago)
 
       expect(LlmService).to receive(:call_with_structured_output) do |args|
-        expect(args[:model]).to eq(SummarizerService::MODEL)
+        expect(args[:model]).to eq(Rails.configuration.summarizer_model)
         expect(args[:messages].last[:content]).to include('earlier: someone named Mars')
         double(structured_output: { "summary" => "Mars came back." })
       end
 
       described_class.call("neon")
       expect(Summary.interaction.where(persona: neon).last.summary_text).to eq("Mars came back.")
+    end
+  end
+
+  context 'after a persona fold' do
+    it 'reads only logs after the fold boundary, not everything since the older last chunk' do
+      create(:summary, summary_type: 'interaction', persona: neon,
+             summary_text: 'pre-fold chunk', end_time: 30.minutes.ago)
+      create(:summary, summary_type: 'persona', persona: neon,
+             metadata: { folded_through_at: 10.minutes.ago.iso8601(6) }.to_json)
+      convo_with_logs(persona_slug: "neon", prefix: "FOLDED", at: 20.minutes.ago) # already folded
+      convo_with_logs(persona_slug: "neon", prefix: "FRESH", at: 5.minutes.ago)
+
+      expect(LlmService).to receive(:call_with_structured_output) do |args|
+        material = args[:messages].last[:content]
+        expect(material).to include("FRESH-u0")
+        expect(material).not_to include("FOLDED")
+        double(structured_output: { "summary" => "post-fold only" })
+      end
+
+      described_class.call("neon")
+      expect(Summary.interaction.where(persona: neon).last.summary_text).to eq("post-fold only")
     end
   end
 

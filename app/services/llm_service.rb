@@ -4,6 +4,10 @@ require "net/http"
 require "timeout"
 
 class LlmService
+  # Reliable structured-output models to fall back to when the primary model
+  # times out OR comes back empty/unparsable (see call_with_structured_output).
+  FAST_FALLBACK_MODELS = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ].freeze
+
   class << self
     # Main conversation call with tool support
     def call_with_tools(messages:, tools: [], model: nil, **options)
@@ -139,15 +143,25 @@ class LlmService
                           "cost=$#{u['cost']}"
         Rails.logger.debug { "   content: #{response.content&.truncate(300)}" }
 
+        # A "successful" call can still come back with empty/unparsable content — some
+        # providers occasionally return finish_reason "stop" with a blank or truncated
+        # body, which yields no structured output and no exception. That's not a timeout,
+        # so it never hit the rescue below and used to fall straight through to the
+        # caller's degraded fallback. Instead, silently resend to a reliable secondary
+        # model (no TTS filler — the visitor never hears the retry).
+        if response.structured_output.blank?
+          Rails.logger.warn "⚠️ #{response.model || model_to_use} returned no parseable structured output " \
+                             "(content=#{response.content.to_s.length} chars); retrying on secondary model(s)"
+          recovered = retry_structured_on_secondary(messages, response_format, extras, exclude: model_to_use)
+          return recovered if recovered
+        end
+
         response
 
       rescue Net::ReadTimeout, Timeout::Error => e
         Rails.logger.warn "⏰ LLM call timed out with #{model_to_use} (#{e.class}); trying fast fallback models"
 
-        # Try faster fallback models for timeouts
-        fast_fallback_models = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ]
-
-        fast_fallback_models.each do |fallback_model|
+        FAST_FALLBACK_MODELS.each do |fallback_model|
           begin
             response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
             Rails.logger.info "✅ Fast fallback model #{fallback_model} recovered after timeout"
@@ -171,6 +185,12 @@ class LlmService
         Rails.logger.error "❌ LLM structured-output call failed with #{model_to_use}: #{e.class} - #{e.message}"
         Rails.logger.debug { e.backtrace.first(5).join("\n") }
 
+        # A hard error (bad model id, 429, provider 5xx) shouldn't cost us the whole call —
+        # try a reliable secondary before giving up, so one flaky/misconfigured model never
+        # silently drops a summary or a turn.
+        recovered = retry_structured_on_secondary(messages, response_format, extras, exclude: model_to_use)
+        return recovered if recovered
+
         # Return a mock response with error info
         OpenStruct.new(
           content: "I'm having trouble thinking right now. Please try again.",
@@ -192,6 +212,24 @@ class LlmService
         response_format: response_format,
         extras: extras
       )
+    end
+
+    # Resend the same request to reliable secondary models, returning the first
+    # response that actually parses into structured output. nil if none recover.
+    def retry_structured_on_secondary(messages, response_format, extras, exclude:)
+      (FAST_FALLBACK_MODELS - [ exclude ]).each do |model|
+        begin
+          resp = attempt_structured_output_call(messages, response_format, model, extras)
+          if resp.structured_output.present?
+            Rails.logger.info "✅ Secondary #{model} recovered structured output after empty primary response"
+            return resp
+          end
+          Rails.logger.warn "⚠️ Secondary #{model} also returned empty structured output"
+        rescue => e
+          Rails.logger.warn "❌ Secondary #{model} failed: #{e.message}"
+        end
+      end
+      nil
     end
 
     public

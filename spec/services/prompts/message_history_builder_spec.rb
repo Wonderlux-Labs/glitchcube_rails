@@ -84,9 +84,9 @@ RSpec.describe Prompts::MessageHistoryBuilder do
         end
       end
 
-      it 'caps at the configured limit (12 turns = 24 messages)' do
+      it 'caps at the configured limit (8 turns = 16 messages)' do
         result = described_class.new(conversation: conversation).build
-        expect(result.length).to eq(24)
+        expect(result.length).to eq(16)
       end
     end
 

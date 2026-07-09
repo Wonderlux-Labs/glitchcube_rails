@@ -35,6 +35,16 @@ RSpec.describe SummaryTriggers do
     described_class.after_turn("neon")
   end
 
+  it "does not count turns already folded into a persona summary" do
+    create(:summary, summary_type: "interaction", persona: neon, end_time: 30.minutes.ago)
+    create(:summary, summary_type: "persona", persona: neon,
+           metadata: { folded_through_at: 10.minutes.ago.iso8601(6) }.to_json)
+    add_turns(described_class::CHUNK_EVERY - 1, at: 20.minutes.ago) # folded — must not count
+    add_turns(1, at: Time.current) # just one fresh turn since the fold
+    expect(Recurring::Memory::SummarizerJob).not_to receive(:perform_later)
+    described_class.after_turn("neon")
+  end
+
   it "does not enqueue a persona fold (fold is switch-only)" do
     add_turns(60)
     expect(PersonaSummarizerJob).not_to receive(:perform_later)

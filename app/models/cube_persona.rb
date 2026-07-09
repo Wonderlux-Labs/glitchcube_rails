@@ -30,15 +30,22 @@ class CubePersona
     name.to_sym
   end
 
-  def self.set_random
+  # The autonomous rotation always makes a grand entrance (fanfare on the cube).
+  def self.set_random(entrance: :grand)
     # Only rotate among active personas (Persona.active); fall back to the full list
     # if none are seeded/active.
     pool = Persona.active.pluck(:slug).map(&:to_sym)
     pool = PERSONAS if pool.empty?
-    set_current_persona(pool.sample)
+    set_current_persona(pool.sample, entrance: entrance)
   end
 
-  def self.set_current_persona(persona)
+  # entrance:
+  #   :grand — call the HASS script.set_persona_grand (full arrival ceremony)
+  #   :quick — call the HASS script.set_persona_quick (fanfare-free dev/Assist switch)
+  #   nil    — set input_select directly, no theatrics (e.g. boot-sync reconciliation)
+  # Every branch writes input_select.current_persona exactly once, which drives the
+  # HASS "Persona Switcher" automation (Assist voice sync).
+  def self.set_current_persona(persona, entrance: nil)
     return unless PERSONAS.include? persona&.to_sym
 
     # Get current persona before switching
@@ -47,11 +54,18 @@ class CubePersona
     # Clear the cache immediately to force fresh read
     Rails.cache.delete("current_persona")
 
-    HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+    case entrance
+    when :grand
+      HomeAssistantService.call_service("script", "set_persona_grand", persona: persona.to_s)
+    when :quick
+      HomeAssistantService.call_service("script", "set_persona_quick", persona: persona.to_s)
+    else
+      HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+    end
     # Write new persona to cache
     Rails.cache.write("current_persona", persona.to_s, expires_in: 30.minutes)
 
-    Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona}"
+    Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona} (#{entrance || 'quiet'})"
 
     # Handle persona switching with goal awareness
     if previous_persona != persona.to_sym

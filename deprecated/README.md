@@ -8,8 +8,8 @@ These are **reference snapshots**, not live config. Rails never loads anything i
 here — they're kept around because some of them are still useful to copy from when
 configuring a HASS instance (sensors, templates, scripts, dashboards, automations).
 
-The live HASS config lives on the actual Home Assistant box (the UTM VM in dev —
-`glitch.local`, SSH `root` / `easytoremember`). This in-repo copy drifted from the
+The live HASS config lives on the actual Home Assistant box (on tailscale —
+`glitch` / `100.79.82.74`, SSH `root` / `easytoremember`). This in-repo copy drifted from the
 live instance long ago; treat it as a grab-bag of examples, not a source of truth.
 
 ## What's here

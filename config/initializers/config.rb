@@ -11,7 +11,12 @@ Rails.application.configure do
 
 
   # Home Assistant configuration
-  config.home_assistant_url = ENV["HOME_ASSISTANT_URL"] || (Rails.env.development? || Rails.env.test? ? "http://glitch.local:8123" : nil)
+  config.home_assistant_url = ENV["HOME_ASSISTANT_URL"] ||
+    if Rails.env.test?
+      "http://glitch.local:8123" # matches recorded VCR cassette hosts — do not change
+    elsif Rails.env.development?
+      "http://100.79.82.74:8123" # HASS on tailscale (magic name: glitch)
+    end
   config.home_assistant_token = ENV["HOME_ASSISTANT_TOKEN"]
   config.home_assistant_timeout = ENV["HOME_ASSISTANT_TIMEOUT"]&.to_i || 30
 
@@ -31,4 +36,9 @@ Rails.application.configure do
   # is exactly one model, set by one env var (`DEFAULT_AI_MODEL`, always present).
   # Swap it live without a restart: `Rails.configuration.ai_model = "stepfun/step-3.7-flash"`.
   config.ai_model = ENV["DEFAULT_AI_MODEL"]
+
+  # The background summarizer tiers (interaction / persona+handoff / overall) all run on this
+  # one model — separate from the conversation brain so we can trade it off independently.
+  # Swap live: `Rails.configuration.summarizer_model = "..."`.
+  config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "google/gemini-3.5-flash"
 end

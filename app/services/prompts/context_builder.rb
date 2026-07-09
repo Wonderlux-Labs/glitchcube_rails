@@ -12,12 +12,13 @@
 #   5. Live now               — the HASS composite sensor (time, weather); the most volatile
 #                               state, kept LAST, closest to the raw message history that follows.
 #
-# The overall digest is NOT truncated (its length is steered by the overall summarizer's own
-# prompt); the shorter blobs keep a loose `clip` backstop.
+# Nothing here is char-clipped. Each summarizer's own prompt is responsible for keeping its
+# output the right length (handoffs ~2 paragraphs, persona summary ~180 words, chunks ~120
+# words, overall ~400 words); truncating mid-sentence at the point of consumption only ever
+# hurt the load-bearing handoffs. We bound BREADTH (how many current-session chunks) not DEPTH.
 module Prompts
   class ContextBuilder
     WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
-    MAX_BLOB = 900 # loose truncation backstop for the short blobs (handoff/persona/chunk)
     CURRENT_SESSION_CHUNKS = 4
 
     def self.build(persona: nil)
@@ -62,7 +63,7 @@ module Prompts
       return nil if handoffs.empty?
 
       lines = [ "The cube's recent history (what happened on the cube just before you woke up):" ]
-      handoffs.reverse_each { |h| lines << "• #{clip(SummaryRenderer.handoff(h))}" } # oldest of the two first
+      handoffs.reverse_each { |h| lines << "• #{SummaryRenderer.handoff(h)}" } # oldest of the two first
       lines.join("\n")
     rescue => e
       warn_nil("recent history", e)
@@ -76,9 +77,9 @@ module Prompts
       summary = persona.summaries.where(summary_type: "persona").order(:created_at).last
       return nil if summary&.summary_text.blank?
 
-      parts = [ "What you (#{persona.name || @persona}) remember from your recent time on the cube: #{clip(summary.summary_text)}" ]
+      parts = [ "What you (#{persona.name || @persona}) remember from your recent time on the cube: #{summary.summary_text.to_s.strip}" ]
       note = summary.metadata_json["ooc_note"]
-      parts << "A note to yourself: #{clip(note)}" if note.present?
+      parts << "A note to yourself: #{note.to_s.strip}" if note.present?
       parts.join("\n")
     rescue => e
       warn_nil("persona summary", e)
@@ -93,7 +94,7 @@ module Prompts
       return nil if chunks.empty?
 
       lines = [ "Your current session so far (what's happened since you woke up this time):" ]
-      chunks.each { |c| lines << clip(SummaryRenderer.interaction_chunk(c)) }
+      chunks.each { |c| lines << SummaryRenderer.interaction_chunk(c) }
       lines.join("\n\n")
     rescue => e
       warn_nil("current session", e)
@@ -112,10 +113,9 @@ module Prompts
     def current_stint_chunks(persona)
       # Boundary is the last fold's `folded_through_at` cursor — the same cursor the persona
       # summarizer uses, so "current session" is exactly the chunks not yet folded into a summary.
-      since = persona.summaries.where(summary_type: "persona").order(:created_at).last
-                     &.metadata_json&.dig("folded_through_at")
+      since = Summary.fold_boundary_for(persona)
       scope = Summary.interaction.where(persona_id: persona.id)
-      scope = scope.where("created_at > ?", Time.zone.parse(since)) if since.present?
+      scope = scope.where("created_at > ?", since) if since
       scope.order(:start_time).last(CURRENT_SESSION_CHUNKS)
     end
 
@@ -124,10 +124,6 @@ module Prompts
 
       parts << "\n## #{heading}"
       parts << body.to_s.strip
-    end
-
-    def clip(text)
-      text.to_s.squish.truncate(MAX_BLOB)
     end
 
     def warn_nil(what, error)

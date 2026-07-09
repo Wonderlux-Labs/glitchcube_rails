@@ -2,35 +2,20 @@
 
 class PersonaSwitchService
   class << self
-    # Handle persona switching - end current conversation and notify Home Assistant
+    # Rails-side bookkeeping for a persona switch. The actual input_select.current_persona
+    # write is owned by the caller (CubePersona.set_current_persona — directly or via the
+    # set_persona_{grand,quick} HASS script), so this method does not touch HASS state.
     def handle_persona_switch(new_persona_id, previous_persona_id = nil)
       Rails.logger.info "🎭 Persona switch: #{previous_persona_id || 'unknown'} → #{new_persona_id}"
 
       # Summarize the OUTGOING persona's just-finished stint (memory + self-steering).
       PersonaSummarizerJob.perform_later(previous_persona_id.to_s) if previous_persona_id.present?
 
-      begin
-        # End any active conversations to ensure new conversation starts fresh
-        end_active_conversations
+      # End any active conversations to ensure new conversation starts fresh
+      end_active_conversations
 
-        # Clear any cached conversation data
-        clear_conversation_caches
-
-        # Notify Home Assistant of the persona change. Single source of truth is
-        # input_select.current_persona (what CubePersona.current_persona reads).
-        HomeAssistantService.call_service(
-          "input_select",
-          "select_option",
-          {
-            entity_id: "input_select.current_persona",
-            option: new_persona_id.to_s
-          }
-        )
-
-        Rails.logger.info "✅ Notified Home Assistant of persona change to #{new_persona_id}"
-      rescue StandardError => e
-        Rails.logger.error "❌ Failed to notify Home Assistant: #{e.message}"
-      end
+      # Clear any cached conversation data
+      clear_conversation_caches
     end
 
     private

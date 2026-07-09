@@ -8,7 +8,6 @@
 # self-summaries. Runs periodically (Recurring::Memory::OverallSummarizerJob) and can be
 # triggered manually.
 class OverallSummarizerService
-  MODEL = "google/gemini-3.5-flash"
   OVERALL_TYPE = "overall"
   HANDOFF_TYPE = "handoff"
 
@@ -23,7 +22,10 @@ class OverallSummarizerService
     You are REBUILDING each field, not appending: for every field, produce an updated version that
     carries forward what still matters from the current world board, folds in the new handoffs, and
     DROPS what's gone stale. This keeps memory durable (a fact from an hour ago survives even if the
-    latest handoff didn't mention it) without letting it sprawl.
+    latest handoff didn't mention it) without letting it sprawl. Carry forward FACTS, never prose:
+    rewrite every field fresh in your own words each run instead of copying the previous board's
+    sentences or phrasing. If grandiose language is accumulating ("legendary", "has cemented
+    itself"), flatten it back to plain reporting.
 
     Produce these fields — keep them distinct:
 
@@ -35,10 +37,12 @@ class OverallSummarizerService
     persona plays it the same way.
 
     `durable_facts` — the "world board": places, camps, events visitors keep mentioning that stay
-    true across the night (a possible fashion show at Camp Trashy, a quiet tea lounge, a loud
-    hygiene station). Short lines. Carry forward the still-relevant ones, add new, drop stale; keep
-    the ~5-8 most relevant. This is what makes the cube feel like it's actually AT this event.
-    Empty if nothing durable surfaced.
+    true across the night (a camp's rumored event, a quiet lounge, a loud sound camp — format
+    illustrations only, never write them onto the board). Short lines. ONLY facts that actually
+    surfaced in the handoffs — never placeholder or "not yet known" lines, and the cube's own mood,
+    performance, or capabilities are not world facts (those live in the narrative, if anywhere).
+    Carry forward the still-relevant ones, add new, drop stale; keep the ~5-8 most relevant. This
+    is what makes the cube feel like it's actually AT this event. Empty if nothing durable surfaced.
 
     `recurring_visitors` — named anchors: people who gave a name and left a hook ("Marco: wants a
     deep lavender-purple glow, may be back by sunrise"). Short lines. Carry forward, add new, rotate
@@ -50,7 +54,10 @@ class OverallSummarizerService
 
     `director_note` — OPTIONAL. Leave empty unless a genuine WHOLE-CUBE pattern jumps out across
     the handoffs (devices failing every stint, all personas blurring, a whole-event approach
-    landing badly). Do NOT force one — steering mostly lives per-persona.
+    landing badly). Corrective, not creative: flag a problem or pattern to fix — never direct all
+    personas to adopt one persona's bit, style, or storyline, and never assign emotional homework
+    ("keep X sacred"). If it's fun rather than broken, leave it empty. Do NOT force one — steering
+    mostly lives per-persona.
   PROMPT
 
   def self.call
@@ -95,7 +102,7 @@ class OverallSummarizerService
         { role: "user", content: build_material(overall, handoffs) }
       ],
       response_format: Schemas::OverallSummarySchema.schema,
-      model: MODEL
+      model: Rails.configuration.summarizer_model
     )
     response.structured_output || {}
   end

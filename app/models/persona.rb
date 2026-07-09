@@ -21,6 +21,7 @@ class Persona < ApplicationRecord
     {
       "name" => name,
       "description" => description,
+      "persona_overview" => persona_overview,
       "voice_id" => voice_id,
       "agent_id" => agent_id,
       "persona_prompt" => persona_prompt,

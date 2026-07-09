@@ -1,11 +1,14 @@
 - id: '1755313710558'
   alias: Persona Switcher
   description: >-
-    When input_select.current_persona changes, select the matching Assist
-    pipeline on the Cube Voice device. Pipelines all share one conversation
+    When input_select.current_persona changes: (1) select the matching Assist
+    pipeline on the Cube Voice device — pipelines all share one conversation
     agent (conversation.glitch_cube_neon) and differ only by TTS voice, so this
-    is purely a voice swap. Personas without their own pipeline fall back to
-    "preferred".
+    is purely a voice swap; personas without their own pipeline fall back to
+    "preferred". (2) Recolor the Voice PE LED ring to that persona's signature
+    color at full brightness, so the ring identifies who's talking. The ring is
+    otherwise the assistant's thinking/listening indicator and gets overridden
+    freely during a turn — this just resets it to the persona's color on switch.
   triggers:
   - trigger: state
     entity_id:
@@ -19,4 +22,156 @@
       option: >-
         {{ {'buddy': 'Buddy', 'jax': 'Jax', 'neon': 'Neon', 'zorp': 'Zorp', 'crash': 'Crash'}
            .get(states('input_select.current_persona'), 'preferred') }}
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_cube_voice_led_ring
+    data:
+      brightness: 255
+      rgb_color: >-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}
+           .get(states('input_select.current_persona'), [255,255,255]) }}
+  mode: single
+
+- id: cube_voice_mic_guard_and_marquee
+  alias: Cube Voice - mic guard + marquee status
+  description: >-
+    Two jobs in one so they can't race each other:
+    (1) SELF-STT FIX — the Voice PE reopens the mic before TTS finishes playing
+    (esphome VPE #563: the mic reopens when the TTS stream finishes DOWNLOADING, not
+    playing — the gap scales with speech length, hits the built-in speaker too). We
+    MUTE the mic when the satellite enters 'responding' (the cube is speaking) and
+    UNMUTE ~0.3s after the voice media_player leaves 'playing' (audio truly ended).
+    Muting on 'responding' (not on media 'playing') means the wake CHIME at
+    conversation start — which plays media while the satellite is idle→listening,
+    never 'responding' — does NOT mute, so you can speak immediately on a fresh start.
+    IMPORTANT (learned 2026-07-08 from state history): the firmware often blips
+    responding→idle→listening ~2s into a long response, BEFORE audio even starts.
+    An unmute-on-idle "safety" fired on that blip and reopened the mic mid-speech →
+    self-STT feedback loops. So we do NOT unmute on idle; the ONLY unmute paths are
+    (a) real playback end (playing→idle) and (b) a 10s-idle stuck-mute safety with a
+    media-not-playing guard. Muting works mid-stream: the mute switch substitutes
+    zero samples into the already-open STT stream at the firmware level.
+    (2) MARQUEE STATUS — the unmute (real playback end) is the true "now listening"
+    moment, so it drives the LISTENING label; THINKING shows on processing; we clear
+    our status while the cube is speaking so the persona's own marquee messages show
+    through. If TTS actually plays on a different media_player than assumed, only the
+    entity_id below needs changing.
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: responding
+    id: responding
+  - trigger: state
+    entity_id: media_player.cube_cube_voice_media_player
+    from: playing
+    id: tts_done
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: processing
+    id: thinking
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: listening
+    id: listening
+  # Stuck-mute safety: satellite has been idle 10s (conversation truly over, not the
+  # mid-response responding→idle→listening blip, which lasts <100ms).
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: idle
+    for: "00:00:10"
+    id: ended
+  conditions: []
+  actions:
+  - choose:
+    # (1) Cube starts speaking ('responding') -> mute mic so the early mic-reopen can't
+    #     hear the TTS; clear our status so the persona's marquee shows. The wake chime
+    #     at conversation start is NOT 'responding', so a fresh start never mutes.
+    - conditions:
+      - "{{ trigger.id == 'responding' }}"
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify/dismiss
+          payload: ""
+    # (2) Real playback ended -> let the tail die, unmute, and if we're now listening
+    #     for the visitor, that's the true LISTENING moment. This is the ONLY normal
+    #     unmute path — do not add others without re-reading the header comment.
+    - conditions:
+      - "{{ trigger.id == 'tts_done' }}"
+      sequence:
+      - delay: "00:00:00.3"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - choose:
+        - conditions:
+          - "{{ is_state('assist_satellite.cube_cube_voice_assist_satellite', 'listening') }}"
+          sequence:
+          - action: mqtt.publish
+            data:
+              topic: marquee/notify
+              payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
+        default:
+        - action: mqtt.publish
+          data:
+            topic: marquee/notify/dismiss
+            payload: ""
+    # Brain thinking.
+    - conditions:
+      - "{{ trigger.id == 'thinking' }}"
+      sequence:
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify
+          payload: '{"text":"THINKING","color":"#FFC400","hold":true,"stack":false}'
+    # Genuine listening (NOT the premature during-playback reopen) -> LISTENING.
+    # The premature reopen can beat the media player to 'playing' by ~140ms, so the
+    # media check alone races; the mute switch is the reliable tell — we muted at
+    # 'responding' and a genuine listening moment is never muted.
+    - conditions:
+      - "{{ trigger.id == 'listening' }}"
+      - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      - "{{ is_state('switch.cube_cube_voice_mute', 'off') }}"
+      sequence:
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify
+          payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
+    # Idle 10s -> stuck-mute safety (e.g. TTS errored and media never played) + clear
+    # marquee. Media-not-playing guard so a still-playing tail can't get the mic opened.
+    - conditions:
+      - "{{ trigger.id == 'ended' }}"
+      - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify/dismiss
+          payload: ""
+  mode: queued
+  max: 15
+
+- id: cube_awtrix_idle_effect_cycle
+  alias: Cube AWTRIX - idle effect cycle
+  description: >-
+    Timing layer for the marquee idle screen. Every 2 minutes (and on HA start), call
+    script.set_marquee_idle with no args so it picks a random ambient effect + random
+    palette + random speed. The SCRIPT owns WHAT shows; this owns WHEN. To curate, pass
+    explicit args in the data: below, add conditions, or change the interval — e.g. a
+    single fixed look, or a weighted/random pick of known-good arg combos.
+  triggers:
+  - trigger: time_pattern
+    minutes: "/2"
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: script.set_marquee_idle
+    data: {}
   mode: single

@@ -6,7 +6,7 @@
 # There is deliberately NO mid-stint persona fold — the persona summarizer runs only on
 # switch (wired in PersonaSwitchService), which avoids over-steering a still-active persona.
 class SummaryTriggers
-  CHUNK_EVERY = 12 # interaction-chunk cadence, mapped to the ~12-turn raw-history window
+  CHUNK_EVERY = 8 # interaction-chunk cadence, kept in step with the raw-history window (8)
 
   def self.after_turn(persona_slug)
     new(persona_slug).after_turn
@@ -31,9 +31,12 @@ class SummaryTriggers
 
   private
 
-  # Turns for this persona since its last interaction chunk was written.
+  # Turns for this persona since its last interaction chunk — clamped to the persona-fold
+  # boundary (same cursor as SummarizerService#logs_since), so already-folded turns never
+  # count toward the next chunk.
   def unsummarized_turns(persona)
-    since = Summary.interaction.where(persona_id: persona.id).recent.first&.end_time
+    last_chunk_end = Summary.interaction.where(persona_id: persona.id).recent.first&.end_time
+    since = [ last_chunk_end, Summary.fold_boundary_for(persona) ].compact.max
     scope = ConversationLog.joins(:conversation).where(conversations: { persona: persona.slug })
     scope = scope.where("conversation_logs.created_at > ?", since) if since
     scope.count

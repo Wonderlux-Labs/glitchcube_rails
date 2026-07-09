@@ -25,7 +25,7 @@ module Recurring
         return if Time.current < Time.parse(next_at.to_s)
 
         Rails.logger.info "🎲 RandomPersonaJob: interval elapsed, switching persona"
-        CubePersona.set_random
+        CubePersona.set_random(entrance: :grand)
         schedule_next
       end
 

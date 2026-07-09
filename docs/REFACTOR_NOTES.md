@@ -216,7 +216,7 @@ fixed brain/translator pairing.
 ### 3. FakeHomeAssistant audit (lower priority now)
 
 Deferred — see §1. We need request-spec/world-state context more than HASS-response
-fidelity. The UTM VM (`glitch.local`, SSH `root/easytoremember`) stays reserved for
+fidelity. The HASS box (`glitch` / `100.79.82.74`, SSH `root/easytoremember`) stays reserved for
 pre-event manual smoke testing.
 
 ### 4. Phase 3 — EventProfile portability (most invasive, defer)

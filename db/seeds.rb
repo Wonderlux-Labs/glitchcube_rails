@@ -24,6 +24,7 @@ persona_files.each do |path|
   persona.assign_attributes(
     name: config['name'],
     description: config['description'],
+    persona_overview: config['persona_overview'],
     voice_id: config['voice_id'],
     agent_id: config['agent_id'],
     persona_prompt: config['persona_prompt'],

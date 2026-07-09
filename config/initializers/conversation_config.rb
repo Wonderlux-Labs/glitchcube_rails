@@ -12,8 +12,11 @@ Rails.application.configure do
   #   minutes — only pull turns from the last N minutes (so a cube idle for 20 min
   #             starts fresh rather than dredging up an unrelated interaction)
   #   limit   — hard cap on how many recent turns to include
+  # Kept in step with SummaryTriggers::CHUNK_EVERY (8): the raw window carries the last ~8
+  # turns live, and every 8 turns those get captured into an interaction chunk — so as a turn
+  # ages out of the raw window it's already preserved in the current-session chunk record.
   config.history_window_minutes = Integer(ENV.fetch("HISTORY_WINDOW_MINUTES", 10))
-  config.history_window_limit = Integer(ENV.fetch("HISTORY_WINDOW_LIMIT", 12))
+  config.history_window_limit = Integer(ENV.fetch("HISTORY_WINDOW_LIMIT", 8))
 
   # Conversation continue delay - how long to wait before re-enabling listening when continue_conversation is true
   config.conversation_continue_delay = 3.seconds

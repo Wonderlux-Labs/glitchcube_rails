@@ -47,6 +47,11 @@ end
 # table churn and the bare TRANSACTION BEGIN/COMMIT statements — carries a
 # `job=...` comment. Anything touching a solid_queue_* table gets dropped too,
 # covering the supervisor's polling/claim/insert traffic that runs outside a job.
+#
+# The last guard catches the noisiest case: the supervisor/dispatcher poll the
+# QUEUE database in a tight loop, emitting bare `TRANSACTION BEGIN/COMMIT` (and
+# SAVEPOINT) lines that carry no table name and no `job=` tag. Nothing issued on
+# the queue connection is ever interesting in development.log, so drop it all.
 module SilenceBackgroundJobSql
   def sql(event)
     sql = event.payload[:sql].to_s
@@ -54,6 +59,7 @@ module SilenceBackgroundJobSql
     return if name.start_with?("SolidQueue")
     return if sql.include?("solid_queue_")
     return if sql.include?("job=") # query-log tag -> came from inside a job
+    return if event.payload[:connection]&.pool&.db_config&.name == "queue"
 
     super
   end

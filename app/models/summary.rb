@@ -31,6 +31,15 @@ class Summary < ApplicationRecord
     scope type.to_sym, -> { where(summary_type: type) }
   end
 
+  # The persona-fold boundary cursor: turns created at or before this instant are already
+  # folded into a `persona` summary (PersonaSummarizerService stamps `folded_through_at`).
+  # Nil if this persona has never been folded. Every reader of the cursor goes through here.
+  def self.fold_boundary_for(persona)
+    folded_through = where(summary_type: "persona", persona_id: persona.id)
+                     .order(:created_at).last&.metadata_json&.dig("folded_through_at")
+    folded_through && Time.zone.parse(folded_through)
+  end
+
   def metadata_json
     return {} if metadata.blank?
     JSON.parse(metadata)

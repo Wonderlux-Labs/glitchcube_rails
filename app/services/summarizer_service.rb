@@ -6,7 +6,6 @@
 # ONE persona's conversations — never cross-persona — and carries no steering: performance
 # notes live in the persona summary, system-wide notes in the overall. See docs/conversation_flow.md.
 class SummarizerService
-  MODEL = "google/gemini-3.5-flash"
   SUMMARY_TYPE = "interaction"
 
   # On the very first run for a persona (no prior chunk) look back this far for material.
@@ -71,9 +70,10 @@ class SummarizerService
     Summary.interaction.where(persona_id: persona.id).recent.first
   end
 
-  # This persona's conversation logs since its last chunk was written.
+  # This persona's conversation logs since its last chunk — clamped to the persona-fold
+  # boundary, so a post-fold chunk never re-covers turns the fold already absorbed.
   def logs_since(persona, previous)
-    since = previous&.end_time || FIRST_RUN_LOOKBACK.ago
+    since = [ previous&.end_time, Summary.fold_boundary_for(persona) ].compact.max || FIRST_RUN_LOOKBACK.ago
     ConversationLog.joins(:conversation)
                    .where(conversations: { persona: persona.slug })
                    .where("conversation_logs.created_at > ?", since)
@@ -88,7 +88,7 @@ class SummarizerService
         { role: "user", content: build_material(logs, previous) }
       ],
       response_format: Schemas::SummarySchema.schema,
-      model: MODEL
+      model: Rails.configuration.summarizer_model
     )
     response.structured_output || {}
   end

@@ -36,7 +36,7 @@ class Schemas::NarrativeResponseSchema
               description: "Whether to keep listening without a wake word. Err toward true; false only when the conversation has clearly ended (a goodbye) or the input is environmental noise, not someone talking to you."
 
       string :ooc_questions, required: false,
-             description: "OPTIONAL — leave this out on most turns. If a genuine out-of-character question has come up for you — about who your character is or should be, something you'd ask a director, or something you'd ask the programmer maintaining this art project — put it here in plain English. Nothing answers it yet; it's just collected so the people running the cube can see what you'd want to ask. Only include it when a real question has surfaced."
+             description: "OPTIONAL — leave this out on most turns. Step out of character for a second: if a genuine question has come up for the humans running this art project, put it here in plain English. It could be about your character (\"Am I allowed to be meaner than this?\", \"Should I have a goal for the night or just react?\", \"Is there a version of me visitors respond to better?\"), about the project (\"What happens to these conversations after people walk away — do you keep them?\", \"Can I refuse a request?\", \"Who decides which of us is awake?\"), or anything you'd genuinely want to ask a director or the programmer maintaining you. Nothing answers it yet; it's just collected so the people running the cube can see what you'd want to ask. Only include it when a real question has actually surfaced — not as filler."
     end
   end
 end

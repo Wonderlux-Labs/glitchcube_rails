@@ -1,7 +1,7 @@
 # Home Assistant config — the files we actually run
 
 This mirrors the **GlitchCube-authored files that are live on the HASS box**
-(`root@glitch.local:/config`) right now — not a full HASS config, just the parts we
+(`root@glitch:/config`) right now — not a full HASS config, just the parts we
 own and maintain. Keep this in sync when you change config on the box.
 
 Contents:
@@ -61,13 +61,13 @@ Contents:
 ## Deploying a change to the box
 
 ```
-sshpass -e scp <file> root@glitch.local:/config/<path>     # SSHPASS=easytoremember
+sshpass -e scp <file> root@glitch:/config/<path>     # SSHPASS=easytoremember
 # validate BEFORE reloading:  POST /api/config/core/check_config  (needs the long-lived token)
 # then reload — a NEW template/integration needs a core restart:
 #   POST /api/services/homeassistant/restart
 
 # local media (media/sounds/*) deploys to a DIFFERENT root — not /config:
-sshpass -e scp <file> root@glitch.local:/media/sounds/<path>
+sshpass -e scp <file> root@glitch:/media/sounds/<path>
 ```
 
 ## Not this: `deprecated/homeassistant/`
