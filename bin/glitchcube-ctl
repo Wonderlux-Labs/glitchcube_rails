@@ -1,0 +1,40 @@
+#!/bin/bash
+# Control the GlitchCube boot supervisor (com.glitchcube.boot LaunchAgent).
+#
+# The agent has KeepAlive=false: stopping it stays stopped, but the job remains
+# loaded so RunAtLoad still fires on the next power-cycle. Use these during dev.
+#
+#   bin/glitchcube-ctl start     # run it now (VM + Rails + jobs)
+#   bin/glitchcube-ctl stop      # stop it, stays stopped until you start / reboot
+#   bin/glitchcube-ctl restart   # stop + start
+#   bin/glitchcube-ctl status    # launchd state + last exit code
+#   bin/glitchcube-ctl logs      # tail the supervisor logs
+set -euo pipefail
+
+APP_ROOT="/Users/estiens/code/glitchcube-main/glitchcube_rails"
+LABEL="com.glitchcube.boot"
+TARGET="gui/$(id -u)/$LABEL"
+
+case "${1:-}" in
+  start)
+    # kickstart if already loaded; otherwise bootstrap from the installed plist.
+    launchctl kickstart "$TARGET" 2>/dev/null \
+      || launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$LABEL.plist"
+    ;;
+  stop)
+    launchctl kill TERM "$TARGET"
+    ;;
+  restart)
+    launchctl kickstart -k "$TARGET"
+    ;;
+  status)
+    launchctl print "$TARGET" | grep -E 'state|last exit|pid|program' || true
+    ;;
+  logs)
+    tail -f "$APP_ROOT/log/boot.out.log" "$APP_ROOT/log/boot.err.log"
+    ;;
+  *)
+    echo "usage: bin/glitchcube-ctl {start|stop|restart|status|logs}" >&2
+    exit 1
+    ;;
+esac

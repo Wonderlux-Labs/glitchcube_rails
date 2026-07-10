@@ -1,0 +1,39 @@
+#!/bin/bash
+# Install (or reinstall) the GlitchCube boot supervisor LaunchAgent.
+# Run once on bigbuddy from the logged-in GUI session:  bin/install-boot
+set -euo pipefail
+
+APP_ROOT="/Users/estiens/code/glitchcube-main/glitchcube_rails"
+LABEL="com.glitchcube.boot"
+SRC="$APP_ROOT/deploy/launchd/$LABEL.plist"
+DST="$HOME/Library/LaunchAgents/$LABEL.plist"
+DOMAIN="gui/$(id -u)"
+
+[ -f "$SRC" ] || { echo "missing $SRC"; exit 1; }
+
+mkdir -p "$HOME/Library/LaunchAgents"
+cp "$SRC" "$DST"
+echo "installed $DST"
+
+# Replace any existing instance (modern launchctl API).
+launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+launchctl bootstrap "$DOMAIN" "$DST"
+echo "bootstrapped $DOMAIN/$LABEL"
+
+cat <<EOF
+
+Done. The supervisor starts everything at login / power-cycle.
+It does NOT auto-restart on crash (deliberate) — stop it during dev and it stays
+stopped. Control it with:  bin/glitchcube-ctl {start|stop|restart|status|logs}
+
+Before relying on unattended power-outage recovery, confirm:
+  1. Auto-login is ON for 'estiens' (System Settings > Users & Groups).
+  2. Ruby $(cat "$APP_ROOT/.ruby-version") is installed:  rbenv versions
+  3. The UTM VM name is 'glitch':  /Applications/UTM.app/Contents/MacOS/utmctl list
+     (if different, update VM_NAME in bin/ensure-hass-vm)
+
+Useful commands:
+  bin/glitchcube-ctl restart                # restart now
+  bin/glitchcube-ctl logs                   # watch logs
+  launchctl bootout $DOMAIN/$LABEL          # fully uninstall the agent
+EOF

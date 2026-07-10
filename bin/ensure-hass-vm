@@ -1,0 +1,44 @@
+#!/bin/bash
+# Ensure the Home Assistant UTM VM is running.
+#
+# Idempotent and best-effort: this is called from the boot supervisor
+# (bin/glitchcube-boot), so it must never wedge or crash-loop the Rails app.
+# A slow or unhappy VM is logged loudly and we continue anyway — Rails does not
+# need HASS up to boot; HASS calls simply fail until it comes online.
+#
+# NOTE: utmctl only sees VMs from a GUI (Aqua) login session, not over plain SSH.
+
+UTMCTL="/Applications/UTM.app/Contents/MacOS/utmctl"
+VM_NAME="glitch"   # verify with: "$UTMCTL" list  (from the logged-in session)
+
+log() { echo "[ensure-hass-vm] $*" >&2; }
+
+if [ ! -x "$UTMCTL" ]; then
+  log "utmctl not found at $UTMCTL — skipping VM start"
+  exit 0
+fi
+
+# Launch UTM in the background if it isn't already running (-g: don't steal focus).
+open -ga UTM
+
+# Wait for the UTM backend/XPC to answer after launch (up to ~60s).
+status=""
+for _ in $(seq 1 30); do
+  status="$("$UTMCTL" status "$VM_NAME" 2>/dev/null)"
+  [ -n "$status" ] && break
+  sleep 2
+done
+
+if [ -z "$status" ]; then
+  log "utmctl did not respond for VM '$VM_NAME' within timeout — continuing without it"
+  exit 0
+fi
+
+if [ "$status" = "started" ]; then
+  log "VM '$VM_NAME' already started"
+else
+  log "VM '$VM_NAME' status='$status' — starting"
+  "$UTMCTL" start "$VM_NAME" || log "utmctl start '$VM_NAME' failed — continuing"
+fi
+
+exit 0

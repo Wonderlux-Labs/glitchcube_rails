@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  GlitchCube boot supervisor (user LaunchAgent).
+  Install with bin/install-boot. Concrete bigbuddy paths — bigbuddy is the only prod host.
+  Runs in the logged-in GUI session (auto-login required) so utmctl can see the VM.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.glitchcube.boot</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/estiens/code/glitchcube-main/glitchcube_rails/bin/glitchcube-boot</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Boot/power-cycle starter, NOT a babysitter. No KeepAlive: if we stop it
+       ourselves during development it stays stopped. Restart manually with:
+         launchctl kickstart gui/$(id -u)/com.glitchcube.boot
+       To opt into crash-restart, set this <true/> — but then a plain pkill gets
+       resurrected too; stop via `launchctl bootout` to keep it down. -->
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/estiens/code/glitchcube-main/glitchcube_rails</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/estiens/.rbenv/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key>
+    <string>/Users/estiens</string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/estiens/code/glitchcube-main/glitchcube_rails/log/boot.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/estiens/code/glitchcube-main/glitchcube_rails/log/boot.err.log</string>
+</dict>
+</plist>
