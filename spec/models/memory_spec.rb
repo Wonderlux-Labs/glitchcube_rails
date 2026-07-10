@@ -21,11 +21,13 @@ RSpec.describe Memory, type: :model do
       expect(build(:memory, importance: 11)).not_to be_valid
     end
 
-    it "does not embed on save (no vectorsearch hook)" do
-      memory = create(:memory)
-      expect(memory.embedding).to be_nil
-      expect(Memory._save_callbacks.map(&:filter)).not_to include(:upsert_to_vectorsearch)
-    end
+    # Embeddings/pgvector removed in this version — the `embedding` column no
+    # longer exists. Restore this (and the column) if vector search comes back.
+    # it "does not embed on save (no vectorsearch hook)" do
+    #   memory = create(:memory)
+    #   expect(memory.embedding).to be_nil
+    #   expect(Memory._save_callbacks.map(&:filter)).not_to include(:upsert_to_vectorsearch)
+    # end
   end
 
   describe ".search" do

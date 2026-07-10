@@ -2,8 +2,8 @@
 
 require 'rails_helper'
 
-RSpec.describe Gps::GpsTrackingService, type: :service do
-  pending "GPS disabled for stationary regional installation — restore for Burning Man"
+RSpec.describe Gps::GpsTrackingService, type: :service,
+  skip: "GPS/location disabled this version (no landmarks/streets/boundaries tables) — restore for Burning Man" do
   let(:service) { described_class.new }
   let(:mock_ha_service) { instance_double(HomeAssistantService) }
 
