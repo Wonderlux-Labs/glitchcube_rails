@@ -1,5 +1,16 @@
-# Configuration initializer for loading ENV vars into Rails.configuration
-# This is the ONLY place ENV vars should be accessed - use Rails.configuration everywhere else
+# Configuration initializer for loading ENV vars into Rails.configuration.
+# This is the ONLY place ENV vars should be accessed — use Rails.configuration everywhere else.
+#
+# This file is the source of truth for every knob and its default. `.env` (gitignored)
+# should hold only two kinds of thing:
+#   1. SECRETS — API keys / tokens that can't have a default (OPENROUTER_API_KEY,
+#      HOME_ASSISTANT_TOKEN, QUALSPEC_API_KEY).
+#   2. GENUINE PER-HOST OVERRIDES — values that legitimately differ by machine and
+#      have no universal default (HOME_ASSISTANT_URL on prod, USE_LOCAL_VISION on the
+#      dev box, PGGSSENCMODE for local libpq).
+# Everything else below defaults sensibly and needs NO env var on any host; set the
+# matching ENV only to override for a single run. Don't reintroduce env vars for
+# things that just want a per-environment default — put the default here instead.
 
 Rails.application.configure do
   config.mission_control.jobs.http_basic_auth_enabled = false
@@ -33,9 +44,10 @@ Rails.application.configure do
 
   # === The one model knob ===
   # We make LLM calls in exactly one place now (the conversation flow), so there
-  # is exactly one model, set by one env var (`DEFAULT_AI_MODEL`, always present).
+  # is exactly one brain model. It has a sane default here, so no env var is
+  # required on any host; set `DEFAULT_AI_MODEL` only to override for a run.
   # Swap it live without a restart: `Rails.configuration.ai_model = "stepfun/step-3.7-flash"`.
-  config.ai_model = ENV["DEFAULT_AI_MODEL"]
+  config.ai_model = ENV["DEFAULT_AI_MODEL"] || "z-ai/glm-5.2:nitro"
 
   # The background summarizer tiers (interaction / persona+handoff / overall) all run on this
   # one model — separate from the conversation brain so we can trade it off independently.
