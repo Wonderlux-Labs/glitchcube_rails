@@ -160,5 +160,4 @@ class Api::V1::ConversationController < Api::V1::BaseController
       "cube_installation_#{ENV.fetch('INSTALLATION_ID', 'default')}"
     )[0..16]
   end
-
 end

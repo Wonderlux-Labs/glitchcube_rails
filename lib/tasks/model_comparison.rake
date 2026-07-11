@@ -25,7 +25,7 @@ namespace :models do
     system = ENV["SYSTEM"] || "You are a persona of the GlitchCube, an interactive art-installation cube at a festival. Stay in character, speak aloud, keep it short."
 
     med = ->(a) { a = a.compact.sort; a.empty? ? 0 : a[a.size / 2] }
-    p95 = ->(a) { a = a.compact.sort; a.empty? ? 0 : a[[(a.size * 0.95).ceil - 1, a.size - 1].min.clamp(0, a.size - 1)] }
+    p95 = ->(a) { a = a.compact.sort; a.empty? ? 0 : a[[ (a.size * 0.95).ceil - 1, a.size - 1 ].min.clamp(0, a.size - 1)] }
 
     rows = models.map do |m|
       puts "\n▶ #{m}"
