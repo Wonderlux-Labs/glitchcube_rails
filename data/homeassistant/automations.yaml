@@ -175,3 +175,60 @@
   - action: script.set_marquee_idle
     data: {}
   mode: single
+
+- id: camera_refresh_description
+  alias: "Camera: refresh description"
+  description: >-
+    Refresh the cube's sense of what it currently sees. Fires on two triggers: (1) the
+    exposed input_button being pressed — this is the cube's plain-English "refresh my
+    camera" action, mapped onto the button by the Assist agent; (2) the voice satellite
+    entering 'listening', i.e. a conversation starting via wake word OR the physical
+    button on the Voice PE (both drive the satellite to 'listening'). Either way we run
+    script.refresh_camera_description, which does the llmvision call and writes the
+    description into input_text.current_camera_state.
+    DEBOUNCE: the satellite re-enters 'listening' at the START OF EVERY TURN
+    (continue_conversation reopens the mic each round), not just at conversation start — so
+    without a guard this fires every turn. The condition below throttles the satellite path
+    to at most once per ~2 min, which doubles as a nice "keep the view fresh as people come
+    and go." Two bypasses: a manual button press always fires (the cube explicitly asked),
+    and an EMPTY input_text always refreshes (so a new conversation right after a clear gets
+    a look immediately instead of waiting out the throttle). Keyed on last_updated, not
+    last_changed, so an identical back-to-back description still counts as a refresh.
+  triggers:
+  - trigger: state
+    entity_id: input_button.refresh_camera_description
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: listening
+  conditions:
+  - condition: template
+    value_template: >-
+      {% set s = states.input_text.current_camera_state %}
+      {{ trigger.entity_id == 'input_button.refresh_camera_description'
+         or (s.state | trim) == ''
+         or (now() - s.last_updated).total_seconds() > 120 }}
+  actions:
+  - action: script.refresh_camera_description
+  mode: single
+
+- id: camera_clear_stale_description
+  alias: "Camera: clear stale description"
+  description: >-
+    Blank input_text.current_camera_state once it has sat unchanged for 3 minutes, so a
+    stale camera look never lingers in the brain's prompt. The non-empty condition is the
+    guard: clearing sets the value to "" (a state change that restarts the 3-min timer),
+    but 3 min later the condition is false and nothing re-fires. ContextBuilder omits the
+    line entirely when this is empty, so clearing simply removes the camera block.
+  triggers:
+  - trigger: state
+    entity_id: input_text.current_camera_state
+    for: "00:03:00"
+  conditions:
+  - "{{ states('input_text.current_camera_state') | trim != '' }}"
+  actions:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.current_camera_state
+    data:
+      value: ""
+  mode: single

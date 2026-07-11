@@ -74,6 +74,17 @@ input_text:
     max: 255
     icon: mdi:bullhorn
 
+  # What the cube's camera currently sees. script.refresh_camera_description runs the
+  # snapshot through llmvision and writes a short description here; ContextBuilder injects
+  # it into the brain's prompt (below the world state) whenever it's non-empty. An
+  # automation blanks it after ~3 min so a stale look never lingers. Short-lived on
+  # purpose — we don't analyze the camera continuously (vision calls cost money).
+  current_camera_state:
+    name: "Current Camera State"
+    initial: ""
+    max: 255
+    icon: mdi:cctv
+
 # Placeholder controls for the `switches` tool. They don't drive real hardware yet —
 # exposing them just lets us see the action agent flip them. Wire up behavior later.
 input_boolean:
@@ -88,3 +99,11 @@ input_button:
   trigger_alarm:
     name: "Trigger Alarm"
     icon: mdi:alarm-light
+
+  # The ONLY camera-related entity exposed to the Assist action agent. The cube's
+  # plain-English "refresh my camera" maps onto pressing this; the agent never sees the
+  # camera or llmvision entities themselves. An automation reacts to the press (and to
+  # conversation start) by running script.refresh_camera_description.
+  refresh_camera_description:
+    name: "Refresh Camera Description"
+    icon: mdi:camera-iris

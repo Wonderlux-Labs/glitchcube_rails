@@ -17,7 +17,6 @@ play_music_on_jukebox:
     metadata: {}
     target:
       entity_id:
-      - media_player.jukebox
       - media_player.jukebox_internal
     data:
       media_id: '{{ query }}'
@@ -259,16 +258,35 @@ awtrix_marquee_message:
           unit_of_measurement: s
   sequence:
   - variables:
+      # Capture the current (idle) brightness so we can restore it after the message.
+      # The AWTRIX matrix light's brightness IS the device BRI setting (0-255); the idle
+      # screen often runs dim, which would make an un-boosted message hard to read.
+      prev_bri: "{{ state_attr('light.cube_awtrix_marquee_matrix', 'brightness') | int(255) }}"
       notify_payload: >-
         {% set p = {"text": message, "duration": (duration | default(20, true)) | int} %}
         {% if rainbow | default(false, true) %}{% set p = p | combine({"rainbow": true}) %}
         {% elif color | default('', true) %}{% set p = p | combine({"color": color}) %}{% endif %}
         {{ p | to_json }}
+  # Force full brightness FIRST so the notification is always readable, even when the
+  # idle screen was dimmed down.
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 255}'
   - action: mqtt.publish
     data:
       topic: marquee/notify
       payload: "{{ notify_payload | trim }}"
-  mode: single
+  # Hold full brightness for the life of the message (+1s buffer), then restore the
+  # prior idle brightness. mode:queued so back-to-back messages each capture/restore
+  # the real idle level in order instead of clobbering each other.
+  - delay: "{{ (duration | default(20, true)) | int + 1 }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: "{{ {'BRI': prev_bri} | to_json }}"
+  mode: queued
+  max: 5
 
 awtrix_marquee_clear:
   alias: AWTRIX Marquee Clear
@@ -379,88 +397,175 @@ awtrix_install_idle_apps:
   mode: single
 
 # --- Cube light preset effects ---------------------------------------------------
-# The cube light (light.cube_light, a govee2mqtt device) is ALSO exposed directly for
-# solid colors/brightness. This script is the curated preset layer on top of it: a
-# short pick-list of MOOD scenes plus MUSIC-REACTIVE modes that pulse live to whatever
-# audio the light hears (handy when a persona has music going). Scenes route through
-# select.cube_light_scene; music-reactive routes through switch + select.cube_light_
-# music_mode. Picking a mood turns music mode OFF so they don't fight. The device has
-# ~97 scenes + DIY scenes; we intentionally surface only a few so the agent isn't
-# overwhelmed. "Energetic" maps to the device's "Energic" spelling.
+# The cube light (light.cube_light, a govee2mqtt device) is exposed directly for solid
+# colors/brightness — set it directly for those. Two convenience scripts pick named looks
+# on top of it; both simply select a scene on the device:
+#   set_cube_light_effect       -> static scenes: the full built-in catalog (~97) plus the
+#                                  non-reactive DIY scenes. Built-in ones route through
+#                                  select.cube_light_scene, DIY ones through
+#                                  select.cube_light_diy_scene.
+#   set_music_reactive_lighting -> the sound-reactive DIY scenes only (they pulse to audio
+#                                  on their own). Also just selects a DIY scene — the split
+#                                  exists so the caller has a clear "make it react to the
+#                                  music" tool. The device's old built-in "music mode"
+#                                  switch is retired and left untouched.
 
 set_cube_light_effect:
   alias: Set Cube Light Effect
   description: >-
-    Put a preset effect on the cube's main light. Choose a MOOD scene for ambiance, a
-    DIY scene for a distinctive look (a couple pulse to music on their own), or a
-    MUSIC-REACTIVE mode that reacts live to whatever's playing (great when you've got a
-    track going). Moods: Sunset (warm, cozy), Aurora (calm, dreamy), Fire (intense,
-    flickering), Ocean (cool, serene), Rainbow (playful), Soothing (mellow). DIY:
-    "Music reactive jazz" and "A music reactive smoky" pulse to music; "Cyberpunk" is
-    glitchy neon; "A vintage lava lamp" is a slow retro drift. For a plain solid color,
-    control the light directly instead of using this.
+    Put a preset look on the cube's main light, chosen from the device's full catalog.
+    Good general moods: Sunset/Sunset Glow (warm, cozy), Aurora/Dreamland/Soothing (calm,
+    dreamy), Fire (intense flicker), Ocean/Lake/Wave (cool, serene), Rainbow/Joyful
+    (playful), Firefly/Starry Sky (gentle sparkle), Mysterious/Poison (eerie). Seasonal/
+    holiday looks (Christmas*, Halloween, Ghost, Valentine's Day…) and planet themes (Mars,
+    Jupiter, Milky Way) are in here too. Custom DIY looks: "Cyberpunk"/"Acid" are glitchy
+    neon, "A vintage lava lamp"/"Slow Rainbow" are slow retro drifts, "Forest Rave" is
+    frenetic. For a look that pulses live to music/sound, use set_music_reactive_lighting.
+    For a plain solid color, set the light directly instead of using this.
   fields:
     effect:
       name: Effect
-      description: >-
-        Which preset to run. "Music-reactive:" options react to sound in real time, and
-        the two "music reactive" DIY scenes do too (baked in); everything else is static.
+      description: Which look to run — a built-in scene or a DIY scene, all in one list.
       required: true
       selector:
         select:
           options:
+          # Built-in scenes (select.cube_light_scene)
+          - "Sunrise"
           - "Sunset"
-          - "Aurora"
-          - "Fire"
-          - "Ocean"
           - "Rainbow"
+          - "Sunset Glow"
+          - "Aurora"
+          - "Forest"
+          - "Ocean"
+          - "Wave"
+          - "Snow flake"
+          - "Spring Wind"      # device spelling uses a non-breaking space
+          - "Sky"
+          - "Firefly"
+          - "Fire"
+          - "Falling Petals"
+          - "Cherry blossoms"
+          - "Raining"
+          - "Desert"
+          - "Karst Cave"
+          - "Mountain Forest"
+          - "Feather"
+          - "Spring"
+          - "Summer"
+          - "Fall"
+          - "Winter"
+          - "Lake"
+          - "White Light"
+          - "Reading"
+          - "Night Light"
+          - "Morning"
+          - "Afternoon"
+          - "Leisure"
+          - "Refreshing"
+          - "Fish tank"
+          - "Goldfish"
+          - "Train"
+          - "Kitchen Aromas"
+          - "Breathe"
+          - "Gradient"
+          - "Graffiti"
+          - "Dreamlike"
+          - "Joyful"
+          - "Smudge"
+          - "Rubik's Cube"
+          - "Interlaced"
+          - "Swing"
+          - "Christmas"
+          - "Halloween"
+          - "Christmas Bell"
+          - "Candy Cane"
+          - "Valentine's Day"
+          - "Heartbeat"
+          - "Saint Patrick's Day"
+          - "Easter Egg"
+          - "Ghost"
+          - "Mother's Hug"
+          - "Christmas Baubles"
+          - "Christmas Eve"
+          - "Candy Cane B"
+          - "Santa Hat"
+          - "Christmas Stripe"
+          - "Christmas Stripe B"
+          - "Christmas Stripe C"
+          - "Christmas Stripe D"
+          - "Christmas Gift"
+          - "Christmas Wreath"
+          - "Snow House"
+          - "Christmas Tree"
+          - "Gingerbread Man"
+          - "Christmas Stocking"
+          - "Santa Claus"
+          - "Grim Graveyard"
+          - "Poison"
+          - "Lightning Bats"
+          - "Halloween Witches"
+          - "Thanksgiving"
+          - "Healing"
+          - "Starry Sky"
+          - "Accompany"
+          - "Dreamland"
+          - "Night"
+          - "Mysterious"
           - "Soothing"
-          - "Music reactive jazz"
-          - "A music reactive smoky"
-          - "Cyberpunk"
+          - "Earth"
+          - "Mars"
+          - "Venus"
+          - "Uranus"
+          - "Jupiter"
+          - "Milky Way"       # device spelling uses a non-breaking space
+          - "Flash"
+          - "Gary"
+          - "Judy"
+          - "Nick"
+          - "ZDP Duo"
+          - "ZDP Trio"
+          - "Motunui"
+          - "Heart of the Island"
+          - "Wayfinding"
+          # Non-reactive DIY scenes (select.cube_light_diy_scene). Sound-reactive DIY
+          # scenes live in set_music_reactive_lighting instead. Add new DIY scenes to
+          # whichever script fits as they're created on the device.
+          - "Happy Blinker"
+          - "Snakes swirl"
+          - "Slow Rainbow"
+          - "So Slow Rainbow"
+          - "So Slow Rainbow (1)"
+          - "Forest Rave"
           - "A vintage lava lamp"
-          - "Music-reactive: Energetic"
-          - "Music-reactive: Rhythm"
-          - "Music-reactive: Spectrum"
-          - "Music-reactive: Rolling"
+          - "Slow Color Change"
+          - "Cyberpunk"
+          - "Acid"
   sequence:
   - variables:
       diy_scenes:
-        - "Music reactive jazz"
-        - "A music reactive smoky"
-        - "Cyberpunk"
+        - "Happy Blinker"
+        - "Snakes swirl"
+        - "Slow Rainbow"
+        - "So Slow Rainbow"
+        - "So Slow Rainbow (1)"
+        - "Forest Rave"
         - "A vintage lava lamp"
+        - "Slow Color Change"
+        - "Cyberpunk"
+        - "Acid"
   - choose:
-    # Live music-reactive mode: enable the reactive switch + pick the style.
-    - conditions:
-      - "{{ effect.startswith('Music-reactive:') }}"
-      sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: switch.cube_light_music_mode
-      - action: select.select_option
-        target:
-          entity_id: select.cube_light_music_mode
-        data:
-          option: "{{ effect | replace('Music-reactive: ', '') | replace('Energetic', 'Energic') }}"
-    # DIY scene: reactivity (if any) is baked into the scene, so keep the separate
-    # music-mode switch OFF or it would override the DIY look.
+    # DIY scene.
     - conditions:
       - "{{ effect in diy_scenes }}"
       sequence:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.cube_light_music_mode
       - action: select.select_option
         target:
           entity_id: select.cube_light_diy_scene
         data:
           option: "{{ effect }}"
-    # Mood scene.
+    # Built-in scene.
     default:
-    - action: switch.turn_off
-      target:
-        entity_id: switch.cube_light_music_mode
     - action: select.select_option
       target:
         entity_id: select.cube_light_scene
@@ -468,8 +573,33 @@ set_cube_light_effect:
         option: "{{ effect }}"
   mode: single
 
+set_music_reactive_lighting:
+  alias: Set Music-Reactive Lighting
+  description: >-
+    Make the cube's main light pulse LIVE to whatever sound is playing — use this whenever
+    you want the light to react to the music/audio. Pick one of the sound-reactive looks
+    below. (For a static scene, mood, or color instead, use set_cube_light_effect or set
+    the light directly.)
+  fields:
+    effect:
+      name: Effect
+      description: Which sound-reactive look to run
+      required: true
+      selector:
+        select:
+          options:
+          - "Music reactive jazz"
+          - "A music reactive smoky"
+  sequence:
+  - action: select.select_option
+    target:
+      entity_id: select.cube_light_diy_scene
+    data:
+      option: "{{ effect }}"
+  mode: single
+
 # --- Sound effects ---------------------------------------------------------------
-# Short stinger SFX played through the JUKEBOX speaker (media_player.jukebox), NOT the
+# Short stinger SFX played through the JUKEBOX speaker (media_player.jukebox_internal), NOT the
 # voice-assistant media player — playing SFX to the VA speaker breaks wake-word/assist
 # listening. Files live in /media/sounds/effects/ on the box (free-to-use, sourced from
 # Wikimedia Commons; see CREDITS.txt there for per-file license/attribution). Addressed
@@ -524,7 +654,7 @@ play_sound_effect:
         "Sheep Bleat": sheep.mp3
   - action: media_player.play_media
     target:
-      entity_id: media_player.jukebox
+      entity_id: media_player.jukebox_internal
     data:
       media_content_type: music
       media_content_id: "media-source://media_source/local/sounds/effects/{{ files[effect] }}"
@@ -618,5 +748,34 @@ set_persona_grand:
   # TODO: theme lighting               -> script.set_cube_light_effect  (effect: ...)
   # TODO: per-persona theme song       -> script.play_music_on_jukebox  (query: ...)
   # TODO: spoken arrival announcement  -> per-persona line via TTS / loudspeaker_announcement
+  mode: single
+
+# Take a camera snapshot, run it through llmvision, and stash a short description of what
+# the cube currently sees in input_text.current_camera_state. Called by the "Camera: refresh
+# description" automation (on conversation start and when the exposed button is pressed).
+# The provider/camera IDs live ONLY here — nothing upstream knows about them.
+refresh_camera_description:
+  alias: Refresh Camera Description
+  description: >-
+    Take a snapshot from the cube's camera, run it through the vision analyzer, and store a
+    short description of what's in front of the cube in input_text.current_camera_state.
+  sequence:
+  - action: llmvision.image_analyzer
+    data:
+      provider: 01KX77D35KPJHRNVGDTB7RRX1C
+      image_entity:
+        - camera.192_168_68_75
+      include_filename: true
+      message: >-
+        Focus on the people in the picture — they are interacting with an interactive art
+        project that just asked for a snapshot of what it currently sees. In ONE or TWO short
+        sentences (max 255 characters): how many people, their fashion / vibe, and anything
+        notable. If no one is there, say so briefly.
+    response_variable: results
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.current_camera_state
+    data:
+      value: "{{ (results.response_text | default('', true))[:255] }}"
   mode: single
 

@@ -69,7 +69,7 @@
                 },
                 {
                   "type": "custom:mini-media-player",
-                  "entity": "media_player.jukebox",
+                  "entity": "media_player.jukebox_internal",
                   "artwork": "cover",
                   "hide": {
                     "power": true

@@ -24,7 +24,7 @@ Contents:
     `responding -> listening` transition (a fresh wake word is `idle -> listening`, so
     it doesn't double up). See `media/sounds/` below for the sound asset.
 - `scripts.yaml` — HASS scripts exposed to the tool-calling HASS agent, e.g.
-  `play_music_on_jukebox` (plays a track on `media_player.jukebox` via Music Assistant).
+  `play_music_on_jukebox` (plays a track on `media_player.jukebox_internal` via Music Assistant).
 - `packages/` — our config packages:
   - `glitchcube_core.yaml` — input helpers Rails reads/writes (`input_select.current_persona`,
     `input_select.cube_mode`, host routing, etc.).

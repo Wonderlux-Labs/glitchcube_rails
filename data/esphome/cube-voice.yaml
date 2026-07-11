@@ -108,6 +108,38 @@ micro_wake_word:
   # Frees ~3KB internal SRAM (ESPHome 2026.6 / PR #16632) — helps avoid the
   # "Failed to allocate tensors" PSRAM-fragmentation failure with extra models.
   task_stack_in_psram: true
+  # Marks the next on_listening as a wake-word turn (the stock automation in the
+  # pinned package already chimes for those) so the continue-conversation chime
+  # below skips it. Appended after the stock on_wake_word_detected automation.
+  on_wake_word_detected:
+    - lambda: id(gc_wake_word_listen) = true;
+
+# --- Continue-conversation listen chime (GLITCHCUBE) -------------------------------
+# Stock firmware only chimes when the wake word is heard; in continue_conversation
+# mode the C++ reopens the mic straight from RESPONSE_FINISHED with no audible cue.
+# on_listening fires on HA's STT_START for EVERY listen — the wake-word turn and each
+# continue-conversation re-listen — so chime here, gated by gc_wake_word_listen so
+# only the re-listens play it. Respects the device's "Wake sound" toggle. priority
+# false = skip the chime rather than cut off anything still announcing.
+globals:
+  - id: gc_wake_word_listen
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+voice_assistant:
+  on_listening:
+    - if:
+        condition:
+          and:
+            - lambda: return !id(gc_wake_word_listen);
+            - switch.is_on: wake_sound
+        then:
+          - script.execute:
+              id: play_sound
+              priority: false
+              sound_file: "wake_word_triggered_sound"
+    - lambda: id(gc_wake_word_listen) = false;
 
 # --- Brighter voice LED effects (GLITCHCUBE) --------------------------------------
 # The cube's LED ring lives inside a small diffusing cube and needs full light for the

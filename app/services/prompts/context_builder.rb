@@ -10,7 +10,11 @@
 #   3. Your own past          — the CURRENT persona's latest `persona` summary + self-steering.
 #   4. Your current session   — this persona's current-stint interaction chunks (since it woke).
 #   5. Live now               — the HASS composite sensor (time, weather); the most volatile
-#                               state, kept LAST, closest to the raw message history that follows.
+#                               state, kept second-to-last.
+#   6. Camera view            — a short description of what the cube's camera currently sees
+#                               (input_text.current_camera_state), kept LAST, closest to the
+#                               raw message history. Present only when non-empty; HASS clears
+#                               it after ~3 min, so when it's there it's fresh.
 #
 # Nothing here is char-clipped. Each summarizer's own prompt is responsible for keeping its
 # output the right length (handoffs ~2 paragraphs, persona summary ~180 words, chunks ~120
@@ -19,6 +23,7 @@
 module Prompts
   class ContextBuilder
     WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
+    CAMERA_STATE_ENTITY = "input_text.current_camera_state"
     CURRENT_SESSION_CHUNKS = 4
 
     def self.build(persona: nil)
@@ -35,7 +40,8 @@ module Prompts
         recent_history_context,
         persona_summary_context,
         current_session_context,
-        world_state_context
+        world_state_context,
+        camera_context
       ].compact.join("\n\n")
     end
 
@@ -108,6 +114,19 @@ module Prompts
       "Right now: #{content.squish}"
     rescue => e
       warn_nil("#{WORLD_STATE_SENSOR}", e)
+    end
+
+    # 6. The live camera view — its own block, below the ambient world state, closest to the
+    #    raw messages. Present only when the input_text is non-empty; when it's blank (or the
+    #    HASS clear automation has wiped it) nothing is injected. HASS owns staleness, so a
+    #    presence check is all we need here — no timestamps.
+    def camera_context
+      desc = HomeAssistantService.entity(CAMERA_STATE_ENTITY)&.dig("state")
+      return nil if desc.blank?
+
+      "Right now, your camera shows: #{desc.squish}"
+    rescue => e
+      warn_nil(CAMERA_STATE_ENTITY, e)
     end
 
     def current_stint_chunks(persona)

@@ -32,6 +32,21 @@
         {%- endif -%}
       attributes:
         content: >-
+          {#- Reusable hue -> plain color-name macro, used for every RGB light below. -#}
+          {%- macro color_name(ent) -%}
+            {%- set hs = state_attr(ent, 'hs_color') -%}
+            {%- set hue = hs[0] if hs else 0 -%}
+            {%- set sat = hs[1] if hs else 0 -%}
+            {%- if sat < 12 -%}soft white
+            {%- elif hue < 15 or hue >= 345 -%}red
+            {%- elif hue < 45 -%}orange
+            {%- elif hue < 70 -%}yellow
+            {%- elif hue < 160 -%}green
+            {%- elif hue < 200 -%}teal
+            {%- elif hue < 260 -%}blue
+            {%- elif hue < 290 -%}purple
+            {%- else -%}pink{%- endif -%}
+          {%- endmacro -%}
           {%- set w = states('weather.forecast_home') -%}
           {%- set t = state_attr('weather.forecast_home', 'temperature') -%}
           {%- set h = state_attr('weather.forecast_home', 'humidity') -%}
@@ -39,27 +54,35 @@
           {%- set daytime = is_state('sun.sun', 'above_horizon') -%}
           It is {{ now().strftime('%-I:%M %p') }} on {{ now().strftime('%A') }} and it is {{ 'daytime' if daytime else 'dark out' }}.
           {%- if w not in ['unknown', 'unavailable', none] %} The weather is {{ w | replace('_', ' ') }}{% if t is not none %}, around {{ t }}°F{% endif %}{% if h is not none %} with {{ h }}% humidity{% endif %}{% if ws is not none %} and winds near {{ ws | round }} mph{% endif %}.{% endif %}
-          {#- Your ring light (the LED ring on top of the cube) -#}
-          {%- set ring = 'light.cube_cube_voice_led_ring' -%}
-          {%- if is_state(ring, 'on') -%}
-            {%- set hs = state_attr(ring, 'hs_color') -%}
-            {%- set hue = hs[0] if hs else 0 -%}
-            {%- set sat = hs[1] if hs else 0 -%}
-            {%- set bri = state_attr(ring, 'brightness') or 255 -%}
-            {%- if sat < 12 -%}{%- set color = 'soft white' -%}
-            {%- elif hue < 15 or hue >= 345 -%}{%- set color = 'red' -%}
-            {%- elif hue < 45 -%}{%- set color = 'orange' -%}
-            {%- elif hue < 70 -%}{%- set color = 'yellow' -%}
-            {%- elif hue < 160 -%}{%- set color = 'green' -%}
-            {%- elif hue < 200 -%}{%- set color = 'teal' -%}
-            {%- elif hue < 260 -%}{%- set color = 'blue' -%}
-            {%- elif hue < 290 -%}{%- set color = 'purple' -%}
-            {%- else -%}{%- set color = 'pink' -%}{%- endif -%}
-            {{ ' Your ring light is on and glowing ' ~ ('dim ' if bri < 80 else '') ~ color ~ '.' }}
-          {%- else %} Your ring light is off.{%- endif -%}
-          {#- The jukebox -#}
-          {%- set jb = 'media_player.jukebox' -%}
-          {%- set jbs = states(jb) -%}
-          {%- if jbs == 'playing' %} The jukebox is playing{% if state_attr(jb, 'media_title') %} "{{ state_attr(jb, 'media_title') }}"{% if state_attr(jb, 'media_artist') %} by {{ state_attr(jb, 'media_artist') }}{% endif %}{% endif %}.
-          {%- elif jbs == 'paused' %} The jukebox is paused.
+          {#- Your main cube light (light.cube_light) — your inner glow. Report the active
+              scene/effect name if one is running, otherwise the solid color; always the
+              brightness. The scene selects reset to 'None' when a solid color is set, so
+              they're the reliable tell for "is a named look running." (The device's built-
+              in music mode is retired — we don't read its switch.) -#}
+          {%- set cube = 'light.cube_light' -%}
+          {%- if is_state(cube, 'on') -%}
+            {%- set bri = state_attr(cube, 'brightness') or 255 -%}
+            {%- set bripct = (bri / 255 * 100) | round -%}
+            {%- set none_vals = ['None', 'none', 'unknown', 'unavailable'] -%}
+            {%- set scene = states('select.cube_light_scene') -%}
+            {%- set diy = states('select.cube_light_diy_scene') -%}
+            {%- if scene not in none_vals -%}
+              {{ ' Your cube light is running the "' ~ scene ~ '" effect, at about ' ~ bripct ~ '% brightness.' }}
+            {%- elif diy not in none_vals -%}
+              {{ ' Your cube light is running the "' ~ diy ~ '" effect, at about ' ~ bripct ~ '% brightness.' }}
+            {%- else -%}
+              {{ ' Your cube light is a solid ' ~ (color_name(cube) | trim) ~ ', at about ' ~ bripct ~ '% brightness.' }}
+            {%- endif -%}
+          {%- else %} Your cube light is off — no inner glow right now.{%- endif -%}
+          {#- The jukebox: track / artist / volume when actually playing, else quiet. It
+              keeps stale media_title metadata while idle, so only trust it when playing. -#}
+          {%- set jb = 'media_player.jukebox_internal' -%}
+          {%- if is_state(jb, 'playing') -%}
+            {%- set title = state_attr(jb, 'media_title') -%}
+            {%- set artist = state_attr(jb, 'media_artist') -%}
+            {%- set vol = state_attr(jb, 'volume_level') -%}
+            {{ ' The jukebox is playing' ~ (' "' ~ title ~ '"' if title else '') ~ (' by ' ~ artist if artist else '') ~ (', at ' ~ (vol * 100) | round ~ '% volume' if vol is not none else '') ~ '.' }}
           {%- else %} The jukebox is quiet right now.{%- endif -%}
+          {#- Marquee: only surface it if it looks offline, so a persona knows the sign is
+              dead. When it's healthy, say nothing. -#}
+          {%- if states('light.cube_awtrix_marquee_matrix') in ['unavailable', 'unknown', 'none'] %} (Heads up: your marquee sign appears to be offline right now.){%- endif -%}

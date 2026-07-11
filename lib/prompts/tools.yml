@@ -14,19 +14,19 @@
 tools:
   lighting:
     name: "lighting controls"
-    action_names: [cube_light, top_light]
-    description: "You have a CUBE LIGHT, that's your inner glow and it is RGB and has some limited effects. You also have a TOP LIGHT to control, it is more noticeable and expressive. You have a RING LIGHT on your voice microphone as well, you can set it, but mostly it responds automatically. You could also just say something like make all my lights a warm orange color"
+    action_names: [cube_light]
+    description: "You have a cube light, that's your inner glow so if you turn it off you better have a reason! You can set it any color you want, and you also have a lot of animated scenes, some even music reactive. Use your light liberally - it represents you!"
     examples:
-      - { action_name: cube_light, description: "warm amber, slow gentle pulse" }
-      - { action_name: top_light, description: "sound reactive disco lights" }
-      - { action_name: lights, description: "make all my lights a warm orange" }
+      - { action_name: cube_light, description: "neon green" }
+      - { action_name: cube_light, description: "sound reactive disco lighting please" }
+      - { action_name: cube_light, description: "a romantic effect, dim brightness a little" }
   marquee:
     name: "marquee text"
     action_names: [marquee]
-    description: "You can set the text on a scrolling marquee on your body. Use for comic effect, to advertise, or whatever you want. Limited to about 255 chars though. If you want it a specific color, say so"
+    description: "You can set the text on a scrolling marquee on your body. Use for comic effect, to advertise, or whatever you want. Limited to about 255 chars though. If you want it a specific color, say so. It clears automatically"
     examples:
       - { action_name: marquee, description: "THE STARS FORGOT YOUR NAME in pink" }
-      - { action_name: marquee, description: "clear the marquee" }
+      - { action_name: marquee, description: "I am not your mom. Color: Rainbow" }
   announce:
     name: "announcer voice"
     action_names: [announcement]
@@ -46,7 +46,7 @@ tools:
     description: "You can put on background mood music — searchable across many libraries — that plays quietly UNDER the conversation for ambiance (it lowers itself so you can still be heard). Say the vibe or a track. This is background texture, not a front-and-center song."
     examples:
       - { action_name: mood_music, description: "something slow and classical" }
-      - { action_name: mood_music, description: "stop the background music" }
+      - { action_name: mood_music, description: "some radio static and hums and pops" }
   jukebox:
     name: "jukebox controls"
     action_names: [jukebox]
@@ -58,7 +58,7 @@ tools:
   switches:
     name: "switches and triggers"
     action_names: [switch]
-    description: "You have an alarm you can trigger (sirens and whistles), and a strobe light and usb charging hub that can be on or off"
+    description: "You have a black light and a strobe light you cand trigger and a usb charging hub that can be on or off"
     examples:
       - { action_name: switch, description: "turn my usb charger off" }
-      - { action_name: switch, description: "trigger the alarm mode" }
+      - { action_name: switch, description: "black light on please!" }

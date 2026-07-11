@@ -37,6 +37,42 @@ RSpec.describe Prompts::ContextBuilder do
       end
     end
 
+    context 'camera view' do
+      def stub_camera(state)
+        allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
+          .and_return({ "state" => state })
+      end
+
+      it 'injects the camera description when the input_text is present' do
+        stub_camera("Two people in glittery jackets, laughing.")
+        expect(subject).to include("Right now, your camera shows: Two people in glittery jackets, laughing.")
+      end
+
+      it 'injects nothing when the input_text is an empty string' do
+        stub_camera("")
+        expect(subject).not_to include("your camera shows")
+      end
+
+      it 'injects nothing when the entity is missing (nil)' do
+        # default before-block already returns nil for every entity
+        expect(subject).not_to include("your camera shows")
+      end
+
+      it 'places the camera view LAST, after the live world state' do
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_return({ "attributes" => { "content" => "It is dark out." } })
+        stub_camera("One person leaning in close.")
+        expect(subject.index("Right now:")).to be < subject.index("Right now, your camera shows:")
+      end
+
+      it 'fails open when the fetch raises' do
+        allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
+          .and_raise(StandardError, "HASS down")
+        expect(Rails.logger).to receive(:warn).with(/Could not load input_text.current_camera_state/)
+        expect { subject }.not_to raise_error
+      end
+    end
+
     context 'overall memory (the world board)' do
       it 'injects the latest overall summary, not truncated, in a structural layout' do
         create(:summary, summary_type: 'overall', summary_text: 'The whole night has been rowdy.',

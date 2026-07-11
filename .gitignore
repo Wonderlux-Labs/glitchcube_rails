@@ -78,3 +78,4 @@ __pycache__/
 # ESPHome build cache + device secrets (data/esphome)
 data/esphome/.esphome/
 data/esphome/secrets.yaml
+data/homeassistant/media/
