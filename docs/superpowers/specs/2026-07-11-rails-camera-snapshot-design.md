@@ -46,12 +46,18 @@ Constants (visible at the top of the job, per explicit preference — no adjusta
 resolution/format knobs):
 
 ```ruby
-SNAPSHOT_PATH    = Rails.root.join("tmp/camera/snapshot.jpg")  # dir created on demand
-SNAPSHOT_COMMAND = %(ffmpeg -f avfoundation -video_size 1280x720 -pixel_format uyvy422 -i "0" -frames:v 1 -y #{SNAPSHOT_PATH})
+SNAPSHOT_DIR     = Rails.root.join("tmp/camera")               # created on demand
+SNAPSHOT_COMMAND = %(ffmpeg -f avfoundation -video_size 1280x720 -pixel_format uyvy422 -i "0" -frames:v 1 -y %{path})
 THROTTLE_SECONDS = 120
 CAPTURE_TIMEOUT  = 10 # seconds; kill a hung ffmpeg, fail loudly
 CAMERA_STATE_ENTITY = "input_text.current_camera_state"        # same id ContextBuilder reads
 ```
+
+Snapshots are **kept, not overwritten**: each capture writes
+`SNAPSHOT_DIR/snapshot_<UTC timestamp>.jpg` (`format(SNAPSHOT_COMMAND, path: ...)`) and
+the job analyzes the file it just wrote. No cleanup yet — deliberately, so future image
+diffing between consecutive snapshots stays possible from day one. When disk bloat
+matters we'll truncate to the last ~10; not in scope now.
 
 Behavior:
 
@@ -126,8 +132,8 @@ capture in a small bash script and grant that. Not a blocker for writing the cod
 
 ## Testing
 
-- **Job spec** — stub the capture (write a fixture JPEG to `SNAPSHOT_PATH` instead of
-  running ffmpeg), stub `LlmService.call_with_vision`, drive against `FakeHomeAssistant`:
+- **Job spec** — stub the capture (write a fixture JPEG to the timestamped snapshot path
+  instead of running ffmpeg), stub `LlmService.call_with_vision`, drive against `FakeHomeAssistant`:
   assert the `input_text.set_value` service call, the 255-char truncation, and the
   throttle (fresh non-empty state → no capture, no LLM call, no write).
 - **LlmService spec** — VCR cassette for `call_with_vision` (tiny fixture image), plus
