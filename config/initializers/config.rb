@@ -22,12 +22,10 @@ Rails.application.configure do
 
 
   # Home Assistant configuration
-  config.home_assistant_url = ENV["HOME_ASSISTANT_URL"] ||
-    if Rails.env.test?
-      "http://glitch.local:8123" # matches recorded VCR cassette hosts — do not change
-    elsif Rails.env.development?
-      "http://100.79.82.74:8123" # HASS on tailscale (magic name: glitch)
-    end
+  # Dev and prod hit the SAME HASS instance, reachable at glitch.local. Overridable
+  # per host via HOME_ASSISTANT_URL, but nothing sets it now. Test also relies on this
+  # exact host to match recorded VCR cassettes — do not change it.
+  config.home_assistant_url = ENV["HOME_ASSISTANT_URL"] || "http://glitch.local:8123"
   config.home_assistant_token = ENV["HOME_ASSISTANT_TOKEN"]
   config.home_assistant_timeout = ENV["HOME_ASSISTANT_TIMEOUT"]&.to_i || 30
 
@@ -47,7 +45,7 @@ Rails.application.configure do
   # is exactly one brain model. It has a sane default here, so no env var is
   # required on any host; set `DEFAULT_AI_MODEL` only to override for a run.
   # Swap it live without a restart: `Rails.configuration.ai_model = "stepfun/step-3.7-flash"`.
-  config.ai_model = ENV["DEFAULT_AI_MODEL"] || "z-ai/glm-5.2:nitro"
+  config.ai_model = ENV["DEFAULT_AI_MODEL"] || "deepseek/deepseek-v4-flash:nitro"
 
   # The background summarizer tiers (interaction / persona+handoff / overall) all run on this
   # one model — separate from the conversation brain so we can trade it off independently.
