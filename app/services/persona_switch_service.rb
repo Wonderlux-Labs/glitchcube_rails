@@ -33,7 +33,6 @@ class PersonaSwitchService
     def clear_conversation_caches
       # Clear any cached conversation-related data
       Rails.cache.delete_matched("conversation:*") if Rails.cache.respond_to?(:delete_matched)
-      Rails.cache.delete_matched("performance_mode:*") if Rails.cache.respond_to?(:delete_matched)
       Rails.logger.info "🧹 Cleared conversation caches"
     end
   end

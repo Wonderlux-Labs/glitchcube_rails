@@ -72,11 +72,6 @@ class ConversationOrchestrator
 
   # Step 2: Perform checks before the main LLM call.
   def run_pre_llm_checks
-    # Stop active performance mode if necessary.
-    if PerformanceModeService.get_active_performance(@state[:session_id])
-      PerformanceModeService.stop_active_performance(@state[:session_id], "conversation_interrupted")
-    end
-
     # Build the prompt for the LLM.
     prompt_result = PromptBuilder.call(
       conversation: @state[:conversation],

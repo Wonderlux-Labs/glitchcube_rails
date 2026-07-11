@@ -88,8 +88,6 @@ serves scriptable entities/sensors/world state. The **scenario harness**
 against the fake with a canned brain response and asserts on observable output —
 what the cube *says and does*. This replaced the old `scripts/*harness*` model
 benchmarks (removed; they targeted the deleted two-tier architecture).
-`PerformanceModeService` takes an injectable clock (`FakeClock`) so timed loops
-run in virtual time, never against the wall clock.
 
 ## Naming note: `ConversationLog`
 
