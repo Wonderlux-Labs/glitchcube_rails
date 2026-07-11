@@ -55,6 +55,19 @@ class ConversationOrchestrator
     setup_result = Setup.call(session_id: @initial_session_id, context: @context)
     raise SetupError, setup_result.error unless setup_result.success?
     @state.merge!(setup_result.data) # Populates @state with :conversation, :persona, :session_id
+
+    # Refresh the cube's "look" for this turn — fire-and-forget; the job throttles
+    # itself (skips unless the description is empty or stale), so enqueueing every
+    # turn is cheap. The description lands mid-turn and is in the prompt next round.
+    # Contained because it's genuinely optional: a camera problem (or an inline
+    # adapter running the job right here, as smoke tests do) must never fail the turn.
+    # (The HASS-side kill switch, input_boolean.disable_camera, is checked in the
+    # job itself — it's async there, so the HASS read is free.)
+    begin
+      CameraDescriptionJob.perform_later unless Rails.configuration.disable_camera
+    rescue => e
+      Rails.logger.warn "📷 Camera refresh failed (turn continues): #{e.class} - #{e.message}"
+    end
   end
 
   # Step 2: Perform checks before the main LLM call.

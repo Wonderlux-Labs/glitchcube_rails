@@ -79,3 +79,6 @@ __pycache__/
 data/esphome/.esphome/
 data/esphome/secrets.yaml
 data/homeassistant/media/
+# Rails-host-only media (theme songs etc.) — played locally via ffplay, never scped to the HASS box
+data/rails_media/*
+!data/rails_media/README.md

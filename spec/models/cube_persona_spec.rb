@@ -28,6 +28,36 @@ RSpec.describe CubePersona, type: :model do
     end
   end
 
+  describe '.set_current_persona' do
+    before do
+      allow(HomeAssistantService).to receive(:call_service)
+      allow(HomeAssistantService).to receive(:entity)
+        .with("input_select.current_persona")
+        .and_return({ "state" => "buddy" })
+      allow(PersonaSwitchService).to receive(:handle_persona_switch)
+    end
+
+    it 'writes the input_select directly and enqueues the grand entrance show for :grand' do
+      expect {
+        CubePersona.set_current_persona(:jax, entrance: :grand)
+      }.to have_enqueued_job(ShowJob).with("grand_entrance", persona: "jax")
+
+      expect(HomeAssistantService).to have_received(:call_service).with(
+        "input_select", "select_option",
+        entity_id: "input_select.current_persona", option: "jax"
+      )
+    end
+
+    it 'uses the quick HASS script for :quick, with no show' do
+      expect {
+        CubePersona.set_current_persona(:jax, entrance: :quick)
+      }.not_to have_enqueued_job(ShowJob)
+
+      expect(HomeAssistantService).to have_received(:call_service)
+        .with("script", "set_persona_quick", persona: "jax")
+    end
+  end
+
   describe 'abstract interface' do
     let(:persona) { CubePersona.new }
 

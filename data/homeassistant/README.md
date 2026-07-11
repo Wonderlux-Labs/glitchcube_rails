@@ -58,6 +58,11 @@ Contents:
   .ffmpeg_proxy` logging a 404 against `/media/local/...` when the file was in the
   wrong place.
 
+Theme songs deliberately do NOT live here: they're in `data/rails_media/theme_songs/`
+(outside this deploy tree), played by Rails straight off the host speaker via `ffplay`
+(`HostAudio` / `Shows::GrandEntrance`). Never scp them to the box — the VM doesn't have
+the disk for them and nothing there plays them.
+
 ## Deploying a change to the box
 
 ```

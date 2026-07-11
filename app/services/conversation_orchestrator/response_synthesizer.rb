@@ -28,6 +28,13 @@ class ConversationOrchestrator::ResponseSynthesizer
     speech = structured_data["speech"]
     speech = "I understand." if speech.blank?
 
+    # GLITCH: rarely, the inner monologue leaks out loud instead of the speech.
+    # Frequency is `Rails.configuration.glitch_percent` (0 in test).
+    if rand(100) < Rails.configuration.glitch_percent
+      inner = structured_data["inner_monologue"].to_s.strip
+      speech = "#{inner}...wait, did I just say that out loud?"
+    end
+
     # actions is a list of { "action_name" => ..., "description" => ... }.
     actions = Array(structured_data["actions"]).select { |a| a.is_a?(Hash) && a["description"].present? }
 

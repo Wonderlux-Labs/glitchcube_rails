@@ -41,11 +41,14 @@ class FakeHomeAssistant
 
   # ---- scenario scripting helpers ----
 
-  def set_state(entity_id, state, attributes = {})
+  # last_updated mirrors the real HASS state object (always present, ISO8601);
+  # pass it explicitly to script freshness-sensitive scenarios (camera throttle).
+  def set_state(entity_id, state, attributes = {}, last_updated: Time.current.utc.iso8601)
     @entities[entity_id] = {
       "entity_id" => entity_id,
       "state" => state.to_s,
-      "attributes" => stringify(attributes)
+      "attributes" => stringify(attributes),
+      "last_updated" => last_updated
     }
   end
 
@@ -160,6 +163,9 @@ class FakeHomeAssistant
       ids.each { |id| set_state(id, "on", (entity(id)&.dig("attributes") || {}).merge(extra)) }
     when "turn_off"
       ids.each { |id| set_state(id, "off") }
+    when "set_value"
+      value = data[:value] || data["value"]
+      ids.each { |id| set_state(id, value) }
     end
   end
 

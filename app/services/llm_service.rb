@@ -2,6 +2,7 @@
 require "ostruct"
 require "net/http"
 require "timeout"
+require "base64"
 
 class LlmService
   # Reliable structured-output models to fall back to when the primary model
@@ -286,12 +287,56 @@ class LlmService
       )
     end
 
+    # One-shot vision call: send an image (base64 data-URI content part) plus a prompt
+    # to a vision-capable model and return the text reply. If the primary raises or
+    # comes back blank, retry once on the configured fallback model (same idea as
+    # retry_structured_on_secondary), then raise — the caller (CameraDescriptionJob)
+    # wants a loud failure, not a degraded description.
+    def call_with_vision(prompt:, image_path:, model: nil)
+      model_to_use = model || Rails.configuration.camera_vision_model
+      messages = vision_messages(prompt, image_path)
+
+      Rails.logger.info "👁️ LLM vision call: #{model_to_use} (#{File.basename(image_path)})"
+
+      begin
+        content = attempt_vision_call(messages, model_to_use)
+        return content if content.present?
+        Rails.logger.warn "⚠️ #{model_to_use} returned an empty vision response; retrying on fallback"
+      rescue StandardError => e
+        Rails.logger.warn "❌ Vision call failed on #{model_to_use}: #{e.message}; retrying on fallback"
+      end
+
+      fallback_model = Rails.configuration.vision_fallback_model
+      content = attempt_vision_call(messages, fallback_model)
+      raise "Vision call returned no content on #{model_to_use} or #{fallback_model}" if content.blank?
+
+      Rails.logger.info "✅ Vision fallback #{fallback_model} recovered"
+      content
+    end
+
     # Check if LLM service is configured and available
     def available?
       OpenRouter.configuration.access_token.present?
     end
 
     private
+
+    def vision_messages(prompt, image_path)
+      image_uri = "data:image/jpeg;base64,#{Base64.strict_encode64(File.binread(image_path))}"
+      [ {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: image_uri } }
+        ]
+      } ]
+    end
+
+    def attempt_vision_call(messages, model)
+      client = OpenRouter::Client.new
+      response = client.complete(messages, model: model, extras: { temperature: 0.3 })
+      response.content
+    end
 
     def build_background_messages(prompt, context)
       # If context includes pre-built messages, use them

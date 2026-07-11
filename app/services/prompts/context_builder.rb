@@ -12,9 +12,12 @@
 #   5. Live now               — the HASS composite sensor (time, weather); the most volatile
 #                               state, kept second-to-last.
 #   6. Camera view            — a short description of what the cube's camera currently sees
-#                               (input_text.current_camera_state), kept LAST, closest to the
-#                               raw message history. Present only when non-empty; HASS clears
-#                               it after ~3 min, so when it's there it's fresh.
+#                               (input_text.current_camera_state), closest to the raw message
+#                               history. Present only when non-empty; HASS clears it after
+#                               ~3 min, so when it's there it's fresh.
+#   7. Glitch premonition     — only when the random rotation's next persona switch is <3 min
+#                               out: a one-line "you feel a glitch coming on" so the persona
+#                               can (or can choose not to) sense its own end approaching.
 #
 # Nothing here is char-clipped. Each summarizer's own prompt is responsible for keeping its
 # output the right length (handoffs ~2 paragraphs, persona summary ~180 words, chunks ~120
@@ -25,6 +28,7 @@ module Prompts
     WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
     CAMERA_STATE_ENTITY = "input_text.current_camera_state"
     CURRENT_SESSION_CHUNKS = 4
+    PREMONITION_WINDOW = 3.minutes
 
     def self.build(persona: nil)
       new(persona: persona).build
@@ -41,7 +45,8 @@ module Prompts
         persona_summary_context,
         current_session_context,
         world_state_context,
-        camera_context
+        camera_context,
+        glitch_premonition_context
       ].compact.join("\n\n")
     end
 
@@ -121,12 +126,28 @@ module Prompts
     #    HASS clear automation has wiped it) nothing is injected. HASS owns staleness, so a
     #    presence check is all we need here — no timestamps.
     def camera_context
+      return nil if Rails.configuration.disable_camera
+
       desc = HomeAssistantService.entity(CAMERA_STATE_ENTITY)&.dig("state")
       return nil if desc.blank?
 
       "Right now, your camera shows: #{desc.squish}"
     rescue => e
       warn_nil(CAMERA_STATE_ENTITY, e)
+    end
+
+    # 7. When the random rotation (Recurring::Persona::RandomPersonaJob) is about to
+    #    switch personas, let the current one feel it coming. A past-due timestamp
+    #    also counts — the job's next 5-min tick will fire the switch any moment.
+    #    Purely flavor; the persona may or may not reference it.
+    def glitch_premonition_context
+      next_at = Rails.cache.read(Recurring::Persona::RandomPersonaJob::NEXT_SWITCH_KEY)
+      return nil if next_at.blank?
+      return nil if Time.parse(next_at.to_s) > PREMONITION_WINDOW.from_now
+
+      "You feel a glitch coming on. The cube is getting unstable — someone else is taking over... soon."
+    rescue => e
+      warn_nil("glitch premonition", e)
     end
 
     def current_stint_chunks(persona)

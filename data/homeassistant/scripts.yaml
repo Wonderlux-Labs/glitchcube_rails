@@ -661,11 +661,15 @@ play_sound_effect:
   mode: single
 
 # --- Persona switching -------------------------------------------------------
-# Two ways to change the cube's active persona. Both write input_select.current_persona,
-# which the "Persona Switcher" automation watches to swap the Assist voice pipeline — so
-# neither script needs to touch the pipeline itself. `persona` is optional; omit it to pick
-# a random one (excluding whoever is current). The Rails random-rotation job calls
-# set_persona_grand; set_persona_quick is the fanfare-free path for dev/manual/Assist use.
+# The quick, fanfare-free persona switch. It writes input_select.current_persona,
+# which the "Persona Switcher" automation watches to swap the Assist voice pipeline —
+# so the script needs not touch the pipeline itself. `persona` is optional; omit it to
+# pick a random one (excluding whoever is current).
+#
+# The GRAND entrance (anomaly VO, theme song, marquee, arrival announcement) is NOT a
+# HASS script anymore — it's Rails-side (Shows::GrandEntrance), sequenced in Ruby with
+# audio played straight off the Rails host. Rails raises input_boolean.persona_switching
+# for the duration, as a hook for any HASS-side automations that want to react.
 
 set_persona_quick:
   alias: Set Persona (quick)
@@ -673,8 +677,8 @@ set_persona_quick:
     Switch the cube's active persona with NO fanfare — just change who's in charge.
     This is the lightweight path for dev/manual switches and (eventually) direct Assist
     requests like "let me talk to Buddy again". Give a `persona`, or omit it to pick a
-    random one (never the current persona). For the full arrival ceremony use
-    set_persona_grand instead.
+    random one (never the current persona). The full arrival ceremony lives Rails-side
+    (Shows::GrandEntrance).
   fields:
     persona:
       name: Persona
@@ -705,77 +709,5 @@ set_persona_quick:
     data:
       message: "{{ target | upper }}"
       duration: 8
-  mode: single
-
-set_persona_grand:
-  alias: Set Persona (grand entrance)
-  description: >-
-    Switch the cube's active persona WITH the full arrival ceremony — the new persona
-    makes a scene. This is what the Rails random-rotation job calls when the cube changes
-    personas on its own. Give a `persona`, or omit it to pick a random one (never the
-    current persona). For a quiet dev/Assist switch use set_persona_quick instead.
-  fields:
-    persona:
-      name: Persona
-      description: Which persona to switch to. Omit for a random pick.
-      required: false
-      example: jax
-      selector:
-        select:
-          options:
-          - buddy
-          - jax
-          - zorp
-          - crash
-          - neon
-  sequence:
-  - variables:
-      target: >-
-        {{ persona | default('', true) or
-           (state_attr('input_select.current_persona', 'options')
-            | reject('eq', states('input_select.current_persona')) | list | random) }}
-  - action: input_select.select_option
-    target:
-      entity_id: input_select.current_persona
-    data:
-      option: "{{ target }}"
-  # --- GRAND ENTRANCE (skeleton — flesh out per persona) ---
-  - action: script.awtrix_marquee_message
-    data:
-      message: "{{ target | upper }} HAS ENTERED THE CUBE"
-      duration: 15
-  # TODO: stinger / sound effect       -> script.play_sound_effect  (effect: ...)
-  # TODO: theme lighting               -> script.set_cube_light_effect  (effect: ...)
-  # TODO: per-persona theme song       -> script.play_music_on_jukebox  (query: ...)
-  # TODO: spoken arrival announcement  -> per-persona line via TTS / loudspeaker_announcement
-  mode: single
-
-# Take a camera snapshot, run it through llmvision, and stash a short description of what
-# the cube currently sees in input_text.current_camera_state. Called by the "Camera: refresh
-# description" automation (on conversation start and when the exposed button is pressed).
-# The provider/camera IDs live ONLY here — nothing upstream knows about them.
-refresh_camera_description:
-  alias: Refresh Camera Description
-  description: >-
-    Take a snapshot from the cube's camera, run it through the vision analyzer, and store a
-    short description of what's in front of the cube in input_text.current_camera_state.
-  sequence:
-  - action: llmvision.image_analyzer
-    data:
-      provider: 01KX77D35KPJHRNVGDTB7RRX1C
-      image_entity:
-        - camera.192_168_68_75
-      include_filename: true
-      message: >-
-        Focus on the people in the picture — they are interacting with an interactive art
-        project that just asked for a snapshot of what it currently sees. In ONE or TWO short
-        sentences (max 255 characters): how many people, their fashion / vibe, and anything
-        notable. If no one is there, say so briefly.
-    response_variable: results
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.current_camera_state
-    data:
-      value: "{{ (results.response_text | default('', true))[:255] }}"
   mode: single
 

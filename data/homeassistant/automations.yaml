@@ -33,6 +33,46 @@
            .get(states('input_select.current_persona'), [255,255,255]) }}
   mode: single
 
+- id: persona_switching_silence
+  alias: "Persona switching: silence during the show"
+  description: >-
+    Companion to the Rails-side grand entrance (Shows::GrandEntrance). Rails raises
+    input_boolean.persona_switching for the duration of the show (and guarantees it
+    drops, even on a crash); this automation does the HASS-side silencing: when the
+    flag goes up, mute the Voice PE mic and stop any in-flight playback (cuts off a
+    persona mid-sentence — that's the point); when it drops, unmute. The mic-guard
+    automation below deliberately keeps its hands off the mute switch while the flag
+    is on (see its conditions), so this automation owns the mic for the whole show.
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.persona_switching
+    to: "on"
+    id: show_start
+  - trigger: state
+    entity_id: input_boolean.persona_switching
+    to: "off"
+    id: show_end
+  actions:
+  - choose:
+    - conditions:
+      - "{{ trigger.id == 'show_start' }}"
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: media_player.media_stop
+        target:
+          entity_id:
+          - media_player.cube_cube_voice_media_player
+          - media_player.jukebox_internal
+    - conditions:
+      - "{{ trigger.id == 'show_end' }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+  mode: restart
+
 - id: cube_voice_mic_guard_and_marquee
   alias: Cube Voice - mic guard + marquee status
   description: >-
@@ -100,8 +140,12 @@
     # (2) Real playback ended -> let the tail die, unmute, and if we're now listening
     #     for the visitor, that's the true LISTENING moment. This is the ONLY normal
     #     unmute path — do not add others without re-reading the header comment.
+    #     persona_switching guard: during a Rails-side grand entrance the silence
+    #     automation above owns the mute switch (its media_stop fires this trigger) —
+    #     hands off until the flag drops and that automation unmutes.
     - conditions:
       - "{{ trigger.id == 'tts_done' }}"
+      - "{{ is_state('input_boolean.persona_switching', 'off') }}"
       sequence:
       - delay: "00:00:00.3"
       - action: switch.turn_off
@@ -143,9 +187,12 @@
           payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
     # Idle 10s -> stuck-mute safety (e.g. TTS errored and media never played) + clear
     # marquee. Media-not-playing guard so a still-playing tail can't get the mic opened.
+    # persona_switching guard: same hands-off as the tts_done path — the grand-entrance
+    # show keeps the mic muted longer than 10s of satellite idle.
     - conditions:
       - "{{ trigger.id == 'ended' }}"
       - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      - "{{ is_state('input_boolean.persona_switching', 'off') }}"
       sequence:
       - action: switch.turn_off
         target:
@@ -174,41 +221,6 @@
   actions:
   - action: script.set_marquee_idle
     data: {}
-  mode: single
-
-- id: camera_refresh_description
-  alias: "Camera: refresh description"
-  description: >-
-    Refresh the cube's sense of what it currently sees. Fires on two triggers: (1) the
-    exposed input_button being pressed — this is the cube's plain-English "refresh my
-    camera" action, mapped onto the button by the Assist agent; (2) the voice satellite
-    entering 'listening', i.e. a conversation starting via wake word OR the physical
-    button on the Voice PE (both drive the satellite to 'listening'). Either way we run
-    script.refresh_camera_description, which does the llmvision call and writes the
-    description into input_text.current_camera_state.
-    DEBOUNCE: the satellite re-enters 'listening' at the START OF EVERY TURN
-    (continue_conversation reopens the mic each round), not just at conversation start — so
-    without a guard this fires every turn. The condition below throttles the satellite path
-    to at most once per ~2 min, which doubles as a nice "keep the view fresh as people come
-    and go." Two bypasses: a manual button press always fires (the cube explicitly asked),
-    and an EMPTY input_text always refreshes (so a new conversation right after a clear gets
-    a look immediately instead of waiting out the throttle). Keyed on last_updated, not
-    last_changed, so an identical back-to-back description still counts as a refresh.
-  triggers:
-  - trigger: state
-    entity_id: input_button.refresh_camera_description
-  - trigger: state
-    entity_id: assist_satellite.cube_cube_voice_assist_satellite
-    to: listening
-  conditions:
-  - condition: template
-    value_template: >-
-      {% set s = states.input_text.current_camera_state %}
-      {{ trigger.entity_id == 'input_button.refresh_camera_description'
-         or (s.state | trim) == ''
-         or (now() - s.last_updated).total_seconds() > 120 }}
-  actions:
-  - action: script.refresh_camera_description
   mode: single
 
 - id: camera_clear_stale_description

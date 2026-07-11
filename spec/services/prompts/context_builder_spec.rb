@@ -48,6 +48,12 @@ RSpec.describe Prompts::ContextBuilder do
         expect(subject).to include("Right now, your camera shows: Two people in glittery jackets, laughing.")
       end
 
+      it 'omits the camera view when the camera is disabled in config, even with a description present' do
+        allow(Rails.configuration).to receive(:disable_camera).and_return(true)
+        stub_camera("Two people in glittery jackets, laughing.")
+        expect(subject).not_to include("your camera shows")
+      end
+
       it 'injects nothing when the input_text is an empty string' do
         stub_camera("")
         expect(subject).not_to include("your camera shows")
@@ -69,6 +75,51 @@ RSpec.describe Prompts::ContextBuilder do
         allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
           .and_raise(StandardError, "HASS down")
         expect(Rails.logger).to receive(:warn).with(/Could not load input_text.current_camera_state/)
+        expect { subject }.not_to raise_error
+      end
+    end
+
+    context 'glitch premonition (imminent persona switch)' do
+      def stub_next_switch(time)
+        allow(Rails.cache).to receive(:read).and_call_original
+        allow(Rails.cache).to receive(:read)
+          .with(Recurring::Persona::RandomPersonaJob::NEXT_SWITCH_KEY)
+          .and_return(time&.iso8601)
+      end
+
+      it 'injects the premonition when the next switch is within 3 minutes' do
+        stub_next_switch(2.minutes.from_now)
+        expect(subject).to include("You feel a glitch coming on")
+      end
+
+      it 'injects the premonition when the switch time has already passed (tick pending)' do
+        stub_next_switch(1.minute.ago)
+        expect(subject).to include("You feel a glitch coming on")
+      end
+
+      it 'injects nothing when the switch is further out' do
+        stub_next_switch(20.minutes.from_now)
+        expect(subject).not_to include("glitch coming on")
+      end
+
+      it 'injects nothing when no switch is scheduled' do
+        stub_next_switch(nil)
+        expect(subject).not_to include("glitch coming on")
+      end
+
+      it 'places the premonition LAST, below the camera view' do
+        allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
+          .and_return({ "state" => "One person leaning in close." })
+        stub_next_switch(1.minute.from_now)
+        expect(subject.index("your camera shows")).to be < subject.index("You feel a glitch coming on")
+      end
+
+      it 'fails open when the cached timestamp is garbage' do
+        allow(Rails.cache).to receive(:read).and_call_original
+        allow(Rails.cache).to receive(:read)
+          .with(Recurring::Persona::RandomPersonaJob::NEXT_SWITCH_KEY)
+          .and_return("not a time")
+        expect(Rails.logger).to receive(:warn).with(/Could not load glitch premonition/)
         expect { subject }.not_to raise_error
       end
     end

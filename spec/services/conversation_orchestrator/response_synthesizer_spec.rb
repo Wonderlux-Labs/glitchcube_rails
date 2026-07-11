@@ -31,6 +31,8 @@ RSpec.describe ConversationOrchestrator::ResponseSynthesizer do
     }
   end
 
+  # glitch_percent is forced to 0 in the test env, so the "glitch" never fires
+  # unless a spec opts in (see the glitch context below).
   describe '.call' do
     context 'with valid structured response' do
       it 'synthesizes a complete AI response' do
@@ -89,6 +91,36 @@ RSpec.describe ConversationOrchestrator::ResponseSynthesizer do
         expect(result.success?).to be true
         expect(result.data[:text]).to eq("Hello there!")
         expect(result.data[:continue_conversation]).to be true
+      end
+    end
+
+    context 'when the turn glitches' do
+      before { allow(Rails.configuration).to receive(:glitch_percent).and_return(100) }
+
+      it 'leaks the inner monologue out loud instead of the speech' do
+        result = described_class.call(
+          llm_response: llm_response,
+          action_results: action_results,
+          prompt_data: prompt_data
+        )
+
+        leaked = "User requested light control...wait, did I just say that out loud?"
+        expect(result.data[:text]).to eq(leaked)
+        expect(result.data[:speech_text]).to eq(leaked)
+        # inner_monologue field is preserved unchanged
+        expect(result.data[:inner_monologue]).to eq("User requested light control")
+      end
+    end
+
+    context 'when the turn does not glitch' do
+      it 'speaks the intended speech' do
+        result = described_class.call(
+          llm_response: llm_response,
+          action_results: action_results,
+          prompt_data: prompt_data
+        )
+
+        expect(result.data[:text]).to eq("I've turned on the lights for you.")
       end
     end
 

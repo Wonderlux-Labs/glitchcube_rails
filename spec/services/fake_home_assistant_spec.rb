@@ -65,11 +65,19 @@ RSpec.describe FakeHomeAssistant, type: :service do
       fake.set_state("light.cube_inner", :on)
 
       entity = fake.entity("light.cube_inner")
-      expect(entity).to eq(
+      expect(entity).to include(
         "entity_id" => "light.cube_inner",
         "state" => "on",
         "attributes" => {}
       )
+      expect(entity["last_updated"]).to be_present # mirrors the real HASS state object
+    end
+
+    it "accepts an explicit last_updated for freshness-sensitive scenarios" do
+      stamp = 10.minutes.ago.utc.iso8601
+      fake.set_state("input_text.current_camera_state", "someone", last_updated: stamp)
+
+      expect(fake.entity("input_text.current_camera_state")["last_updated"]).to eq(stamp)
     end
 
     it "stringifies attribute keys" do

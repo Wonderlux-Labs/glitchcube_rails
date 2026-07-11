@@ -40,11 +40,14 @@ class CubePersona
   end
 
   # entrance:
-  #   :grand — call the HASS script.set_persona_grand (full arrival ceremony)
+  #   :grand — Rails-side spectacle (Shows::GrandEntrance via ShowJob): anomaly VO,
+  #            theme song off the host speaker, marquee, then the new persona
+  #            announces itself. The input_select write stays synchronous so the
+  #            HASS "Persona Switcher" automation and our own bookkeeping see the
+  #            new persona immediately; the show is pure async theater.
   #   :quick — call the HASS script.set_persona_quick (fanfare-free dev/Assist switch)
   #   nil    — set input_select directly, no theatrics (e.g. boot-sync reconciliation)
-  # Every branch writes input_select.current_persona exactly once, which drives the
-  # HASS "Persona Switcher" automation (Assist voice sync).
+  # Every branch writes input_select.current_persona exactly once.
   def self.set_current_persona(persona, entrance: nil)
     return unless PERSONAS.include? persona&.to_sym
 
@@ -56,7 +59,8 @@ class CubePersona
 
     case entrance
     when :grand
-      HomeAssistantService.call_service("script", "set_persona_grand", persona: persona.to_s)
+      HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+      ShowJob.perform_later("grand_entrance", persona: persona.to_s)
     when :quick
       HomeAssistantService.call_service("script", "set_persona_quick", persona: persona.to_s)
     else

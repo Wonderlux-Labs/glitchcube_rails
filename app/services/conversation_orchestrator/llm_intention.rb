@@ -34,11 +34,13 @@ class ConversationOrchestrator::LlmIntention
 
     ConversationLogger.llm_request(@model, @user_message, schema)
 
+    t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     response = LlmService.call_with_structured_output(
       messages: messages,
       response_format: schema,
       model: @model
     )
+    latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round
 
     # A failed/timed-out call comes back with a non-blank apology in `content` but
     # NO structured_output. The brain pipeline needs the structured hash, so treat a
@@ -46,7 +48,8 @@ class ConversationOrchestrator::LlmIntention
     # otherwise we'd pass nil forward and crash response synthesis.
     raise "LLM returned no structured output" if response.structured_output.blank?
 
-    ConversationLogger.llm_response(response.model || @model, response.content, [], { usage: response.usage })
+    ConversationLogger.llm_response(response.model || @model, response.content, [],
+                                    { usage: response.usage, provider: provider_of(response), latency_ms: latency_ms })
 
     # Smoke test: the brain may surface `ooc_questions` — out-of-character questions
     # for a director/programmer about its character or the project. Nothing is wired
@@ -54,7 +57,7 @@ class ConversationOrchestrator::LlmIntention
     # worth folding into steering later. See docs/conversation_flow.md.
     log_ooc_questions(response.structured_output["ooc_questions"])
 
-    ServiceResult.success({ llm_response: response.structured_output, usage: usage_for(response) })
+    ServiceResult.success({ llm_response: response.structured_output, usage: usage_for(response, latency_ms) })
   rescue => e
     ConversationLogger.error("LLM Intention", e.message, { model: @model, user_message: @user_message })
     # The brain LLM is the ONE place we degrade gracefully instead of failing
@@ -67,19 +70,35 @@ class ConversationOrchestrator::LlmIntention
 
   private
 
-  # Tag on which model actually answered (a timeout can fall back to a
-  # different model than requested) so the admin conversation log can show it.
-  def usage_for(response)
+  # Tokens / price / speed pulled straight off the OpenRouter response, persisted on
+  # the ConversationLog so we can compare models without grepping logs. `model` is the
+  # one that actually answered (a timeout can fall back to a different model than
+  # requested); `provider` is which upstream OpenRouter routed to (matters for `:nitro`,
+  # which picks the fastest provider); `latency_ms` is the wall-clock brain round-trip
+  # (≈ time-to-speech, since the action agent runs async); `tokens_per_second` is
+  # completion throughput.
+  def usage_for(response, latency_ms = nil)
     u = response.usage
     return nil if u.blank?
 
+    completion = u["completion_tokens"]
+    tps = latency_ms.to_i.positive? && completion ? (completion * 1000.0 / latency_ms).round(1) : nil
     {
       "model" => response.model || @model,
+      "provider" => provider_of(response),
       "prompt_tokens" => u["prompt_tokens"],
-      "completion_tokens" => u["completion_tokens"],
+      "completion_tokens" => completion,
       "total_tokens" => u["total_tokens"],
-      "cost" => u["cost"]
-    }
+      "cost" => u["cost"],
+      "latency_ms" => latency_ms,
+      "tokens_per_second" => tps
+    }.compact
+  end
+
+  # The gem exposes response.provider (the upstream OpenRouter routed to); guard in
+  # case a fallback path returns a response shape without it.
+  def provider_of(response)
+    response.provider if response.respond_to?(:provider)
   end
 
   def log_ooc_questions(questions)

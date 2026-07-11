@@ -41,4 +41,22 @@ Rails.application.configure do
   # one model — separate from the conversation brain so we can trade it off independently.
   # Swap live: `Rails.configuration.summarizer_model = "..."`.
   config.summarizer_model = ENV["SUMMARIZER_MODEL"] || "google/gemini-3.5-flash"
+
+  # Camera snapshot description (CameraDescriptionJob → LlmService.call_with_vision).
+  # Vision-capable models only. If the primary raises or comes back empty we retry once
+  # on the fallback, then fail loudly. Swap live like the other model knobs.
+  config.camera_vision_model = ENV["CAMERA_VISION_MODEL"] || "google/gemini-3.5-flash"
+  config.vision_fallback_model = ENV["VISION_FALLBACK_MODEL"] || "qwen/qwen3.7-max"
+
+  # Odds (percent) that a turn "glitches" and leaks the inner monologue out loud
+  # instead of the intended speech (ResponseSynthesizer). Forced to 0 in test so
+  # it never fires unless a spec exercises it deliberately. Swap live like the
+  # other knobs: `Rails.configuration.glitch_percent = 10`.
+  config.glitch_percent = Rails.env.test? ? 0 : (ENV["GLITCH_PERCENT"]&.to_i || 3)
+
+  # Kill switch for the camera pipeline. When true, no CameraDescriptionJob is ever
+  # enqueued and ContextBuilder omits the camera block. Toggle live like the model
+  # knobs, or flip input_boolean.disable_camera on the HASS side (checked in the job —
+  # automation/timer-friendly, e.g. "camera off at night").
+  config.disable_camera = ENV["DISABLE_CAMERA"] == "true"
 end

@@ -74,11 +74,13 @@ input_text:
     max: 255
     icon: mdi:bullhorn
 
-  # What the cube's camera currently sees. script.refresh_camera_description runs the
-  # snapshot through llmvision and writes a short description here; ContextBuilder injects
-  # it into the brain's prompt (below the world state) whenever it's non-empty. An
-  # automation blanks it after ~3 min so a stale look never lingers. Short-lived on
-  # purpose — we don't analyze the camera continuously (vision calls cost money).
+  # What the cube's camera currently sees. Rails owns the pipeline now:
+  # CameraDescriptionJob (on the Rails host, where the webcam is plugged in) grabs a
+  # one-shot ffmpeg frame, runs it through a vision model, and writes the short
+  # description here; ContextBuilder injects it into the brain's prompt (below the world
+  # state) whenever it's non-empty. The "Camera: clear stale description" automation
+  # blanks it after ~3 min so a stale look never lingers. Short-lived on purpose — we
+  # don't analyze the camera continuously (vision calls cost money).
   current_camera_state:
     name: "Current Camera State"
     initial: ""
@@ -95,15 +97,27 @@ input_boolean:
     name: "Strobe Light"
     icon: mdi:flash
 
+  # HASS-side kill switch for the camera pipeline. CameraDescriptionJob checks this
+  # before every capture, so automations (a nighttime timer, an event mode, whatever)
+  # can turn the cube's look off without touching Rails. Rails has its own independent
+  # switch (DISABLE_CAMERA / config.disable_camera); either being on disables the camera.
+  disable_camera:
+    name: "Disable Camera"
+    initial: false
+    icon: mdi:camera-off
+
+  # Raised by Rails for the duration of a grand-entrance persona switch
+  # (Shows::GrandEntrance) — guaranteed to drop even if the show crashes. Listeners:
+  # the "Persona switching: silence during the show" automation (mutes the mic +
+  # stops the media players while up, unmutes when it drops) and the mic-guard
+  # automation (keeps its hands off the mute switch while this is on). Hang more
+  # show-time behavior here as it comes up.
+  persona_switching:
+    name: "Persona Switching (show in progress)"
+    initial: false
+    icon: mdi:drama-masks
+
 input_button:
   trigger_alarm:
     name: "Trigger Alarm"
     icon: mdi:alarm-light
-
-  # The ONLY camera-related entity exposed to the Assist action agent. The cube's
-  # plain-English "refresh my camera" maps onto pressing this; the agent never sees the
-  # camera or llmvision entities themselves. An automation reacts to the press (and to
-  # conversation start) by running script.refresh_camera_description.
-  refresh_camera_description:
-    name: "Refresh Camera Description"
-    icon: mdi:camera-iris

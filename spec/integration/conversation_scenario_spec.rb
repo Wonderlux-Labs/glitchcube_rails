@@ -72,4 +72,34 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
     # The turn was persisted.
     expect(Conversation.find_by(session_id: session_id)).to be_present
   end
+
+  it "still completes the turn when the camera refresh blows up" do
+    # The camera look is fire-and-forget; under an inline/test adapter (or if the
+    # enqueue itself fails) the error surfaces right in the orchestrator's stack —
+    # it must never take the conversation down with it.
+    allow(CameraDescriptionJob).to receive(:perform_later)
+      .and_raise("Snapshot capture failed (exit 251)")
+
+    response = ConversationOrchestrator.new(
+      session_id: session_id,
+      message: "make it spooky in here",
+      context: { device_id: "cube_voice", language: "en" }
+    ).call
+
+    expect(response.to_s).to include("spooky")
+    expect(Conversation.find_by(session_id: session_id)).to be_present
+  end
+
+  it "never enqueues the camera job when the camera is disabled in config" do
+    allow(Rails.configuration).to receive(:disable_camera).and_return(true)
+    allow(CameraDescriptionJob).to receive(:perform_later)
+
+    ConversationOrchestrator.new(
+      session_id: session_id,
+      message: "make it spooky in here",
+      context: { device_id: "cube_voice", language: "en" }
+    ).call
+
+    expect(CameraDescriptionJob).not_to have_received(:perform_later)
+  end
 end
