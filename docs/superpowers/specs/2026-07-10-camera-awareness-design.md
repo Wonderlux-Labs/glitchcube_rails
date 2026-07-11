@@ -1,7 +1,12 @@
 # Camera Awareness — design
 
+> **SUPERSEDED (2026-07-11):** the HASS-side pipeline described here (mediamtx RTSP →
+> generic camera → LLMVision) was replaced by a Rails-owned one-shot capture. See
+> `2026-07-11-rails-camera-snapshot-design.md`. The prompt-injection side (input_text →
+> ContextBuilder) and the stale-clear automation described here are still accurate.
+
 **Date:** 2026-07-10
-**Status:** approved design, ready for implementation plan
+**Status:** superseded — see banner above
 
 ## Goal
 
