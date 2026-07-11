@@ -314,6 +314,24 @@ class LlmService
       content
     end
 
+    # Local vision via ollama running on the same host — the snapshot never leaves
+    # the box (the privacy win for the Burn). POSTs one image + prompt to ollama's
+    # /api/generate. On ANY failure (ollama down, timeout, non-200, blank reply) it
+    # falls back to the OpenRouter call_with_vision path so a description still lands.
+    # Deliberately NOT DRY with call_with_vision: the two backends have different
+    # wire shapes and failure modes, and keeping them separate keeps each readable.
+    def call_with_local_vision(prompt:, image_path:)
+      begin
+        content = attempt_local_vision_call(prompt, image_path)
+        return content if content.present?
+        Rails.logger.warn "⚠️ Local vision returned empty; falling back to OpenRouter vision"
+      rescue StandardError => e
+        Rails.logger.warn "❌ Local vision failed (#{e.message}); falling back to OpenRouter vision"
+      end
+
+      call_with_vision(prompt: prompt, image_path: image_path)
+    end
+
     # Check if LLM service is configured and available
     def available?
       OpenRouter.configuration.access_token.present?
@@ -336,6 +354,34 @@ class LlmService
       client = OpenRouter::Client.new
       response = client.complete(messages, model: model, extras: { temperature: 0.3 })
       response.content
+    end
+
+    # Raw POST to the local ollama vision endpoint. `think: false` stops the vision
+    # model wasting time on chain-of-thought; keep_alive holds it resident between
+    # turns (warm ~2.5s, cold ~7s while it loads). Raises on any transport/HTTP error
+    # so call_with_local_vision can fall back.
+    def attempt_local_vision_call(prompt, image_path)
+      model = Rails.configuration.local_vision_model
+      uri = URI.join(Rails.configuration.local_vision_url, "/api/generate")
+      Rails.logger.info "👁️ Local vision call: #{model} (#{File.basename(image_path)})"
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.open_timeout = 5
+      http.read_timeout = 60
+      request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json")
+      request.body = {
+        model: model,
+        prompt: prompt,
+        images: [ Base64.strict_encode64(File.binread(image_path)) ],
+        stream: false,
+        think: false,
+        keep_alive: "10m"
+      }.to_json
+
+      response = http.request(request)
+      raise "ollama returned HTTP #{response.code}" unless response.code.to_i == 200
+
+      JSON.parse(response.body)["response"].to_s.strip
     end
 
     def build_background_messages(prompt, context)

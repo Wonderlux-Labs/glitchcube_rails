@@ -1,3 +1,7 @@
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Movement/GPS simulation tasks; part of the GPS/GIS bundle, none of it wired in. Restore for a future Burn.
+# ============================================================
 namespace :movement do
   desc "Test the movement simulation by triggering a single step"
   task test: :environment do

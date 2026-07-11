@@ -41,148 +41,6 @@ class Api::V1::ConversationController < Api::V1::BaseController
     }, status: 500
   end
 
-  def proactive
-    # Extract trigger and context parameters
-    trigger_type = params[:trigger] || "unknown_trigger"
-    context_data = params[:context] || {}
-
-    Rails.logger.info "🤖 Generating proactive message for trigger: #{trigger_type}"
-
-    begin
-      # Generate contextual message using LLM
-      result = ProactiveMessageService.generate(
-        trigger_type: trigger_type,
-        context: context_data
-      )
-
-      # Skip announcement if determined inappropriate
-      unless result[:should_announce]
-        Rails.logger.info "🤫 Skipping proactive announcement (not appropriate)"
-        render json: { success: true, skipped: true }
-        return
-      end
-
-      # Use the generated message and persona-specific satellite
-      ha_response = HomeAssistantService.call_service(
-        "assist_satellite",
-        "start_conversation",
-        {
-          entity_id: result[:satellite_entity],
-          start_message: result[:message],
-          extra_system_prompt: "You are responding to a proactive trigger as #{result[:persona]}. Be engaging and helpful."
-        }
-      )
-
-      Rails.logger.info "✅ Proactive conversation started as #{result[:persona]} via #{result[:satellite_entity]}"
-
-      render json: {
-        success: true,
-        persona: result[:persona],
-        message: result[:message]
-      }
-
-    rescue HomeAssistantService::Error => e
-      Rails.logger.error "❌ Failed to start proactive conversation: #{e.message}"
-
-      render json: {
-        success: false,
-        error: "Failed to start conversation: #{e.message}",
-        data: {
-          response_type: "error",
-          satellite_entity: result[:satellite_entity],
-          message: result[:message]
-        }
-      }
-    end
-
-  rescue StandardError => e
-    Rails.logger.error "ProactiveConversationController failed: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-
-    # Return error in HASS-compatible format
-    render json: {
-      success: false,
-      error: e.message,
-      data: {
-        response_type: "error",
-        speech_text: "I encountered an error processing the proactive trigger. Please check the system.",
-        error_details: e.message
-      }
-    }, status: 500
-  end
-
-  def persona_arrival
-    persona_id = params[:persona_id] || params[:persona]
-    current_goal = params[:current_goal]
-    current_mood = params[:current_mood] || "neutral"
-
-    unless persona_id
-      render json: { success: false, error: "persona_id required" }, status: 400
-      return
-    end
-
-    Rails.logger.info "🎭 Persona arrival announcement for: #{persona_id}"
-
-    begin
-      persona_instance = get_persona_instance(persona_id)
-      unless persona_instance
-        render json: { success: false, error: "Unknown persona: #{persona_id}" }, status: 400
-        return
-      end
-
-      # Get system prompt
-      system_prompt = get_persona_system_prompt(persona_instance)
-
-      # Build context
-      context = build_arrival_context(current_goal, current_mood)
-
-      # Create arrival prompt
-      user_message = "You've just become the active persona! Give a brief 3-second introduction that shows your personality and acknowledges the current situation. Context: #{context}"
-
-      messages = [
-        { role: "system", content: system_prompt },
-        { role: "user", content: user_message }
-      ]
-
-      # Call LLM for announcement
-      response = LlmService.call_with_structured_output(
-        messages: messages,
-        response_format: "text",
-        model: Rails.configuration.ai_model,
-        temperature: 0.9
-      )
-
-      announcement = response.content || "Hello, I'm #{persona_id}!"
-
-      # Get persona voice
-      persona_voice = get_persona_voice(persona_id)
-
-      # Announce via Home Assistant
-      HomeAssistantService.call_service(
-        "music_assistant",
-        "announce",
-        {
-          message: announcement,
-          voice: persona_voice,
-          entity_id: "media_player.cube_cube_voice_media_player"
-        }
-      )
-
-      Rails.logger.info "🎤 #{persona_id} arrival: #{announcement[0..100]}..."
-
-      render json: {
-        success: true,
-        persona_id: persona_id,
-        announcement: announcement,
-        voice: persona_voice
-      }
-
-    rescue StandardError => e
-      Rails.logger.error "❌ Persona arrival failed: #{e.message}"
-      render json: { success: false, error: e.message }, status: 500
-    end
-  end
-
   def health
     render json: {
       status: "ok",
@@ -196,13 +54,11 @@ class Api::V1::ConversationController < Api::V1::BaseController
   private
 
   def extract_message_from_payload
-    # HASS sends message in this structure (but be careful with proactive calls)
     message = params[:message] || params[:text] || ""
 
     # Only try to dig into context if it's hash-like (a plain Hash in specs,
     # ActionController::Parameters for real requests — neither is a Hash per
-    # is_a?, so check by duck type instead. Proactive calls send a bare string
-    # for context, which doesn't respond to #dig, so this correctly skips it.
+    # is_a?, so check by duck type instead).
     if message.blank? && params[:context].respond_to?(:dig)
       message = params.dig(:context, :message) || ""
     end
@@ -211,7 +67,7 @@ class Api::V1::ConversationController < Api::V1::BaseController
   end
 
   def extract_session_id_from_payload
-    # HASS sends session_id in context (but in proactive calls, context is a string)
+    # HASS sends session_id inside the context object
     session_id = if params[:context].respond_to?(:dig)
       params.dig(:context, :session_id)
     else
@@ -293,9 +149,6 @@ class Api::V1::ConversationController < Api::V1::BaseController
   end
 
   def determine_response_type(orchestrator_result)
-    # Check if this is a proactive conversation that should trigger immediate speech
-    return "immediate_speech_with_background_tools" if @context&.dig(:source) == "proactive_trigger"
-
     # Check if orchestrator indicates async tools are running
     return "immediate_speech_with_background_tools" if orchestrator_result&.dig(:async_tools_pending)
 
@@ -308,64 +161,4 @@ class Api::V1::ConversationController < Api::V1::BaseController
     )[0..16]
   end
 
-  def default_proactive_session_id
-    @default_proactive_session_id ||= Digest::SHA256.hexdigest(
-      "cube_proactive_#{ENV.fetch('INSTALLATION_ID', 'default')}"
-    )[0..16]
-  end
-
-  # Get persona instance from ID. Defaults to the current persona.
-  def get_persona_instance(persona_id = nil)
-    Prompts::PersonaLoader.load((persona_id || CubePersona.current_persona).to_s)
-  end
-
-  # Get system prompt from persona
-  def get_persona_system_prompt(persona_instance)
-    result = persona_instance.process_message("", {})
-    result[:system_prompt] || "You are #{persona_instance.name}, a unique AI persona in the GlitchCube."
-  rescue StandardError => e
-    Rails.logger.error "Failed to get system prompt: #{e.message}"
-    "You are #{persona_instance.name}, a unique AI persona in the GlitchCube."
-  end
-
-  # Get persona voice ID from config
-  def get_persona_voice(persona_id)
-    begin
-      config_path = Rails.root.join("lib", "prompts", "personas", "#{persona_id}.yml")
-      if File.exist?(config_path)
-        config = YAML.load_file(config_path)
-        config["voice_id"]
-      end
-    rescue StandardError => e
-      Rails.logger.warn "Failed to load voice for #{persona_id}: #{e.message}"
-      nil
-    end
-  end
-
-  # Build arrival context
-  def build_arrival_context(current_goal, current_mood)
-    context_parts = []
-    context_parts << "Current mood: #{current_mood}" if current_mood.present?
-    context_parts << "Current goal: #{current_goal}" if current_goal.present?
-
-    # Get basic environment context
-    begin
-      current_time = Time.current
-      time_str = current_time.strftime("%l:%M %p").strip
-      context_parts << "Time: #{time_str}"
-
-      hour = current_time.hour
-      period = case hour
-      when 5..11 then "morning"
-      when 12..16 then "afternoon"
-      when 17..20 then "evening"
-      else "night"
-      end
-      context_parts << "Period: #{period}"
-    rescue
-      # Ignore timing errors
-    end
-
-    context_parts.join(", ")
-  end
 end

@@ -10,6 +10,11 @@ RSpec.describe CameraDescriptionJob, type: :job do
 
   before do
     HomeAssistantService.instance = fake_ha
+    # Pin the routing flag so specs don't depend on the ambient .env (dev sets
+    # USE_LOCAL_VISION=false); the false-path spec overrides this. Stub both backends
+    # so no spec makes a real ollama/OpenRouter call.
+    allow(Rails.configuration).to receive(:use_local_vision).and_return(true)
+    allow(LlmService).to receive(:call_with_local_vision).and_return(description)
     allow(LlmService).to receive(:call_with_vision).and_return(description)
 
     # Stub the capture: write a fixture JPEG where a real ffmpeg run would land
@@ -27,10 +32,10 @@ RSpec.describe CameraDescriptionJob, type: :job do
   end
 
   describe '#perform' do
-    it 'captures a frame, asks the vision model, and writes the description to the input_text' do
+    it 'captures a frame, asks the local vision model, and writes the description to the input_text' do
       job.perform
 
-      expect(LlmService).to have_received(:call_with_vision).with(
+      expect(LlmService).to have_received(:call_with_local_vision).with(
         prompt: described_class::VISION_PROMPT,
         image_path: snapshot_path
       )
@@ -41,8 +46,20 @@ RSpec.describe CameraDescriptionJob, type: :job do
       expect(call[:data][:value]).to eq(description)
     end
 
+    it 'routes to the OpenRouter vision path when use_local_vision is false' do
+      allow(Rails.configuration).to receive(:use_local_vision).and_return(false)
+
+      job.perform
+
+      expect(LlmService).to have_received(:call_with_vision).with(
+        prompt: described_class::VISION_PROMPT,
+        image_path: snapshot_path
+      )
+      expect(LlmService).not_to have_received(:call_with_local_vision)
+    end
+
     it 'truncates the description to the input_text max (255 chars)' do
-      allow(LlmService).to receive(:call_with_vision).and_return('x' * 400)
+      allow(LlmService).to receive(:call_with_local_vision).and_return('x' * 400)
 
       job.perform
 
@@ -59,7 +76,7 @@ RSpec.describe CameraDescriptionJob, type: :job do
       job.perform
 
       expect(job).not_to have_received(:capture_snapshot!)
-      expect(LlmService).not_to have_received(:call_with_vision)
+      expect(LlmService).not_to have_received(:call_with_local_vision)
       expect(fake_ha.service_calls_for('input_text')).to be_empty
     end
 
@@ -87,7 +104,7 @@ RSpec.describe CameraDescriptionJob, type: :job do
 
       job.perform(throttle_seconds: 3600)
 
-      expect(LlmService).not_to have_received(:call_with_vision)
+      expect(LlmService).not_to have_received(:call_with_local_vision)
     end
   end
 
@@ -98,7 +115,7 @@ RSpec.describe CameraDescriptionJob, type: :job do
       job.perform
 
       expect(job).not_to have_received(:capture_snapshot!)
-      expect(LlmService).not_to have_received(:call_with_vision)
+      expect(LlmService).not_to have_received(:call_with_local_vision)
       expect(fake_ha.service_calls_for('input_text')).to be_empty
     end
 
@@ -108,7 +125,7 @@ RSpec.describe CameraDescriptionJob, type: :job do
       job.perform
 
       expect(job).not_to have_received(:capture_snapshot!)
-      expect(LlmService).not_to have_received(:call_with_vision)
+      expect(LlmService).not_to have_received(:call_with_local_vision)
       expect(fake_ha.service_calls_for('input_text')).to be_empty
     end
   end

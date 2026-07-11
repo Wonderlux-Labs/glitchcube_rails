@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS location spoofing/home-camp helpers; only callers are the GPS/GIS bundle. Restore for a future Burn.
+# ============================================================
+
 # Configuration class for GlitchCube system
 # Provides centralized access to configuration values and utility methods
 class GlitchCube

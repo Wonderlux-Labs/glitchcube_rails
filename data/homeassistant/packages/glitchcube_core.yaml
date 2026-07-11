@@ -117,6 +117,33 @@ input_boolean:
     initial: false
     icon: mdi:drama-masks
 
+  # Quiet-hours master switch. When ON, the cube keeps its volume down:
+  # (1) the "Quiet mode: auto-duck jukebox" automation caps
+  #     media_player.jukebox_internal at quiet_mode_max_volume (below), and
+  # (2) Rails' HostAudio caps its own direct host playback (ffplay/say) to the
+  #     same percentage — see app/services/host_audio.rb.
+  # OFF (or absent) = no ducking anywhere. Toggle it from an automation later if a
+  # placement actually enforces quiet hours (<80 dB @ 40 ft); we don't write that
+  # automation yet.
+  quiet_mode:
+    name: "Quiet Mode"
+    initial: false
+    icon: mdi:volume-low
+
+input_number:
+  # The volume cap (percent, 0-100) applied everywhere while quiet_mode is ON.
+  # Read by the auto-duck automation and by Rails' HostAudio. Tune it live to find
+  # the level that clears the dB limit at the actual placement.
+  quiet_mode_max_volume:
+    name: "Quiet Mode Max Volume"
+    initial: 50
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    mode: slider
+    icon: mdi:volume-medium
+
 input_button:
   trigger_alarm:
     name: "Trigger Alarm"

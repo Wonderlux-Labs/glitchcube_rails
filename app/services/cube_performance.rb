@@ -1,6 +1,11 @@
 # app/services/cube_performance.rb
 # Convenience class for triggering performance modes
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Facade over the disabled Performance Mode subsystem (see PerformanceModeService).
+# ============================================================
+
 class CubePerformance
   class << self
     # Start a stand-up comedy routine

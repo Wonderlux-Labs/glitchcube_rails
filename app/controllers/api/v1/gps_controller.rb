@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS tracking API for the stationary install; part of the GPS/GIS bundle, none of it wired in. Restore for a future Burn.
+# ============================================================
+
 class Api::V1::GpsController < Api::V1::BaseController
   # Reduce logging noise for high-frequency GPS endpoints
   def self.silencer

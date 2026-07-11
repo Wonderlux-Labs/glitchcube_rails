@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Superseded by the HASS composite sensor (sensor.glitchcube_world_state); its only writer, the reflection job, was removed. No longer injected into prompts.
+# ============================================================
+
 # The cube's curated continuity, injected verbatim into every prompt. A short
 # flat file is the single source of truth; every write is mirrored to a Home
 # Assistant text sensor so it's visible on a dashboard. The reflection job is

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-# GPS sensor update — disabled for stationary regional installation.
-# Restore for Burning Man deployment when GPS/location services are needed.
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS disabled for the stationary install; no-op stub, not scheduled in recurring.yml. Restore for a future Burn.
+# ============================================================
 module Recurring
   module System
     class GpsSensorUpdateJob < ApplicationJob

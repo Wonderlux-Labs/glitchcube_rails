@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# BRC-geography reference model (GPS); table never populated this iteration. Restore for a future Burn.
+# ============================================================
+
 class Landmark < ApplicationRecord
   before_save :update_spatial_location
 

@@ -1,5 +1,10 @@
 # app/services/contextual_speech_trigger_service.rb
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Only consumed by the disabled Performance Mode service; no live caller.
+# ============================================================
+
 class ContextualSpeechTriggerService
   class Error < StandardError; end
   class NoResponseError < Error; end

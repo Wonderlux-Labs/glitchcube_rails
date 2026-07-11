@@ -8,7 +8,6 @@ module Shows
   # noise drew over can talk right back, and if nobody's there the conversation
   # just ends.
   class GrandEntrance < Base
-    THEME_SONGS_DIR = Rails.root.join("data/rails_media/theme_songs")
     # Fixed for now; make it random (e.g. rand(60..120)) when the show grows.
     MAX_PLAY_SECONDS = 60
 
@@ -55,16 +54,8 @@ module Shows
       light_effect(GLITCH_SCENES.sample)
     end
 
-    # Theme songs are untracked local files (gitignored), so a checkout without
-    # them still gets a show — just a quieter one.
     def play_theme_song
-      song = Dir[THEME_SONGS_DIR.join("*.mp3")].sample
-      if song.nil?
-        Rails.logger.warn "🎭 No theme songs in #{THEME_SONGS_DIR}; skipping the song"
-        return
-      end
-      Rails.logger.info "🎭 Theme song: #{File.basename(song)}"
-      HostAudio.play(song, max_seconds: MAX_PLAY_SECONDS)
+      HostAudio.play_random_theme_song(max_seconds: MAX_PLAY_SECONDS)
     end
 
     def announce_arrival

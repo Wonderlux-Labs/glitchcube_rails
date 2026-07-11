@@ -22,7 +22,7 @@ RSpec.describe Shows::GrandEntrance do
 
     FileUtils.touch(songs_dir.join("theme_a.mp3"))
     FileUtils.touch(songs_dir.join("theme_b.mp3"))
-    stub_const("Shows::GrandEntrance::THEME_SONGS_DIR", songs_dir)
+    stub_const("HostAudio::THEME_SONGS_DIR", songs_dir)
   end
 
   after do
@@ -68,7 +68,7 @@ RSpec.describe Shows::GrandEntrance do
   it 'plays a random theme song from the rails media dir, capped at 60 seconds' do
     show.call
 
-    expect(HostAudio).to have_received(:play) do |path, max_seconds:|
+    expect(HostAudio).to have_received(:play) do |path, max_seconds:, **|
       expect(path.to_s).to start_with(songs_dir.to_s)
       expect(path.to_s).to end_with(".mp3")
       expect(max_seconds).to eq(60)

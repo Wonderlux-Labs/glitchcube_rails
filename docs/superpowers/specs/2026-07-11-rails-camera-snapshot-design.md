@@ -1,8 +1,29 @@
 # Rails-Owned Camera Snapshots — design
 
 **Date:** 2026-07-11
-**Status:** approved design, ready for implementation plan
+**Status:** **implemented** — see the addendum below for two deltas from this design (local ollama vision; ffmpeg command fix).
 **Supersedes:** `2026-07-10-camera-awareness-design.md` (the HASS/LLMVision pipeline)
+
+## Implemented — deltas from the design below (2026-07-11)
+
+1. **Local ollama vision, OpenRouter as fallback.** The design assumed an OpenRouter
+   vision call. Shipped: vision runs **local by default** on the same host to keep the
+   image on the box (privacy win for the Burn). `LlmService.call_with_local_vision` POSTs
+   the snapshot to on-host ollama (`qwen3-vl:4b`, ~2.5s warm / ~7s cold model load); on
+   ANY failure (down/timeout/non-200/blank) it falls back to the OpenRouter
+   `call_with_vision` described below. New config: `config.use_local_vision` (default true;
+   only `USE_LOCAL_VISION="false"` disables — dev sets it false, no model pulled there),
+   `config.local_vision_url` (`http://localhost:11434`), `config.local_vision_model`
+   (`qwen3-vl:4b`). On prod the server is the **Ollama.app login item** (autostarts on GUI
+   login — the same session the camera needs; model lives in `~/.ollama/models`); nothing
+   in the boot script, no `ollama serve`.
+2. **ffmpeg command fix.** The `SNAPSHOT_COMMAND` in this doc is missing two flags the prod
+   webcam requires and is broken as written. Real command:
+   `ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 -pixel_format uyvy422 -i "0" -update 1 -frames:v 1 -y %{path}`
+   — `-framerate 30` (the device only offers exactly 30fps @1280x720; ffmpeg's 29.97
+   default → `Input/output error`, never opens), `-update 1` (ffmpeg 8's image2 muxer
+   refuses a single fixed filename without it). Note: the camera **cannot be opened over
+   SSH** (no window-server session); capture must run in a real login session on prod.
 
 ## Goal
 

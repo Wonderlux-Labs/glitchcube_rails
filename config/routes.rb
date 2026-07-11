@@ -15,8 +15,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       # New conversation orchestrator route (matches HASS agent)
       post "conversation", to: "conversation#handle"
-      post "conversation/proactive", to: "conversation#proactive"
-      post "conversation/persona_arrival", to: "conversation#persona_arrival"
+
+      # Host-speaker audio triggers (HASS -> Rails via rest_command)
+      post "audio/theme_song", to: "audio#theme_song"
 
       namespace :home_assistant do
         get "health", to: "home_assistant#health"

@@ -1,6 +1,11 @@
 # app/services/performance_mode_service.rb
 # Autonomous performance mode for extended AI monologues/routines
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Performance Mode is disabled this edition — PerformanceModeJob is fully commented out, so nothing drives the loop.
+# ============================================================
+
 class PerformanceModeService
   class Error < StandardError; end
 

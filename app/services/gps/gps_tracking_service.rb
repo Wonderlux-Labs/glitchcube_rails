@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS/location tracking is off for the stationary install; tables are never populated. Restore for a future Burn.
+# ============================================================
+
 # Simple service to get GPS coordinates from Home Assistant
 # All location context comes from LocationContextService
 module Gps

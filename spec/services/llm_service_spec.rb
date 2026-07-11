@@ -147,4 +147,62 @@ RSpec.describe LlmService do
       }.to raise_error(StandardError, "boom 2")
     end
   end
+
+  describe ".call_with_local_vision" do
+    include WebMock::API
+
+    let(:jpeg_bytes) { "\xFF\xD8\xFF\xD9".b }
+    let(:image_path) do
+      path = Rails.root.join("tmp/llm_local_vision_spec.jpg")
+      File.binwrite(path, jpeg_bytes)
+      path.to_s
+    end
+    let(:ollama_url) { "#{Rails.configuration.local_vision_url}/api/generate" }
+    after { FileUtils.rm_f(image_path) }
+
+    it "POSTs the prompt + base64 image to ollama and returns its response text" do
+      captured = nil
+      stub_request(:post, ollama_url).to_return do |request|
+        captured = JSON.parse(request.body)
+        { status: 200, body: { response: "one person in a red shirt" }.to_json }
+      end
+
+      result = described_class.call_with_local_vision(prompt: "what do you see?", image_path: image_path)
+
+      expect(result).to eq("one person in a red shirt")
+      expect(captured["model"]).to eq(Rails.configuration.local_vision_model)
+      expect(captured["prompt"]).to eq("what do you see?")
+      expect(captured["images"]).to eq([ Base64.strict_encode64(jpeg_bytes) ])
+      expect(captured["stream"]).to be(false)
+      expect(captured["think"]).to be(false)
+    end
+
+    it "falls back to OpenRouter vision when ollama is unreachable" do
+      stub_request(:post, ollama_url).to_raise(Errno::ECONNREFUSED)
+      allow(described_class).to receive(:call_with_vision).and_return("openrouter recovered")
+
+      result = described_class.call_with_local_vision(prompt: "look", image_path: image_path)
+
+      expect(result).to eq("openrouter recovered")
+      expect(described_class).to have_received(:call_with_vision).with(prompt: "look", image_path: image_path)
+    end
+
+    it "falls back to OpenRouter vision on a non-200 from ollama" do
+      stub_request(:post, ollama_url).to_return(status: 500, body: "kaboom")
+      allow(described_class).to receive(:call_with_vision).and_return("openrouter recovered")
+
+      expect(
+        described_class.call_with_local_vision(prompt: "look", image_path: image_path)
+      ).to eq("openrouter recovered")
+    end
+
+    it "falls back to OpenRouter vision when ollama returns a blank description" do
+      stub_request(:post, ollama_url).to_return(status: 200, body: { response: "" }.to_json)
+      allow(described_class).to receive(:call_with_vision).and_return("openrouter recovered")
+
+      expect(
+        described_class.call_with_local_vision(prompt: "look", image_path: image_path)
+      ).to eq("openrouter recovered")
+    end
+  end
 end

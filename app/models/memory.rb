@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Not written or read during a turn; continuity is the summarizer pipeline (Summary), not this table.
+# ============================================================
+
 # A discrete thing the cube remembers about people, events, or the world.
 # Searched on demand by MemorySearchService via plain Rails queries — no
 # embeddings. The `embedding` column is retained but unused. Writing is not wired

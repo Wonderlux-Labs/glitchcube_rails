@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-# Movement simulation — disabled for stationary regional installation.
-# Restore for Burning Man deployment when GPS/movement is needed.
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS/movement disabled for the stationary install; no-op stub, not scheduled in recurring.yml. Restore for a future Burn.
+# ============================================================
 class Recurring::System::MovementSimulationJob < ApplicationJob
   queue_as :default
 

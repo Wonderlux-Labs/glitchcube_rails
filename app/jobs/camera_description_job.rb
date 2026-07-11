@@ -19,19 +19,29 @@ class CameraDescriptionJob < ApplicationJob
   SNAPSHOT_DIR = Rails.root.join("tmp/camera")
   # The full capture command, deliberately visible in one place — no knobs. One
   # frame, then the camera turns back off. %{path} is the timestamped output file.
-  SNAPSHOT_COMMAND = %(ffmpeg -f avfoundation -video_size 1280x720 -pixel_format uyvy422 -i "0" -frames:v 1 -y %{path})
+  # -framerate 30: the prod webcam only offers exactly 30fps at 1280x720; without
+  # this ffmpeg picks its 29.97 default, which the device rejects with an I/O error
+  # before it ever opens. -update 1: ffmpeg 8's image2 muxer refuses a single fixed
+  # filename (no %03d sequence pattern) unless told it's a single-image overwrite.
+  SNAPSHOT_COMMAND = %(ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 -pixel_format uyvy422 -i "0" -update 1 -frames:v 1 -y %{path})
   THROTTLE_SECONDS = 120
   CAPTURE_TIMEOUT = 10 # seconds; a hung ffmpeg is killed and fails the job
   CAMERA_STATE_ENTITY = "input_text.current_camera_state" # same entity ContextBuilder reads
   DISABLE_ENTITY = "input_boolean.disable_camera" # HASS-side kill switch (timer/automation-friendly)
   DESCRIPTION_MAX = 255 # the input_text's max length
 
-  # Same people-focused prompt the old llmvision script used.
+  # People-focused, present-tense. Deliberately states NO character count: qwen3-vl
+  # takes a "max 255 characters" instruction literally and appends a "(193 chars)"
+  # tally to its answer. write_description truncates to DESCRIPTION_MAX anyway, so we
+  # ask for brevity in words, not numbers. "Only what you can actually see" trims the
+  # model's tendency to narrate a backstory for the scene.
   VISION_PROMPT = <<~PROMPT.squish
-    Focus on the people in the picture — they are interacting with an interactive art
-    project that just asked for a snapshot of what it currently sees. In ONE or TWO short
-    sentences (max 255 characters): how many people, their fashion / vibe, and anything
-    notable. If no one is there, say so briefly.
+    You are the eyes of an interactive art cube; this is the snapshot it just took of
+    whoever is in front of it. In two to three short sentences, describe only what you can
+    actually see: how many people, their fashion / vibe, and anything notable. Be brief
+    and concrete — no guessing or backstory. If it's too dark to see or no on is there, just say that.
+    This provides context for in-character interactions with whomever the cube is interacting with
+    so details are important. Do not include any commentary.
   PROMPT
 
   def perform(throttle_seconds: nil)
@@ -39,7 +49,11 @@ class CameraDescriptionJob < ApplicationJob
     return if throttled?(throttle_seconds || THROTTLE_SECONDS)
 
     snapshot_path = capture_snapshot!
-    description = LlmService.call_with_vision(prompt: VISION_PROMPT, image_path: snapshot_path)
+    description = if Rails.configuration.use_local_vision
+      LlmService.call_with_local_vision(prompt: VISION_PROMPT, image_path: snapshot_path)
+    else
+      LlmService.call_with_vision(prompt: VISION_PROMPT, image_path: snapshot_path)
+    end
     write_description(description)
   end
 

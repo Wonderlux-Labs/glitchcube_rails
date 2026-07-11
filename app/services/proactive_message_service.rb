@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Fully orphaned: its endpoint (POST /conversation/proactive) was deleted; proactive arrivals are handled by Shows::GrandEntrance now. Kept as reference.
+# ============================================================
+
 # ProactiveMessageService
 # Generates contextual, persona-aware proactive messages using LLM
 class ProactiveMessageService

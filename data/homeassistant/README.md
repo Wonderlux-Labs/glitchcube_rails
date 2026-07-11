@@ -25,9 +25,17 @@ Contents:
     it doesn't double up). See `media/sounds/` below for the sound asset.
 - `scripts.yaml` — HASS scripts exposed to the tool-calling HASS agent, e.g.
   `play_music_on_jukebox` (plays a track on `media_player.jukebox_internal` via Music Assistant).
+  - "Quiet mode: auto-duck jukebox" (`automation.quiet_mode_auto_duck_jukebox`) — while
+    `input_boolean.quiet_mode` is on, keeps `media_player.jukebox_internal` at/below
+    `input_number.quiet_mode_max_volume` (percent). Fires on jukebox volume change,
+    quiet_mode → on, or the cap changing; caps regardless of play state (pre-ducks idle so
+    the next track can't blip loud). Rails' `HostAudio` applies the same cap to its own
+    direct host playback (ffplay/say). For a real quiet-hours placement (<80 dB @ 40 ft),
+    add an automation that toggles `quiet_mode` on a schedule — deliberately not written yet.
 - `packages/` — our config packages:
   - `glitchcube_core.yaml` — input helpers Rails reads/writes (`input_select.current_persona`,
-    `input_select.cube_mode`, host routing, etc.).
+    `input_select.cube_mode`, host routing, `input_boolean.quiet_mode` +
+    `input_number.quiet_mode_max_volume`, etc.).
 - `templates/` — plain YAML template-entity files, merged into the config root's single
   `template:` key via `!include_dir_merge_list` (each file is a bare list, no `template:`
   wrapper — see the comment in either file). These live outside `packages/` at the

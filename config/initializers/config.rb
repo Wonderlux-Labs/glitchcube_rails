@@ -48,6 +48,18 @@ Rails.application.configure do
   config.camera_vision_model = ENV["CAMERA_VISION_MODEL"] || "google/gemini-3.5-flash"
   config.vision_fallback_model = ENV["VISION_FALLBACK_MODEL"] || "qwen/qwen3.7-max"
 
+  # Local vision: describe the camera snapshot with an ollama vision model running on
+  # the same host (no image ever leaves the box — the privacy win for the Burn). When
+  # true, CameraDescriptionJob calls LlmService.call_with_local_vision, which POSTs to
+  # ollama and, if that fails (ollama down, timeout), falls back to the OpenRouter
+  # call_with_vision path above. Set false to skip ollama entirely and go straight to
+  # OpenRouter. Warm latency ~2.5s on prod; ~7s cold (model load).
+  # On by default: only an explicit USE_LOCAL_VISION="false" disables it (a missing
+  # var, or any other value like "1", stays true).
+  config.use_local_vision = ENV["USE_LOCAL_VISION"] != "false"
+  config.local_vision_url = ENV["LOCAL_VISION_URL"] || "http://localhost:11434"
+  config.local_vision_model = ENV["LOCAL_VISION_MODEL"] || "qwen3-vl:4b"
+
   # Odds (percent) that a turn "glitches" and leaks the inner monologue out loud
   # instead of the intended speech (ResponseSynthesizer). Forced to 0 in test so
   # it never fires unless a spec exercises it deliberately. Swap live like the

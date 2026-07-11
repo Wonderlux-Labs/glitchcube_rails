@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Deep-recall query over the (also dormant) Memory table; not wired into the persona turn.
+# ============================================================
+
 # Deep-recall over the Memory table. Plain Rails search — no embeddings.
 #
 # Standalone service kept for a future background memory consolidator / deep-recall

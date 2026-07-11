@@ -8,8 +8,13 @@ app is kept alive if it crashes. Goal: **flip the power on → everything comes 
 ```
 Mac boots
   └─ auto-login (estiens)                      ← required; enables the GUI session below
+       │                                          (also what lets ffmpeg open the webcam and
+       │                                           the Ollama.app server start — neither works headless/over SSH)
        ├─ brew services LaunchAgents           ← already installed, not managed here:
-       │    postgresql@16, mosquitto (MQTT), redis, memcached, ollama, mediamtx, colima
+       │    postgresql@16, mosquitto (MQTT), redis, memcached, colima
+       ├─ Ollama.app (login item)              ← local camera-vision server on :11434
+       │    (qwen3-vl:4b in ~/.ollama/models). NOT a brew service — the brew ollama
+       │    formula was removed to avoid a duplicate :11434 server. Nothing to add here.
        └─ com.glitchcube.boot  (LaunchAgent, RunAtLoad — no babysitter)
             └─ bin/glitchcube-boot
                  ├─ bin/ensure-hass-vm         ← starts the "glitch" UTM VM (Home Assistant)
@@ -76,11 +81,21 @@ Under the hood these are `launchctl kickstart` / `kill TERM` / `print` against
 `gui/$(id -u)/com.glitchcube.boot`. To fully uninstall the agent:
 `launchctl bootout gui/$(id -u)/com.glitchcube.boot`.
 
-## Adding more services later (camera/ffmpeg, etc.)
+## Camera vision
+
+No RTSP/streaming and nothing to add to the boot chain. The webcam is grabbed one frame at a
+time by `CameraDescriptionJob` (inside the Rails `jobs` process): a one-shot ffmpeg capture,
+described by the local **Ollama.app** vision server on `:11434` (falls back to OpenRouter if
+ollama is down), written to `input_text.current_camera_state`. Both ffmpeg's camera access and
+the ollama server ride the auto-login GUI session above. The old `mediamtx` RTSP server and any
+webcam→RTSP publisher are retired — remove them from prod when convenient; they cost nothing
+while unused. See `docs/superpowers/specs/2026-07-11-rails-camera-snapshot-design.md`.
+
+## Adding other services later
 
 Two clean options, no changes to the supervisor:
 
-- **Part of the app lifecycle** (starts/stops with Rails): add a line to `Procfile.dev`, e.g.
-  `camera: ffmpeg -i rtsp://... ...`. foreman runs it alongside web/jobs.
-- **Independent long-running daemon**: prefer a Homebrew `brew services` LaunchAgent (this is how
-  `mediamtx`, the RTSP server, already runs) so it has its own lifecycle and logs.
+- **Part of the app lifecycle** (starts/stops with Rails): add a line to `Procfile.dev`. foreman
+  runs it alongside web/jobs.
+- **Independent long-running daemon**: prefer a Homebrew `brew services` LaunchAgent so it has its
+  own lifecycle and logs.
