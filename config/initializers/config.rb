@@ -35,7 +35,7 @@ Rails.application.configure do
   # (an LLM with the Assist API enabled) interprets plain-English requests
   # ("play some jazz", "romantic lights"), controls the exposed devices, and
   # replies in natural language — which we fold back into the next turn's history.
-  config.hass_action_agent = ENV["HASS_ACTION_AGENT"] || "conversation.google_gemini_flash_latest"
+  config.hass_action_agent = ENV["HASS_ACTION_AGENT"] || "conversation.anthropic_claude_sonnet_4_6"
 
 
   # Other integrations can be added here
