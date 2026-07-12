@@ -15,8 +15,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       # New conversation orchestrator route (matches HASS agent)
       post "conversation", to: "conversation#handle"
-      post "conversation/proactive", to: "conversation#proactive"
-      post "conversation/persona_arrival", to: "conversation#persona_arrival"
+
+      # Host-speaker audio triggers (HASS -> Rails via rest_command)
+      post "audio/theme_song", to: "audio#theme_song"
 
       namespace :home_assistant do
         get "health", to: "home_assistant#health"
@@ -28,12 +29,6 @@ Rails.application.routes.draw do
 
       # Summary routes
       get "summaries/recent", to: "summaries#recent"
-
-      # Performance mode routes
-      post "performance_mode/start", to: "performance_mode#start"
-      post "performance_mode/stop", to: "performance_mode#stop"
-      get "performance_mode/status", to: "performance_mode#status"
-      post "performance_mode/interrupt", to: "performance_mode#interrupt"
 
       # GPS routes
       get "gps/location", to: "gps#location"
@@ -47,12 +42,6 @@ Rails.application.routes.draw do
       post "gps/stop_movement", to: "gps#stop_movement"
       get "gps/cube_current_loc", to: "gps#cube_current_loc"
       get "gps/landmarks", to: "gps#landmarks"
-
-      # Burning Man quest routes
-      namespace :burning_man do
-        post "quest/progress", to: "burning_man#update_quest_progress"
-        get "quest/status", to: "burning_man#quest_status"
-      end
 
       # GIS/Map data routes
       resources :gis, only: [] do
@@ -78,27 +67,16 @@ Rails.application.routes.draw do
   # GPS map view
   get "gps", to: "gps#map"
 
-  # Performance mode web interface
-  get "performance", to: "performance#index"
-  post "performance/start", to: "performance#start"
-  post "performance/stop", to: "performance#stop"
-  get "performance/status", to: "performance#status"
-
   # Admin dashboard for development monitoring
   namespace :admin do
     root "dashboard#index"
 
-    resources :conversations, only: [ :index, :show ] do
-      member do
-        get :timeline
-        get :tools
-      end
-    end
+    resources :conversations, only: [ :index, :show ]
 
     resources :memories, only: [ :index, :show ] do
       collection do
         get :search
-        get :by_type
+        get :by_category
       end
     end
 
@@ -116,28 +94,9 @@ Rails.application.routes.draw do
     get "system", to: "system#index"
     get "system/health", to: "system#health"
 
-    resources :people, only: [ :index, :show, :edit, :update, :destroy ] do
-      collection do
-        get :search
-      end
-    end
-
-    resources :events, only: [ :index, :show ] do
-      collection do
-        get :timeline
-        get :search
-      end
-    end
-
     resources :summaries, only: [ :index, :show ] do
       collection do
         get :analytics
-        get :search
-      end
-    end
-
-    resources :facts, only: [ :index, :show ] do
-      collection do
         get :search
       end
     end

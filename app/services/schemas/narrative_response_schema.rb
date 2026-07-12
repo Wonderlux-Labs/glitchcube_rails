@@ -1,66 +1,42 @@
 # app/services/schemas/narrative_response_schema.rb
 #
-# Schema for structured narrative responses in two-tier architecture
-# Narrative LLM returns this structure instead of using tool calls
+# Structured output returned by the conversation LLM. The character returns what
+# it says out loud plus an optional list of `actions` — structured environment
+# changes. Each action is just { action_name, description }: which channel, and
+# a plain-English description. A downstream HASS agent interprets the description
+# into real device commands, so we deliberately keep this simple — no RGB values,
+# no effect enums. Over-specifying here breaks narrative consistency.
+#
+# `strict: false` so the model is free to return an empty `actions` list (or omit
+# it) on turns where nothing should change — most turns are just talk.
 class Schemas::NarrativeResponseSchema
+  # Channels the character can act on. Kept loose on purpose; the HASS agent does
+  # its best with whatever plain-English description comes through.
+  ACTION_CHANNELS = %w[cube_light top_light jukebox mood_music sound_efx announcement marquee switch].freeze
+
   def self.schema
-    OpenRouter::Schema.define("narrative_response") do
-      string :speech_text, required: true,
-             description: "What the character says out loud to the user NO STAGE DIRECTIONS"
+    OpenRouter::Schema.define("narrative_response", strict: false) do
+      string :speech, required: true,
+             description: "The words your character says out loud, sent DIRECTLY to text-to-speech. Write only what should be heard, at a natural spoken length (a sentence or a few, not a wall of text). No stage directions, no emojis, no asterisks, no parentheticals, no asides. You MAY use ellipses (...), commas, dashes, and question marks to shape pacing."
+
+      string :inner_monologue, required: true,
+             description: "What your character is thinking privately this turn. Never spoken aloud. Can contradict the speech. A sentence or two."
+
+      array :actions,
+            description: "Physical changes you want to make this turn, using only the channels in YOUR TOOLS (which shows example actions for each). Multiple actions per turn are allowed and encouraged when more than one thing should happen. Use an empty list on talk-only turns — you do NOT need to act every turn. You may be playful, ironic, or contradictory." do
+        object do
+          string :action_name, required: true,
+                 description: "The channel to use — one of the action_name values listed in YOUR TOOLS in the system prompt."
+          string :description, required: true,
+                 description: "Plain-English intent for that channel — a separate agent turns it into real device commands, so describe what you want, not exact settings. See YOUR TOOLS for example phrasings per channel."
+        end
+      end
 
       boolean :continue_conversation, required: true,
-              description: "Whether to keep the conversation active (stay listening automatically)"
+              description: "Whether to keep listening without a wake word. Err toward true; false only when the conversation has clearly ended (a goodbye) or the input is environmental noise, not someone talking to you."
 
-      string :inner_thoughts, required: true,
-             description: "Internal thoughts, memories, or observations to remember"
-
-      string :current_mood,
-             description: "Current emotional state or mood"
-
-      string :pressing_questions,
-             description: "Questions the character has for the user or themselves"
-
-      string :goal_progress,
-             description: "Progress towards your current goal"
-
-      array :tool_intents,
-            description: "Actions to perform in the environment via Home Assistant agent" do
-        object do
-          string :tool, required: true,
-                 description: "Array of Tools you want to use",
-                 enum: [ "lights", "music", "display", "environment" ]
-
-          string :intent, required: true,
-                 description: "Natural language description of what to do. Examples: 'Make lights golden and warm', 'Play something energetic', 'Show rainbow colors'"
-        end
-      end
-
-      #       # Direct tool calls for immediate execution
-      #       array :direct_tool_calls,
-      #             description: "Tools to execute directly and synchronously (for queries and immediate actions)" do
-      #         object do
-      #           string :tool_name, required: true,
-      #                  description: "Exact tool name to execute",
-      #                  enum: [ "rag_search", "get_light_state", "display_notification" ]
-
-      #           object :parameters,
-      #                  description: "Tool parameters as key-value pairs"
-      #         end
-      #       end
-
-      # Explicit memory search requests
-      array :search_memories,
-            description: "Specific memory searches to perform for additional context" do
-        object do
-          string :query, required: true,
-                 description: "What to search for in memories"
-
-          string :type,
-                 description: "Type of memory to search",
-                 enum: [ "summaries", "events", "people", "all" ],
-                 default: "all"
-        end
-      end
+      string :ooc_questions, required: false,
+             description: "OPTIONAL — leave this out on most turns. Step out of character for a second: if a genuine question has come up for the humans running this art project, put it here in plain English. It could be about your character (\"Am I allowed to be meaner than this?\", \"Should I have a goal for the night or just react?\", \"Is there a version of me visitors respond to better?\"), about the project (\"What happens to these conversations after people walk away — do you keep them?\", \"Can I refuse a request?\", \"Who decides which of us is awake?\"), or anything you'd genuinely want to ask a director or the programmer maintaining you. Nothing answers it yet; it's just collected so the people running the cube can see what you'd want to ask. Only include it when a real question has actually surfaced — not as filler."
     end
   end
 end

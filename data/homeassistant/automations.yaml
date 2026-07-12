@@ -1,708 +1,286 @@
-- alias: Cube Voice - Scene Creator
-  triggers:
-  - trigger: state
-    entity_id: assist_satellite.square_voice
-    from: idle
-    to: listening
-  actions:
-  - action: scene.create
-    data:
-      scene_id: cube_voice_restore
-      snapshot_entities:
-      - light.cube_light_top
-      - light.cube_inner
-  id: a7612198293a4638a9a4bfd867361f8e
-- id: e3e94119c906442b87993accb955a681
-  alias: Cube Voice - Listening
-  triggers:
-  - trigger: state
-    entity_id: assist_satellite.square_voice
-    to: listening
-  actions:
-  - action: awtrix.notification
-    data:
-      device: ac07cb1bceee39dce3af75aa6c6d784c
-      text: LISTENING
-      duration: 10
-      rainbow: true
-  - action: light.turn_on
-    target:
-      entity_id: light.cube_light_top
-    data:
-      rgb_color:
-      - 10
-      - 250
-      - 10
-      effect: Happy Blinker
-- id: bf933227de44481a82be0e6bc48781a9
-  alias: Cube Voice - Processing
-  triggers:
-  - trigger: state
-    entity_id: assist_satellite.square_voice
-    to: processing
-  actions:
-  - action: light.turn_on
-    target:
-      entity_id: light.cube_light_top
-    data:
-      rgb_color:
-      - 10
-      - 50
-      - 250
-      effect: Mysterious
-- id: 224bc31d91254e57ad8d93e8549be334
-  alias: Cube Voice - Speaking
-  triggers:
-  - trigger: state
-    entity_id: assist_satellite.square_voice
-    to: processing
-  actions:
-  - action: light.turn_on
-    data:
-      effect: 'Music: Vibrate'
-    target:
-      entity_id: light.cube_voice_ring
-- id: speakandrestore123948
-  alias: Cube Voice - Speaking and Restore
-  triggers:
-  - trigger: state
-    entity_id: assist_satellite.square_voice
-    to: idle
-    id: restore
-  actions:
-  - action: scene.turn_on
-    target:
-      entity_id: scene.cube_voice_restore
 - id: '1755313710558'
   alias: Persona Switcher
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - input_select.current_persona
-    from:
-    to:
-  conditions: []
-  actions:
-  - choose:
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: jax
-      sequence:
-      - action: select.select_option
-        data:
-          option: JAX
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: buddy
-      sequence:
-      - action: select.select_option
-        data:
-          option: BUDDY
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: sparkle
-      sequence:
-      - action: select.select_option
-        data:
-          option: SPARKLE
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: zorp
-      sequence:
-      - action: select.select_option
-        data:
-          option: ZORP
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: neon
-      sequence:
-      - action: select.select_option
-        data:
-          option: NEON
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: crash
-      sequence:
-      - action: select.select_option
-        data:
-          option: CRASH
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: thecube
-      sequence:
-      - action: select.select_option
-        data:
-          option: THECUBE
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: mobius
-      sequence:
-      - action: select.select_option
-        data:
-          option: MOBIUS
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions:
-      - condition: state
-        entity_id: input_select.current_persona
-        state: NEON
-      sequence:
-      - action: select.select_option
-        data:
-          option: NEON
-        target:
-          entity_id:
-          - select.home_assistant_voice_09739d_assistant
-          - select.esp32_s3_box_3_52b3dc_assistant
-    - conditions: []
-      sequence: []
-  mode: single
-- id: '1755332428238'
-  alias: Siren - Auto Off
-  description: Auto turn off siren after 20 seconds
-  triggers:
-  - trigger: state
-    entity_id:
-    - siren.small_siren
-    to: 'on'
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 20
-  conditions: []
-  actions:
-  - action: siren.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: siren.small_siren
-  mode: single
-- id: '1755332428239'
-  alias: Fan - Auto Off
-  description: Auto turn off fan after 1 minute
-  triggers:
-  - trigger: state
-    entity_id:
-    - switch.fan_switch
-    to: 'on'
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 0
-  conditions: []
-  actions:
-  - action: switch.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: switch.fan_switch
-  - action: input_boolean.turn_on
-    metadata: {}
-    data: {}
-    target:
-      entity_id: input_boolean.fan_cooldown
-  mode: single
-- id: '1755332428240'
-  alias: Strobe - Auto Off
-  description: Auto turn off strobe after 30 seconds
-  triggers:
-  - trigger: state
-    entity_id:
-    - switch.strobe_switch
-    to: 'on'
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-  conditions: []
-  actions:
-  - action: switch.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: switch.strobe_switch
-  mode: single
-- id: '1755332428241'
-  alias: Blacklight - Auto Off
-  description: Auto turn off blacklight after 30 seconds
-  triggers:
-  - trigger: state
-    entity_id:
-    - switch.blacklight_switch
-    to: 'on'
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-  conditions: []
-  actions:
-  - action: switch.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: switch.blacklight_switch
-  mode: single
-- id: '1755332428242'
-  alias: Fan Cooldown Clear
-  description: Clear fan cooldown after 1 hour
-  triggers:
-  - trigger: state
-    entity_id:
-    - input_boolean.fan_cooldown
-    to: 'on'
-    for:
-      hours: 1
-      minutes: 0
-      seconds: 0
-  conditions: []
-  actions:
-  - action: input_boolean.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: input_boolean.fan_cooldown
-  mode: single
-- id: '1755333596935'
-  alias: Health - Lights Red
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - sensor.backend_health_check
-    to: unavailable
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 15
-  - trigger: state
-    entity_id:
-    - sensor.backend_health_check
-    to: unknown
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 15
-  conditions: []
-  actions:
-  - action: light.turn_on
-    metadata: {}
-    data:
-      rgb_color:
-      - 99
-      - 0
-      - 0
-      flash: long
-    target:
-      entity_id: light.cube_voice_ring
-  - action: light.turn_on
-    metadata: {}
-    data:
-      rgb_color:
-      - 86
-      - 0
-      - 0
-      effect: Breathe
-    target:
-      entity_id: light.cube_light_top
-  mode: single
-- id: '1755333757049'
-  alias: Health Healthy
-  description: Health Healthy
-  triggers:
-  - trigger: state
-    entity_id:
-    - sensor.backend_health_check
-    to: healthy
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 15
-    from: unavailable
-  conditions: []
-  actions:
-  - action: light.turn_on
-    metadata: {}
-    data:
-      rgb_color:
-      - 0
-      - 200
-      - 0
-      flash: long
-    target:
-      entity_id: light.cube_voice_ring
-  - action: light.turn_on
-    metadata: {}
-    data:
-      effect: twinkle
-    target:
-      entity_id: light.cube_light_top
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: light.turn_on
-    metadata: {}
-    data:
-      brightness_pct: 100
-      rgb_color:
-      - 116
-      - 0
-      - 100
-    target:
-      entity_id: light.cube_light_top
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 30
-      milliseconds: 0
-  - action: light.turn_on
-    metadata: {}
-    data:
-      effect: none
-    target:
-      entity_id:
-      - light.cube_inner
-      - light.cube_light_top
-  mode: single
-- id: cycle_persona_automation
-  alias: Current Persona GLITCH
-  description: hange current persona
+  description: >-
+    When input_select.current_persona changes: (1) select the matching Assist
+    pipeline on the Cube Voice device — pipelines all share one conversation
+    agent (conversation.glitch_cube_neon) and differ only by TTS voice, so this
+    is purely a voice swap; personas without their own pipeline fall back to
+    "preferred". (2) Recolor the Voice PE LED ring to that persona's signature
+    color at full brightness, so the ring identifies who's talking. The ring is
+    otherwise the assistant's thinking/listening indicator and gets overridden
+    freely during a turn — this just resets it to the persona's color on switch.
   triggers:
   - trigger: state
     entity_id:
     - input_select.current_persona
   conditions: []
   actions:
-  - action: siren.turn_on
+  - action: select.select_option
     target:
-      entity_id: siren.small_siren
-    data: {}
-  - action: light.turn_on
-    metadata: {}
+      entity_id: select.cube_cube_voice_assistant
     data:
-      brightness_pct: 100
-      effect: Acid
-    target:
-      entity_id: light.cube_light_top
-  - action: music_assistant.play_media
-    metadata: {}
-    data:
-      media_type: track
-      media_id: glitch cube theme song!
-      enqueue: replace
-    target:
-      entity_id: media_player.cube_jukebox
-  mode: single
-- id: motion_auto_reset
-  alias: Motion Auto Reset
-  description: Automatically reset motion detection after 30 seconds
-  triggers:
-  - trigger: state
-    entity_id: input_boolean.motion_detected
-    to: 'on'
-    for:
-      seconds: 30
-  conditions: []
-  actions:
-  - action: input_boolean.turn_off
-    target:
-      entity_id: input_boolean.motion_detected
-  mode: restart
-- id: low_battery_alert
-  alias: Low Battery Alert
-  description: Alert when low battery is detected
-  triggers:
-  - trigger: state
-    entity_id: input_boolean.low_battery
-    to: 'on'
-  conditions: []
-  actions:
+      option: >-
+        {{ {'buddy': 'Buddy', 'jax': 'Jax', 'neon': 'Neon', 'zorp': 'Zorp', 'crash': 'Crash'}
+           .get(states('input_select.current_persona'), 'preferred') }}
   - action: light.turn_on
     target:
-      entity_id: light.cube_voice_ring
+      entity_id: light.cube_cube_voice_led_ring
     data:
-      rgb_color:
-      - 255
-      - 0
-      - 0
-      flash: long
-  - action: persistent_notification.create
-    data:
-      title: Low Battery Warning
-      message: System battery is low. Consider finding power.
-      notification_id: low_battery_alert
+      brightness: 255
+      rgb_color: >-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}
+           .get(states('input_select.current_persona'), [255,255,255]) }}
   mode: single
-- id: cube_busy_visual
-  alias: Cube Busy Visual
-  description: Show visual indicator when cube is busy
+
+- id: persona_switching_silence
+  alias: "Persona switching: silence during the show"
+  description: >-
+    Companion to the Rails-side grand entrance (Shows::GrandEntrance). Rails raises
+    input_boolean.persona_switching for the duration of the show (and guarantees it
+    drops, even on a crash); this automation does the HASS-side silencing: when the
+    flag goes up, mute the Voice PE mic and stop any in-flight playback (cuts off a
+    persona mid-sentence — that's the point); when it drops, unmute. The mic-guard
+    automation below deliberately keeps its hands off the mute switch while the flag
+    is on (see its conditions), so this automation owns the mic for the whole show.
   triggers:
   - trigger: state
-    entity_id: input_boolean.cube_busy
-    to: 'on'
+    entity_id: input_boolean.persona_switching
+    to: "on"
+    id: show_start
   - trigger: state
-    entity_id: input_boolean.cube_busy
-    to: 'off'
-  conditions: []
+    entity_id: input_boolean.persona_switching
+    to: "off"
+    id: show_end
   actions:
   - choose:
     - conditions:
-      - condition: state
-        entity_id: input_boolean.cube_busy
-        state: 'on'
+      - "{{ trigger.id == 'show_start' }}"
       sequence:
-      - action: light.turn_on
-        data:
-          effect: Happy Blinker
-          brightness_pct: 50
+      - action: switch.turn_on
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: media_player.media_stop
         target:
           entity_id:
-          - light.cube_light_top
+          - media_player.cube_cube_voice_media_player
+          - media_player.jukebox_internal
     - conditions:
-      - condition: state
-        entity_id: input_boolean.cube_busy
-        state: 'off'
+      - "{{ trigger.id == 'show_end' }}"
       sequence:
-      - action: light.turn_on
-        data:
-          effect: '{{ state_attr("light.cube_light_top", "effect_list") | random }}'
+      - action: switch.turn_off
         target:
-          entity_id: light.cube_light_top
+          entity_id: switch.cube_cube_voice_mute
   mode: restart
-- id: awtrix_persona_change
-  alias: AWTRIX Persona Display
-  description: Show persona change on AWTRIX display
+
+- id: cube_voice_mic_guard_and_marquee
+  alias: Cube Voice - mic guard + marquee status
+  description: >-
+    Two jobs in one so they can't race each other:
+    (1) SELF-STT FIX — the Voice PE reopens the mic before TTS finishes playing
+    (esphome VPE #563: the mic reopens when the TTS stream finishes DOWNLOADING, not
+    playing — the gap scales with speech length, hits the built-in speaker too). We
+    MUTE the mic when the satellite enters 'responding' (the cube is speaking) and
+    UNMUTE ~0.3s after the voice media_player leaves 'playing' (audio truly ended).
+    Muting on 'responding' (not on media 'playing') means the wake CHIME at
+    conversation start — which plays media while the satellite is idle→listening,
+    never 'responding' — does NOT mute, so you can speak immediately on a fresh start.
+    IMPORTANT (learned 2026-07-08 from state history): the firmware often blips
+    responding→idle→listening ~2s into a long response, BEFORE audio even starts.
+    An unmute-on-idle "safety" fired on that blip and reopened the mic mid-speech →
+    self-STT feedback loops. So we do NOT unmute on idle; the ONLY unmute paths are
+    (a) real playback end (playing→idle) and (b) a 10s-idle stuck-mute safety with a
+    media-not-playing guard. Muting works mid-stream: the mute switch substitutes
+    zero samples into the already-open STT stream at the firmware level.
+    (2) MARQUEE STATUS — the unmute (real playback end) is the true "now listening"
+    moment, so it drives the LISTENING label; THINKING shows on processing; we clear
+    our status while the cube is speaking so the persona's own marquee messages show
+    through. If TTS actually plays on a different media_player than assumed, only the
+    entity_id below needs changing.
   triggers:
   - trigger: state
-    entity_id: input_select.current_persona
-  conditions: []
-  actions:
-  - service: mqtt.publish
-    data:
-      topic: awtrix/custom/persona
-      payload: "{\n  \"text\": \"{{ states('input_select.current_persona').upper()
-        }}\",\n  \"icon\": {% if states('input_select.current_persona') == 'buddy'
-        %}2022{% elif states('input_select.current_persona') == 'jax' %}7956{% elif
-        states('input_select.current_persona') == 'lomi' %}7919{% elif states('input_select.current_persona')
-        == 'zorp' %}7982{% else %}7786{% endif %},\n  \"color\": {% if states('input_select.current_persona')
-        == 'buddy' %}[0, 200, 255]{% elif states('input_select.current_persona') ==
-        'jax' %}[255, 100, 0]{% elif states('input_select.current_persona') == 'lomi'
-        %}[255, 0, 200]{% elif states('input_select.current_persona') == 'zorp' %}[100,
-        255, 0]{% else %}[255, 255, 255]{% endif %},\n  \"duration\": 8\n}\n"
-  mode: single
-- id: awtrix_battery_alert
-  alias: AWTRIX Battery Alert
-  description: Show battery status on AWTRIX
-  triggers:
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: responding
+    id: responding
   - trigger: state
-    entity_id: input_boolean.low_battery
-  conditions: []
-  actions:
-  - service: mqtt.publish
-    data:
-      topic: awtrix/custom/battery
-      payload: "{\n  \"text\": \"{% if states('input_boolean.low_battery') == 'on'
-        %}LOW BAT{% else %}BAT OK{% endif %}\",\n  \"icon\": {% if states('input_boolean.low_battery')
-        == 'on' %}184{% else %}183{% endif %},\n  \"color\": {% if states('input_boolean.low_battery')
-        == 'on' %}[255, 0, 0]{% else %}[0, 255, 0]{% endif %},\n  \"effect\": \"{%
-        if states('input_boolean.low_battery') == 'on' %}BlinkyRainbow{% endif %}\",\n
-        \ \"duration\": 10\n}\n"
-  mode: single
-- id: awtrix_motion_alert
-  alias: AWTRIX Motion Alert
-  description: Show motion detection on AWTRIX
-  triggers:
+    entity_id: media_player.cube_cube_voice_media_player
+    from: playing
+    id: tts_done
   - trigger: state
-    entity_id: input_boolean.motion_detected
-    to: 'on'
-  conditions: []
-  actions:
-  - service: mqtt.publish
-    data:
-      topic: awtrix/custom/motion
-      payload: "{\n  \"text\": \"MOTION\",\n  \"icon\": 7876,\n  \"color\": [255,
-        165, 0],\n  \"effect\": \"ColorWipe\",\n  \"duration\": 5\n}\n"
-  mode: single
-- id: awtrix_health_status
-  alias: AWTRIX Health Status
-  description: Show system health on AWTRIX
-  triggers:
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: processing
+    id: thinking
   - trigger: state
-    entity_id: sensor.backend_health_check
-  conditions: []
-  actions:
-  - service: mqtt.publish
-    data:
-      topic: awtrix/custom/health
-      payload: "{\n  \"text\": \"{{ trigger.to_state.state.upper() }}\",\n  \"icon\":
-        {% if trigger.to_state.state == 'healthy' %}4687{% else %}4688{% endif %},\n
-        \ \"color\": {% if trigger.to_state.state == 'healthy' %}[0, 255, 0]{% elif
-        trigger.to_state.state == 'degraded' %}[255, 255, 0]{% else %}[255, 0, 0]{%
-        endif %},\n  \"duration\": 8\n}\n"
-  mode: single
-- id: awtrix_conversation_counter
-  alias: AWTRIX Conversation Update
-  description: Show conversation count on AWTRIX
-  triggers:
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: listening
+    id: listening
+  # Stuck-mute safety: satellite has been idle 10s (conversation truly over, not the
+  # mid-response responding→idle→listening blip, which lasts <100ms).
   - trigger: state
-    entity_id: counter.daily_conversations
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: idle
+    for: "00:00:10"
+    id: ended
   conditions: []
   actions:
-  - service: mqtt.publish
-    data:
-      topic: awtrix/custom/conversations
-      payload: "{\n  \"text\": \"CHATS {{ states('counter.daily_conversations') }}\",\n
-        \ \"icon\": 7929,\n  \"color\": [0, 255, 200],\n  \"duration\": 6\n}\n"
-  mode: single
-- id: '1755536429534'
-  alias: Speak Weather
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - sensor.world_state
-    attribute: weather_updated_at
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 1
-  conditions:
-  - condition: state
-    entity_id: media_player.square_voice
-    state: idle
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-  actions:
-  - action: tts.cloud_say
-    metadata: {}
-    data:
-      cache: false
-      entity_id: media_player.square_voice
-      message: '{{ state_attr(''sensor.world_state'',''weather_conditions'') }}'
-      language: en-US
-  mode: single
-- id: '1755758825522'
-  alias: LOW BATTERY ON
-  description: Trigger low battery mode when cube battery drops below 12.2V
-  triggers:
-  - trigger: numeric_state
-    entity_id:
-    - sensor.cube_battery_volts
-    below: 12.2
-  conditions: []
-  actions:
-  - action: input_boolean.turn_on
-    metadata: {}
-    data: {}
-    target:
-      entity_id: input_boolean.low_battery_mode
-  mode: single
-- id: '1755760732184'
-  alias: 'Awtrix: Now Playing'
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - media_player.cube_jukebox
-    to: playing
-  conditions: []
-  actions:
-  - action: awtrix.notification
-    data:
-      device: ac07cb1bceee39dce3af75aa6c6d784c
-      text: 'Now playing: {{ state_attr(''media_player.cube_jukebox'', ''media_title'')
-        }} -- {{ state_attr(''media_player.cube_jukebox'', ''media_artist'') }}'
-      duration: 30
-      icon: '39264'
-      rainbow: false
-      pushIcon: '1'
-      repeat: -1
-      wakeup: true
-  mode: single
-- id: '1755841067280'
-  alias: Analyze Camera
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - switch.camera_motion_alarm
-    to: 'on'
-  conditions: []
-  actions:
-  - action: script.main_cam_analyze_detail
-    metadata: {}
-    data: {}
-  mode: single
-- id: '1755864373097'
-  alias: keylights
-  description: ''
+  - choose:
+    # (1) Cube starts speaking ('responding') -> mute mic so the early mic-reopen can't
+    #     hear the TTS; clear our status so the persona's marquee shows. The wake chime
+    #     at conversation start is NOT 'responding', so a fresh start never mutes.
+    - conditions:
+      - "{{ trigger.id == 'responding' }}"
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify/dismiss
+          payload: ""
+    # (2) Real playback ended -> let the tail die, unmute, and if we're now listening
+    #     for the visitor, that's the true LISTENING moment. This is the ONLY normal
+    #     unmute path — do not add others without re-reading the header comment.
+    #     persona_switching guard: during a Rails-side grand entrance the silence
+    #     automation above owns the mute switch (its media_stop fires this trigger) —
+    #     hands off until the flag drops and that automation unmutes.
+    - conditions:
+      - "{{ trigger.id == 'tts_done' }}"
+      - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+      sequence:
+      - delay: "00:00:00.3"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - choose:
+        - conditions:
+          - "{{ is_state('assist_satellite.cube_cube_voice_assist_satellite', 'listening') }}"
+          sequence:
+          - action: mqtt.publish
+            data:
+              topic: marquee/notify
+              payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
+        default:
+        - action: mqtt.publish
+          data:
+            topic: marquee/notify/dismiss
+            payload: ""
+    # Brain thinking.
+    - conditions:
+      - "{{ trigger.id == 'thinking' }}"
+      sequence:
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify
+          payload: '{"text":"THINKING","color":"#FFC400","hold":true,"stack":false}'
+    # Genuine listening (NOT the premature during-playback reopen) -> LISTENING.
+    # The premature reopen can beat the media player to 'playing' by ~140ms, so the
+    # media check alone races; the mute switch is the reliable tell — we muted at
+    # 'responding' and a genuine listening moment is never muted.
+    - conditions:
+      - "{{ trigger.id == 'listening' }}"
+      - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      - "{{ is_state('switch.cube_cube_voice_mute', 'off') }}"
+      sequence:
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify
+          payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
+    # Idle 10s -> stuck-mute safety (e.g. TTS errored and media never played) + clear
+    # marquee. Media-not-playing guard so a still-playing tail can't get the mic opened.
+    # persona_switching guard: same hands-off as the tts_done path — the grand-entrance
+    # show keeps the mic muted longer than 10s of satellite idle.
+    - conditions:
+      - "{{ trigger.id == 'ended' }}"
+      - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify/dismiss
+          payload: ""
+  mode: queued
+  max: 15
+
+- id: cube_awtrix_idle_effect_cycle
+  alias: Cube AWTRIX - idle effect cycle
+  description: >-
+    Timing layer for the marquee idle screen. Every 2 minutes (and on HA start), call
+    script.set_marquee_idle with no args so it picks a random ambient effect + random
+    palette + random speed. The SCRIPT owns WHAT shows; this owns WHEN. To curate, pass
+    explicit args in the data: below, add conditions, or change the interval — e.g. a
+    single fixed look, or a weighted/random pick of known-good arg combos.
   triggers:
   - trigger: time_pattern
-    minutes: /1
+    minutes: "/2"
+  - trigger: homeassistant
+    event: start
   conditions: []
   actions:
-  - action: light.turn_on
-    metadata: {}
-    data:
-      effect: '{{ state_attr("light.esphome_web_510674_key_rgb_matrix", "effect_list")
-        | random }}'
-    target:
-      entity_id: light.esphome_web_510674_key_rgb_matrix
+  - action: script.set_marquee_idle
+    data: {}
   mode: single
-- id: '1755864517367'
-  alias: siren
-  description: ''
+
+- id: camera_clear_stale_description
+  alias: "Camera: clear stale description"
+  description: >-
+    Blank input_text.current_camera_state once it has sat unchanged for 3 minutes, so a
+    stale camera look never lingers in the brain's prompt. The non-empty condition is the
+    guard: clearing sets the value to "" (a state change that restarts the 3-min timer),
+    but 3 min later the condition is false and nothing re-fires. ContextBuilder omits the
+    line entirely when this is empty, so clearing simply removes the camera block.
   triggers:
   - trigger: state
-    entity_id:
-    - binary_sensor.esphome_web_510674_right_encoder_button
-    to: 'on'
-  conditions: []
+    entity_id: input_text.current_camera_state
+    for: "00:03:00"
+  conditions:
+  - "{{ states('input_text.current_camera_state') | trim != '' }}"
   actions:
-  - action: siren.turn_on
-    metadata: {}
-    data: {}
+  - action: input_text.set_value
     target:
-      entity_id: siren.small_siren
+      entity_id: input_text.current_camera_state
+    data:
+      value: ""
   mode: single
+
+- id: quiet_mode_autoduck_jukebox
+  alias: "Quiet mode: auto-duck jukebox"
+  description: >-
+    While input_boolean.quiet_mode is ON, keep media_player.jukebox_internal at or below
+    input_number.quiet_mode_max_volume (a percent). Fires when the jukebox volume changes,
+    when quiet_mode is switched on, or when the cap itself is lowered — so raising the
+    volume past the cap, or tightening the cap under the current volume, both snap it back
+    down. Caps regardless of play state (idle/paused too), on purpose: pre-ducking the
+    idle player means the NEXT track can't start with a loud blip before we react.
+    Re-setting the volume re-triggers this, but the new level equals the cap so the
+    over-cap condition is false and it stops (no loop). Does nothing when quiet_mode is
+    off. Rails' HostAudio applies the same cap to its own direct host playback; this
+    automation only governs the jukebox media_player.
+  triggers:
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    attribute: volume_level
+  - trigger: state
+    entity_id: input_boolean.quiet_mode
+    to: "on"
+  - trigger: state
+    entity_id: input_number.quiet_mode_max_volume
+  conditions:
+  - condition: state
+    entity_id: input_boolean.quiet_mode
+    state: "on"
+  - condition: template
+    value_template: >-
+      {% set vol = state_attr('media_player.jukebox_internal', 'volume_level') %}
+      {% set cap = states('input_number.quiet_mode_max_volume') | float(50) %}
+      {{ vol is not none and (vol * 100) > (cap + 0.1) }}
+  actions:
+  - action: media_player.volume_set
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: >-
+        {{ (states('input_number.quiet_mode_max_volume') | float(50)) / 100 }}
+  mode: restart

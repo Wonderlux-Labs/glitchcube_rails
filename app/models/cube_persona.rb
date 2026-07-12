@@ -26,15 +26,29 @@ class CubePersona
       name = Rails.cache.read("current_persona") || "buddy"
       Rails.logger.warn "⚠️ Using cached/default persona: #{name}"
     end
-    
+
     name.to_sym
   end
 
-  def self.set_random
-    set_current_persona(PERSONAS.sample)
+  # The autonomous rotation always makes a grand entrance (fanfare on the cube).
+  def self.set_random(entrance: :grand)
+    # Only rotate among active personas (Persona.active); fall back to the full list
+    # if none are seeded/active.
+    pool = Persona.active.pluck(:slug).map(&:to_sym)
+    pool = PERSONAS if pool.empty?
+    set_current_persona(pool.sample, entrance: entrance)
   end
 
-  def self.set_current_persona(persona)
+  # entrance:
+  #   :grand — Rails-side spectacle (Shows::GrandEntrance via ShowJob): anomaly VO,
+  #            theme song off the host speaker, marquee, then the new persona
+  #            announces itself. The input_select write stays synchronous so the
+  #            HASS "Persona Switcher" automation and our own bookkeeping see the
+  #            new persona immediately; the show is pure async theater.
+  #   :quick — call the HASS script.set_persona_quick (fanfare-free dev/Assist switch)
+  #   nil    — set input_select directly, no theatrics (e.g. boot-sync reconciliation)
+  # Every branch writes input_select.current_persona exactly once.
+  def self.set_current_persona(persona, entrance: nil)
     return unless PERSONAS.include? persona&.to_sym
 
     # Get current persona before switching
@@ -42,12 +56,20 @@ class CubePersona
 
     # Clear the cache immediately to force fresh read
     Rails.cache.delete("current_persona")
-    
-    HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+
+    case entrance
+    when :grand
+      HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+      ShowJob.perform_later("grand_entrance", persona: persona.to_s)
+    when :quick
+      HomeAssistantService.call_service("script", "set_persona_quick", persona: persona.to_s)
+    else
+      HomeAssistantService.call_service("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
+    end
     # Write new persona to cache
     Rails.cache.write("current_persona", persona.to_s, expires_in: 30.minutes)
 
-    Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona}"
+    Rails.logger.info "🎭 Persona set: #{previous_persona} → #{persona} (#{entrance || 'quiet'})"
 
     # Handle persona switching with goal awareness
     if previous_persona != persona.to_sym
@@ -91,6 +113,20 @@ class CubePersona
   # @return [Hash] Configuration for response generation
   def response_style
     raise NotImplementedError, "#{self.class} must implement response_style"
+  end
+
+  # Returns [voice_name, language] for Nabu Casa cloud TTS.
+  # YAML format: "GuyNeural||en-US" — short voice name, then locale after ||.
+  # Returns [nil, nil] if not configured (HASS component falls back to its defaults).
+  def tts_voice
+    raw = persona_config["voice_id"].to_s
+    return [ nil, nil ] if raw.blank?
+    parts = raw.split("||")
+    [ parts[0]&.strip, parts[1]&.strip ]
+  end
+
+  def voice_id
+    tts_voice.first
   end
 
   # Abstract method: Returns whether the persona can handle a specific topic

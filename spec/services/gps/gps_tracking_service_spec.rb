@@ -2,7 +2,8 @@
 
 require 'rails_helper'
 
-RSpec.describe Gps::GpsTrackingService, type: :service do
+RSpec.describe Gps::GpsTrackingService, type: :service,
+  skip: "GPS/location disabled this version (no landmarks/streets/boundaries tables) — restore for Burning Man" do
   let(:service) { described_class.new }
   let(:mock_ha_service) { instance_double(HomeAssistantService) }
 
@@ -60,7 +61,7 @@ RSpec.describe Gps::GpsTrackingService, type: :service do
 
         # Mock Landmark for fallback
         landmark = instance_double(Landmark, latitude: 40.7864, longitude: -119.2065)
-        allow(Landmark).to receive_message_chain(:active, :order).and_return([ landmark ])
+        allow(Landmark).to receive_message_chain(:active, :sample).and_return(landmark)
       end
 
       it 'returns fallback location with context' do
@@ -77,7 +78,7 @@ RSpec.describe Gps::GpsTrackingService, type: :service do
     it 'always returns location data with context merged' do
       allow(mock_ha_service).to receive(:entity).and_return(nil)
       landmark = instance_double(Landmark, latitude: 40.7864, longitude: -119.2065)
-      allow(Landmark).to receive_message_chain(:active, :order).and_return([ landmark ])
+      allow(Landmark).to receive_message_chain(:active, :sample).and_return(landmark)
 
       result = service.current_location
 
@@ -98,6 +99,11 @@ RSpec.describe Gps::GpsTrackingService, type: :service do
     before do
       allow(Gps::LocationContextService).to receive(:full_context)
         .and_return(location_context)
+      # initialize -> current_location queries HA sensors; return nil so it
+      # falls back without raising on the instance_double.
+      allow(mock_ha_service).to receive(:entity).and_return(nil)
+      landmark = instance_double(Landmark, latitude: 40.7864, longitude: -119.2065)
+      allow(Landmark).to receive_message_chain(:active, :sample).and_return(landmark)
     end
 
     it 'returns proximity data with map mode and effects' do

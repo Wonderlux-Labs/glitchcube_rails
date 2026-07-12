@@ -206,6 +206,17 @@ class HomeAssistantService
       @instance ||= new
     end
 
+    # Swap the backing instance — used by the scenario/test harness to inject a
+    # FakeHomeAssistant. Any code path that goes through the class methods (or
+    # `.instance`) will then talk to the fake. Direct `.new` callers bypass this,
+    # so callers that need to be fakeable should use `.instance`.
+    attr_writer :instance
+
+    # Restore the real Home Assistant backend (clears any injected fake).
+    def reset_instance!
+      @instance = nil
+    end
+
     def method_missing(method_name, *args, &block)
       if instance.respond_to?(method_name)
         instance.send(method_name, *args, &block)

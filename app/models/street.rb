@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# BRC-geography reference model (GPS); table never populated this iteration. Restore for a future Burn.
+# ============================================================
+
 class Street < ApplicationRecord
   validates :name, presence: true
   validates :street_type, presence: true, inclusion: { in: %w[radial arc] }

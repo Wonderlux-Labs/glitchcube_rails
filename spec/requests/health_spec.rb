@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 RSpec.describe "Health endpoint", type: :request do
+  # HealthController caches service_health under the shared "service_string"
+  # cache key for 5 minutes. Clear it between examples so each test's stubs
+  # actually take effect (otherwise results leak across examples by order).
+  before { Rails.cache.delete("service_string") }
+
   describe "GET /health" do
     it "returns health status with proper structure" do
       get '/health'

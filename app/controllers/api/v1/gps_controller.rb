@@ -1,12 +1,17 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS tracking API for the stationary install; part of the GPS/GIS bundle, none of it wired in. Restore for a future Burn.
+# ============================================================
+
 class Api::V1::GpsController < Api::V1::BaseController
   # Reduce logging noise for high-frequency GPS endpoints
   def self.silencer
     @silencer ||= ActiveSupport::LogSubscriber.new
   end
 
-  around_action :silence_gps_logging, only: [:location, :coords, :proximity]
+  around_action :silence_gps_logging, only: [ :location, :coords, :proximity ]
   def location
     begin
       # Get current location with full context

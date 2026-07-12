@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory :conversation do
     session_id { SecureRandom.uuid }
-    persona { 'default' }
+    persona { 'artifact' }
     source { 'api' }
     started_at { Time.current }
     message_count { 0 }

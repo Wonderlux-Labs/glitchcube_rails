@@ -36,3 +36,49 @@
 .env
 CLAUDE.md
 .aider*
+
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ruby / Rails
+*.rbc
+capybara-*.html
+rerun.txt
+spec/tmp
+.rspec_status
+.byebug_history
+/coverage
+
+# Node
+node_modules/
+.yarn-integrity
+
+# Playwright / browser automation logs
+.playwright-mcp/
+
+# Python bytecode (from deprecated HASS custom component snapshot)
+__pycache__/
+*.pyc
+
+# ESPHome build cache + device secrets (data/esphome)
+data/esphome/.esphome/
+data/esphome/secrets.yaml
+data/homeassistant/media/
+# Rails-host-only media (theme songs etc.) — played locally via ffplay, never scped to the HASS box
+data/rails_media/*
+!data/rails_media/README.md

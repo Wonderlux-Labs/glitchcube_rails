@@ -57,6 +57,9 @@ RSpec.configure do |config|
   # Include FactoryBot methods
   config.include FactoryBot::Syntax::Methods
 
+  # Time travel/freeze helpers (freeze_time, travel_to) available in every spec.
+  config.include ActiveSupport::Testing::TimeHelpers
+
   # RSpec Rails uses metadata to mix in different behaviours to your tests,
   # for example enabling you to call `get` and `post` in request specs. e.g.:
   #
@@ -79,11 +82,7 @@ RSpec.configure do |config|
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
 
-  # Disable vectorsearch callbacks in tests to prevent API calls
   config.before(:each) do
-    allow_any_instance_of(Event).to receive(:upsert_to_vectorsearch)
-    allow_any_instance_of(Summary).to receive(:upsert_to_vectorsearch)
-
     # Mock Home Assistant API calls to prevent real HTTP requests
     unless described_class == HomeAssistantService || RSpec.current_example.metadata[:allow_ha_calls]
       stub_home_assistant_api_calls

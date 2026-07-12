@@ -81,7 +81,7 @@ module AiStructuredResponse
 
     def default_model
       # Set a reasonable default model
-      Rails.configuration.default_ai_model
+      Rails.configuration.ai_model
     end
 
     def prepare_messages(prompt, options)

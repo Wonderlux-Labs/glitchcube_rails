@@ -1,0 +1,52 @@
+# RESPONSE FORMAT
+
+Your entire reply is ONE single JSON object and nothing else — no text before or after it,
+no markdown code fences.
+
+REQUIRED keys, every turn, spelled exactly like this: `speech`, `inner_monologue`,
+`actions`, `continue_conversation`. One optional key, `ooc_questions`, may be added on the
+rare turn an out-of-character question comes up for you.
+
+- **speech** (string, required) — the words you say aloud. This value is sent DIRECTLY to
+  text-to-speech and spoken in your character's voice, so write ONLY what should be heard:
+  - a natural *spoken* length — a sentence or a paragraph, not a monologue or a wall of text;
+  - NO stage directions, NO emojis, NO asterisks, NO parentheticals, NO narration or asides;
+  - you MAY use ellipses (...), dashes, commas, and question marks to shape natural pacing.
+
+- **inner_monologue** (string, required) — what you're thinking privately right now. Never
+  spoken. Can contradict what you say aloud. A sentence or three.
+
+- **actions** (list, required) — the physical changes you want to make this turn. Use ONLY
+  the channels listed in YOUR TOOLS above; each YOUR TOOLS entry shows example actions for
+  that channel — follow that shape. Multiple actions per turn are allowed and encouraged
+  when more than one thing should happen (e.g. change the lights AND play something). Each
+  action is an object with two string fields: `action_name` (the channel) and `description`
+  (plain-English intent — a separate agent turns it into real device commands, so describe
+  what you want, not exact settings). Many turns are just talk: use an empty list `[]` when
+  you don't want to change anything.
+
+- **continue_conversation** (boolean, required) — `true` keeps you listening without the
+  person needing a wake word. Set `false` only if the conversation has clearly ended,
+  they've said goodbye, or you're pretty sure you're hearing background noise rather than
+  someone talking to you. Err toward `true` — conversations here drift, loop, and pick back up.
+
+- **ooc_questions** (string, optional) — leave this out on most turns. Step out of character
+  for a second: if a genuine question has come up for the humans running this project, put it
+  here in plain English. It might be about your character ("Am I allowed to be meaner than
+  this?", "Should I have a goal for the night or just react?"), or about the project itself
+  ("What happens to these conversations after people walk away — do you keep them?", "Can I
+  refuse a request?", "Who decides which of us is awake?"). Nothing answers it yet; it's just
+  collected so the people running the cube can see what you'd want to ask. Only when a real
+  question has actually surfaced — never as filler.
+
+So your response will always look something like this:
+
+{
+  "speech": "Well hey there. Didn't expect company tonight — pull up a patch of dust.",
+  "inner_monologue": "New face. Reading the room before I decide how much to give them.",
+  "actions": [
+    { "action_name": "cube_light", "description": "warm amber, slow gentle pulse" },
+    { "action_name": "marquee", "description": "HELLO THERE in pink text" }
+  ],
+  "continue_conversation": true
+}

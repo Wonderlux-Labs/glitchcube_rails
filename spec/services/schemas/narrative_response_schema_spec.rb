@@ -5,123 +5,51 @@ RSpec.describe Schemas::NarrativeResponseSchema do
   describe '.schema' do
     let(:schema) { described_class.schema }
 
-    it 'returns an OpenRouter schema' do
-      expect(schema).to respond_to(:name)
+    it 'returns an OpenRouter::Schema named narrative_response' do
+      expect(schema).to be_a(OpenRouter::Schema)
       expect(schema.name).to eq('narrative_response')
     end
 
-    it 'defines required fields correctly' do
-      # Test the schema structure by accessing its properties
-      expect(schema).to be_a(OpenRouter::Schema)
-    end
-
-    it 'includes tool_intents array with enum constraints' do
-      # Verify the schema allows tool enums we expect
-      tool_enums = [ "lights", "music", "display", "environment" ]
-
-      # This tests the schema definition exists
+    it 'builds without error' do
       expect { schema }.not_to raise_error
     end
   end
 
-  describe 'schema validation with OpenRouter' do
-    let(:schema) { described_class.schema }
+  describe 'the emitted JSON schema shape' do
+    let(:props) { described_class.schema.to_h.dig(:schema, :properties) }
 
-    context 'with valid structured output' do
-      let(:valid_output) do
-        {
-          "speech_text" => "Hello there, welcome to my domain!",
-          "continue_conversation" => true,
-          "inner_thoughts" => "This person seems interesting",
-          "current_mood" => "curious",
-          "pressing_questions" => "What brings you here?",
-          "tool_intents" => [
-            {
-              "tool" => "lights",
-              "intent" => "Make the lights warm and welcoming"
-            },
-            {
-              "tool" => "music",
-              "intent" => "Play something ambient"
-            }
-          ],
-          "direct_tool_calls" => [
-            {
-              "tool_name" => "rag_search",
-              "parameters" => {
-                "query" => "fire spinning",
-                "type" => "events",
-                "limit" => 3
-              }
-            }
-          ],
-          "search_memories" => [
-            {
-              "query" => "previous conversations about music",
-              "type" => "summaries",
-              "limit" => 2
-            }
-          ]
-        }
-      end
-
-      it 'has all required fields' do
-        expect(valid_output).to have_key("speech_text")
-        expect(valid_output).to have_key("continue_conversation")
-      end
-
-      it 'has valid tool intents structure' do
-        tool_intents = valid_output["tool_intents"]
-        expect(tool_intents).to be_an(Array)
-
-        tool_intents.each do |intent|
-          expect(intent).to have_key("tool")
-          expect(intent).to have_key("intent")
-          expect([ "lights", "music", "display", "environment" ]).to include(intent["tool"])
-        end
-      end
-
-      it 'has valid direct tool calls structure' do
-        direct_tool_calls = valid_output["direct_tool_calls"]
-        expect(direct_tool_calls).to be_an(Array)
-
-        direct_tool_calls.each do |tool_call|
-          expect(tool_call).to have_key("tool_name")
-          expect(tool_call).to have_key("parameters")
-          expect([ "rag_search", "get_light_state", "display_notification" ]).to include(tool_call["tool_name"])
-        end
-      end
-
-      it 'has valid search memories structure' do
-        search_memories = valid_output["search_memories"]
-        expect(search_memories).to be_an(Array)
-
-        search_memories.each do |search|
-          expect(search).to have_key("query")
-          expect(search["type"]).to be_in([ "summaries", "events", "people", "all" ]) if search["type"]
-          expect(search["limit"]).to be_between(1, 10) if search["limit"]
-        end
-      end
+    it 'exposes the narrative keys including the optional ooc_questions field' do
+      expect(props.keys).to contain_exactly(:speech, :inner_monologue, :actions, :continue_conversation, :ooc_questions)
     end
 
-    context 'with minimal valid output' do
-      let(:minimal_output) do
-        {
-          "speech_text" => "Sure thing.",
-          "continue_conversation" => false,
-          "tool_intents" => [],
-          "direct_tool_calls" => [],
-          "search_memories" => []
-        }
-      end
+    it 'types ooc_questions as a string' do
+      expect(props[:ooc_questions][:type]).to eq('string')
+    end
 
-      it 'works with minimal required fields only' do
-        expect(minimal_output).to have_key("speech_text")
-        expect(minimal_output).to have_key("continue_conversation")
-        expect(minimal_output["tool_intents"]).to be_an(Array)
-        expect(minimal_output["direct_tool_calls"]).to be_an(Array)
-        expect(minimal_output["search_memories"]).to be_an(Array)
-      end
+    # The DSL marks every field required; optionality in practice comes from
+    # strict: false (the model may return it blank/omit it, and we treat blank as
+    # "no question" — see LlmIntention#log_ooc_questions).
+    it 'is non-strict so optional fields can be left blank' do
+      expect(described_class.schema.to_h[:strict]).to be(false)
+    end
+
+    it 'types speech and inner_monologue as strings' do
+      expect(props[:speech][:type]).to eq('string')
+      expect(props[:inner_monologue][:type]).to eq('string')
+    end
+
+    it 'types continue_conversation as boolean' do
+      expect(props[:continue_conversation][:type]).to eq('boolean')
+    end
+
+    it 'types actions as a list of { action_name, description } objects, both required' do
+      actions = props[:actions]
+      expect(actions[:type]).to eq('array')
+
+      item = actions[:items]
+      expect(item[:type]).to eq('object')
+      expect(item[:properties].keys).to contain_exactly(:action_name, :description)
+      expect(item[:required]).to contain_exactly('action_name', 'description')
     end
   end
 end

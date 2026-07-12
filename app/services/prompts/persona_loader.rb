@@ -6,7 +6,6 @@ module Prompts
       "jax" => Personas::JaxPersona,
       "sparkle" => Personas::SparklePersona,
       "zorp" => Personas::ZorpPersona,
-      "lomi" => Personas::LomiPersona,
       "crash" => Personas::CrashPersona,
       "neon" => Personas::NeonPersona,
       "mobius" => Personas::MobiusPersona,
@@ -15,6 +14,10 @@ module Prompts
 
     def self.load(persona_name)
       new(persona_name).load
+    end
+
+    def self.voice_id_for(persona_name)
+      load(persona_name)&.voice_id
     end
 
     def initialize(persona_name)

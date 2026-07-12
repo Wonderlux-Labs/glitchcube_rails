@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "lovelace.cube_dev",
+  "data": {
+    "config": {
+      "views": [
+        {
+          "title": "Cube Dev",
+          "type": "sections",
+          "max_columns": 3,
+          "sections": [
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "Persona & Controls"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_select.current_persona",
+                  "name": "Persona"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_select.cube_mode",
+                  "name": "Cube Mode"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_text.marquee_text",
+                  "name": "Marquee Text"
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "Cube State — brain output"
+                },
+                {
+                  "type": "markdown",
+                  "content": "### 🗣️ Speech\n{{ state_attr('sensor.cube_state','speech') or '—' }}\n\n### 💭 Inner monologue\n{{ state_attr('sensor.cube_state','inner_monologue') or '—' }}\n\n_updated: {{ state_attr('sensor.cube_state','updated_at') or '—' }}_"
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "World State — prompt context"
+                },
+                {
+                  "type": "markdown",
+                  "content": "{{ state_attr('sensor.glitchcube_world_state','content') or '—' }}"
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "Jukebox"
+                },
+                {
+                  "type": "custom:mini-media-player",
+                  "entity": "media_player.jukebox_internal",
+                  "artwork": "cover",
+                  "hide": {
+                    "power": true
+                  }
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "Cube Voice (Voice PE)"
+                },
+                {
+                  "type": "light",
+                  "entity": "light.cube_cube_voice_led_ring",
+                  "name": "LED Ring"
+                },
+                {
+                  "type": "entities",
+                  "title": "Status & controls",
+                  "entities": [
+                    {
+                      "entity": "assist_satellite.cube_cube_voice_assist_satellite",
+                      "name": "Satellite state"
+                    },
+                    {
+                      "entity": "select.cube_cube_voice_assistant",
+                      "name": "Pipeline"
+                    },
+                    {
+                      "entity": "select.cube_cube_voice_wake_word",
+                      "name": "Wake word"
+                    },
+                    {
+                      "entity": "switch.cube_cube_voice_mute",
+                      "name": "Mute"
+                    },
+                    {
+                      "entity": "switch.cube_cube_voice_wake_sound",
+                      "name": "Wake sound"
+                    },
+                    {
+                      "entity": "update.cube_cube_voice",
+                      "name": "Firmware"
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mini-media-player",
+                  "entity": "media_player.cube_cube_voice_media_player",
+                  "artwork": "cover"
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "Dev Tool Outputs (what the agent called)"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_text.dev_jukebox_song",
+                  "name": "Jukebox Song"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_text.dev_mood_music",
+                  "name": "Mood Music"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_text.dev_sound_effect",
+                  "name": "Sound Effect"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_text.announcement",
+                  "name": "Announcement"
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "cards": [
+                {
+                  "type": "heading",
+                  "heading": "Switch Placeholders"
+                },
+                {
+                  "type": "entities",
+                  "entities": [
+                    {
+                      "entity": "input_boolean.usb_charger",
+                      "name": "USB Charger"
+                    },
+                    {
+                      "entity": "input_boolean.strobe_light",
+                      "name": "Strobe Light"
+                    },
+                    {
+                      "entity": "input_button.trigger_alarm",
+                      "name": "Trigger Alarm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,46 @@
+[  187474ms] [WARNING] [ha-button] size="large" is deprecated. Use size="l" instead. The long-form value will be removed in the next major version. @ http://glitch.local:8123/frontend_latest/app.90cd1b8892c2cba1.js:91
+[ 1966159ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 1968165ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 1971170ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 1974216ms] [WARNING] [ha-button] size="small" is deprecated. Use size="s" instead. The long-form value will be removed in the next major version. @ http://glitch.local:8123/frontend_latest/app.90cd1b8892c2cba1.js:91
+[ 1974260ms] Object
+[ 2551540ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[ 2551541ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 2552643ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 2552644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[ 2554711ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 2554711ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[ 2557762ms] Object
+[ 3993108ms] Object
+[ 5834287ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[ 5834287ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 5835290ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[ 5835290ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 5837294ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[ 5837294ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 5840332ms] Object
+[10328008ms] Object
+[13421195ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[13421196ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[13423201ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[13423202ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[13426209ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[13426209ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[13429293ms] Object
+[15504528ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[15504528ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[15506533ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[15506535ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[15509539ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[15509539ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://glitch.local:8123/auth/token:0
+[15512635ms] Object
+[16718719ms] Object
+[30655528ms] Object
+[60973843ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/auth/token:0
+[60974051ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[60981128ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/auth/token:0
+[60981128ms] [ERROR] WebSocket connection to 'ws://glitch.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED @ http://glitch.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[60983740ms] Object
+[61909172ms] Object
+[68853848ms] Object
+[69184095ms] Object

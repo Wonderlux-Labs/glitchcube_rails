@@ -90,15 +90,44 @@ class ConversationLogger
       logger.info ""
     end
 
-    def conversation_ended(session_id, final_response, continue_conversation, tool_analysis = {})
+    def conversation_ended(session_id, final_response, continue_conversation, _tool_analysis = {}, narrative = {})
       logger.info "🎬 CONVERSATION ENDED"
       logger.info "   Session: #{session_id}"
-      logger.info "   Final Response: #{final_response&.truncate(200)}"
+      # The full structured narrative, surfaced here for manual smoke testing —
+      # speech + inner_monologue + actions + continue are the whole response.
+      logger.info "   🗣️  Speech: #{final_response}"
+      logger.info "   💭 Inner:  #{narrative[:inner_monologue]}" if narrative[:inner_monologue].present?
+      log_actions(Array(narrative[:actions]))
       logger.info "   Continue: #{continue_conversation}"
-      if tool_analysis.any?
-        logger.info "   Tools Used: sync=#{tool_analysis[:sync_tools]&.length || 0}, async=#{tool_analysis[:async_tools]&.length || 0}"
-      end
       logger.info "   " + "="*60
+      logger.info ""
+    end
+
+    # The plain-English actions the brain emitted this turn (before the HA agent
+    # translates them). Each is {action_name, description}.
+    def log_actions(actions)
+      if actions.empty?
+        logger.info "   🎛️  Actions: (none)"
+        return
+      end
+      logger.info "   🎛️  Actions:"
+      actions.each do |a|
+        name = a.is_a?(Hash) ? (a["action_name"] || a[:action_name]) : nil
+        desc = a.is_a?(Hash) ? (a["description"] || a[:description]) : a.to_s
+        logger.info "      • #{[ name, desc ].compact.join(': ')}"
+      end
+    end
+
+    # What the HASS conversation agent (the tool caller) reported back after we
+    # handed it this turn's actions. Async, so it lands between turns in the log.
+    def ha_agent_reply(instruction, reply, error: nil, persona: nil)
+      logger.info "🏠 HA AGENT REPLY (tool caller)#{" [#{persona}]" if persona.present?}"
+      logger.info "   Sent:  #{instruction}"
+      if error
+        logger.info "   ⚠️  Error: #{error}"
+      else
+        logger.info "   Agent: #{reply}"
+      end
       logger.info ""
     end
 

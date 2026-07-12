@@ -3,8 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe Conversation, type: :model do
+  # freeze_time / travel_to helpers are not globally included in this suite.
+  include ActiveSupport::Testing::TimeHelpers
+
   describe 'associations' do
-    it { should have_many(:messages).dependent(:destroy) }
+    it { should have_many(:conversation_logs).dependent(:destroy) }
   end
 
   describe 'validations' do
@@ -128,23 +131,6 @@ RSpec.describe Conversation, type: :model do
     end
   end
 
-  describe '#add_message' do
-    let(:conversation) { create(:conversation) }
-
-    it 'creates a new message' do
-      expect {
-        conversation.add_message(role: 'user', content: 'Hello')
-      }.to change(conversation.messages, :count).by(1)
-    end
-
-    it 'creates message with correct attributes' do
-      message = conversation.add_message(role: 'user', content: 'Hello', model_used: 'gpt-4')
-      expect(message.role).to eq('user')
-      expect(message.content).to eq('Hello')
-      expect(message.model_used).to eq('gpt-4')
-    end
-  end
-
   describe '#flow_data_json' do
     let(:conversation) { build(:conversation) }
 
@@ -175,53 +161,6 @@ RSpec.describe Conversation, type: :model do
     it 'returns empty hash for invalid JSON' do
       conversation.metadata = 'invalid'
       expect(conversation.metadata_json).to eq({})
-    end
-  end
-
-  describe '#summary' do
-    let(:conversation) { create(:conversation, session_id: 'test-123', persona: 'technical') }
-    let!(:message) { create(:message, conversation: conversation, content: 'Last message') }
-
-    before do
-      conversation.update!(
-        message_count: 5,
-        total_cost: 0.05,
-        total_tokens: 1000,
-        started_at: 2.hours.ago,
-        ended_at: 1.hour.ago
-      )
-    end
-
-    it 'returns summary hash with all relevant data' do
-      summary = conversation.summary
-      expect(summary[:session_id]).to eq('test-123')
-      expect(summary[:message_count]).to eq(5)
-      expect(summary[:persona]).to eq('technical')
-      expect(summary[:total_cost]).to eq(0.05)
-      expect(summary[:total_tokens]).to eq(1000)
-      expect(summary[:duration]).to be_within(1.second).of(1.hour)
-      expect(summary[:last_message]).to eq('Last message')
-    end
-
-    it 'memoizes the result' do
-      first_call = conversation.summary
-      second_call = conversation.summary
-      expect(first_call).to equal(second_call)
-    end
-  end
-
-  describe '#update_totals!' do
-    let(:conversation) { create(:conversation) }
-
-    before do
-      create(:message, conversation: conversation, prompt_tokens: 100, completion_tokens: 50, cost: 0.01)
-      create(:message, conversation: conversation, prompt_tokens: 200, completion_tokens: 75, cost: 0.02)
-    end
-
-    it 'updates total_tokens and total_cost' do
-      conversation.update_totals!
-      expect(conversation.total_tokens).to eq(425) # 100+50+200+75
-      expect(conversation.total_cost).to eq(0.03) # 0.01+0.02
     end
   end
 end

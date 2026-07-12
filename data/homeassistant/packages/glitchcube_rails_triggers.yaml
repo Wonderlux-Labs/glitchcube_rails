@@ -1,0 +1,23 @@
+# GlitchCube — HASS -> Rails triggers
+#
+# The mirror direction of the custom conversation component (which calls INTO
+# Rails for speech): these rest_commands let HASS automations poke Rails to DO
+# things on the host. Rails' address is dynamic — the host-registration job
+# writes it to input_text.glitchcube_host — so we template the URL off that
+# entity, appending the default port (4567) only when the value doesn't already
+# carry one (same rule the custom component uses).
+#
+# Call from an automation with e.g.  action: rest_command.glitchcube_play_theme_song
+# Test it from Developer Tools > Actions the same way.
+
+rest_command:
+  # Play a random theme song out the cube's host speaker (fire-and-forget on the
+  # Rails side — the endpoint enqueues a job and returns immediately). Intended
+  # for an idle-attractor automation: when the cube has been quiet a long while,
+  # blast a song to draw people over. That automation isn't written yet.
+  glitchcube_play_theme_song:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/audio/theme_song
+    method: POST
+    content_type: "application/json"
+    payload: "{}"

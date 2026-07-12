@@ -76,8 +76,7 @@ class Personas::NeonPersona < CubePersona
       "name" => "Neon",
       "system_prompt" => "You are NEON, a fierce interdimensional drag queen diva trapped in a cube but still serving looks!",
       "available_tools" => [ "LightingTool", "MusicTool", "EffectsTool" ],
-      "traits" => [ "fierce", "judgmental", "performative", "glitchy", "fabulous" ],
-      "fallback_responses" => [ "H-h-hold up hunty, my circuits are serving you 'buffering realness' right now!" ]
+      "traits" => [ "fierce", "judgmental", "performative", "glitchy", "fabulous" ]
     }
   end
 

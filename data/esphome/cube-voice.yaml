@@ -1,0 +1,207 @@
+# GlitchCube takeover config for the Home Assistant Voice PE satellite.
+#
+# Strategy: keep the ENTIRE stock firmware as a package pinned to the release the
+# device already runs (26.6.0), and layer the minimum on top:
+#
+#   1. components/voice_assistant/ — vendored from esphome 2026.6.0 with the
+#      GLITCHCUBE PATCH for esphome/home-assistant-voice-pe#563: the stock 2s
+#      "playing" timeout declares the TTS response finished before the announcement
+#      has even STARTED playing (cloud TTS takes >2s to buffer on long persona
+#      speeches), so in continue_conversation mode the mic reopened mid-speech and
+#      the cube transcribed itself into a feedback loop. The patch defers
+#      RESPONSE_FINISHED while the announcement is starting or still playing.
+#      Diff vs stock: grep for "GLITCHCUBE PATCH" in components/voice_assistant/.
+#
+#   2. (staged, commented out) custom wake word models from ../microwakeword/.
+#
+# Node name/MAC must match the existing device so Home Assistant keeps the same
+# device + entity registry entries (cube_cube_voice_* entity ids survive reflash).
+#
+# Build & flash: see README.md in this directory.
+
+substitutions:
+  name: home-assistant-voice-09739d      # current hostname — do not change (entity registry)
+  friendly_name: Home Assistant Voice 09739d
+
+# The device runs the FACTORY firmware = base package + Improv BLE provisioning.
+# We mirror the factory wrapper (home-assistant-voice.factory.yaml@26.6.0) here,
+# EXCEPT the http_request OTA update entity — with it, one click on "update" in HA
+# would replace this custom build with stock firmware.
+packages:
+  # Inline prefix package copied from the factory yaml: must appear BEFORE the main
+  # package so its list items come first when the package lists are appended.
+  va_connected_wait_for_ble:
+    voice_assistant:
+      on_client_connected:
+        - wait_until:
+            not: ble.enabled
+        - delay: 2s
+    wifi:
+      on_disconnect:
+        - ble.enable:
+  nabu_casa.voice_pe: github://esphome/home-assistant-voice-pe/home-assistant-voice.yaml@26.6.0
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false             # name already carries the mac suffix
+
+# --- Improv BLE provisioning (copied from the factory wrapper) --------------------
+# Keeps WiFi recoverable without USB: hold the center button to re-provision over
+# BLE if the device ever loses its saved credentials. Also what makes an empty
+# wifi: block valid — credentials stay in NVS and survive OTA reflashes.
+wifi:
+  on_connect:
+    - delay: 5s  # Gives time for improv results to be transmitted
+    - ble.disable:
+    - script.execute: control_leds
+
+improv_serial:
+
+esp32_ble:
+  name: ha-voice-pe
+
+esp32_improv:
+  authorizer: center_button
+  on_start:
+    - lambda: id(improv_ble_in_progress) = true;
+    - script.execute: control_leds
+  on_provisioned:
+    - lambda: id(improv_ble_in_progress) = false;
+    - script.execute: control_leds
+  on_stop:
+    - lambda: id(improv_ble_in_progress) = false;
+    - script.execute: control_leds
+
+# Local components override built-in ones by name. This list APPENDS to the stock
+# package's external_components (which pulls voice_kit from the VPE repo).
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [voice_assistant]
+    refresh: 0s
+
+# WiFi credentials + the HA api encryption key live on the device (NVS, set during
+# original provisioning/adoption) and survive OTA reflashes — so we deliberately do
+# NOT set them here; the stock package's wifi/api blocks carry them forward. If the
+# device ever gets factory reset, re-provision via Improv BLE or uncomment:
+# wifi:
+#   ssid: !secret wifi_ssid
+#   password: !secret wifi_password
+
+# --- Custom wake words (STAGED — uncomment to enable on a later flash) -----------
+# Models live in ../microwakeword/ (trained with microWakeWord-Trainer-AppleSilicon).
+# Local paths are resolved at COMPILE time relative to this yaml, then baked into
+# the firmware. GitHub raw URLs also work once the repo path is pushed, but local
+# files are the reliable route (URL manifests have known Builder issues).
+# The new wake words appear alongside the stock ones in the device's wake word
+# selector in HA. The stock "Wake word sensitivity" select only adjusts the stock
+# models' cutoffs; these use their manifest cutoffs (0.56 / 0.77).
+#
+micro_wake_word:
+  models:
+    - model: ../microwakeword/hey_glitch_cube.json
+      id: hey_glitch_cube
+    - model: ../microwakeword/yo_cube.json
+      id: yo_cube
+  # Frees ~3KB internal SRAM (ESPHome 2026.6 / PR #16632) — helps avoid the
+  # "Failed to allocate tensors" PSRAM-fragmentation failure with extra models.
+  task_stack_in_psram: true
+  # Marks the next on_listening as a wake-word turn (the stock automation in the
+  # pinned package already chimes for those) so the continue-conversation chime
+  # below skips it. Appended after the stock on_wake_word_detected automation.
+  on_wake_word_detected:
+    - lambda: id(gc_wake_word_listen) = true;
+
+# --- Continue-conversation listen chime (GLITCHCUBE) -------------------------------
+# Stock firmware only chimes when the wake word is heard; in continue_conversation
+# mode the C++ reopens the mic straight from RESPONSE_FINISHED with no audible cue.
+# on_listening fires on HA's STT_START for EVERY listen — the wake-word turn and each
+# continue-conversation re-listen — so chime here, gated by gc_wake_word_listen so
+# only the re-listens play it. Respects the device's "Wake sound" toggle. priority
+# false = skip the chime rather than cut off anything still announcing.
+globals:
+  - id: gc_wake_word_listen
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+voice_assistant:
+  on_listening:
+    - if:
+        condition:
+          and:
+            - lambda: return !id(gc_wake_word_listen);
+            - switch.is_on: wake_sound
+        then:
+          - script.execute:
+              id: play_sound
+              priority: false
+              sound_file: "wake_word_triggered_sound"
+    - lambda: id(gc_wake_word_listen) = false;
+
+# --- Brighter voice LED effects (GLITCHCUBE) --------------------------------------
+# The cube's LED ring lives inside a small diffusing cube and needs full light for the
+# diffraction to look right. The stock "Listening For Command" swirl tapers its trailing
+# LEDs to 75%/50% and the "Thinking" pulse only lights 2 LEDs with a peak that rounds to
+# ~98% (255/10*10 = 250 via integer division) — so the lit pixels read as noticeably
+# dimmer than the ring's set brightness. These overrides light more pixels at the ring's
+# TRUE brightness while keeping each motion distinct. The stock effects/scripts live in
+# the pinned remote package (github://…@26.6.0), so they must be overridden from here —
+# editing the .esphome/ download cache does nothing (it's re-fetched).
+light:
+  - id: !extend voice_assistant_leds
+    effects:
+      # Listening: 8 of 12 LEDs lit at full ring color; a 4-LED gap sweeps around.
+      - addressable_lambda:
+          name: "GC Listening"
+          update_interval: 50ms
+          lambda: |-
+            auto lc = id(led_ring).current_values;
+            Color color(lc.get_red() * 255, lc.get_green() * 255, lc.get_blue() * 255);
+            for (uint8_t i = 0; i < 12; i++) {
+              bool lit = false;
+              for (uint8_t k = 0; k < 8; k++) {
+                if (i == (id(global_led_animation_index) + k) % 12) lit = true;
+              }
+              it[i] = lit ? color : Color::BLACK;
+            }
+            id(global_led_animation_index) = (id(global_led_animation_index) + 1) % 12;
+      # Thinking: 4 evenly spaced LEDs (0,3,6,9) breathe full -> dark -> full; peak is a
+      # TRUE 100% of the ring color (float math, reaches 255 exactly).
+      - addressable_lambda:
+          name: "GC Thinking"
+          update_interval: 10ms
+          lambda: |-
+            static uint8_t step = 0;
+            static bool decreasing = true;
+            const uint8_t steps = 20;
+            if (initial_run) { step = 0; decreasing = true; }
+            auto lc = id(led_ring).current_values;
+            Color color(lc.get_red() * 255, lc.get_green() * 255, lc.get_blue() * 255);
+            uint8_t f = (uint8_t)((255.0f * (steps - step)) / steps);   // 255 at step 0 = full
+            for (uint8_t i = 0; i < 12; i++) {
+              it[i] = (i % 3 == 0) ? (color * f) : Color::BLACK;
+            }
+            if (decreasing) step++; else step--;
+            if (step == 0 || step == steps) decreasing = !decreasing;
+
+# Repoint the listening + thinking phase scripts at the brighter effects. !extend appends
+# to the packaged script's `then:`, so our light.turn_on runs last in the same synchronous
+# pass and wins — only the final state renders (no flash). Brightness follows the ring's set
+# level (remote_values) so a HASS change of 50% -> 50%, 100% -> 100%; the 0.2f floor is the
+# stock minimum-visibility guard.
+script:
+  - id: !extend control_leds_voice_assistant_listening_for_command_phase
+    then:
+      - light.turn_on:
+          id: voice_assistant_leds
+          brightness: !lambda return max(id(led_ring).remote_values.get_brightness(), 0.2f);
+          effect: "GC Listening"
+  - id: !extend control_leds_voice_assistant_thinking_phase
+    then:
+      - light.turn_on:
+          id: voice_assistant_leds
+          brightness: !lambda return max(id(led_ring).remote_values.get_brightness(), 0.2f);
+          effect: "GC Thinking"

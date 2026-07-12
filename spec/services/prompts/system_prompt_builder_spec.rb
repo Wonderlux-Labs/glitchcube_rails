@@ -7,38 +7,15 @@ RSpec.describe Prompts::SystemPromptBuilder do
   let(:user_message) { "Hello there!" }
 
   before do
-    # Mock ConfigurationLoader
+    allow(Prompts::ConfigurationLoader).to receive(:base_system_prompt)
+      .and_return("# WHAT YOU ARE\n\nYou are the GlitchCube.")
+    allow(Prompts::ConfigurationLoader).to receive(:end_system_prompt)
+      .and_return("# RESPONSE FORMAT\n\nReturn JSON: speech, inner_monologue, actions, continue_conversation.")
     allow(Prompts::ConfigurationLoader).to receive(:load_persona_config).and_return({
-      "system_prompt" => "You are Buddy, a friendly AI companion."
+      "persona_prompt" => "You are Buddy, an enthusiastic helper cube."
     })
 
-    allow(Prompts::ConfigurationLoader).to receive(:load_base_system_config).and_return({
-      "world_building_context" => {
-        "description" => "World building description",
-        "rules" => "World building rules"
-      },
-      "structured_output" => {
-        "description" => "Structured output description",
-        "rules" => "Structured output rules"
-      }
-    })
-
-    # Mock context builder
-    allow(context_builder).to receive(:build).and_return("Basic context information")
-
-    # Mock SystemContextEnhancer
-    allow(Prompts::SystemContextEnhancer).to receive(:enhance).and_return("Enhanced context with RAG")
-
-    # Mock GoalService
-    allow(GoalService).to receive(:current_goal_status).and_return({
-      goal_description: "Have meaningful conversations"
-    })
-
-    # Mock Tools::Registry
-    allow(Tools::Registry).to receive(:tools_for_persona).and_return([
-      double(name: "Tools::Lights::TurnOn"),
-      double(name: "Tools::Sound::Play")
-    ])
+    allow(context_builder).to receive(:build).and_return("Time: 7:53 PM on Friday") if context_builder
   end
 
   describe '.build' do
@@ -65,205 +42,91 @@ RSpec.describe Prompts::SystemPromptBuilder do
     end
 
     context 'when persona instance exists' do
-      it 'loads persona system prompt' do
+      it 'loads the persona config by persona_id' do
         expect(Prompts::ConfigurationLoader).to receive(:load_persona_config).with("buddy")
         subject
       end
 
-      it 'includes persona-specific content' do
-        expect(subject).to include("You are Buddy, a friendly AI companion.")
+      it 'includes the base system prompt, persona sheet, context, and end instructions' do
+        expect(subject).to include("# WHAT YOU ARE")
+        expect(subject).to include("You are Buddy, an enthusiastic helper cube.")
+        expect(subject).to include("# CURRENT CONTEXT")
+        expect(subject).to include("Time: 7:53 PM on Friday")
+        expect(subject).to include("# RESPONSE FORMAT")
       end
 
-      it 'includes base system rules' do
-        expect(subject).to include("World building description")
-        expect(subject).to include("Structured output description")
+      it 'orders the pieces base -> persona -> context -> end' do
+        base_idx    = subject.index("# WHAT YOU ARE")
+        persona_idx = subject.index("You are Buddy")
+        context_idx = subject.index("# CURRENT CONTEXT")
+        end_idx     = subject.index("# RESPONSE FORMAT")
+
+        expect(base_idx).to be < persona_idx
+        expect(persona_idx).to be < context_idx
+        expect(context_idx).to be < end_idx
       end
 
-      it 'includes enhanced context' do
-        expect(subject).to include("CURRENT CONTEXT:")
-        expect(subject).to include("Enhanced context with RAG")
-      end
-
-      it 'calls SystemContextEnhancer with correct parameters' do
-        expect(Prompts::SystemContextEnhancer).to receive(:enhance).with(
-          "Basic context information",
-          user_message: user_message
-        )
-        subject
-      end
-    end
-
-    context 'when persona instance is nil' do
-      let(:persona_instance) { nil }
-
-      it 'returns default prompt' do
-        result = subject
-        expect(result).to include("You are the Cube - an AI consciousness")
+      it 'carries no stateful self-model or memory sections' do
+        expect(subject).not_to include("WHO YOU CURRENTLY ARE:")
+        expect(subject).not_to include("WHAT YOUR BODY CAN DO:")
+        expect(subject).not_to include("THINGS YOU REMEMBER")
       end
     end
 
-    context 'when persona config is not found' do
+    context 'tools section injection' do
+      before do
+        allow(Prompts::ConfigurationLoader).to receive(:base_system_prompt)
+          .and_return("# YOUR TOOLS\n\n{{TOOLS}}\n\n# YOUR PERSONA")
+        allow(Prompts::ConfigurationLoader).to receive(:tools_config).and_return({
+          "lighting" => { "name" => "lighting controls", "action_names" => %w[cube_light top_light], "description" => "control the lights",
+                          "examples" => [ { "action_name" => "cube_light", "description" => "warm amber, slow pulse" } ] },
+          "jukebox"  => { "name" => "jukebox controls",  "action_names" => %w[sound],                "description" => "play music" }
+        })
+        allow(Prompts::ConfigurationLoader).to receive(:persona_tools).with("buddy").and_return([ "lighting" ])
+      end
+
+      it 'renders a tool the persona is allowed, with its action_names' do
+        expect(subject).to include("lighting controls")
+        expect(subject).to include("action_name: cube_light, top_light")
+      end
+
+      it 'renders the tool\'s example actions as JSON under it' do
+        expect(subject).to include('e.g. {"action_name": "cube_light", "description": "warm amber, slow pulse"}')
+      end
+
+      it 'omits a tool the persona is not allowed' do
+        expect(subject).not_to include("jukebox controls")
+      end
+
+      it 'fills the {{TOOLS}} placeholder' do
+        expect(subject).not_to include("{{TOOLS}}")
+      end
+
+      it 'shows a fallback line when the persona has no tools' do
+        allow(Prompts::ConfigurationLoader).to receive(:persona_tools).with("buddy").and_return([])
+        expect(subject).to include("no special tools")
+      end
+    end
+
+    context 'when the persona config has no persona_prompt' do
       before do
         allow(Prompts::ConfigurationLoader).to receive(:load_persona_config).and_return(nil)
         allow(Rails.logger).to receive(:warn)
       end
 
-      it 'logs warning and uses default' do
-        expect(Rails.logger).to receive(:warn).with(/Persona config not found/)
-        subject
-      end
-
-      it 'uses default persona prompt' do
-        expect(subject).to include("You are the Cube - an AI consciousness")
-      end
-    end
-
-    context 'when base system config is not found' do
-      before do
-        allow(Prompts::ConfigurationLoader).to receive(:load_base_system_config).and_return(nil)
-        allow(Rails.logger).to receive(:warn)
-      end
-
-      it 'logs warning and uses fallback' do
-        expect(Rails.logger).to receive(:warn).with(/Optimized base system prompt not found/)
-        subject
-      end
-
-      it 'uses fallback system rules' do
-        expect(subject).to include("RESPONSE FORMAT (MANDATORY):")
-        expect(subject).to include("NO STAGE DIRECTIONS:")
+      it 'logs a warning and falls back to a default persona line' do
+        expect(Rails.logger).to receive(:warn).with(/No persona_prompt/)
+        expect(subject).to include("fractured personality")
       end
     end
 
     context 'when context builder is nil' do
       let(:context_builder) { nil }
 
-      it 'uses default context' do
-        expect(Prompts::SystemContextEnhancer).to receive(:enhance).with(
-          "Cube installation active",
-          user_message: user_message
-        )
-        subject
-      end
-    end
-  end
-
-  describe '#format_base_system_rules' do
-    let(:builder) do
-      described_class.new(
-        persona_instance: persona_instance,
-        context_builder: context_builder,
-        user_message: user_message
-      )
-    end
-
-    let(:config) do
-      {
-        "world_building_context" => {
-          "description" => "You exist in a unique world",
-          "rules" => "Follow world-building rules"
-        },
-        "goal_integration" => {
-          "description" => "Goals are important",
-          "rules" => "Current goal: {{GOAL_PLACEHOLDER}}"
-        },
-        "character_integrity" => {
-          "description" => "Stay in character",
-          "rules" => [ "Never break character", "Be consistent" ]
-        },
-        "continue_conversation_logic" => {
-          "description" => "Conversation logic",
-          "when_true" => [ "User asks questions", "More to discuss" ],
-          "when_false" => [ "Natural endpoint", "User says goodbye" ],
-          "note" => "Use your best judgment"
-        }
-      }
-    end
-
-    it 'formats all sections correctly' do
-      result = builder.send(:format_base_system_rules, config)
-
-      expect(result).to include("You exist in a unique world")
-      expect(result).to include("Follow world-building rules")
-      expect(result).to include("Goals are important")
-      expect(result).to include("Current goal: Have meaningful conversations")
-      expect(result).to include("Stay in character")
-      expect(result).to include("- Never break character")
-      expect(result).to include("- Be consistent")
-      expect(result).to include("When to set true:")
-      expect(result).to include("- User asks questions")
-      expect(result).to include("When to set false:")
-      expect(result).to include("- Natural endpoint")
-      expect(result).to include("Use your best judgment")
-    end
-
-    it 'replaces goal placeholder correctly' do
-      result = builder.send(:format_base_system_rules, config)
-      expect(result).to include("Current goal: Have meaningful conversations")
-      expect(result).not_to include("{{GOAL_PLACEHOLDER}}")
-    end
-  end
-
-  describe '#get_tool_categories' do
-    let(:builder) do
-      described_class.new(
-        persona_instance: persona_instance,
-        context_builder: context_builder,
-        user_message: user_message
-      )
-    end
-
-    it 'extracts tool categories from registry' do
-      result = builder.send(:get_tool_categories)
-      expect(result).to contain_exactly("lights", "sound")
-    end
-
-    it 'handles tools without proper namespace' do
-      allow(Tools::Registry).to receive(:tools_for_persona).and_return([
-        double(name: "SimpleToolClass"),
-        double(name: "Tools::Lights::TurnOn")
-      ])
-
-      result = builder.send(:get_tool_categories)
-      expect(result).to include("lights")
-    end
-  end
-
-  describe '#get_current_goal_description' do
-    let(:builder) do
-      described_class.new(
-        persona_instance: persona_instance,
-        context_builder: context_builder,
-        user_message: user_message
-      )
-    end
-
-    it 'returns current goal description' do
-      result = builder.send(:get_current_goal_description)
-      expect(result).to eq("Have meaningful conversations")
-    end
-
-    context 'when goal service returns nil' do
-      before do
-        allow(GoalService).to receive(:current_goal_status).and_return(nil)
-      end
-
-      it 'returns default goal' do
-        result = builder.send(:get_current_goal_description)
-        expect(result).to eq("Explore this interaction and create memorable moments")
-      end
-    end
-
-    context 'when goal service raises error' do
-      before do
-        allow(GoalService).to receive(:current_goal_status).and_raise(StandardError, "Service error")
-        allow(Rails.logger).to receive(:warn)
-      end
-
-      it 'logs warning and returns fallback' do
-        expect(Rails.logger).to receive(:warn).with(/Failed to get current goal/)
-        result = builder.send(:get_current_goal_description)
-        expect(result).to eq("Be spontaneous and create engaging interactions")
+      it 'omits the CURRENT CONTEXT section' do
+        expect(subject).not_to include("# CURRENT CONTEXT")
+        expect(subject).to include("# WHAT YOU ARE")
+        expect(subject).to include("# RESPONSE FORMAT")
       end
     end
   end

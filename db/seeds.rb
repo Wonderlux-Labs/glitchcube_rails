@@ -4,67 +4,35 @@
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
-puts '🌱 Seeding GIS database...'
+# GIS / location seeding is DISABLED for this iteration.
+# Importing Black Rock City geography (streets/landmarks/boundaries) requires
+# PostGIS, which has been intentionally removed from the database layer. The
+# location/GPS Ruby code is kept as unused reference; the streets/landmarks/
+# boundaries tables exist but stay empty. Restore this block (and PostGIS)
+# when re-enabling GPS for a Burning Man deployment.
+puts '⏭️  GIS/location seeding disabled (PostGIS not installed this iteration)'
 
-# Import GIS data
-gis_data_path = Rails.root.join('data', 'gis')
-
-if Dir.exist?(gis_data_path) && Landmark.count < 150
-  puts 'Importing GIS data...'
-
-  # Import landmarks from various sources
-  landmarks_file = gis_data_path.join('burning_man_landmarks.json')
-  if File.exist?(landmarks_file)
-    puts '  Importing landmarks...'
-    Landmark.send(:import_from_landmarks_json, landmarks_file.to_s)
-  end
-
-  toilets_file = gis_data_path.join('toilets.geojson')
-  if File.exist?(toilets_file)
-    puts '  Importing toilets...'
-    Landmark.send(:import_from_toilets_geojson, toilets_file.to_s)
-  end
-
-  plazas_file = gis_data_path.join('plazas.geojson')
-  if File.exist?(plazas_file)
-    puts '  Importing plazas...'
-    Landmark.send(:import_from_plazas_geojson, plazas_file.to_s)
-  end
-
-  cpns_file = gis_data_path.join('cpns.geojson')
-  if File.exist?(cpns_file)
-    puts '  Importing CPNs...'
-    Landmark.send(:import_from_cpns_geojson, cpns_file.to_s)
-  end
-
-  # Import streets
-  streets_file = gis_data_path.join('street_lines.geojson')
-  if File.exist?(streets_file)
-    puts '  Importing streets...'
-    Street.import_from_geojson(streets_file.to_s)
-  end
-
-  # Import boundaries
-  city_blocks_file = gis_data_path.join('city_blocks.geojson')
-  if File.exist?(city_blocks_file)
-    puts '  Importing city blocks...'
-    Boundary.import_from_geojson(city_blocks_file.to_s, 'city_block')
-  end
-
-  trash_fence_file = gis_data_path.join('trash_fence.geojson')
-  if File.exist?(trash_fence_file)
-    puts '  Importing trash fence...'
-    Boundary.import_from_geojson(trash_fence_file.to_s, 'fence')
-  end
-
-  # Report what was imported
-  landmark_count = Landmark.count
-  street_count = Street.count
-  boundary_count = Boundary.count
-
-  puts "✅ GIS import complete: #{landmark_count} landmarks, #{street_count} streets, #{boundary_count} boundaries"
-else
-  puts '⚠️  GIS data directory not found at data/gis - skipping GIS import'
+# Personas — seeded from the persona YAMLs (lib/prompts/personas/*.yml). Idempotent:
+# config fields are refreshed from the YAML each run, but the `active` flag on an
+# existing row is preserved (only set on create) — so a manual toggle sticks, while a
+# fresh DB honors the YAML's `active:` (defaulting true; a few unused personas ship false).
+persona_files = Dir[Rails.root.join('lib', 'prompts', 'personas', '*.yml')]
+persona_files.each do |path|
+  slug = File.basename(path, '.yml')
+  config = YAML.load_file(path) || {}
+  persona = Persona.find_or_initialize_by(slug: slug)
+  persona.assign_attributes(
+    name: config['name'],
+    description: config['description'],
+    persona_overview: config['persona_overview'],
+    voice_id: config['voice_id'],
+    agent_id: config['agent_id'],
+    persona_prompt: config['persona_prompt'],
+    offline_responses: config['offline_responses'] || {}
+  )
+  persona.active = config.fetch('active', true) if persona.new_record? # preserve manual toggles on existing rows
+  persona.save!
 end
+puts "✅ Seeded #{persona_files.size} personas (#{Persona.active.count} active)"
 
 puts '✅ Database seeding complete!'

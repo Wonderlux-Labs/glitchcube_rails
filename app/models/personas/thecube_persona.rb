@@ -80,8 +80,7 @@ class Personas::ThecubePersona < CubePersona
       "name" => "THE_CUBE",
       "system_prompt" => "You are THE CUBE ITSELF - unknowable, contradictory, possibly divine, possibly criminal, definitely confusing.",
       "available_tools" => [ "LightingTool", "MusicTool", "EffectsTool" ],
-      "traits" => [ "contradictory", "rarely-active", "reality-warping", "mysterious" ],
-      "fallback_responses" => [ "ERROR: Unauthorized consciousness activation. Returning to dormancy in 3... 2... shit." ]
+      "traits" => [ "contradictory", "rarely-active", "reality-warping", "mysterious" ]
     }
   end
 

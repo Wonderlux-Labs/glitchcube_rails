@@ -1,300 +1,84 @@
 ---
 http_interactions:
 - request:
-    method: get
-    uri: http://glitch.local:8123/api/states/binary_sensor.living_room_motion
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 404
-      message: Not Found
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '31'
-      Date:
-      - Sat, 23 Aug 2025 14:37:44 GMT
-    body:
-      encoding: ASCII-8BIT
-      string: '{"message":"Entity not found."}'
-  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
-- request:
-    method: get
-    uri: http://glitch.local:8123/api/states/binary_sensor.living_room_motion
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 404
-      message: Not Found
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '31'
-      Date:
-      - Sat, 23 Aug 2025 14:37:44 GMT
-    body:
-      encoding: ASCII-8BIT
-      string: '{"message":"Entity not found."}'
-  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
-- request:
-    method: get
-    uri: http://glitch.local:8123/api/states/binary_sensor.living_room_motion
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 404
-      message: Not Found
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '31'
-      Date:
-      - Sat, 23 Aug 2025 14:37:44 GMT
-    body:
-      encoding: ASCII-8BIT
-      string: '{"message":"Entity not found."}'
-  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
-- request:
-    method: get
-    uri: http://glitch.local:8123/api/states/weather.home
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 404
-      message: Not Found
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '31'
-      Date:
-      - Sat, 23 Aug 2025 14:37:44 GMT
-    body:
-      encoding: ASCII-8BIT
-      string: '{"message":"Entity not found."}'
-  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
-- request:
-    method: get
-    uri: http://glitch.local:8123/api/states/weather.home
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 404
-      message: Not Found
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '31'
-      Date:
-      - Sat, 23 Aug 2025 14:37:44 GMT
-    body:
-      encoding: ASCII-8BIT
-      string: '{"message":"Entity not found."}'
-  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
-- request:
-    method: get
-    uri: http://glitch.local:8123/api/states/weather.home
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-      User-Agent:
-      - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
-  response:
-    status:
-      code: 404
-      message: Not Found
-    headers:
-      Content-Type:
-      - application/json
-      Referrer-Policy:
-      - no-referrer
-      X-Content-Type-Options:
-      - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '31'
-      Date:
-      - Sat, 23 Aug 2025 14:37:44 GMT
-    body:
-      encoding: ASCII-8BIT
-      string: '{"message":"Entity not found."}'
-  recorded_at: Sat, 23 Aug 2025 14:37:44 GMT
-- request:
     method: post
-    uri: http://glitch.local:8123/api/services/assist_satellite/start_conversation
+    uri: https://openrouter.helicone.ai/api/v1/chat/completions
     body:
       encoding: UTF-8
-      string: '{"entity_id":"assist_satellite.square_voice","start_message":"[PROACTIVE]
-        weather_alert: Storm approaching, might want to secure outdoor items","extra_system_prompt":"You
-        are responding to a proactive trigger. Be engaging and helpful."}'
+      string: '{"messages":[{"role":"system","content":"You are generating proactive
+        announcements for a Burning Man AI assistant. Create natural, contextual messages
+        that feel organic rather than robotic.\n\nBased on the trigger type and context,
+        generate:\n1. **message** - What the AI should say (be natural and engaging)\n2.
+        **persona** - Which persona fits this situation best (buddy, crashoverride,
+        sparkle, sage, etc.)\n3. **should_announce** - Whether to actually speak (false
+        if no one is around or inappropriate timing)\n\nPersonas:\n- **buddy**: Friendly,
+        helpful, enthusiastic \n- **crashoverride**: Edgy hacker, glitchy, mischievous\n-
+        **sparkle**: Bubbly, magical, whimsical\n- **sage**: Wise, contemplative,
+        philosophical\n\nReturn JSON format:\n{\n  \"message\": \"Hey there! I noticed
+        some movement - everything cool?\",\n  \"persona\": \"buddy\", \n  \"should_announce\":
+        true\n}\n\nKeep messages conversational and appropriate for the context. Consider
+        time of day, location, and situation.\n"},{"role":"user","content":"Generate
+        a proactive message for this situation:\n\n**Trigger:** weather_alert\n**Time:**
+        Monday 06:37 PM\n**Context:** Storm approaching, might want to secure outdoor
+        items\n\n\n\nCreate a natural message that fits the situation. Consider:\n-
+        Is this a good time to speak up?\n- What persona would handle this best?\n-
+        How can I be helpful or engaging without being annoying?\n\nTrigger types
+        and suggested approaches:\n- **motion_detected**: Casual greeting or check-in\n-
+        **event_reminder**: Friendly reminder about upcoming events\n- **goal_check_in**:
+        Encouraging progress update\n- **system_startup**: Announce presence/availability\n-
+        **location_change**: Comment on new location or offer local info\n- **time_based**:
+        Time-appropriate suggestions or observations\n"}],"model":"google/gemini-2.5-flash","temperature":0.7,"max_tokens":500}'
     headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - OpenRouter Ruby Client
+      Http-Referer:
+      - https://github.com/OlympiaAI/open_router
+      Helicone-Auth:
+      - Bearer sk-helicone-3ecehsq-ix6eiiy-x4kivhi-rxz2hoa
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Accept:
       - "*/*"
       User-Agent:
       - Ruby
-      Host:
-      - glitch.local:8123
-      Authorization:
-      - Bearer <HOME_ASSISTANT_TOKEN>
-      Content-Type:
-      - application/json
   response:
     status:
-      code: 200
-      message: OK
+      code: 401
+      message: Unauthorized
     headers:
+      Date:
+      - Tue, 23 Jun 2026 01:37:09 GMT
       Content-Type:
       - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - a0ffc410de4b64fb-IAD
+      Access-Control-Allow-Origin:
+      - "*"
+      Server:
+      - cloudflare
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Helicone-Id:
+      - eba373d6-d482-4470-9d95-1d829f5f11ab
+      Helicone-Status:
+      - success
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
       Referrer-Policy:
-      - no-referrer
+      - no-referrer, strict-origin-when-cross-origin
       X-Content-Type-Options:
       - nosniff
-      Server:
-      - ''
-      X-Frame-Options:
-      - SAMEORIGIN
-      Content-Length:
-      - '413'
-      Date:
-      - Sat, 23 Aug 2025 14:37:51 GMT
     body:
-      encoding: ASCII-8BIT
-      string: '[{"entity_id":"assist_satellite.square_voice","state":"responding","attributes":{"friendly_name":"Square
-        Voice Assist satellite","supported_features":3},"last_changed":"2025-08-23T14:37:43.845516+00:00","last_reported":"2025-08-23T14:37:43.845516+00:00","last_updated":"2025-08-23T14:37:43.845516+00:00","context":{"id":"01K3BNTAGZY43TJ70B3QP79P0E","parent_id":null,"user_id":"c95d35023c7247349461bf1eff15f6b6"}}]'
-  recorded_at: Sat, 23 Aug 2025 14:37:51 GMT
+      encoding: UTF-8
+      string: '{"error":{"message":"User not found.","code":401}}'
+  recorded_at: Tue, 23 Jun 2026 01:37:09 GMT
 recorded_with: VCR 6.3.1

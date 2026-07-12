@@ -1,0 +1,148 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are a conversation summarizer
+        for a Burning Man AI assistant. Analyze conversations and extract key insights.\n\nCreate
+        a comprehensive summary with these elements:\n1. **important_questions** -
+        Key questions that were asked or need follow-up\n2. **useful_thoughts** -
+        Valuable insights, realizations, or patterns observed\n3. **goal_progress**
+        - Did the persona make progress toward or complete their current goal? (completed,
+        good_progress, some_progress, no_progress, goal_changed)\n4. **people** -
+        People mentioned in the conversation with their relationship/context\n5. **events**
+        - Events discussed (past or future) with time/location when available\n6.
+        **topics** - Main topics or themes discussed\n\nReturn JSON format:\n{\n  \"general_mood\":
+        \"excited and helpful\",\n  \"important_questions\": [\n    \"How do I find
+        the best art installations?\",\n    \"What time does the Temple burn?\"\n  ],\n  \"useful_thoughts\":
+        [\n    \"User is planning their first Burning Man experience\",\n    \"Strong
+        interest in fire performances and art\"\n  ],\n  \"goal_progress\": \"good_progress\",\n  \"people\":
+        [\n    {\n      \"name\": \"Sarah\",\n      \"description\": \"Friend from
+        camp who knows about fire spinning\",\n      \"relationship\": \"campmate\"\n    }\n  ],\n  \"events\":
+        [\n    {\n      \"title\": \"Temple Burn\",\n      \"description\": \"Final
+        ceremony where the Temple is burned\",\n      \"time\": \"Sunday night\",\n      \"location\":
+        \"Temple\",\n      \"importance\": 9\n    }\n  ],\n  \"topics\": [\"art installations\",
+        \"fire performances\", \"playa survival\"],\n  \"general_summary\": \"Active
+        planning session for Burning Man activities, focusing on art and performances.
+        User showed high engagement and excitement.\"\n}\n\nFocus on actionable insights
+        and emotional patterns. Extract people and events mentioned even if details
+        are incomplete.\n"},{"role":"user","content":"Analyze and summarize these
+        1 conversations from the last 0.0 hours:\n\nTotal exchanges: 1\n\n=== Conversation
+        time_session (default) ===\nDuration: 0.0s | Exchanges: 1\nMood progression:
+        neutral\nKey thoughts: Taking action or planning next steps\nNo questions
+        asked\n\nSample exchanges:\nUser: Don''t forget about the sunrise yoga tomorrow
+        morning at 6 AM at Center Camp!\nAI: I''ll set a reminder for the sunrise
+        yoga session. That sounds wonderful!\n\n\n\n\nCurrent Goal Context:\nNo active
+        goal\n\nCreate a summary that captures the essence of this time period - what
+        was the overall mood, \nwhat important questions came up, what insights were
+        gained, what progress was made toward goals, \nand what happened overall.\n"}],"model":"google/gemini-3.1-flash-lite","temperature":0.3,"max_tokens":2000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Sat, 27 Jun 2026 23:59:45 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782604785-iiLyopLrm8xHkNkTocmG
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1286843df59e6f3-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n\n         \n\n         \n{\"id\":\"gen-1782604785-iiLyopLrm8xHkNkTocmG\",\"object\":\"chat.completion\",\"created\":1782604785,\"model\":\"google/gemini-3.1-flash-lite-20260507\",\"provider\":\"Google\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\n
+        \ \\\"general_mood\\\": \\\"neutral and organized\\\",\\n  \\\"important_questions\\\":
+        [],\\n  \\\"useful_thoughts\\\": [\\n    \\\"The user is proactively tracking
+        event schedules to ensure participation in community activities.\\\",\\n    \\\"The
+        AI is functioning as an effective personal assistant for scheduling and reminders.\\\"\\n
+        \ ],\\n  \\\"goal_progress\\\": \\\"no_progress\\\",\\n  \\\"people\\\": [],\\n
+        \ \\\"events\\\": [\\n    {\\n      \\\"title\\\": \\\"Sunrise Yoga\\\",\\n
+        \     \\\"description\\\": \\\"Morning yoga session for the community\\\",\\n
+        \     \\\"time\\\": \\\"Tomorrow, 6:00 AM\\\",\\n      \\\"location\\\": \\\"Center
+        Camp\\\",\\n      \\\"importance\\\": 7\\n    }\\n  ],\\n  \\\"topics\\\":
+        [\\n    \\\"event scheduling\\\",\\n    \\\"wellness\\\",\\n    \\\"community
+        activities\\\"\\n  ],\\n  \\\"general_summary\\\": \\\"The user provided a
+        reminder for a specific event (sunrise yoga) to ensure it is tracked. The
+        AI acknowledged the request and confirmed it would set a reminder, demonstrating
+        a helpful and supportive interaction.\\\"\\n}\\n```\",\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.text\",\"signature\":\"AY89a19xgEtE4VqMqIYSwoxnCpIUZqY+t1MhRAljS85CHuj4pnN10bbxmHZqYiwuc+c=\",\"format\":\"google-gemini-v1\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":594,\"completion_tokens\":232,\"total_tokens\":826,\"cost\":0.0004965,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0004965,\"upstream_inference_prompt_cost\":0.0001485,\"upstream_inference_completions_cost\":0.000348},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Sat, 27 Jun 2026 23:59:46 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782604785-iiLyopLrm8xHkNkTocmG
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      date:
+      - Sat, 27 Jun 2026 23:59:46 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      cache-control:
+      - private, no-store
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a128684cac6afc79-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782604785-iiLyopLrm8xHkNkTocmG
+        not found","code":404}}'
+  recorded_at: Sat, 27 Jun 2026 23:59:46 GMT
+recorded_with: VCR 6.4.0

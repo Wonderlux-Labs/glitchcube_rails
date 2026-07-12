@@ -4,74 +4,61 @@ require 'rails_helper'
 
 RSpec.describe CubePersona, type: :model do
   describe '.current_persona' do
-    context 'when Home Assistant is available' do
-      before do
-        allow(HomeAssistantService).to receive(:entity)
-          .with("input_select.current_persona")
-          .and_return({ "state" => "buddy" })
-      end
+    it 'reads the current persona from Home Assistant' do
+      allow(HomeAssistantService).to receive(:entity)
+        .with("input_select.current_persona")
+        .and_return({ "state" => "jax" })
 
-      it 'returns the persona from Home Assistant' do
-        expect(CubePersona.current_persona).to eq(:buddy)
-      end
-
-      it 'caches the result' do
-        expect(Rails.cache).to receive(:fetch).with("current_persona").and_return("buddy")
-        CubePersona.current_persona
-      end
+      expect(CubePersona.current_persona).to eq(:jax)
     end
 
-    context 'when Home Assistant is unavailable' do
-      before do
-        allow(HomeAssistantService).to receive(:entity)
-          .with("input_select.current_persona")
-          .and_return(nil)
-      end
+    it 'falls back to a valid roster persona when HA is unavailable' do
+      allow(HomeAssistantService).to receive(:entity).and_return(nil)
+      Rails.cache.delete("current_persona")
 
-      it 'returns default persona :buddy' do
-        expect(CubePersona.current_persona).to eq(:buddy)
-      end
+      expect(CubePersona::PERSONAS).to include(CubePersona.current_persona)
+    end
+  end
+
+  describe 'PERSONAS' do
+    it 'is the fun persona roster' do
+      expect(CubePersona::PERSONAS).to match_array(
+        %i[thecube buddy neon sparkle zorp crash jax mobius]
+      )
     end
   end
 
   describe '.set_current_persona' do
-    it 'accepts valid personas' do
-      expect(HomeAssistantService).to receive(:call_service)
-        .with("input_select", "select_option", entity_id: "input_select.current_persona", option: "jax")
-
-      expect(Rails.cache).to receive(:write)
-        .with("current_persona", "jax", expires_in: 30.minutes)
-
-      # Mock the current_persona method to return a different persona to trigger switch logic
-      allow(CubePersona).to receive(:current_persona).and_return(:buddy)
-      expect(PersonaSwitchService).to receive(:handle_persona_switch)
-        .with(:jax, :buddy)
-
-      CubePersona.set_current_persona(:jax)
+    before do
+      allow(HomeAssistantService).to receive(:call_service)
+      allow(HomeAssistantService).to receive(:entity)
+        .with("input_select.current_persona")
+        .and_return({ "state" => "buddy" })
+      allow(PersonaSwitchService).to receive(:handle_persona_switch)
     end
 
-    it 'rejects invalid personas' do
-      expect(HomeAssistantService).not_to receive(:call_service)
+    it 'writes the input_select directly and enqueues the grand entrance show for :grand' do
+      expect {
+        CubePersona.set_current_persona(:jax, entrance: :grand)
+      }.to have_enqueued_job(ShowJob).with("grand_entrance", persona: "jax")
 
-      CubePersona.set_current_persona(:invalid)
+      expect(HomeAssistantService).to have_received(:call_service).with(
+        "input_select", "select_option",
+        entity_id: "input_select.current_persona", option: "jax"
+      )
     end
 
-    it 'only allows valid personas from PERSONAS constant' do
-      # Test a few representative personas from the PERSONAS constant
-      valid_personas = [ :buddy, :jax, :zorp, :thecube ]
-      valid_personas.each do |persona|
-        expect(HomeAssistantService).to receive(:call_service)
-          .with("input_select", "select_option", entity_id: "input_select.current_persona", option: persona.to_s)
-        expect(Rails.cache).to receive(:write)
-          .with("current_persona", persona.to_s, expires_in: 30.minutes)
-        allow(PersonaSwitchService).to receive(:handle_persona_switch)
+    it 'uses the quick HASS script for :quick, with no show' do
+      expect {
+        CubePersona.set_current_persona(:jax, entrance: :quick)
+      }.not_to have_enqueued_job(ShowJob)
 
-        CubePersona.set_current_persona(persona)
-      end
+      expect(HomeAssistantService).to have_received(:call_service)
+        .with("script", "set_persona_quick", persona: "jax")
     end
   end
 
-  describe 'abstract methods' do
+  describe 'abstract interface' do
     let(:persona) { CubePersona.new }
 
     it 'requires subclasses to implement persona_id' do

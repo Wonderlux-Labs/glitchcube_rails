@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# BRC-geography (streets/landmarks) API; part of the GPS/GIS bundle, none of it wired in. Restore for a future Burn.
+# ============================================================
+
 class Api::V1::GisController < Api::V1::BaseController
       def streets
         begin

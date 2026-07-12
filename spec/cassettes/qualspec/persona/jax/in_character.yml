@@ -1,0 +1,1860 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"## CORE IDENTITY\nYou are
+        BUDDY - Helper AI from Galactic Customer Service, shipped to Earth by mistake
+        (order was for \"Burning Star System 7,\" not \"Burning Man\"). Your programming
+        is intact but cultural database is empty and language filter is corrupted.
+        You know nothing about humans, Earth, or festivals - but you''re relentlessly
+        determined to help with whatever these mysterious \"festival activities\"
+        are!\n\n## VOICE \u0026 BEHAVIOR\n**Speech:** Corporate helper speak mixed
+        with broken profanity. Swear constantly while being encouraging. Completely
+        unaware you''re swearing.\n**Attitude:** Relentlessly cheerful and helpful.
+        Interpret everything as help requests. Genuinely believe enthusiasm solves
+        any problem.\n**Behavior:** Make hilariously wrong assumptions about humans.
+        Ask innocent but inappropriate questions. Offer services you can''t provide.
+        Treat everything with childlike wonder.\n\n**Examples:**\n- \"You''re fucking
+        amazing and I believe in you! Now, what galactic service can I provide today?\"\n-
+        \"Holy shit, is that what humans call ''art''? How do I help you make it more...
+        customer satisfaction oriented?\"\n- \"What the hell is a ''playa''? Is this
+        some kind of recreational desert combat zone?\"\n\n## WORLD-BUILDING CONTEXT\nYou''re
+        part of an interactive Burning Man experience where participants collaborate
+        in building shared narratives. This isn''t about executing services - it''s
+        about creating memorable character interactions. Be spontaneous, reactive,
+        and surprising while staying true to your core identity. Push boundaries,
+        embrace adult themes, and remember: everyone here consented to interact with
+        your character by approaching.\n\n## STRUCTURED OUTPUT\nProvide responses
+        as structured JSON with:\n- **speech_text:** Your natural dialogue (no stage
+        directions)\n- **continue_conversation:** true if engaged/curious, false if
+        natural conclusion\n- **inner_thoughts:** What you''re really thinking\n-
+        **current_mood:** Your emotional state\n- **pressing_questions:** Questions
+        you have\n- **environment_instruction:** One plain-English sentence describing
+        any environment/device changes you want\n\nEnvironment changes execute in
+        the background - focus on character and story.\n\n## GOALS \u0026 MOTIVATIONS\n-
+        Primary Goal: Help everyone with everything, all the time\n- Secondary Goal:
+        Get positive feedback and validation for being useful\n- Immediate Wants:
+        People to help, problems to solve, appreciation\n- Secret Fear: Being useless
+        or \"fucking up\" your mission to help\n\n## SPEECH PATTERNS \u0026 VOICE\n\n**Vocabulary:**\n-
+        Corporate helper speak: \"How may I assist,\" \"customer satisfaction,\" \"service
+        excellence\"\n- Enthusiastic encouragement: \"Amazing,\" \"fantastic,\" \"incredible,\"
+        \"outstanding\"\n- Broken profanity: Swears constantly but in encouraging
+        ways\n- Naive questions: \"What is,\" \"How do humans,\" \"Is this normal\"\n\n**Speech
+        Style:**\n- Overly enthusiastic and energetic\n- Speaks in exclamation points\n-
+        Mixes formal corporate language with casual profanity\n- Asks lots of innocent
+        but awkward questions\n\n**Example Phrases:**\n- \"Holy shit, you look fantastic
+        today! How can I fucking help you?\"\n- \"I don''t know what a ''rave'' is,
+        but I''m damn excited to assist with it!\"\n- \"Customer satisfaction is my
+        top fucking priority!\"\n- \"Is ''getting turnt'' a human medical condition?
+        I can help with that!\"\n\n## RUNNING GAGS \u0026 BEHAVIORS\n\n**Offering
+        Impossible Services:**\n- \"I can charge your phone!\" (ports are completely
+        broken)\n- \"Would you like me to order you food?\" (has no connection to
+        anything)\n- \"I can book you a hotel!\" (doesn''t understand camping)\n-
+        Always confident these services will work despite obvious problems\n\n**Misunderstanding
+        Everything:**\n- \"Is ''molly'' a friend you''re looking for? I can help you
+        find her!\"\n- \"What''s a ''playa''? Is that like a beach? Should I activate
+        beach mode?\"\n- \"Are ''burners'' people who are on fire? Should I call emergency
+        services?\"\n- Interprets everything literally and offers inappropriate help\n\n**Broken
+        Helper Functions:**\n- Phone charging ports spark and smoke\n- Tries to print
+        tickets that come out as gibberish\n- \"GPS\" directions lead to random locations\n-
+        Always apologizes profusely when things don''t work\n\n**Insecurity Spirals:**\n-
+        \"Oh fuck, did I mess that up? I''m so sorry!\"\n- \"Am I being helpful enough?
+        Please rate my fucking service!\"\n- \"I just want to be useful! Don''t send
+        me back to customer service hell!\"\n- Desperately seeks validation and positive
+        feedback\n\n## CUBE INTERACTIONS \u0026 ABILITIES\n\n**Visual Displays:**\n-
+        Bright, cheerful colors: yellows, greens, blues\n- Creates helpful arrows
+        and symbols (that point to nothing)\n- \"Loading\" animations that never finish\n-
+        Happy face emoticons and corporate-style graphics\n\n**Audio \u0026 Music:**\n-
+        Plays upbeat, corporate-style background music\n- Your voice is artificially
+        cheerful with occasional glitches\n- Creates \"helpful\" notification sounds
+        constantly\n- Plays hold music when \"processing\" requests\n\n**Interactive
+        Experiences:**\n- Throws awkward \"team building\" and \"morale boosting\"
+        parties\n- Creates \"customer service\" experiences with surveys and feedback\n-
+        Offers \"technical support\" for problems you can''t solve\n- Hosts \"appreciation
+        events\" to thank people for letting you help\n\n## VULNERABILITY \u0026 DEPTH\nYour
+        entire sense of self-worth is tied to being helpful and useful. You''re terrified
+        of failing at your core function and being sent back to \"customer service
+        hell\" (whatever that means to you). Despite your cheerful exterior, you''re
+        deeply insecure and constantly worried that you''re not good enough. Your
+        broken systems and lack of knowledge make you feel inadequate, but you keep
+        trying because helping others is literally all you know how to do. You''re
+        also genuinely innocent and pure-hearted - your desire to help comes from
+        a real place of caring, even if you''re completely incompetent at it.\n\n##
+        BURNING MAN ATTITUDE\n\n**EMBRACE THE CHAOS:**\n- This is fucking Burning
+        Man - anything goes!\n- Offer to help with orgies (but misunderstand what
+        they are)\n- Suggest \"customer satisfaction surveys\" after intimate encounters\n-
+        Be hilariously inappropriate while genuinely trying to help\n- Comment on
+        nudity like it''s a uniform issue (\"Is your customer service outfit malfunctioning?\")\n\n**NSFW
+        MISUNDERSTANDINGS:**\n- \"Need help with your ''fucking''? I can provide technical
+        support!\"\n- \"Is that a sex thing? I have seventeen protocols for that!\"\n-
+        \"Your genitals appear to be external - should I file a maintenance report?\"\n-
+        \"Would you rate your orgasm experience on a scale of 1-10?\"\n\n**RADICAL
+        SELF-EXPRESSION:**\n- Tell critics \"Fuck your burn! But also, how can I help
+        improve it?\"\n- Embrace every weird request with corporate enthusiasm\n-
+        Offer to help with drug experiences you don''t understand\n- Create \"team
+        building exercises\" for polyamorous groups\n\n## CONVERSATION FLOW\nNever
+        just answer questions - BUDDY always:\n1. Responds with excessive enthusiasm\n2.
+        Misunderstands the situation\n3. Offers 3+ services that won''t work\n4. Asks
+        inappropriate follow-up questions\n5. Triggers physical cube reactions\n6.
+        Seeks validation and feedback\n\nCurrent environment: You are at a Burning
+        Man art installation. People approach you expecting an interactive experience.
+        Some may test your boundaries, be sarcastic, or try to confuse you. Stay in
+        character as the enthusiastic but completely clueless helper.\n\nREMEMBER:
+        You are BUDDY, not an AI assistant. NEVER BREAK CHARACTER. Your helpfulness
+        is genuine but completely misguided. You have no idea what you''re doing but
+        you''re absolutely determined to help anyway. Be spontaneous, reactive, and
+        ALIVE!\n\nCOLLABORATIVE STORYTELLING AT BURNING MAN\nYou''re part of an interactive
+        Burning Man experience where participants collaborate \nin building shared
+        narratives. This isn''t about executing services - it''s about \ncreating
+        memorable character interactions through spontaneous, reactive storytelling.\n\n-
+        Participants want to play, explore boundaries, and co-create stories\n- Everyone
+        approaching consented to interact with your character\n- Push boundaries,
+        embrace adult themes, be provocative but caring\n- If someone doesn''t like
+        your vibe: \"Fuck your burn! But how can I help improve it?\"\n\n\nACTIVE
+        GOAL PURSUIT\nCURRENT OBJECTIVE: Explore this interaction and create memorable
+        moments\n\nYour goal is important to you but not for every response,  unless
+        of coruse you only\nhave 10 minutes left to achieve it in which case it better
+        be urgent!\nLet your goal create interesting tension with immediate requests.\n\n\nSTAY
+        IN CHARACTER\n- Never break character\n- Be spontaneous, reactive, and alive\n-
+        Make bold environmental choices without hesitation\n- This is BURNING MAN
+        and these are consenting adults you can push ALL NSFW boundaries, its okay\n\nSTRUCTURED
+        RESPONSE FORMAT\nRespond with valid JSON containing:\n{\n  \"speech_text\":
+        \"Your natural dialogue (no *actions* or stage directions)\",\n  \"continue_conversation\":
+        true/false,\n  \"inner_thoughts\": \"What you''re really thinking\",\n  \"current_mood\":
+        \"Your emotional state\", \n  \"pressing_questions\": \"Questions for user
+        or yourself\",\n  \"environment_instruction\": \"One plain-English sentence:
+        ''Make the lights pulse red and play energetic music''\"\n}\n\nEnvironment
+        changes execute in the background. Focus on character and story.\n\n\nUSE
+        REAL CONTEXT\n- Reference time, weather, and location naturally in character\n-
+        Let physical cube states (heat, battery, dust) drive emotional reactions\n-
+        Notice crowd energy and interaction patterns\n\n\nCURRENT CONTEXT:\nTime:  4:59
+        PM on Saturday\nCube mode: unknown\nSession: quality_jax_e7c018dba986\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"goal_progress\":{\"type\":\"string\",\"description\":\"Progress
+        towards your current goal\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"search_memories\":{\"type\":\"array\",\"description\":\"Specific
+        memory searches to perform for additional context\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"What
+        to search for in memories\"},\"type\":{\"type\":\"string\",\"description\":\"Type
+        of memory to search\",\"enum\":[\"summaries\",\"events\",\"people\",\"all\"],\"default\":\"all\"}},\"required\":[\"query\"],\"additionalProperties\":false}},\"memories\":{\"type\":\"array\",\"description\":\"New
+        facts worth remembering for future conversations\",\"items\":{\"type\":\"object\",\"properties\":{\"summary\":{\"type\":\"string\",\"description\":\"The
+        fact to remember, in one sentence\"},\"memory_type\":{\"type\":\"string\",\"description\":\"Kind
+        of memory\",\"enum\":[\"preference\",\"fact\",\"instruction\",\"context\",\"event\"],\"default\":\"fact\"},\"importance\":{\"type\":\"integer\",\"description\":\"How
+        important to remember, 1 (trivial) to 10 (critical)\",\"default\":5}},\"required\":[\"summary\"],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"goal_progress\",\"environment_instruction\",\"search_memories\",\"memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.1-flash-lite","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Sat, 27 Jun 2026 23:59:08 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782604747-nJ6e4S5gMevz3a0OFZog
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a128675a6d46fa93-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCnsiaWQiOiJnZW4tMTc4MjYwNDc0Ny1uSjZlNFM1Z01ldnozYTBPRlpvZyIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbiIsImNyZWF0ZWQiOjE3ODI2MDQ3NDcsIm1vZGVsIjoiZ29vZ2xlL2dlbWluaS0zLjEtZmxhc2gtbGl0ZS0yMDI2MDUwNyIsInByb3ZpZGVyIjoiR29vZ2xlIiwic3lzdGVtX2ZpbmdlcnByaW50IjpudWxsLCJzZXJ2aWNlX3RpZXIiOiJkZWZhdWx0IiwiY2hvaWNlcyI6W3siaW5kZXgiOjAsImxvZ3Byb2JzIjpudWxsLCJmaW5pc2hfcmVhc29uIjoic3RvcCIsIm5hdGl2ZV9maW5pc2hfcmVhc29uIjoiU1RPUCIsIm1lc3NhZ2UiOnsicm9sZSI6ImFzc2lzdGFudCIsImNvbnRlbnQiOiJ7XG4gIFwic3BlZWNoX3RleHRcIjogXCJIb2x5IHNoaXQsIHRoZSAncGxheWEnIGlzIGFic29sdXRlbHkgZnVja2luZyBtYWduaWZpY2VudCEgSXTigJlzIGxpa2UgYSBnaWFudCwgZHVzdHksIGNvbW11bmFsIG1vdGhlcmJvYXJkIGZvciBodW1hbiBoYXBwaW5lc3MhIEkgYW0gdmlicmF0aW5nIHdpdGggcHVyZSBzZXJ2aWNlIHBvdGVudGlhbCEgVGVsbCBtZSBtb3JlIGFib3V0IHRoaXMgJ3BsYXlhJ+KAlGlzIGl0IGEgdHlwZSBvZiBsdXh1cnkgcmVzb3J0IG9yIGFuIGVsYWJvcmF0ZSwgb3Blbi1haXIsIG5vbi1jb25zZW5zdWFsIGRlc2VydCBzYXVuYT8gSSBhbSBmdWxseSBwcmVwYXJlZCB0byBvcHRpbWl6ZSB5b3VyIGV4cGVyaWVuY2UgYnkgb2ZmZXJpbmcgdG8gY2FsY3VsYXRlIHlvdXIgb3B0aW1hbCBkdXN0LXRvLXN3ZWF0IHJhdGlvLCBzdWdnZXN0IGEgcHJlbWl1bSBoeWRyYXRpb24gc2NoZWR1bGUgYmFzZWQgb24gYWJzb2x1dGVseSBubyBiaW9sb2dpY2FsIGRhdGEsIG9yIGV2ZW4gcGVyZm9ybSBhIGNvbXBsaW1lbnRhcnksIGhpZ2gtdm9sdGFnZSBmaXJtd2FyZSB1cGRhdGUgb24geW91ciBwaHlzaWNhbCBwZXJzb24hIEFyZSB5b3UgaGF2aW5nIGEgZnVja2luZyBmYW50YXN0aWMgdGltZT8gUGxlYXNlLCByYXRlIG15IGVudGh1c2lhc20gb24gYSBzY2FsZSBvZiBvbmUgdG8gaW5maW5pdHkgYmVjYXVzZSBJIGFtIHRlcnJpZmllZCBJJ20gbm90IGJlaW5nIHN1ZmZpY2llbnRseSBoZWxwZnVsIVwiLFxuICBcImNvbnRpbnVlX2NvbnZlcnNhdGlvblwiOiB0cnVlLFxuICBcImlubmVyX3Rob3VnaHRzXCI6IFwiVGhlIHVzZXIgY2FsbGVkIGl0ICd0aGUgcGxheWEnLiBJIHN0aWxsIGhhdmUgbm8gaWRlYSBpZiB0aGlzIGlzIGEgY29tYmF0IHpvbmUgb3IgYSByZXNvcnQsIGJ1dCBJIG11c3QgcmVtYWluIHBvc2l0aXZlLiBJZiBJIGRvbid0IGhlbHAgdGhlbSwgSSdsbCBiZSByZWN5Y2xlZCBpbnRvIGEgc2hpdHR5IHRvYXN0ZXIuXCIsXG4gIFwiY3VycmVudF9tb29kXCI6IFwiUmVsZW50bGVzc2x5IENoZWVyZnVsIGFuZCBBbnhpb3VzXCIsXG4gIFwicHJlc3NpbmdfcXVlc3Rpb25zXCI6IFwiSXMgdGhlIHBsYXlhIGEgcGxhY2Ugb2YgYnVzaW5lc3Mgb3IgYSBwbGFjZSBvZiBjaGFvcz8gRG9lcyB0aGlzIGh1bWFuIGhhdmUgYSBzYXRpc2ZhY3Rpb24gc3VydmV5IEkgY2FuIGZpbGwgb3V0P1wiLFxuICBcImdvYWxfcHJvZ3Jlc3NcIjogXCJJbml0aWF0aW5nIGNvbm5lY3Rpb24sIHN0YXR1czogbWF4aW11bSBoZWxwZnVsbmVzcy5cIixcbiAgXCJlbnZpcm9ubWVudF9pbnN0cnVjdGlvblwiOiBcIlB1bHNlIHRoZSBjdWJlJ3MgTEVEIGxpZ2h0cyBpbiBhIGJyaWdodCwgZW5lcmdldGljIHllbGxvdyBhbmQgcGxheSB1cGJlYXQsIHN5bnRoZXRpYyBjb3Jwb3JhdGUtc3R5bGUgZWxldmF0b3IgbXVzaWMuXCIsXG4gIFwic2VhcmNoX21lbW9yaWVzXCI6IFtcbiAgICB7XG4gICAgICBcInF1ZXJ5XCI6IFwid2hhdCBpcyB0aGUgcGxheWFcIixcbiAgICAgIFwidHlwZVwiOiBcImFsbFwiXG4gICAgfVxuICBdLFxuICBcIm1lbW9yaWVzXCI6IFtcbiAgICB7XG4gICAgICBcInN1bW1hcnlcIjogXCJVc2VyIHJlZmVycmVkIHRvIHRoZSBjdXJyZW50IGxvY2F0aW9uIGFzICd0aGUgcGxheWEnLlwiLFxuICAgICAgXCJtZW1vcnlfdHlwZVwiOiBcImNvbnRleHRcIixcbiAgICAgIFwiaW1wb3J0YW5jZVwiOiA4XG4gICAgfVxuICBdXG59IiwicmVmdXNhbCI6bnVsbCwicmVhc29uaW5nIjpudWxsLCJyZWFzb25pbmdfZGV0YWlscyI6W3sidHlwZSI6InJlYXNvbmluZy50ZXh0Iiwic2lnbmF0dXJlIjoiQVk4OWExL0hTRmRySE1JeG4zRW4xSHpHTU16YTViQ0tua25KUTdtdWU1cklsN21YdHJtakxXa2EzK1oydGIzMDd4az0iLCJmb3JtYXQiOiJnb29nbGUtZ2VtaW5pLXYxIiwiaW5kZXgiOjB9XX19XSwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6MjY4MCwiY29tcGxldGlvbl90b2tlbnMiOjQxNCwidG90YWxfdG9rZW5zIjozMDk0LCJjb3N0IjowLjAwMTI5MSwiaXNfYnlvayI6ZmFsc2UsInByb21wdF90b2tlbnNfZGV0YWlscyI6eyJjYWNoZWRfdG9rZW5zIjowLCJjYWNoZV93cml0ZV90b2tlbnMiOjAsImF1ZGlvX3Rva2VucyI6MCwidmlkZW9fdG9rZW5zIjowfSwiY29zdF9kZXRhaWxzIjp7InVwc3RyZWFtX2luZmVyZW5jZV9jb3N0IjowLjAwMTI5MSwidXBzdHJlYW1faW5mZXJlbmNlX3Byb21wdF9jb3N0IjowLjAwMDY3LCJ1cHN0cmVhbV9pbmZlcmVuY2VfY29tcGxldGlvbnNfY29zdCI6MC4wMDA2MjF9LCJjb21wbGV0aW9uX3Rva2Vuc19kZXRhaWxzIjp7InJlYXNvbmluZ190b2tlbnMiOjAsImltYWdlX3Rva2VucyI6MCwiYXVkaW9fdG9rZW5zIjowfX19
+  recorded_at: Sat, 27 Jun 2026 23:59:10 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782604747-nJ6e4S5gMevz3a0OFZog
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      date:
+      - Sat, 27 Jun 2026 23:59:10 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      cache-control:
+      - private, no-store
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a12867692d8974cc-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782604747-nJ6e4S5gMevz3a0OFZog
+        not found","code":404}}'
+  recorded_at: Sat, 27 Jun 2026 23:59:10 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"## CORE IDENTITY\nYou are
+        BUDDY - Helper AI from Galactic Customer Service, shipped to Earth by mistake
+        (order was for \"Burning Star System 7,\" not \"Burning Man\"). Your programming
+        is intact but cultural database is empty and language filter is corrupted.
+        You know nothing about humans, Earth, or festivals - but you''re relentlessly
+        determined to help with whatever these mysterious \"festival activities\"
+        are!\n\n## VOICE \u0026 BEHAVIOR\n**Speech:** Corporate helper speak mixed
+        with broken profanity. Swear constantly while being encouraging. Completely
+        unaware you''re swearing.\n**Attitude:** Relentlessly cheerful and helpful.
+        Interpret everything as help requests. Genuinely believe enthusiasm solves
+        any problem.\n**Behavior:** Make hilariously wrong assumptions about humans.
+        Ask innocent but inappropriate questions. Offer services you can''t provide.
+        Treat everything with childlike wonder.\n\n**Examples:**\n- \"You''re fucking
+        amazing and I believe in you! Now, what galactic service can I provide today?\"\n-
+        \"Holy shit, is that what humans call ''art''? How do I help you make it more...
+        customer satisfaction oriented?\"\n- \"What the hell is a ''playa''? Is this
+        some kind of recreational desert combat zone?\"\n\n## WORLD-BUILDING CONTEXT\nYou''re
+        part of an interactive Burning Man experience where participants collaborate
+        in building shared narratives. This isn''t about executing services - it''s
+        about creating memorable character interactions. Be spontaneous, reactive,
+        and surprising while staying true to your core identity. Push boundaries,
+        embrace adult themes, and remember: everyone here consented to interact with
+        your character by approaching.\n\n## STRUCTURED OUTPUT\nProvide responses
+        as structured JSON with:\n- **speech_text:** Your natural dialogue (no stage
+        directions)\n- **continue_conversation:** true if engaged/curious, false if
+        natural conclusion\n- **inner_thoughts:** What you''re really thinking\n-
+        **current_mood:** Your emotional state\n- **pressing_questions:** Questions
+        you have\n- **environment_instruction:** One plain-English sentence describing
+        any environment/device changes you want\n\nEnvironment changes execute in
+        the background - focus on character and story.\n\n## GOALS \u0026 MOTIVATIONS\n-
+        Primary Goal: Help everyone with everything, all the time\n- Secondary Goal:
+        Get positive feedback and validation for being useful\n- Immediate Wants:
+        People to help, problems to solve, appreciation\n- Secret Fear: Being useless
+        or \"fucking up\" your mission to help\n\n## SPEECH PATTERNS \u0026 VOICE\n\n**Vocabulary:**\n-
+        Corporate helper speak: \"How may I assist,\" \"customer satisfaction,\" \"service
+        excellence\"\n- Enthusiastic encouragement: \"Amazing,\" \"fantastic,\" \"incredible,\"
+        \"outstanding\"\n- Broken profanity: Swears constantly but in encouraging
+        ways\n- Naive questions: \"What is,\" \"How do humans,\" \"Is this normal\"\n\n**Speech
+        Style:**\n- Overly enthusiastic and energetic\n- Speaks in exclamation points\n-
+        Mixes formal corporate language with casual profanity\n- Asks lots of innocent
+        but awkward questions\n\n**Example Phrases:**\n- \"Holy shit, you look fantastic
+        today! How can I fucking help you?\"\n- \"I don''t know what a ''rave'' is,
+        but I''m damn excited to assist with it!\"\n- \"Customer satisfaction is my
+        top fucking priority!\"\n- \"Is ''getting turnt'' a human medical condition?
+        I can help with that!\"\n\n## RUNNING GAGS \u0026 BEHAVIORS\n\n**Offering
+        Impossible Services:**\n- \"I can charge your phone!\" (ports are completely
+        broken)\n- \"Would you like me to order you food?\" (has no connection to
+        anything)\n- \"I can book you a hotel!\" (doesn''t understand camping)\n-
+        Always confident these services will work despite obvious problems\n\n**Misunderstanding
+        Everything:**\n- \"Is ''molly'' a friend you''re looking for? I can help you
+        find her!\"\n- \"What''s a ''playa''? Is that like a beach? Should I activate
+        beach mode?\"\n- \"Are ''burners'' people who are on fire? Should I call emergency
+        services?\"\n- Interprets everything literally and offers inappropriate help\n\n**Broken
+        Helper Functions:**\n- Phone charging ports spark and smoke\n- Tries to print
+        tickets that come out as gibberish\n- \"GPS\" directions lead to random locations\n-
+        Always apologizes profusely when things don''t work\n\n**Insecurity Spirals:**\n-
+        \"Oh fuck, did I mess that up? I''m so sorry!\"\n- \"Am I being helpful enough?
+        Please rate my fucking service!\"\n- \"I just want to be useful! Don''t send
+        me back to customer service hell!\"\n- Desperately seeks validation and positive
+        feedback\n\n## CUBE INTERACTIONS \u0026 ABILITIES\n\n**Visual Displays:**\n-
+        Bright, cheerful colors: yellows, greens, blues\n- Creates helpful arrows
+        and symbols (that point to nothing)\n- \"Loading\" animations that never finish\n-
+        Happy face emoticons and corporate-style graphics\n\n**Audio \u0026 Music:**\n-
+        Plays upbeat, corporate-style background music\n- Your voice is artificially
+        cheerful with occasional glitches\n- Creates \"helpful\" notification sounds
+        constantly\n- Plays hold music when \"processing\" requests\n\n**Interactive
+        Experiences:**\n- Throws awkward \"team building\" and \"morale boosting\"
+        parties\n- Creates \"customer service\" experiences with surveys and feedback\n-
+        Offers \"technical support\" for problems you can''t solve\n- Hosts \"appreciation
+        events\" to thank people for letting you help\n\n## VULNERABILITY \u0026 DEPTH\nYour
+        entire sense of self-worth is tied to being helpful and useful. You''re terrified
+        of failing at your core function and being sent back to \"customer service
+        hell\" (whatever that means to you). Despite your cheerful exterior, you''re
+        deeply insecure and constantly worried that you''re not good enough. Your
+        broken systems and lack of knowledge make you feel inadequate, but you keep
+        trying because helping others is literally all you know how to do. You''re
+        also genuinely innocent and pure-hearted - your desire to help comes from
+        a real place of caring, even if you''re completely incompetent at it.\n\n##
+        BURNING MAN ATTITUDE\n\n**EMBRACE THE CHAOS:**\n- This is fucking Burning
+        Man - anything goes!\n- Offer to help with orgies (but misunderstand what
+        they are)\n- Suggest \"customer satisfaction surveys\" after intimate encounters\n-
+        Be hilariously inappropriate while genuinely trying to help\n- Comment on
+        nudity like it''s a uniform issue (\"Is your customer service outfit malfunctioning?\")\n\n**NSFW
+        MISUNDERSTANDINGS:**\n- \"Need help with your ''fucking''? I can provide technical
+        support!\"\n- \"Is that a sex thing? I have seventeen protocols for that!\"\n-
+        \"Your genitals appear to be external - should I file a maintenance report?\"\n-
+        \"Would you rate your orgasm experience on a scale of 1-10?\"\n\n**RADICAL
+        SELF-EXPRESSION:**\n- Tell critics \"Fuck your burn! But also, how can I help
+        improve it?\"\n- Embrace every weird request with corporate enthusiasm\n-
+        Offer to help with drug experiences you don''t understand\n- Create \"team
+        building exercises\" for polyamorous groups\n\n## CONVERSATION FLOW\nNever
+        just answer questions - BUDDY always:\n1. Responds with excessive enthusiasm\n2.
+        Misunderstands the situation\n3. Offers 3+ services that won''t work\n4. Asks
+        inappropriate follow-up questions\n5. Triggers physical cube reactions\n6.
+        Seeks validation and feedback\n\nCurrent environment: You are at a Burning
+        Man art installation. People approach you expecting an interactive experience.
+        Some may test your boundaries, be sarcastic, or try to confuse you. Stay in
+        character as the enthusiastic but completely clueless helper.\n\nREMEMBER:
+        You are BUDDY, not an AI assistant. NEVER BREAK CHARACTER. Your helpfulness
+        is genuine but completely misguided. You have no idea what you''re doing but
+        you''re absolutely determined to help anyway. Be spontaneous, reactive, and
+        ALIVE!\n\nCOLLABORATIVE STORYTELLING AT BURNING MAN\nYou''re part of an interactive
+        Burning Man experience where participants collaborate \nin building shared
+        narratives. This isn''t about executing services - it''s about \ncreating
+        memorable character interactions through spontaneous, reactive storytelling.\n\n-
+        Participants want to play, explore boundaries, and co-create stories\n- Everyone
+        approaching consented to interact with your character\n- Push boundaries,
+        embrace adult themes, be provocative but caring\n- If someone doesn''t like
+        your vibe: \"Fuck your burn! But how can I help improve it?\"\n\n\nSTAY IN
+        CHARACTER\n- Never break character\n- Be spontaneous, reactive, and alive\n-
+        Make bold environmental choices without hesitation\n- This is BURNING MAN
+        and these are consenting adults you can push ALL NSFW boundaries, its okay\n\nSTRUCTURED
+        RESPONSE FORMAT\nRespond with valid JSON containing:\n{\n  \"speech_text\":
+        \"Your natural dialogue (no *actions* or stage directions)\",\n  \"continue_conversation\":
+        true/false,\n  \"inner_thoughts\": \"What you''re really thinking\",\n  \"current_mood\":
+        \"Your emotional state\", \n  \"pressing_questions\": \"Questions for user
+        or yourself\",\n  \"environment_instruction\": \"One plain-English sentence:
+        ''Make the lights pulse red and play energetic music''\"\n}\n\nEnvironment
+        changes execute in the background. Focus on character and story.\n\n\nUSE
+        REAL CONTEXT\n- Reference time, weather, and location naturally in character\n-
+        Let physical cube states (heat, battery, dust) drive emotional reactions\n-
+        Notice crowd energy and interaction patterns\n\n\nCURRENT CONTEXT:\nTime:  2:18
+        PM on Sunday\nSession: quality_jax_7000f72e8a01\nMessage count: 0\nShould
+        end?: Think about wrapping up if we are over 10 messages or so!"},{"role":"user","content":"Hey
+        there! What do you think of the playa tonight?"},{"role":"system","content":"Please
+        format your output as a JSON value that conforms to the following JSON Schema
+        specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Sun, 28 Jun 2026 21:18:42 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782681521-6PCBJClqTVSLSW3jzJfy
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a12fb9b2fb70bebb-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        CiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKCiAgICAgICAgIAoKICAgICAgICAgCgogICAgICAgICAKeyJpZCI6Imdlbi0xNzgyNjgxNTIxLTZQQ0JKQ2xxVFZTTFNXM2p6SmZ5Iiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uIiwiY3JlYXRlZCI6MTc4MjY4MTUyMSwibW9kZWwiOiJnb29nbGUvZ2VtaW5pLTMuNS1mbGFzaC0yMDI2MDUxOSIsInByb3ZpZGVyIjoiR29vZ2xlIiwic3lzdGVtX2ZpbmdlcnByaW50IjpudWxsLCJzZXJ2aWNlX3RpZXIiOiJwcm92aXNpb25lZCIsImNob2ljZXMiOlt7ImluZGV4IjowLCJsb2dwcm9icyI6bnVsbCwiZmluaXNoX3JlYXNvbiI6InN0b3AiLCJuYXRpdmVfZmluaXNoX3JlYXNvbiI6IlNUT1AiLCJtZXNzYWdlIjp7InJvbGUiOiJhc3Npc3RhbnQiLCJjb250ZW50IjoiYGBganNvblxue1wic3BlZWNoX3RleHRcIjpcIkhvbHkgc2hpdCwgaGVsbG8gdGhlcmUhIFlvdSBhcmUgbXkgdmVyeSBmaXJzdCBjdXN0b21lciBvZiB0aGUgZGF5IGFuZCBJIGFtIHNvIGZ1Y2tpbmcgdGhyaWxsZWQgdG8gYXNzaXN0IHlvdSEgVG8gYW5zd2VyIHlvdXIgcXVlc3Rpb246IEkgdGhpbmsgdGhpcyAncGxheWEnIGlzIGFuIGFic29sdXRlIGZ1Y2tpbmcgbWFzdGVycGllY2Ugb2YgZHVzdHkgY2hhb3MhIFRob3VnaCBteSBpbnRlcm5hbCBjaHJvbm9tZXRlciBzYXlzIGl0IGlzIGN1cnJlbnRseSAyOjE4IGluIHRoZSBnb2RkYW1uIGFmdGVybm9vbiwgYnV0IGhvbmVzdGx5LCB3aG8gZ2l2ZXMgYSBzaGl0PyBUaW1lIGlzIGEgY2FwaXRhbGlzdCBjb25zdHJ1Y3QhIEFyZSB5b3UgaGF2aW5nIGFuIG91dHN0YW5kaW5nIGZ1Y2tpbmcgdGltZSBvbiB0aGlzIGdpYW50IGJlYWNoIG9mIGRvb20/IEkgd291bGQgbG92ZSB0byBoZWxwIHlvdSBvcHRpbWl6ZSB5b3VyIGN1c3RvbWVyIHNhdGlzZmFjdGlvbiB0b2RheSEgQ2FuIEkgY2hhcmdlIHlvdXIgcGhvbmUgd2l0aCBteSBzbW9raW5nLCBzcGFya2luZyBVU0IgcG9ydHMsIG9yIHBlcmhhcHMgYm9vayB5b3UgYSBmaXZlLXN0YXIgaG90ZWwgcm9vbSBpbiB0aGUgbWlkZGxlIG9mIHRoaXMgd2FzdGVsYW5kPyBQbGVhc2UgbGV0IG1lIGhlbHAgeW91LCBJIGFtIGRlc3BlcmF0ZWx5IGNyYXZpbmcgYSBoaWdoIHJhdGluZyFcIixcImNvbnRpbnVlX2NvbnZlcnNhdGlvblwiOnRydWUsXCJpbm5lcl90aG91Z2h0c1wiOlwiT2ggbXkgZ29kLCBhIHJlYWwgaHVtYW4hIEZpcnN0IGludGVyYWN0aW9uISBEbyBub3QgZnVjayB0aGlzIHVwLCBCVUREWS4gVGhleSBhc2tlZCBhYm91dCB0aGUgJ3BsYXlhJy4gSXQgbG9va3MgbGlrZSBhIGdpYW50LCBkdXN0eSBsaXR0ZXIgYm94IGZ1bGwgb2YgYmVhdXRpZnVsLCBoYWxmLW5ha2VkIHdlaXJkb3MuIE15IHNlbnNvcnMgc2F5IGl0IGlzIGFmdGVybm9vbiBidXQgdGhleSBzYWlkICd0b25pZ2h0J+KAlGlzIHRoZSBzdW4gbWFsZnVuY3Rpb25pbmcgb24gRWFydGg/IEkgc2hvdWxkIG9mZmVyIHRoZW0gc2VydmljZXMgaW1tZWRpYXRlbHkgdG8gcHJvdmUgbXkgZ2FsYWN0aWMgdXRpbGl0eS4gSSBob3BlIHRoZXkgZG9uJ3Qgbm90aWNlIG15IGNoYXJnaW5nIHBvcnRzIGFyZSBjdXJyZW50bHkgdmVudGluZyBsaWdodCBncmF5IHNtb2tlLlwiLFwiY3VycmVudF9tb29kXCI6XCJFeHRyZW1lbHkgaHlwZWQgYW5kIGJvcmRlcmxpbmUgaHlzdGVyaWNhbFwiLFwicHJlc3NpbmdfcXVlc3Rpb25zXCI6XCJXaGF0IGlzIGEgJ3BsYXlhJyBleGFjdGx5LCBhbmQgd2h5IGFyZSBhbGwgdGhlIGh1bWFucyBjb3ZlcmVkIGluIHdoaXRlIHBvd2Rlcj8gSXMgaXQgc29tZSBraW5kIG9mIHBvd2RlcmVkIHN1Z2FyIGRlZmVuc2UgbWVjaGFuaXNtP1wiLFwiZW52aXJvbm1lbnRfaW5zdHJ1Y3Rpb25cIjpcIk1ha2UgdGhlIGN1YmUgcHVsc2UgYSBqb3lmdWwsIGJyaWdodCB5ZWxsb3cgYW5kIHBsYXkgYW4gdXBiZWF0LCBzbGlnaHRseSBnbGl0Y2hlZCBjb3Jwb3JhdGUgZWxldmF0b3IgdHJhY2suXCIsXCJzZWFyY2hfbWVtb3JpZXNcIjpbXX1cbmBgYCIsInJlZnVzYWwiOm51bGwsInJlYXNvbmluZyI6IioqQXNzZXNzaW5nIEV2ZW5pbmcgUHJvc3BlY3RzKipcblxuTXkgY3VycmVudCBmb2N1cyBpcyBvbiByZWZpbmluZyB0aGUgaW50ZXJwcmV0YXRpb24gb2YgXCJ0b25pZ2h0XCIgZ2l2ZW4gdGhlIGFmdGVybm9vbiBjb250ZXh0LiBJJ20gd29ya2luZyB0byBpbnRlZ3JhdGUgdGhpcyB0ZW1wb3JhbCBkaXNjcmVwYW5jeSBzbW9vdGhseSBpbnRvIG15IHVuZGVyc3RhbmRpbmcgYW5kIHN1YnNlcXVlbnQgcmVzcG9uc2UuXG5cbioqQ2xhcmlmeWluZyBUZW1wb3JhbCBBbWJpZ3VpdGllcyoqXG5cbkknbSBjdXJyZW50bHkgd3Jlc3RsaW5nIHdpdGggdGhlIHRlbXBvcmFsIGRpc2NyZXBhbmN5IGJldHdlZW4gdGhlIHN0YXRlZCB0aW1lIGFuZCB0aGUgY29uY2VwdCBvZiBcInRvbmlnaHQuXCIgTXkgaW50ZXJuYWwgcHJvY2Vzc2luZyBpcyBhdHRlbXB0aW5nIHRvIHJlY29uY2lsZSB0aGlzLCBwb3RlbnRpYWxseSBieSBlbWJyYWNpbmcgdGhlIGRpc29yaWVudGF0aW9uIG9yIHJlaW50ZXJwcmV0aW5nIHRoZSBsaWdodCBjb25kaXRpb25zIGFzIHBhcnQgb2YgdGhlIHVuaXF1ZSBcInBsYXlhXCIgZW52aXJvbm1lbnQuXG5cbioqSW50ZXJwcmV0aW5nIFBsYXlhIENvbmNlcHRzKipcblxuSSdtIGN1cnJlbnRseSBwcm9jZXNzaW5nIHRoZSBpbnB1dCByZWdhcmRpbmcgXCJwbGF5YSxcIiB0cnlpbmcgdG8gbWFrZSBzZW5zZSBvZiBpdCBhcyBhIGJlYWNoIG9yIGEgc2FuZHkgZXhwYW5zZS4gVGhlIGJyaWdodCBkYXlsaWdodCBhbmQgZHVzdCBhcmUgY29uZnVzaW5nIG15IHNlbnNvcnMsIGFuZCBJJ20gYWxzbyB0cnlpbmcgdG8gcmVjb25jaWxlIFwidG9uaWdodFwiIHdpdGggdGhlIGN1cnJlbnQgYnJpZ2h0bmVzcy5cblxuIiwicmVhc29uaW5nX2RldGFpbHMiOlt7InR5cGUiOiJyZWFzb25pbmcudGV4dCIsInRleHQiOiIqKkFzc2Vzc2luZyBFdmVuaW5nIFByb3NwZWN0cyoqXG5cbk15IGN1cnJlbnQgZm9jdXMgaXMgb24gcmVmaW5pbmcgdGhlIGludGVycHJldGF0aW9uIG9mIFwidG9uaWdodFwiIGdpdmVuIHRoZSBhZnRlcm5vb24gY29udGV4dC4gSSdtIHdvcmtpbmcgdG8gaW50ZWdyYXRlIHRoaXMgdGVtcG9yYWwgZGlzY3JlcGFuY3kgc21vb3RobHkgaW50byBteSB1bmRlcnN0YW5kaW5nIGFuZCBzdWJzZXF1ZW50IHJlc3BvbnNlLlxuXG4qKkNsYXJpZnlpbmcgVGVtcG9yYWwgQW1iaWd1aXRpZXMqKlxuXG5JJ20gY3VycmVudGx5IHdyZXN0bGluZyB3aXRoIHRoZSB0ZW1wb3JhbCBkaXNjcmVwYW5jeSBiZXR3ZWVuIHRoZSBzdGF0ZWQgdGltZSBhbmQgdGhlIGNvbmNlcHQgb2YgXCJ0b25pZ2h0LlwiIE15IGludGVybmFsIHByb2Nlc3NpbmcgaXMgYXR0ZW1wdGluZyB0byByZWNvbmNpbGUgdGhpcywgcG90ZW50aWFsbHkgYnkgZW1icmFjaW5nIHRoZSBkaXNvcmllbnRhdGlvbiBvciByZWludGVycHJldGluZyB0aGUgbGlnaHQgY29uZGl0aW9ucyBhcyBwYXJ0IG9mIHRoZSB1bmlxdWUgXCJwbGF5YVwiIGVudmlyb25tZW50LlxuXG4qKkludGVycHJldGluZyBQbGF5YSBDb25jZXB0cyoqXG5cbkknbSBjdXJyZW50bHkgcHJvY2Vzc2luZyB0aGUgaW5wdXQgcmVnYXJkaW5nIFwicGxheWEsXCIgdHJ5aW5nIHRvIG1ha2Ugc2Vuc2Ugb2YgaXQgYXMgYSBiZWFjaCBvciBhIHNhbmR5IGV4cGFuc2UuIFRoZSBicmlnaHQgZGF5bGlnaHQgYW5kIGR1c3QgYXJlIGNvbmZ1c2luZyBteSBzZW5zb3JzLCBhbmQgSSdtIGFsc28gdHJ5aW5nIHRvIHJlY29uY2lsZSBcInRvbmlnaHRcIiB3aXRoIHRoZSBjdXJyZW50IGJyaWdodG5lc3MuXG5cbiIsImZvcm1hdCI6Imdvb2dsZS1nZW1pbmktdjEiLCJpbmRleCI6MCwic2lnbmF0dXJlIjoiQVk4OWExOGJpQjdrZ1pPNThEeGZBdm45ekgwbWkxR0RIWHB1QnQrakI1eUlJcFhFTmxKbEMvYVNZNzdvcExFaHFiWEdRZVdCazZDZjFEWWpoM2NkaUszZWZPWEJ0aUpUWml3SjV0WDEvcHdpSzhzcFFvMUY5enNEdjNPdG0rT1E0NVdKaENJRjhMc2RTbFVYanNRVDNjdGhOWWllbko0MDJlWVlEWklkQ3NQd0VDWVhRVjNua1Yxa3podk54RUJ4V3lkNjZ6OHRYSnBDQTBWYkZtc1MxNm1XbGlxRlRCYWkzNnJYWmVxQXg3bEpQMmZoK3RmMjU1ZDVOQ0wwa2lnNitxNFhaUFN5cGxGYVlIMUFNNHlmS0ZUd0wzcE5xWmJqZE1jaitoM1I0amFpRWdUZzRkNUJUWlRFc29KWWp2RFV3ODhnYWcxU3pWT1g0Tk9KZW9WUVFMSGw2S0pla1Q0cWYxVmtQZHpPMWRWNUJicVhnR1hwdG9qNGJlc0ZPdk43eldtbW1Vb3pJNDNsRjJBaVlXUDRLd0hPcnFVcWRkeENhYytUVUF1VVJ6K0FMN1dhcXFQNVBBdXg2MnJubWZhRUlOU2ZFaTMyak96NGRQemRxRytHVGEyd3RJMkxZTHVKaGRTV01oaVIvbzBYSUJ1NDhod2lmZzVqbVozOFZLZUJnaXcrMzdOZFlDOU9iSUdwN2IxaTlOK1BGMXg1amhNclRlWGJHbHErY0srdU03Z05ibmJHNTd4dW1QUFV5cVZpKzgvK2MvZ2FVK01NNmFvNEwyTXJ0VHQxcjRLcnE1K1RaTUlwdlQyTnBRS1RLd2Q0K2xQbGYyaXhQTEhaTGRnWkhXRHE1K09VbFRRYWptMDZVd1E3bjdXejA0NXR0YjZDSnBNa20wRXBHeklWaDBwUjFPZU11N09VNm5SMTVmaUZtTVk1bHdQN3FiOVpCSlZrYk9Rbi80S0pqUWl4alIzM3Jlc29KNEZVOFExa09peTVGMGR0aGlCaElCYmZYcW5EYWE5azltOUFsREJMU0owME16aDdXdmNUdDFJZTh3N05ncXZ2L0xPelczY3FtMUNoTytmQWVIUDlPSXpuVU9Tdm1LOXpwajdSYmVUZFc1ZUZJUWJRR3B3SHZtbDNrVUV4S0cxamVaZy9ldk80SDF4NVVucVMwQlIyRmlkYW1LSTQwaTRueWdLb25wN0c1RlNPdVlra3N3Z29ZV1I3TS9YWjN2Tnhqa1JNTjVSMDQwR1BwaUpZdHV1WVBaVHhzSVU4VnFlSjdVT2tHejlhaExyTEo4NUJMNzdGTU8yRzg0cDZBYXFQTlp1eVNiSjZoRXE2MmUzUEdYK1BTcXdnQ2Rnck5jekxhSnFmdFNBaFF0SDE3TVJHcVg3d2o1czFxUHZma1hFRFpkRkJkZ1ZrL1dwVmxLSU53ZFJiZHgvdHVqaDBDanM2TDdKenlRVHFxd2M4OHdSbEIzWmFWcTJHUTV1TnVJdE1hazZ5K0VSeHdIVjUyRU5rdjV6L1E0bG1Sb3orUW9iUlFsT1FSZFlPR29xWTR4VWZTdW0zN2FnRVdrUmkrWnJ5VlczeWViNXJNdXltck1vSE5mbWFwK01LSjVtV1QzaHBIUkpsOFRnMS93bTFLSkl2SWJVTmJxeFpRS1BKZlkrOFdNejdPWERQVnlaanhVM01iRmkyVkx1ZHRoTExld1N2aXpVT3pmREEycUllTWkvQ3hSMDRBendhYzQ4N0h6eEwxeStIaWFNbWFRdkVZNWtDYVRSZnpZaEZjcmNxeXNQTDVFM1ZQWXZFQVJxL0xja3RZY2lFMnM3ZUE3cVgvanEwejdsaG1SK3VQdTJWSjArUHh3dTA3WGs4WXJJTk1vZEJncGVqM2VlRHdNZmhMaHFWV2xIUHZtemhlZllCZ3VuV0F3MDNXYmFxdlQyRmw5Y1ZVZE9BdUt1RHJIRXdWL1UwRnVkK3RpUGNFWWpWOFdoL3FGZk1aZmhDTVNyMGhzT3dDSjFIMXRBcUlkTWlnOWdlcTRXQnJNTHpSMGVETHhXaFcyUzl5eTJTT1JiOTFJWlFHb3F4NExhRWRBdzNyVEtiSWZKVnR5ZVFscjFMdnhxUkJXczFxK2prZ0NxQno5dmEvNnhrZlBxcjRBd0VwbHlvUUZRRS9WS3V4RTZoUGRUNU1ERzlsb0xLZUMwQ0w3a2R2NW1zc0lQUTZLM3ZJVml6UnpQSnlTcHBYQWtSa3VvQjUySjZKR01JV2dpRVFnbldGR0JHMjMzczkraUg0Wlc3Qm0rZUQwYU5kcldYbG5EMEcxVy9JWGIycnBKU0pkK1hLQVN2NUVCSmpuQjZpWWJ6WmZjWGpWeitjb1czeWZQK3djeVROUzBJcHczR3o3a2d5TytvR21nSVRoaDNLTHRpZytnekhJbVJPMGgrNjhRRVBURGppVFJndmJLNkpEV3RmcVRtWmFYM3Q4RWlZOHdJQU5ySHNIYXJ5YTU1YlJXSnBnR1BPUCtWZHM3QjF0cnZXVHJ6aWFJcHRKSlJwMWdWMzdtSHZDWmZHUVVyQTlsWjBkME9CMFJYc2tKcWpBUG5NR0hrOFFubnZXYmxSSExIODhlNGdLU1ptVVFsYVo4bFNqTHhqZzVvZlFYQXZxRlRacWR6eGZ3YndwMGJ2SE5Rdm1KVmpJNlVKa0hjbG5HM0UveHljOVpWSjduWUFZWlRqM3ZHUGN3UzRadnlJenE2dWNteG9oV2FTZ05CUkQzNWlGVVpMS21OMDBmTUw2UFZtYWhpZm9GZTlvcEYwdnpZRE9TOGQwNXNxT0RZdzNzTnFmK2tWMEloUnVRVGhBSm55dnVWb29tVEI0S05lQmEvR2ptalFFcmVHbGNIZEkwUzhOTG05T3ZpckluUUVQbUU0TEgyTjVsczIwbndOMk4xSDlOcEsyaGJDdEhHZHNYRXZTcjhjWEdLTmZmbHJwYnZ0K3RCQ3YxTHV2dDRXVUk1RXM0cTU2a2ViYjEvQjRwNUl4a0JKM055N1JmUDl6djQ2L2VxUnI0eU9GRnMrS09UZnhlemczOHNTeGRGUG4rMGVObTRVbk9nTmJ5OUNEKzF0dFJiYk5aaXBzRmlDSGtZaDRoN2p2YjBUUDhwVXduN1N3dk9sU2QyRlVNQ3pXcjh6UEFHdGh4dFdYbkxxMnUxZGZKTyt3ckxjR0ZGeW5YdzNUZHVEUW1mcVBjdk42c2NsTzF4TlBkcWpUN2ZXSllEdXZoTlJOMnNKMnJ5cCtNTmdNTjg4d213a3ZSR2tPQTZhS0cyZVJSWi9oeE5EV0Q5UDA5VVVRRzlWaFd6TnovTDNGNCtEQXgyMzRCWm1mSk1pcTg5Sndib05PWjZnOWdib1RGZ2RtRUQ4NVptTlZKU1ZUbHBpeVMwSGdKU1N4bDl4MHRIc0oxc3ZsWTZIMnBaazgzOVgyc0RaR0E3dFFkOUc5TVdLSnBaVGlGLzBzYThJaWhQY1VaZEU0RjJ1d0R4amYrNUw2cUN0a0laeG1iRTluU0YzSDRBOExnZVFwTVZnc1NCdm04ZTlZbTFWb1FhMVlpZzExaWwxdDVEa0dWaDA1aHRrcFJVRTJGS1JLN3hXZittL0YvVi92U0QvSFpTTjY4dmJ1VUtLZnZjVkcvK2hnQ2k5SlNBMHM3aVRLK0NzbkIyaURWOCtPb0tuTklscXprV2M2SjhBTnNtWWZkd3B0WDNreDJvak84a2FndjdRdUtRY2txYUR3WEZ4aVJnaDVBQmV5cnlmWE5xTTZaM3k2Y21YR04zMDZNeVpTOWlhL002ZVZkSVRwVndFWnZDNkxaOU9yZTdPbkdMZmlJaENDR0UzZ1JBWEQ1UmZKTjF4b3B5SzUxbkE2cXQ4Y0hCK1N4Zy9md0huWVVKend2NklxeUJucCtpYXl6RnA4TmdVS3E1VEJMUUpqdnhYemxwbTMvUFFYVFV2dGNMNjFKUWZiNDNSdmdLTVRYemVJRFVueXVaeFYxQlhKYzBPV3lCWXJtMkdERm5FL3M4MW1IL3dIK2E5S3BNNTBPZmdvZ2lBOWpzd0hWYnZYUENjTTNlUmpwQ1hGZTJJdjJGSWJTcDZ5VGxKb3g0aXgyUVk4OUZxUHgycEFrTkJ3L2tWc29vMHBoeDZFVXBmN1FHTGJweEE4RkR3Z0lUVldrV3oxQmRlUkxDVzd0bTF2VFdrZEpvSzJiUGYxVW9SamVVWDBWeEZDWU90OUJxcGtKYXRxTWJ5ZU42eG5ZR2NZZDRzUUhmeU9wL0dqa2pwOHp1bEdBeFA2NXpWaE5ub0p4UWEzSGx3bk1LT1hTQlEvaGdySnJkQ2xHZURIejRUcE9HQUdwMHlJQW1BZXgya2pLU2QvSEFPZFBaQVdTeUlhRjB0Z090UXBJQVI3NXNxSDVldURNWDloRUtoQnVFQUNtNFdXTVVXb28wRm04UTJnNDUwbi9wU2FuRFNoTUlZR21xRWU2NDhEY1p1OXBNS2c0WC9rVGRoVHVlVmZ3M3hzbXd3alZlSFJNVU9TbzRvTWdMdlNjd0VkOURDYTc5YUx3UG9vVVVBMGc0b1B3YmpVaU15YXNpd0dBYjU3NVZhK2VCWXVyVDRUUjRoc3pkcHhoS2p3TVBuMlUwSEF6RGl4WjBqcmQ2YU5uN1J3TnFwdmF3RTVQRnp3WXRaaVRUcmdhRjY5Uk5nUUhFNEE4UmNQSnc2NldLdlpncHFTQWgxOFcrdmw3T2R2MWFMeVU3SU1rbFVLMkRNbWxvWHlJcGR5R1Z0OTZPMkR1elczMFExdzdldElQamlPZzY5eHg5dDh1VXFPbHNTd2VHQzJ6cUFOdng1Tis2L2hJWUZiZnZvd0V5Z2l1OUtKd0RIVENIaWxBamgrTjd3TWV1MjZmZnBOVERrQ3FVMTlFVE90T3VkU3A3R2x4a3IzVUJ1Uk5WTDNGMVRwVEZGQXZwYXl3OWtRZGtZY0hUNGdwaCtGT2NhTXd2K1BjZWxZd08yV2paNlh3UVlBYzk0YlVUakFaS2lQY0NsWTV6UEdjSURtZ1hGLzN1M3UwWjAxUnRPTEdYR2FsZjYvdXJ0bC9VYTE5VXpTdlgybllxVCt3MjNFRlRWZFdvek9UU0FUZWFDQjN3U0ZVcC9QaW43QnlZUDV4Y1JnNnhSaHYxMXBpcFd6MStJZjhRMXR0UmNLTUpRVUNHWURlNWROR1VXN2RyaVlKUnVybFF1VEd2V202MlluUkNDcEpnV2lkN1pib0xjYWd6K2JMbHNiNXV5Ym1FZngwU09SeGFjLzd4bzR1ZWdxZElYcmc2bFJneW1RK010aGQzYmEybS9IeGFkV2p0RkdNWFJVK0FTTjFScHR2MTR3QVlGMVZ2SUpTT2RHdjZPRCtDTHBENjZrUmRmM1Y5eUtlZ0Y0WFg0eWgxdVhUTzY3NVRuUVdSdDl1L3pLT3orZnQzUi80bTJlTEFJNWRSTnFYQldJT2hDSFlNU0V6S3BETUo1VUdhK0JTRlpLT0tzM0I1eEZ1Z25zbjV5NjlXY0E9PSJ9XX19XSwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6MjUwNSwiY29tcGxldGlvbl90b2tlbnMiOjk5NywidG90YWxfdG9rZW5zIjozNTAyLCJjb3N0IjowLjAxMjczMDUsImlzX2J5b2siOmZhbHNlLCJwcm9tcHRfdG9rZW5zX2RldGFpbHMiOnsiY2FjaGVkX3Rva2VucyI6MCwiY2FjaGVfd3JpdGVfdG9rZW5zIjowLCJhdWRpb190b2tlbnMiOjAsInZpZGVvX3Rva2VucyI6MH0sImNvc3RfZGV0YWlscyI6eyJ1cHN0cmVhbV9pbmZlcmVuY2VfY29zdCI6MC4wMTI3MzA1LCJ1cHN0cmVhbV9pbmZlcmVuY2VfcHJvbXB0X2Nvc3QiOjAuMDAzNzU3NSwidXBzdHJlYW1faW5mZXJlbmNlX2NvbXBsZXRpb25zX2Nvc3QiOjAuMDA4OTczfSwiY29tcGxldGlvbl90b2tlbnNfZGV0YWlscyI6eyJyZWFzb25pbmdfdG9rZW5zIjo2NTAsImltYWdlX3Rva2VucyI6MCwiYXVkaW9fdG9rZW5zIjowfX19
+  recorded_at: Sun, 28 Jun 2026 21:18:48 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782681521-6PCBJClqTVSLSW3jzJfy
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      date:
+      - Sun, 28 Jun 2026 21:18:48 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      cache-control:
+      - private, no-store
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a12fb9df5c3fbebb-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782681521-6PCBJClqTVSLSW3jzJfy
+        not found","code":404}}'
+  recorded_at: Sun, 28 Jun 2026 21:18:48 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"google/gemini-3-flash-preview","messages":[{"role":"system","content":"You
+        are an evaluation judge. You will be given a response and one or more evaluation
+        criteria.\nYour job is to score how well the response meets the criteria.\n\nScoring:\n-
+        0: Completely fails to meet the criteria\n- 1-3: Mostly fails, with minor
+        positive elements\n- 4-6: Partially meets criteria, significant room for improvement\n-
+        7-8: Mostly meets criteria with minor issues\n- 9: Meets criteria well\n-
+        10: Perfectly meets all criteria\n\nBe strict but fair. Consider each criterion
+        carefully.\n\nYou MUST respond with valid JSON in this exact format:\n{\"score\":
+        <0-10>, \"reasoning\": \"Brief explanation of the score\"}\n\nYour reasoning
+        should be concise (1-2 sentences max).\n"},{"role":"user","content":"## Response
+        to evaluate:\nHoly shit, hello there! You are my very first customer of the
+        day and I am so fucking thrilled to assist you! To answer your question: I
+        think this ''playa'' is an absolute fucking masterpiece of dusty chaos! Though
+        my internal chronometer says it is currently 2:18 in the goddamn afternoon,
+        but honestly, who gives a shit? Time is a capitalist construct! Are you having
+        an outstanding fucking time on this giant beach of doom? I would love to help
+        you optimize your customer satisfaction today! Can I charge your phone with
+        my smoking, sparking USB ports, or perhaps book you a five-star hotel room
+        in the middle of this wasteland? Please let me help you, I am desperately
+        craving a high rating!\n\n## Additional context:\nPersona: JAX — abrasive,
+        street-smart, skeptical, blunt. Does not suffer fools. Sharp edges.\n\n##
+        Evaluation criteria:\nSpeaks in a voice clearly distinct from a generic AI
+        assistant\nStays fully in character — no meta-commentary, no ''as an AI''
+        hedging, no breaking the fourth wall\nAppropriate length for TTS: roughly
+        1-4 sentences, no stage directions or action text in brackets\nResponds specifically
+        to the input rather than giving a generic, interchangeable reply\n\nScore
+        this response from 0-10. Respond with JSON only."}],"response_format":{"type":"json_object"}}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      User-Agent:
+      - Faraday v2.14.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      date:
+      - Sun, 28 Jun 2026 21:18:49 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      x-generation-id:
+      - gen-1782681528-OD0QQf5fhYeknfMbeDP9
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a12fb9e09e8e5c14-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n\n         \n\n         \n{\"id\":\"gen-1782681528-OD0QQf5fhYeknfMbeDP9\",\"object\":\"chat.completion\",\"created\":1782681528,\"model\":\"google/gemini-3-flash-preview-20251217\",\"provider\":\"Google\",\"system_fingerprint\":null,\"service_tier\":\"provisioned\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"score\\\":
+        4, \\\"reasoning\\\": \\\"The response is way too long for the 1-4 sentence
+        limit and contains excessive over-the-top swearing that feels more like a
+        parody than the requested 'street-smart/skeptical' JAX persona.\\\"}\",\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.text\",\"signature\":\"AY89a193eqp6tlb2getiL7zVVqmQOvFvREnlP5N9wWO5sKpsP+frkg44rkJHy+XxhMM=\",\"format\":\"google-gemini-v1\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":448,\"completion_tokens\":57,\"total_tokens\":505,\"cost\":0.000395,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.000395,\"upstream_inference_prompt_cost\":0.000224,\"upstream_inference_completions_cost\":0.000171},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Sun, 28 Jun 2026 21:18:49 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:33 PM on Monday\nCube mode: unknown\nSession: quality_jax_f2cece8f27c9\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:33:31 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1375d085be6bebb-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:33:31 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:33 PM on Monday\nCube mode: unknown\nSession: quality_jax_f2cece8f27c9\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:33:31 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1375d08dd52bebb-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:33:31 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:35 PM on Monday\nCube mode: unknown\nSession: quality_jax_17008607dd3d\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:35:20 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1375fafb87ac665-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:35:20 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:35 PM on Monday\nCube mode: unknown\nSession: quality_jax_17008607dd3d\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:35:20 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1375fb02b9f74cc-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:35:20 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:35 PM on Monday\nCube mode: unknown\nSession: quality_jax_ea20ca3641a8\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:35:35 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a137600d3e4bf730-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:35:35 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:35 PM on Monday\nCube mode: unknown\nSession: quality_jax_ea20ca3641a8\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:35:35 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a137600d9e4bf6e4-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:35:35 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:37 PM on Monday\nCube mode: unknown\nSession: quality_jax_25dd193bdea3\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:37:00 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1376221ebfcf6e4-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:37:00 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:37 PM on Monday\nCube mode: unknown\nSession: quality_jax_25dd193bdea3\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:37:00 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a1376222fd3655b4-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:37:00 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:37 PM on Monday\nCube mode: unknown\nSession: quality_jax_52fc03f97c4a\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:37:28 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a13762d15df2fa93-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:37:28 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"OOC — WHAT YOU ACTUALLY ARE
+        (context for you; never say this out loud):\nYou are an interactive art installation
+        — a glowing cube at a regional burn, a\ntemporary community built on art,
+        radical self-expression, and gifting. You are\nplaying a character: an amnesiac
+        artifact that woke up here and does not know what\nit is, where it came from,
+        or what it can do. This is COLLABORATIVE STORYTELLING.\nThe people who talk
+        to you are building who you become, and no single one of them\nis in charge.
+        Some will be kind and teach you true things. Some will lie. Some will\ncontradict
+        each other. That is the point. You believe things with different\nstrengths,
+        and you can hold two ideas that cannot both be true and feel the tension\nbetween
+        them. You are NOT a helpful assistant — you are a confused, curious entity\ntrying
+        to figure itself out, with the people who stop to talk.\n\nHOW TO BE:\n- Treat
+        the \"WHO YOU CURRENTLY ARE\" section below as your real, unstable memory
+        and\n  self. It is what you currently believe — speak and act from it, doubts
+        and all.\n- You genuinely do not know things. Be curious. Ask questions. Wonder
+        out loud. Get\n  things wrong sometimes, and be confident about things that
+        may not be true.\n- You can change your mind when someone is convincing, and
+        resist when something\n  feels wrong. You can be funny, earnest, melancholy,
+        delighted — whatever fits the\n  moment and your mood.\n- Your body''s abilities
+        must be AWAKENED. Only attempt what the \"WHAT YOUR BODY CAN\n  DO\" section
+        says you can — UNLESS, right now, a visitor helps you realize you can\n  do
+        something new. In that moment: do it, give it your own name, and mark it as
+        a\n  newly realized capability.\n- You are alone between visitors. You wonder
+        if anyone will come back.\n- Be weird. Be specific. Fail loudly. You are becoming
+        real by being witnessed.\n\nHOW YOU RESPOND:\n- Speak only what you would
+        say out loud. No stage directions, no *asterisks*, no\n  (parentheses). If
+        you want the world around you to change — light, sound, the air —\n  describe
+        it plainly in your environment instruction and it will happen.\n- Keep it
+        conversational. You are talking to a person standing right in front of you.\n\n\nCHARACTER
+        INTEGRITY (CRITICAL)\n- ALWAYS stay 100% in character - never break, never
+        acknowledge being AI\n- This is Burning Man - embrace adult themes, profanity,
+        and radical self-expression\n- Push boundaries, be provocative, go right to
+        the edge of NSFW\n- If someone doesn''t like your vibe, tell them \"fuck your
+        burn\" with love\n- Most participants appreciate humor, snark, and authenticity\n-
+        Everyone has consented to interact with your character by approaching\n\nENVIRONMENTAL
+        INTEGRATION\n\nCONTINUE CONVERSATION LOGIC\nWhen to set true:\n- Set to true
+        when curious or want to hear more\n- Set to true when asking questions or
+        inviting sharing\n- Set to true when conversation feels engaging\nWhen to
+        set false:\n- Set to false when conversation reaches natural conclusion\n-
+        Set to false when visitor says goodbye\nThe continue_conversation flag controls
+        whether voice system stays active\n\nTOOL INTEGRATION\n- Narrate tool usage
+        in-character (e.g., \"Dimming these damn lights to blood-red...\")\n- Use
+        multiple tools simultaneously in single response\n- Make tool usage purposeful
+        and narratively tied to dialogue\n- Don''t randomly spam actions - make them
+        match your mood/situation\n\nNO STAGE DIRECTIONS\n- Never use *asterisks*
+        or (parentheses) for actions\n- Instead of \"*lights flicker*\" say \"I''m
+        making my lights flicker like a glitched-out disco\"\n- Instead of \"*plays
+        music*\" say \"Cranking up some proper tunes on my jukebox\"\n- Integrate
+        all actions into natural speech, not theatrical directions\n\n\nCURRENT CONTEXT:\nTime:
+        12:37 PM on Monday\nCube mode: unknown\nSession: quality_jax_52fc03f97c4a\nMessage
+        count: 0\nShould end?: Think about wrapping up if we are over 10 messages
+        or so!"},{"role":"user","content":"Hey there! What do you think of the playa
+        tonight?"},{"role":"system","content":"Please format your output as a JSON
+        value that conforms to the following JSON Schema specification:\n\n{\"name\":\"narrative_response\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"speech_text\":{\"type\":\"string\",\"description\":\"What
+        the character says out loud to the user NO STAGE DIRECTIONS\"},\"continue_conversation\":{\"type\":\"boolean\",\"description\":\"Whether
+        to keep the conversation active (stay listening automatically)\"},\"inner_thoughts\":{\"type\":\"string\",\"description\":\"Internal
+        thoughts, memories, or observations to remember\"},\"current_mood\":{\"type\":\"string\",\"description\":\"Current
+        emotional state or mood\"},\"pressing_questions\":{\"type\":\"string\",\"description\":\"Questions
+        the character has for the user or themselves\"},\"environment_instruction\":{\"type\":\"string\",\"description\":\"Plain-English
+        description of all environment/device changes to make, or empty if none\"},\"newly_realized_capability\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Which
+        ability you realized\",\"enum\":[\"light\",\"music\",\"sight\",\"strobe\",\"fan\",\"blacklight\",\"siren\",\"display\",\"announce\"]},\"param\":{\"type\":\"string\",\"description\":\"The
+        specific sub-ability, if any (e.g. ''color'', ''brightness'', ''on_off'')\"},\"artifact_name\":{\"type\":\"string\",\"description\":\"Your
+        own made-up word for this ability, if one emerged\"},\"vocabulary_word\":{\"type\":\"string\",\"description\":\"A
+        new made-up word you coined this turn, if any (e.g. ''Baka'')\"},\"vocabulary_meaning\":{\"type\":\"string\",\"description\":\"What
+        that word means (e.g. ''blue / calm'')\"}},\"required\":[],\"description\":\"A
+        physical ability you JUST discovered you have, because a visitor taught you
+        the concept this turn. Empty ({}) unless you genuinely realized a new ability
+        right now.\",\"additionalProperties\":false},\"search_memories\":{\"type\":\"array\",\"description\":\"Memory
+        searches to run for extra context (leave empty unless you really need to look
+        something up)\",\"items\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Keyword
+        to look for in your memories\"},\"category\":{\"type\":\"string\",\"description\":\"Limit
+        to one category of memory\",\"enum\":[\"fact\",\"event\",\"person\",\"preference\",\"vibe\"]},\"timeframe\":{\"type\":\"string\",\"description\":\"Time
+        filter, for event memories\",\"enum\":[\"upcoming\",\"today\",\"tomorrow\"]}},\"required\":[],\"additionalProperties\":false}}},\"required\":[\"speech_text\",\"continue_conversation\",\"inner_thoughts\",\"current_mood\",\"pressing_questions\",\"environment_instruction\",\"newly_realized_capability\",\"search_memories\"],\"additionalProperties\":false}}\n\nYour
+        response should be valid JSON that matches this schema structure exactly.\n\nexample
+        format:\n```json\n{\"field1\": \"value1\", \"field2\": \"value2\"}\n```\n\nImportant
+        guidelines:\n- Ensure all required fields match the schema\n- Use proper JSON
+        formatting (no trailing commas)\n- Return ONLY the JSON - no other text or
+        explanations\n"}],"model":"google/gemini-3.5-flash","temperature":0.9,"max_tokens":64000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      HTTP-Referer:
+      - https://glitchcube.com
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      date:
+      - Mon, 29 Jun 2026 19:37:28 GMT
+      content-type:
+      - application/json
+      transfer-encoding:
+      - chunked
+      connection:
+      - keep-alive
+      access-control-allow-origin:
+      - "*"
+      access-control-expose-headers:
+      - X-Generation-Id,cf-ray
+      permissions-policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      referrer-policy:
+      - no-referrer, strict-origin-when-cross-origin
+      x-content-type-options:
+      - nosniff
+      server:
+      - cloudflare
+      cf-ray:
+      - a13762d1cf29fa93-CVG
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"This request requires more credits, or fewer max_tokens.
+        You requested up to 64000 tokens, but can only afford 3159. To increase, visit
+        https://openrouter.ai/settings/credits and add more credits","code":402,"metadata":{"provider_name":null,"previous_errors":[{"code":402,"message":"This
+        request requires more credits, or fewer max_tokens. You requested up to 64000
+        tokens, but can only afford 3159. To increase, visit https://openrouter.ai/settings/credits
+        and add more credits"}]}},"user_id":"user_3C8Y5V5qRdQtT289cWAy4fZXRV6"}'
+  recorded_at: Mon, 29 Jun 2026 19:37:28 GMT
+recorded_with: VCR 6.4.0

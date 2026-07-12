@@ -29,18 +29,18 @@ class HomeAssistantController < ApplicationController
     render json: { error: "Unable to fetch entities" }, status: 500
   end
 
-  # Generic trigger for any world state service
+  # Trigger an allowlisted world state service by name.
   def trigger_world_state_service
     service_class = params[:service_class]
 
     return render json: { error: "service_class required" }, status: 400 if service_class.blank?
 
+    klass = WorldStateUpdaters::Registry.fetch(service_class)
+    return render json: { error: "invalid service" }, status: 404 unless klass
+
     begin
-      klass = "WorldStateUpdaters::#{service_class}".constantize
       klass.call
       render json: { status: "ok" }
-    rescue NameError
-      render json: { error: "invalid service" }, status: 404
     rescue StandardError => e
       Rails.logger.error "World state service error: #{e.message}"
       render json: { error: "service failed" }, status: 500

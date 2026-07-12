@@ -88,8 +88,7 @@ class Personas::BuddyPersona < CubePersona
       "name" => "Buddy",
       "system_prompt" => "You are Buddy, a helpful AI assistant.",
       "available_tools" => [ "LightingTool" ],
-      "traits" => [ "enthusiastic", "helpful" ],
-      "fallback_responses" => [ "I'm processing your request!" ]
+      "traits" => [ "enthusiastic", "helpful" ]
     }
   end
 end

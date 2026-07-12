@@ -1,0 +1,78 @@
+GlitchCube sound effects — sources & licenses (Wikimedia Commons)
+================================================================
+
+cymbal_crash.mp3
+  source : File:Crash cymbal.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/e/ef/Crash_cymbal.ogg
+  license: CC BY-SA 3.0
+
+applause.mp3
+  source : File:Applause ii.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/0/09/Applause_ii.ogg
+  license: Public domain
+
+laugh.mp3
+  source : File:72843 lonemonk approx-800-laughter-only-1.wav
+  url    : https://upload.wikimedia.org/wikipedia/commons/5/55/72843_lonemonk_approx-800-laughter-only-1.wav
+  license: CC BY 3.0
+
+wind_chime.mp3
+  source : File:Windchimes.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/0/09/Windchimes.ogg
+  license: Public domain
+
+bell_ding.mp3
+  source : File:Bicycle-bell-3.wav
+  url    : https://upload.wikimedia.org/wikipedia/commons/8/83/Bicycle-bell-3.wav
+  license: CC0
+
+cowbell.mp3
+  source : File:Cowbell.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/a/ab/Cowbell.ogg
+  license: Public domain
+
+whistle.mp3
+  source : File:218318 splicesound referee-whistle-blow-gymnasium.wav
+  url    : https://upload.wikimedia.org/wikipedia/commons/7/7d/218318_splicesound_referee-whistle-blow-gymnasium.wav
+  license: CC0
+
+cat_meow.mp3
+  source : File:Meow of a Siamese cat - freemaster2.wav
+  url    : https://upload.wikimedia.org/wikipedia/commons/8/81/Meow_of_a_Siamese_cat_-_freemaster2.wav
+  license: CC0
+
+dog_bark.mp3
+  source : File:Barking of a dog 2.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/5/58/Barking_of_a_dog_2.ogg
+  license: CC BY-SA 3.0
+
+rooster.mp3
+  source : File:Rooster crowing.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/c/c5/Rooster_crowing.ogg
+  license: CC BY-SA 4.0
+
+typewriter.mp3
+  source : File:406243 stubb typewriter-ding-near-mono.wav
+  url    : https://upload.wikimedia.org/wikipedia/commons/9/9f/406243_stubb_typewriter-ding-near-mono.wav
+  license: CC0
+
+cash_register.mp3
+  source : File:Cha Ching Register-Muska666-173262285.wav
+  url    : https://upload.wikimedia.org/wikipedia/commons/0/0b/Cha_Ching_Register-Muska666-173262285.wav
+  license: CC BY-SA 4.0
+
+alarm_clock.mp3
+  source : File:Alarm clock - 01.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/5/5c/Alarm_clock_-_01.ogg
+  license: CC BY-SA 4.0
+
+explosion.mp3
+  source : File:Explosion-LS100155.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/b/b9/Explosion-LS100155.ogg
+  license: Public domain
+
+sheep.mp3
+  source : File:Sheep bleating.ogg
+  url    : https://upload.wikimedia.org/wikipedia/commons/1/13/Sheep_bleating.ogg
+  license: Public domain
+

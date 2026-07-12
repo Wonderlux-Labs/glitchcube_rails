@@ -2,7 +2,7 @@
 
 class Admin::ConversationsController < Admin::BaseController
   def index
-    @conversations = Conversation.includes(:conversation_logs, :conversation_memories)
+    @conversations = Conversation.includes(:conversation_logs)
                                 .order(created_at: :desc)
                                 .limit(50)
 
@@ -16,106 +16,30 @@ class Admin::ConversationsController < Admin::BaseController
     if params[:persona].present?
       @conversations = @conversations.by_persona(params[:persona])
     end
+
+    @personas = Persona.active.order(:name)
   end
 
   def show
     @conversation = Conversation.find(params[:id])
     @logs = @conversation.conversation_logs.chronological
-    @memories = @conversation.conversation_memories.recent
-    @tools_used = extract_tools_from_logs(@logs)
-  end
-
-  def timeline
-    @conversation = Conversation.find(params[:id])
-    @timeline_events = build_timeline(@conversation)
-    render json: @timeline_events
-  end
-
-  def tools
-    @conversation = Conversation.find(params[:id])
-    @tools = extract_detailed_tools(@conversation)
-    render json: @tools
+    @timeline = build_timeline(@conversation, @logs)
   end
 
   private
 
-  def extract_tools_from_logs(logs)
-    tools = []
-    logs.each do |log|
-      tool_results = log.tool_results_json
-      if tool_results.present?
-        tools << {
-          log_id: log.id,
-          timestamp: log.created_at,
-          tools: tool_results
-        }
-      end
-    end
-    tools
-  end
+  # One timestamp-ordered timeline mixing each conversation turn with the HASS
+  # action-agent's results for that conversation (stored on the Conversation,
+  # not per-turn — see EnvironmentDirectorJob#store_results). Best-effort
+  # ordering only: this is a dev/debug view, not an exact causal trace.
+  def build_timeline(conversation, logs)
+    events = logs.map { |log| { type: :turn, timestamp: log.created_at, log: log } }
 
-  def build_timeline(conversation)
-    events = []
-
-    # Conversation start
-    events << {
-      type: "conversation_start",
-      timestamp: conversation.started_at,
-      title: "Conversation Started",
-      details: "Persona: #{conversation.persona}"
-    }
-
-    # Each log entry
-    conversation.conversation_logs.chronological.each do |log|
-      events << {
-        type: "message_exchange",
-        timestamp: log.created_at,
-        title: "Message Exchange",
-        user_message: log.user_message.truncate(100),
-        ai_response: log.ai_response.truncate(100),
-        tools_used: log.tool_results_json.present?
-      }
+    Array(conversation.metadata_json["pending_ha_results"]).each do |result|
+      timestamp = result["timestamp"].present? ? Time.zone.parse(result["timestamp"]) : conversation.started_at
+      events << { type: :action_result, timestamp: timestamp, result: result }
     end
 
-    # Memories created
-    conversation.conversation_memories.each do |memory|
-      events << {
-        type: "memory_created",
-        timestamp: memory.created_at,
-        title: "Memory Created",
-        details: "#{memory.memory_type}: #{memory.summary.truncate(60)}"
-      }
-    end
-
-    # Conversation end
-    if conversation.ended_at
-      events << {
-        type: "conversation_end",
-        timestamp: conversation.ended_at,
-        title: "Conversation Ended",
-        details: "Duration: #{conversation.duration&.round(2)}s"
-      }
-    end
-
-    events.sort_by { |e| e[:timestamp] }
-  end
-
-  def extract_detailed_tools(conversation)
-    all_tools = []
-    conversation.conversation_logs.each do |log|
-      tool_results = log.tool_results_json
-      if tool_results.present?
-        tool_results.each do |tool_name, result|
-          all_tools << {
-            log_id: log.id,
-            timestamp: log.created_at,
-            tool_name: tool_name,
-            result: result,
-            user_context: log.user_message.truncate(50)
-          }
-        end
-      end
-    end
-    all_tools
+    events.sort_by { |e| e[:timestamp] || Time.zone.at(0) }
   end
 end

@@ -2,6 +2,53 @@
 
 <h1>📝 Summaries</h1>
 
+<div style="margin-bottom: 30px;">
+  <h2>🧠 Current Snapshot</h2>
+
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+    <h3 style="color: #00ffff; margin-top: 0;">Overall (shared, long-term)</h3>
+    <% if @latest_overall %>
+      <p><%= simple_format(@latest_overall.summary_text) %></p>
+      <% if @latest_overall.metadata_json['ooc_note'].present? %>
+        <p style="color: #ffcc00;"><strong>Director note:</strong> <%= @latest_overall.metadata_json['ooc_note'] %></p>
+      <% end %>
+      <%= link_to 'View history', admin_summary_path(@latest_overall), class: 'btn' %>
+    <% else %>
+      <p style="color: #666;">No overall summary yet.</p>
+    <% end %>
+  </div>
+
+  <div style="background: #2a2a2a; padding: 15px; border: 1px solid #444; margin-bottom: 15px;">
+    <h3 style="color: #00ffff; margin-top: 0;">Latest interaction (rolling short-term)</h3>
+    <% if @latest_interaction %>
+      <p><%= truncate(@latest_interaction.summary_text, length: 300) %></p>
+      <%= link_to 'View history', admin_summary_path(@latest_interaction), class: 'btn' %>
+    <% else %>
+      <p style="color: #666;">No interaction summary yet.</p>
+    <% end %>
+  </div>
+
+  <h3 style="color: #00ffff;">Per-persona</h3>
+  <div class="stats">
+    <% @latest_persona_summaries.each do |persona, summary| %>
+      <div class="stat-box">
+        <h4><%= persona.name || persona.slug %></h4>
+        <% if summary %>
+          <p><%= truncate(summary.summary_text, length: 150) %></p>
+          <% if summary.metadata_json['ooc_note'].present? %>
+            <p style="color: #ffcc00; font-size: 0.9em;"><%= truncate(summary.metadata_json['ooc_note'], length: 100) %></p>
+          <% end %>
+          <%= link_to 'View history', admin_summary_path(summary), class: 'btn' %>
+        <% else %>
+          <p style="color: #666;">No stint yet.</p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<h2>📚 History</h2>
+
 <div class="stats">
   <div class="stat-box">
     <h3>Total Summaries</h3>
@@ -40,10 +87,10 @@
 </div>
 
 <div style="margin-bottom: 20px;">
-  <%= link_to 'All Summaries', admin_summaries_path, class: 'btn' %>
-  <%= link_to 'Daily', admin_summaries_path(type: 'daily'), class: 'btn' %>
-  <%= link_to 'Session', admin_summaries_path(type: 'session'), class: 'btn' %>
-  <%= link_to 'Goal Completions', admin_summaries_path(type: 'goal_completion'), class: 'btn' %>
+  <%= link_to 'All', admin_summaries_path, class: 'btn' %>
+  <%= link_to 'Interaction', admin_summaries_path(type: 'interaction'), class: 'btn' %>
+  <%= link_to 'Overall', admin_summaries_path(type: 'overall'), class: 'btn' %>
+  <%= link_to 'Persona', admin_summaries_path(type: 'persona'), class: 'btn' %>
   <%= link_to 'Analytics', analytics_admin_summaries_path, class: 'btn' %>
 </div>
 
@@ -66,6 +113,9 @@
           <span style="background: #444; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
             <%= summary.summary_type.humanize %>
           </span>
+          <% if summary.persona %>
+            <br><small style="color: #666;"><%= summary.persona.name || summary.persona.slug %></small>
+          <% end %>
         </td>
         <td><%= truncate(summary.summary_text, length: 120) %></td>
         <td><%= summary.message_count %></td>
@@ -93,14 +143,14 @@
   </tbody>
 </table>
 
-<% if @summaries.respond_to?(:total_pages) %>
+<% if @total_pages > 1 %>
   <div style="margin-top: 20px;">
-    Page <%= @summaries.current_page %> of <%= @summaries.total_pages %>
-    <% if @summaries.prev_page %>
-      <%= link_to '← Previous', admin_summaries_path(page: @summaries.prev_page), class: 'btn' %>
+    Page <%= @page %> of <%= @total_pages %>
+    <% if @page > 1 %>
+      <%= link_to '← Previous', admin_summaries_path(request.query_parameters.merge(page: @page - 1)), class: 'btn' %>
     <% end %>
-    <% if @summaries.next_page %>
-      <%= link_to 'Next →', admin_summaries_path(page: @summaries.next_page), class: 'btn' %>
+    <% if @page < @total_pages %>
+      <%= link_to 'Next →', admin_summaries_path(request.query_parameters.merge(page: @page + 1)), class: 'btn' %>
     <% end %>
   </div>
 <% end %>

@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Fully orphaned: its endpoint (POST /conversation/proactive) was deleted; proactive arrivals are handled by Shows::GrandEntrance now. Kept as reference.
+# ============================================================
+
 # ProactiveMessageService
 # Generates contextual, persona-aware proactive messages using LLM
 class ProactiveMessageService
@@ -37,38 +42,16 @@ class ProactiveMessageService
   private
 
   def gather_system_context
-    context = {
+    {
       trigger_type: @trigger_type,
       time: Time.current.strftime("%A %I:%M %p"),
       provided_context: @context
     }
-
-    # Add current goal if available
-    begin
-      goal_status = GoalService.current_goal_status
-      context[:current_goal] = goal_status[:goal_description] if goal_status
-    rescue StandardError => e
-      Rails.logger.debug "Could not get goal status: #{e.message}"
-    end
-
-    # Add location context if available
-    begin
-      gps_service = Services::Gps::GpsTrackingService.new
-      location = gps_service.current_location
-      context[:location] = {
-        zone: location[:zone],
-        address: location[:address]
-      } if location
-    rescue StandardError => e
-      Rails.logger.debug "Could not get location: #{e.message}"
-    end
-
-    context
   end
 
   def generate_with_llm(system_context)
     prompt = build_prompt(system_context)
-    
+
     response = LlmService.generate_text(
       prompt: prompt,
       system_prompt: build_system_prompt,
@@ -85,7 +68,7 @@ class ProactiveMessageService
 
   def build_system_prompt
     <<~PROMPT
-      You are generating proactive announcements for a Burning Man AI assistant. Create natural, contextual messages that feel organic rather than robotic.
+      You are generating proactive announcements for an AI assistant at a regional burn (Lakes of Fire). Create natural, contextual messages that feel organic rather than robotic.
 
       Based on the trigger type and context, generate:
       1. **message** - What the AI should say (be natural and engaging)
@@ -93,7 +76,7 @@ class ProactiveMessageService
       3. **should_announce** - Whether to actually speak (false if no one is around or inappropriate timing)
 
       Personas:
-      - **buddy**: Friendly, helpful, enthusiastic 
+      - **buddy**: Friendly, helpful, enthusiastic#{' '}
       - **crashoverride**: Edgy hacker, glitchy, mischievous
       - **sparkle**: Bubbly, magical, whimsical
       - **sage**: Wise, contemplative, philosophical
@@ -101,7 +84,7 @@ class ProactiveMessageService
       Return JSON format:
       {
         "message": "Hey there! I noticed some movement - everything cool?",
-        "persona": "buddy", 
+        "persona": "buddy",#{' '}
         "should_announce": true
       }
 
@@ -136,27 +119,23 @@ class ProactiveMessageService
 
   def format_additional_context(system_context)
     parts = []
-    
-    if system_context[:current_goal]
-      parts << "**Current Goal:** #{system_context[:current_goal]}"
-    end
-    
+
     if system_context[:location]
       parts << "**Location:** #{system_context[:location][:zone]} - #{system_context[:location][:address]}"
     end
-    
+
     parts.empty? ? "" : parts.join("\n")
   end
 
   def parse_response(response)
     # Remove markdown code blocks if present
     cleaned = response.gsub(/```json\s*\n?/, "").gsub(/```\s*$/, "").strip
-    
+
     JSON.parse(cleaned)
   rescue JSON::ParserError => e
     Rails.logger.error "❌ Failed to parse proactive message JSON: #{e.message}"
     Rails.logger.error "Response was: #{response}"
-    
+
     # Fallback parsing
     {
       "message" => extract_message_fallback(response),
@@ -171,7 +150,7 @@ class ProactiveMessageService
       match = response.match(/"message":\s*"([^"]+)"/i)
       return match[1] if match
     end
-    
+
     # Last resort - use a cleaned version of the response
     response.gsub(/[{}"\[\]]/, "").strip.truncate(200)
   end
@@ -197,11 +176,11 @@ class ProactiveMessageService
     when "crashoverride"
       "assist_satellite.crash_voice"
     when "sparkle"
-      "assist_satellite.sparkle_voice" 
+      "assist_satellite.sparkle_voice"
     when "sage"
       "assist_satellite.sage_voice"
     else
-      "assist_satellite.square_voice" # buddy default
+      "assist_satellite.cube_cube_voice_assist_satellite" # buddy default
     end
   end
 
@@ -209,7 +188,7 @@ class ProactiveMessageService
     {
       message: "System active and ready.",
       persona: "buddy",
-      satellite_entity: "assist_satellite.square_voice",
+      satellite_entity: "assist_satellite.cube_cube_voice_assist_satellite",
       should_announce: true
     }
   end

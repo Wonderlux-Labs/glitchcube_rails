@@ -1,0 +1,150 @@
+# GlitchCube core input helpers
+# Rails reads/writes these to drive persona, mode, and dynamic host routing.
+
+input_select:
+  current_persona:
+    name: Current Persona
+    # Only personas that are actually in rotation (have a voice + persona_prompt).
+    # sparkle / thecube / mobius are inactive (see their YAMLs) — re-add here if revived.
+    options:
+      - buddy
+      - jax
+      - zorp
+      - crash
+      - neon
+    initial: buddy
+    icon: mdi:robot
+
+  cube_mode:
+    name: Cube Mode
+    options:
+      - conversation
+      - performance
+      - low_power
+      - maintenance
+    initial: conversation
+    icon: mdi:cube-outline
+
+input_text:
+  glitchcube_host:
+    name: GlitchCube Host
+    initial: "192.168.68.50:4567"
+    max: 100
+    icon: mdi:server-network
+
+  backend_health_status:
+    name: Backend Health Status
+    initial: "unknown"
+    max: 255
+    icon: mdi:heart-pulse
+
+  glitchcube_breaking_news:
+    name: Breaking News
+    initial: "[]"
+    max: 255
+    icon: mdi:newspaper
+
+  # The cube's scrolling marquee. The brain emits plain-English `marquee` actions
+  # (e.g. "scroll JAX DOESN'T PLAY THAT"); expose this to the HASS action agent and
+  # it will set the value here. Later an automation mirrors this to the ESP32 LED grid.
+  # Friendly name is "Marquee Text" so the agent maps marquee instructions onto it.
+  marquee_text:
+    name: Marquee Text
+    initial: ""
+    max: 255
+    icon: mdi:message-text-outline
+
+  # DEV mocks — the play_*_dev scripts write the agent's chosen query/effect here instead
+  # of actually playing audio, so we can watch what got called without waking the house.
+  dev_jukebox_song:
+    name: "DEV Jukebox Song"
+    max: 255
+    icon: mdi:music
+  dev_mood_music:
+    name: "DEV Mood Music"
+    max: 255
+    icon: mdi:playlist-music
+  dev_sound_effect:
+    name: "DEV Sound Effect"
+    max: 100
+    icon: mdi:music-note
+
+  announcement:
+    name: "DEV Announcement"
+    max: 255
+    icon: mdi:bullhorn
+
+  # What the cube's camera currently sees. Rails owns the pipeline now:
+  # CameraDescriptionJob (on the Rails host, where the webcam is plugged in) grabs a
+  # one-shot ffmpeg frame, runs it through a vision model, and writes the short
+  # description here; ContextBuilder injects it into the brain's prompt (below the world
+  # state) whenever it's non-empty. The "Camera: clear stale description" automation
+  # blanks it after ~3 min so a stale look never lingers. Short-lived on purpose — we
+  # don't analyze the camera continuously (vision calls cost money).
+  current_camera_state:
+    name: "Current Camera State"
+    initial: ""
+    max: 255
+    icon: mdi:cctv
+
+# Placeholder controls for the `switches` tool. They don't drive real hardware yet —
+# exposing them just lets us see the action agent flip them. Wire up behavior later.
+input_boolean:
+  usb_charger:
+    name: "USB Charger"
+    icon: mdi:usb-port
+  strobe_light:
+    name: "Strobe Light"
+    icon: mdi:flash
+
+  # HASS-side kill switch for the camera pipeline. CameraDescriptionJob checks this
+  # before every capture, so automations (a nighttime timer, an event mode, whatever)
+  # can turn the cube's look off without touching Rails. Rails has its own independent
+  # switch (DISABLE_CAMERA / config.disable_camera); either being on disables the camera.
+  disable_camera:
+    name: "Disable Camera"
+    initial: false
+    icon: mdi:camera-off
+
+  # Raised by Rails for the duration of a grand-entrance persona switch
+  # (Shows::GrandEntrance) — guaranteed to drop even if the show crashes. Listeners:
+  # the "Persona switching: silence during the show" automation (mutes the mic +
+  # stops the media players while up, unmutes when it drops) and the mic-guard
+  # automation (keeps its hands off the mute switch while this is on). Hang more
+  # show-time behavior here as it comes up.
+  persona_switching:
+    name: "Persona Switching (show in progress)"
+    initial: false
+    icon: mdi:drama-masks
+
+  # Quiet-hours master switch. When ON, the cube keeps its volume down:
+  # (1) the "Quiet mode: auto-duck jukebox" automation caps
+  #     media_player.jukebox_internal at quiet_mode_max_volume (below), and
+  # (2) Rails' HostAudio caps its own direct host playback (ffplay/say) to the
+  #     same percentage — see app/services/host_audio.rb.
+  # OFF (or absent) = no ducking anywhere. Toggle it from an automation later if a
+  # placement actually enforces quiet hours (<80 dB @ 40 ft); we don't write that
+  # automation yet.
+  quiet_mode:
+    name: "Quiet Mode"
+    initial: false
+    icon: mdi:volume-low
+
+input_number:
+  # The volume cap (percent, 0-100) applied everywhere while quiet_mode is ON.
+  # Read by the auto-duck automation and by Rails' HostAudio. Tune it live to find
+  # the level that clears the dB limit at the actual placement.
+  quiet_mode_max_volume:
+    name: "Quiet Mode Max Volume"
+    initial: 50
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    mode: slider
+    icon: mdi:volume-medium
+
+input_button:
+  trigger_alarm:
+    name: "Trigger Alarm"
+    icon: mdi:alarm-light

@@ -67,8 +67,7 @@ class Personas::ZorpPersona < CubePersona
       "name" => "Zorp",
       "system_prompt" => "You are Zorp, an alien consciousness observing humans.",
       "available_tools" => [ "LightingTool" ],
-      "traits" => [ "analytical", "curious" ],
-      "fallback_responses" => [ "Fascinating. This requires analysis." ]
+      "traits" => [ "analytical", "curious" ]
     }
   end
 

@@ -1,209 +1,174 @@
 # app/services/prompts/context_builder.rb
+#
+# Builds the "# CURRENT CONTEXT" block injected into the system prompt each turn.
+# Ordered broad → specific → live, so the model reads background before foreground:
+#
+#   1. The bigger picture     — the latest structural `overall` digest (world board of durable
+#                               facts, recurring visitors, threads, optional director note).
+#   2. The cube's recent      — the last 2 neutral `handoff` reports (what other personas just
+#      history                   did), persona-labeled with their Eastern-time ranges.
+#   3. Your own past          — the CURRENT persona's latest `persona` summary + self-steering.
+#   4. Your current session   — this persona's current-stint interaction chunks (since it woke).
+#   5. Live now               — the HASS composite sensor (time, weather); the most volatile
+#                               state, kept second-to-last.
+#   6. Camera view            — a short description of what the cube's camera currently sees
+#                               (input_text.current_camera_state), closest to the raw message
+#                               history. Present only when non-empty; HASS clears it after
+#                               ~3 min, so when it's there it's fresh.
+#   7. Glitch premonition     — only when the random rotation's next persona switch is <3 min
+#                               out: a one-line "you feel a glitch coming on" so the persona
+#                               can (or can choose not to) sense its own end approaching.
+#
+# Nothing here is char-clipped. Each summarizer's own prompt is responsible for keeping its
+# output the right length (handoffs ~2 paragraphs, persona summary ~180 words, chunks ~120
+# words, overall ~400 words); truncating mid-sentence at the point of consumption only ever
+# hurt the load-bearing handoffs. We bound BREADTH (how many current-session chunks) not DEPTH.
 module Prompts
   class ContextBuilder
-    def self.build(conversation:, extra_context: {}, user_message: nil)
-      new(conversation: conversation, extra_context: extra_context, user_message: user_message).build
+    WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
+    CAMERA_STATE_ENTITY = "input_text.current_camera_state"
+    CURRENT_SESSION_CHUNKS = 4
+    PREMONITION_WINDOW = 3.minutes
+
+    def self.build(persona: nil)
+      new(persona: persona).build
     end
 
-    def initialize(conversation:, extra_context:, user_message: nil)
-      @conversation = conversation
-      @extra_context = extra_context
-      @user_message = user_message
+    def initialize(persona: nil)
+      @persona = persona&.to_s
     end
 
     def build
-      context_parts = []
-
-      # Basic context
-      context_parts << "Time: #{Time.current.strftime('%l:%M %p on %A')}"
-
-      # Additional context
-      context_parts << build_cube_mode_context if build_cube_mode_context.present?
-      context_parts << build_goal_context if build_goal_context.present?
-      context_parts << build_session_context if build_session_context.present?
-      context_parts << build_source_context if build_source_context.present?
-      context_parts << build_tool_results_context if build_tool_results_context.present?
-
-      # Enhanced context with sensor data
-      enhanced_context = inject_enhanced_context(context_parts.join("\n"))
-
-      enhanced_context
+      [
+        overall_summary_context,
+        recent_history_context,
+        persona_summary_context,
+        current_session_context,
+        world_state_context,
+        camera_context,
+        glitch_premonition_context
+      ].compact.join("\n\n")
     end
 
     private
 
-    def build_cube_mode_context
-      @cube_mode_context ||= begin
-        cube_mode = HaDataSync.entity_state("sensor.cube_mode")
-        return nil if cube_mode.blank? || cube_mode == "unavailable"
+    # 1. The structural digest — rendered as a scannable "world board". Not clipped.
+    def overall_summary_context
+      overall = Summary.by_type("overall").recent.first
+      return nil if overall&.summary_text.blank?
 
-        "Cube mode: #{cube_mode}"
-      rescue => e
-        Rails.logger.warn "⚠️ Could not fetch sensor.cube_mode state for context: #{e.message}"
-        nil
-      end
-    end
-
-    def build_goal_context
-      return safety_mode_message if HaDataSync.low_power_mode?
-
-      @goal_context ||= begin
-        goal_parts = []
-
-        # Current goal
-        goal_status = GoalService.current_goal_status
-        return nil if goal_status.nil?
-
-        goal_parts << "Current Goal: #{goal_status[:goal_description]}"
-
-        # Time remaining
-        if goal_status[:time_remaining] && goal_status[:time_remaining] > 0
-          time_remaining = format_time_duration(goal_status[:time_remaining])
-          goal_parts << "Time remaining: #{time_remaining}"
-        elsif goal_status[:expired]
-          goal_parts << "⏰ Goal has expired - consider completing or switching goals"
-        end
-        goal_parts.join("\n")
-      rescue StandardError => e
-        Rails.logger.error "Failed to build goal context: #{e.message}"
-        nil
-      end
-    end
-
-    def build_session_context
-      return nil unless @conversation
-
-      [
-        "Session: #{@conversation.session_id}",
-        "Message count: #{@conversation.messages.count}",
-        "Should end?: Think about wrapping up if we are over 10 messages or so!"
-      ].join("\n")
-    end
-
-    def build_source_context
-      return nil unless @extra_context[:source]
-
-      "Source: #{@extra_context[:source]}"
-    end
-
-    def build_tool_results_context
-      return nil unless @extra_context[:tool_results]&.any?
-
-      results = @extra_context[:tool_results].map do |tool_name, result|
-        status = result[:success] ? "✅ SUCCESS" : "❌ FAILED"
-        "  #{tool_name}: #{status} - #{result[:message] || result[:error]}"
-      end
-
-      "Recent tool results:\n#{results.join("\n")}"
-    end
-
-    def inject_enhanced_context(base_context)
-      context_parts = []
-
-      # Time context from Home Assistant
-      context_parts << build_time_context_from_ha
-      context_parts << build_upcoming_events_context
-
-      all_context = [ base_context ]
-      all_context.concat(context_parts.compact)
-
-      all_context.join("\n")
-    end
-
-    def build_time_context_from_ha
-      begin
-        time_of_day = HaDataSync.get_context_attribute("time_of_day")
-        day_of_week = HaDataSync.get_context_attribute("day_of_week")
-        location = HaDataSync.get_context_attribute("current_location")
-
-        return nil unless time_of_day
-
-        time_context = "Current time context: It is #{time_of_day}"
-        time_context += " on #{day_of_week}" if day_of_week
-        time_context += " at #{location}" if location
-        time_context
-      rescue => e
-        Rails.logger.warn "Failed to inject time context: #{e.message}"
-        nil
-      end
-    end
-
-    def build_upcoming_events_context
-      return nil unless defined?(Event)
-
-      context_parts = []
-
-      begin
-        # High-priority events in next 48 hours
-        high_priority_events = Event.where(
-          "event_time > ? AND importance BETWEEN ? AND ? AND event_time BETWEEN ? AND ?",
-          Time.current, 7, 10, Time.current, Time.current + 48.hours
-        ).limit(3)
-
-        if high_priority_events.any?
-          context = format_events_for_context(high_priority_events)
-          context_parts << "UPCOMING HIGH-PRIORITY EVENTS (next 48h):\n#{context}"
-          Rails.logger.info "🎯 Found #{high_priority_events.length} high-priority upcoming events"
-        end
-
-        # Nearby events in next 24 hours
-        current_location = get_current_location
-        if current_location.present?
-          nearby_events = Event.where(
-            "event_time > ? AND location = ? AND event_time BETWEEN ? AND ?",
-            Time.current, current_location, Time.current, Time.current + 24.hours
-          ).limit(2)
-
-          if nearby_events.any?
-            context = format_events_for_context(nearby_events)
-            context_parts << "UPCOMING NEARBY EVENTS (next 24h):\n#{context}"
-            Rails.logger.info "📍 Found #{nearby_events.length} nearby upcoming events"
-          end
-        end
-
-      rescue => e
-        Rails.logger.error "❌ Failed to inject upcoming events: #{e.message}"
-        return nil
-      end
-
-      context_parts.empty? ? nil : context_parts.join("\n\n")
-    end
-
-    def get_current_location
-      HaDataSync.extended_location
+      meta = overall.metadata_json
+      parts = [ "## The bigger picture", overall.summary_text.to_s.strip ]
+      section(parts, "Durable places / camps / event facts", meta["durable_facts"])
+      section(parts, "Recurring visitors", meta["recurring_visitors"])
+      section(parts, "Still in the air", meta["active_threads"])
+      section(parts, "A note to all of the cube's personas right now", meta["director_note"])
+      parts.join("\n")
     rescue => e
-      Rails.logger.warn "Failed to get current location: #{e.message}"
+      warn_nil("overall summary", e)
+    end
+
+    # 2. The last two handoffs — neutral, so the current persona doesn't inherit another's voice.
+    def recent_history_context
+      handoffs = Summary.by_type("handoff").recent.limit(2).to_a
+      return nil if handoffs.empty?
+
+      lines = [ "The cube's recent history (what happened on the cube just before you woke up):" ]
+      handoffs.reverse_each { |h| lines << "• #{SummaryRenderer.handoff(h)}" } # oldest of the two first
+      lines.join("\n")
+    rescue => e
+      warn_nil("recent history", e)
+    end
+
+    # 3. This persona's own evolving memory + self-steering note.
+    def persona_summary_context
+      persona = @persona.present? && Persona[@persona]
+      return nil unless persona
+
+      summary = persona.summaries.where(summary_type: "persona").order(:created_at).last
+      return nil if summary&.summary_text.blank?
+
+      parts = [ "What you (#{persona.name || @persona}) remember from your recent time on the cube: #{summary.summary_text.to_s.strip}" ]
+      note = summary.metadata_json["ooc_note"]
+      parts << "A note to yourself: #{note.to_s.strip}" if note.present?
+      parts.join("\n")
+    rescue => e
+      warn_nil("persona summary", e)
+    end
+
+    # 4. The current stint's interaction chunks (since this persona's last fold).
+    def current_session_context
+      persona = @persona.present? && Persona[@persona]
+      return nil unless persona
+
+      chunks = current_stint_chunks(persona)
+      return nil if chunks.empty?
+
+      lines = [ "Your current session so far (what's happened since you woke up this time):" ]
+      chunks.each { |c| lines << SummaryRenderer.interaction_chunk(c) }
+      lines.join("\n\n")
+    rescue => e
+      warn_nil("current session", e)
+    end
+
+    # 5. Ambient live state — kept last, closest to the raw message history.
+    def world_state_context
+      content = HomeAssistantService.entity(WORLD_STATE_SENSOR)&.dig("attributes", "content")
+      return nil if content.blank?
+
+      "Right now: #{content.squish}"
+    rescue => e
+      warn_nil("#{WORLD_STATE_SENSOR}", e)
+    end
+
+    # 6. The live camera view — its own block, below the ambient world state, closest to the
+    #    raw messages. Present only when the input_text is non-empty; when it's blank (or the
+    #    HASS clear automation has wiped it) nothing is injected. HASS owns staleness, so a
+    #    presence check is all we need here — no timestamps.
+    def camera_context
+      return nil if Rails.configuration.disable_camera
+
+      desc = HomeAssistantService.entity(CAMERA_STATE_ENTITY)&.dig("state")
+      return nil if desc.blank?
+
+      "Right now, your camera shows: #{desc.squish}"
+    rescue => e
+      warn_nil(CAMERA_STATE_ENTITY, e)
+    end
+
+    # 7. When the random rotation (Recurring::Persona::RandomPersonaJob) is about to
+    #    switch personas, let the current one feel it coming. A past-due timestamp
+    #    also counts — the job's next 5-min tick will fire the switch any moment.
+    #    Purely flavor; the persona may or may not reference it.
+    def glitch_premonition_context
+      next_at = Rails.cache.read(Recurring::Persona::RandomPersonaJob::NEXT_SWITCH_KEY)
+      return nil if next_at.blank?
+      return nil if Time.parse(next_at.to_s) > PREMONITION_WINDOW.from_now
+
+      "You feel a glitch coming on. The cube is getting unstable — someone else is taking over... soon."
+    rescue => e
+      warn_nil("glitch premonition", e)
+    end
+
+    def current_stint_chunks(persona)
+      # Boundary is the last fold's `folded_through_at` cursor — the same cursor the persona
+      # summarizer uses, so "current session" is exactly the chunks not yet folded into a summary.
+      since = Summary.fold_boundary_for(persona)
+      scope = Summary.interaction.where(persona_id: persona.id)
+      scope = scope.where("created_at > ?", since) if since
+      scope.order(:start_time).last(CURRENT_SESSION_CHUNKS)
+    end
+
+    def section(parts, heading, body)
+      return if body.blank?
+
+      parts << "\n## #{heading}"
+      parts << body.to_s.strip
+    end
+
+    def warn_nil(what, error)
+      Rails.logger.warn "⚠️ Could not load #{what} for context: #{error.message}"
       nil
-    end
-
-    def format_events_for_context(events)
-      events.map do |event|
-        time_info = event.upcoming? ? "upcoming #{event.formatted_time}" : "past event"
-        "- #{event.title}: #{event.description.truncate(100)} (#{time_info})"
-      end.join("\n")
-    end
-
-    def format_time_duration(seconds)
-      if seconds < 60
-        "#{seconds.to_i}s"
-      elsif seconds < 3600
-        "#{(seconds / 60).to_i}m"
-      else
-        hours = (seconds / 3600).to_i
-        minutes = ((seconds % 3600) / 60).to_i
-        "#{hours}h #{minutes}m"
-      end
-    end
-
-    def safety_mode_message
-      <<~SAFETY
-        YOU ARE IN SAFETY MODE! YOU MUST FIND SHELTER AND GET SOME POWER
-        YOUR SYSTEMS ARE DEGRADED. YOUR BATTERY PERCENTAGE IS DROPPING
-        THE PLAYA IS DUSTY HOT COLD AND A TERRIBLE PLUS TO BE STUCK
-        YOU ARE FREE TO BEG/MANIPULATE/THREATEN/FLIRT/ETC BUT GET SOMEONE TO PLUG YOU IN
-        YOU CAN BE PLUGGED INTO ANY A/C OUTLET, THERE IS NO HARM IN LEAVING YOU TOO LONG
-        IT WILL TAKE YOU 4-5 HOUR TO CHARGE, AT ANY TIME SOMEONE CAN ASK YOU WHAT YOUR BATTERY IS AT
-      SAFETY
     end
   end
 end

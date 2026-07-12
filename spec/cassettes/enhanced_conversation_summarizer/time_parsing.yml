@@ -1,0 +1,215 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197237-Pb742RnoE0MJAO3UqO7k
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:47:19 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018a67bb70916d-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197237-Pb742RnoE0MJAO3UqO7k
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:47:18 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are a conversation summarizer
+        for a Burning Man AI assistant. Analyze conversations and extract key insights.\n\nCreate
+        a comprehensive summary with these elements:\n1. **important_questions** -
+        Key questions that were asked or need follow-up\n2. **useful_thoughts** -
+        Valuable insights, realizations, or patterns observed\n3. **goal_progress**
+        - Did the persona make progress toward or complete their current goal? (completed,
+        good_progress, some_progress, no_progress, goal_changed)\n4. **people** -
+        People mentioned in the conversation with their relationship/context\n5. **events**
+        - Events discussed (past or future) with time/location when available\n6.
+        **topics** - Main topics or themes discussed\n\nReturn JSON format:\n{\n  \"general_mood\":
+        \"excited and helpful\",\n  \"important_questions\": [\n    \"How do I find
+        the best art installations?\",\n    \"What time does the Temple burn?\"\n  ],\n  \"useful_thoughts\":
+        [\n    \"User is planning their first Burning Man experience\",\n    \"Strong
+        interest in fire performances and art\"\n  ],\n  \"goal_progress\": \"good_progress\",\n  \"people\":
+        [\n    {\n      \"name\": \"Sarah\",\n      \"description\": \"Friend from
+        camp who knows about fire spinning\",\n      \"relationship\": \"campmate\"\n    }\n  ],\n  \"events\":
+        [\n    {\n      \"title\": \"Temple Burn\",\n      \"description\": \"Final
+        ceremony where the Temple is burned\",\n      \"time\": \"Sunday night\",\n      \"location\":
+        \"Temple\",\n      \"importance\": 9\n    }\n  ],\n  \"topics\": [\"art installations\",
+        \"fire performances\", \"playa survival\"],\n  \"general_summary\": \"Active
+        planning session for Burning Man activities, focusing on art and performances.
+        User showed high engagement and excitement.\"\n}\n\nFocus on actionable insights
+        and emotional patterns. Extract people and events mentioned even if details
+        are incomplete.\n"},{"role":"user","content":"Analyze and summarize these
+        1 conversations from the last 0.0 hours:\n\nTotal exchanges: 1\n\n=== Conversation
+        time_session (default) ===\nDuration: 0.0s | Exchanges: 1\nMood progression:
+        neutral\nKey thoughts: Taking action or planning next steps\nNo questions
+        asked\n\nSample exchanges:\nUser: Don''t forget about the sunrise yoga tomorrow
+        morning at 6 AM at Center Camp!\nAI: I''ll set a reminder for the sunrise
+        yoga session. That sounds wonderful!\n\n\n\n\nCurrent Goal Context:\nNo active
+        goal\n\nCreate a summary that captures the essence of this time period - what
+        was the overall mood, \nwhat important questions came up, what insights were
+        gained, what progress was made toward goals, \nand what happened overall.\n"}],"model":"google/gemini-3.1-flash-lite","temperature":0.3,"max_tokens":2000}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:15 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Generation-Id:
+      - gen-1782197295-Ac1wAO7Ic5QCEzvWcZIw
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018bc61cd78432-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n\n         \n\n         \n{\"id\":\"gen-1782197295-Ac1wAO7Ic5QCEzvWcZIw\",\"object\":\"chat.completion\",\"created\":1782197295,\"model\":\"google/gemini-3.1-flash-lite-20260507\",\"provider\":\"Google\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"stop\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\n
+        \ \\\"general_mood\\\": \\\"neutral and organized\\\",\\n  \\\"important_questions\\\":
+        [],\\n  \\\"useful_thoughts\\\": [\\n    \\\"User is proactively managing
+        their schedule for upcoming playa events\\\",\\n    \\\"The AI is functioning
+        as a reliable assistant for event tracking\\\"\\n  ],\\n  \\\"goal_progress\\\":
+        \\\"no_progress\\\",\\n  \\\"people\\\": [],\\n  \\\"events\\\": [\\n    {\\n
+        \     \\\"title\\\": \\\"Sunrise Yoga\\\",\\n      \\\"description\\\": \\\"Morning
+        yoga session\\\",\\n      \\\"time\\\": \\\"Tomorrow morning at 6 AM\\\",\\n
+        \     \\\"location\\\": \\\"Center Camp\\\",\\n      \\\"importance\\\": 5\\n
+        \   }\\n  ],\\n  \\\"topics\\\": [\\n    \\\"event scheduling\\\",\\n    \\\"yoga\\\",\\n
+        \   \\\"Center Camp activities\\\"\\n  ],\\n  \\\"general_summary\\\": \\\"The
+        user provided a reminder for a specific event (sunrise yoga) to ensure it
+        is tracked. The AI acknowledged the request and confirmed it would set a reminder,
+        demonstrating effective coordination for the user's schedule.\\\"\\n}\\n```\",\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.encrypted\",\"data\":\"AY89a19BiCFdN9aeC6xOGf8HcLi55/eV/Yr4JS60lsy9q49sJQKAoOsFm1yX9eA7+kc=\",\"format\":\"google-gemini-v1\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":594,\"completion_tokens\":226,\"total_tokens\":820,\"cost\":0.0004875,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0004875,\"upstream_inference_prompt_cost\":0.0001485,\"upstream_inference_completions_cost\":0.000339},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Tue, 23 Jun 2026 06:48:16 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197295-Ac1wAO7Ic5QCEzvWcZIw
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:16 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018bcf6c28d6a7-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197295-Ac1wAO7Ic5QCEzvWcZIw
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:48:16 GMT
+recorded_with: VCR 6.4.0

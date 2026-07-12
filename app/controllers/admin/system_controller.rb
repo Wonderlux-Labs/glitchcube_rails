@@ -66,12 +66,9 @@ class Admin::SystemController < Admin::BaseController
   def get_resource_usage
     {
       database_size: get_database_size,
-      active_conversations: Conversation.where(status: 'active').count rescue 0,
-      total_memories: ConversationMemory.count rescue 0,
-      total_summaries: Summary.count rescue 0,
-      total_people: Person.count rescue 0,
-      total_events: Event.count rescue 0,
-      total_facts: Fact.count rescue 0
+      active_conversations: (Conversation.where(status: "active").count rescue 0),
+      total_memories: (Memory.count rescue 0),
+      total_summaries: (Summary.count rescue 0)
     }
   end
 
@@ -164,7 +161,7 @@ class Admin::SystemController < Admin::BaseController
     # OpenRouter/LLM Services
     dependencies[:llm_service] = {
       status: check_llm_service_health[:status],
-      primary_model: Rails.configuration.primary_model || "Not configured"
+      primary_model: Rails.configuration.ai_model || "Not configured"
     }
 
     dependencies
@@ -221,17 +218,7 @@ class Admin::SystemController < Admin::BaseController
   end
 
   def check_gps_service_health
-    begin
-      # Check if GPS tracking is working
-      if defined?(GpsTrackingService)
-        current_location = GpsTrackingService.current_location
-        { status: "healthy", message: "GPS tracking active", location: current_location }
-      else
-        { status: "unknown", message: "GPS service not available" }
-      end
-    rescue => e
-      { status: "unhealthy", message: e.message }
-    end
+    { status: "disabled", message: "GPS not active for stationary installation" }
   end
 
   # Utility methods

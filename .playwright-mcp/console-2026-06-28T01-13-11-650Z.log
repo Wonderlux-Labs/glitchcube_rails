@@ -1,0 +1,11 @@
+[  761741ms] [WARNING] [ha-button] size="small" is deprecated. Use size="s" instead. The long-form value will be removed in the next major version. @ http://homeassistant.local:8123/frontend_latest/app.90cd1b8892c2cba1.js:91
+[  807438ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[  808452ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[  810460ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[  813465ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[  843605ms] [WARNING] [ha-button] size="large" is deprecated. Use size="l" instead. The long-form value will be removed in the next major version. @ http://homeassistant.local:8123/frontend_latest/app.90cd1b8892c2cba1.js:91
+[ 1601362ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 1602402ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 1604457ms] [ERROR] WebSocket connection to 'ws://homeassistant.local:8123/api/websocket' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://homeassistant.local:8123/frontend_latest/core.10367cdb5b23766d.js:0
+[ 1607531ms] Object
+[ 4915365ms] Object

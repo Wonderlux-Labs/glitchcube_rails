@@ -2,46 +2,37 @@
 require "ostruct"
 require "net/http"
 require "timeout"
+require "base64"
 
 class LlmService
+  # Reliable structured-output models to fall back to when the primary model
+  # times out OR comes back empty/unparsable (see call_with_structured_output).
+  FAST_FALLBACK_MODELS = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ].freeze
+
   class << self
     # Main conversation call with tool support
     def call_with_tools(messages:, tools: [], model: nil, **options)
-      model = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ].sample
-      model_to_use = model || Rails.configuration.default_ai_model
+      # Respect an explicitly requested model (e.g. the translator pins a
+      # precise tool-calling model); only sample from the pool when none given.
+      default_pool = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ]
+      # In test env, skip pool sampling so VCR cassettes stay stable
+      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.ai_model
 
-      Rails.logger.info "🤖 LLM call with tools: #{model_to_use}"
-      Rails.logger.info "🔧 Tools available: #{tools.length} - #{tools.map(&:name).join(', ')}"
-      Rails.logger.info "📝 Last message: #{messages.last&.dig(:content)&.first(200)}..."
-      Rails.logger.debug "📚 Full messages: #{messages.map { |m| "#{m[:role]}: #{m[:content]&.first(100)}..." }.join(' | ')}"
+      tool_names = tools.map { |t| t.is_a?(Hash) ? (t.dig(:function, :name) || t.dig("function", "name")) : t.name }
+      Rails.logger.info "🤖 LLM call with tools: #{model_to_use} (#{tools.length} tools)"
+      Rails.logger.debug { "   tools: #{tool_names.join(', ')} | last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
-        # Prepare extras with OpenRouter-specific parameters
-        extras = {
-          temperature: options[:temperature] || 0.9,
-          max_tokens: options[:max_tokens] || 32000
-        }.merge(options.except(:temperature, :max_tokens))
+        # Prepare extras with OpenRouter-specific parameters.
+        # We do NOT set max_tokens — it's an optional completion cap and, on
+        # reasoning models, it's spent on reasoning tokens and starves the actual
+        # answer. Leave it unset so each provider uses its own (model-max) default.
+        # A caller can still pass one explicitly.
+        extras = { temperature: options[:temperature] || 0.9 }
+        extras[:max_tokens] = options[:max_tokens] if options[:max_tokens]
+        extras.merge!(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
-
-        # Log the full request being sent
-        Rails.logger.info "🚀 OpenRouter Request:"
-        Rails.logger.info "   Model: #{model_to_use}"
-        Rails.logger.info "   Tool choice: #{tools.any? ? 'auto' : nil}"
-        Rails.logger.info "   Extras: #{extras.inspect}"
-        Rails.logger.info "   Tools: #{tools.length} tools - #{tools.map(&:name).join(', ')}"
-        Rails.logger.info "📋 FULL REQUEST DETAILS:"
-        Rails.logger.info "   Messages (#{messages.length}):"
-        messages.each_with_index do |msg, i|
-          Rails.logger.info "     [#{i+1}] #{msg[:role]}: #{msg[:content]&.first(500)}#{'...' if msg[:content]&.length.to_i > 500}"
-        end
-        if tools.any?
-          Rails.logger.info "   Tool Definitions:"
-          tools.each_with_index do |tool, i|
-            Rails.logger.info "     [#{i+1}] #{tool.name}: #{tool.description}"
-            Rails.logger.info "         Parameters: #{tool.parameters.inspect}"
-          end
-        end
 
         response = client.complete(
           messages,
@@ -51,30 +42,16 @@ class LlmService
           extras: extras
         )
 
-        # Log the full response received
-        Rails.logger.info "📥 OpenRouter Response:"
-        Rails.logger.info "   Content: #{response.content&.first(500)}#{'...' if response.content&.length.to_i > 500}"
-        Rails.logger.info "   Model: #{response.model}"
-        Rails.logger.info "   Usage: #{response.usage}"
-        Rails.logger.info "   Tool calls: #{response.tool_calls&.length || 0}"
+        tool_call_count = response.tool_calls&.length || 0
+        Rails.logger.info "✅ LLM response: #{response.model} | #{tool_call_count} tool calls | usage=#{response.usage}"
+        Rails.logger.debug { "   content: #{response.content&.first(300)}" }
         if response.tool_calls&.any?
           response.tool_calls.each_with_index do |tc, i|
             begin
-              Rails.logger.info "     [#{i+1}] #{tc.name}: #{tc.arguments}"
+              Rails.logger.debug { "   tool[#{i + 1}] #{tc.name}: #{tc.arguments}" }
             rescue OpenRouter::ToolCallError => e
-              Rails.logger.warn "     [#{i+1}] #{tc.name}: MALFORMED ARGUMENTS - #{e.message}"
+              Rails.logger.warn "⚠️  tool[#{i + 1}] #{tc.name}: MALFORMED ARGUMENTS - #{e.message}"
             end
-          end
-        end
-        Rails.logger.info "📄 FULL RAW RESPONSE:"
-        Rails.logger.info "#{JSON.pretty_generate(response.raw_response)}"
-
-        Rails.logger.info "✅ LLM response received: #{response.content&.first(100)}..."
-
-        if response.has_tool_calls?
-          Rails.logger.info "🔧 Tool calls requested: #{response.tool_calls.map(&:name).join(', ')}"
-          response.tool_calls.each_with_index do |tc, i|
-            Rails.logger.debug "   Tool #{i+1}: #{tc.name} with args: #{tc.arguments}"
           end
         end
 
@@ -82,27 +59,13 @@ class LlmService
         response
 
       rescue Net::ReadTimeout, Timeout::Error => e
-
-        # ====================================================================
-        # TIMEOUT: LLM tool call timed out - trying faster models
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "⏰ TIMEOUT: LLM tool call timed out with #{model_to_use} (45s limit)"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.warn "⏰ LLM tool call timed out with #{model_to_use} (#{e.class}); trying fast models"
 
         # Try faster models for tool calls on timeout
-        fast_models = [ "openai/gpt-5-mini", "google/gemini-2.5-flash" ]
-        Rails.logger.warn "🚀 Trying #{fast_models.length} fast models for tool call timeout..."
+        fast_models = [ "google/gemini-3.1-flash-lite", "google/gemini-2.5-flash" ]
 
         fast_models.each do |fast_model|
           begin
-            Rails.logger.info "⚡ Attempting fast model: #{fast_model}"
-
             client = OpenRouter::Client.new
             response = client.complete(
               messages,
@@ -112,9 +75,8 @@ class LlmService
               extras: extras
             )
 
-            Rails.logger.info "✅ SUCCESS: Fast model #{fast_model} worked for tool call after timeout!"
+            Rails.logger.info "✅ Fast model #{fast_model} recovered the tool call after timeout"
             return response
-
           rescue => fallback_error
             Rails.logger.warn "❌ Fast model #{fast_model} failed: #{fallback_error.message}"
             next
@@ -122,22 +84,18 @@ class LlmService
         end
 
         Rails.logger.error "💥 All fast models failed for tool call timeout"
+        OpenStruct.new(
+          content: "I'm having trouble thinking right now. Please try again.",
+          tool_calls: [],
+          has_tool_calls?: false,
+          usage: { prompt_tokens: 0, completion_tokens: 0 },
+          model: model_to_use,
+          error: "All models timed out"
+        )
 
       rescue StandardError => e
-
-        # ====================================================================
-        # ERROR: LLM tool call failed
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "❌ ERROR: LLM tool call failed with #{model_to_use}"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "   Details: #{e.inspect}"
-        Rails.logger.error "   Backtrace: #{e.backtrace.first(5).join("\n")}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        Rails.logger.error "❌ LLM tool call failed with #{model_to_use}: #{e.class} - #{e.message}"
+        Rails.logger.debug { e.backtrace.first(5).join("\n") }
 
         # Return error response that mimics OpenRouter::Response interface
         OpenStruct.new(
@@ -153,28 +111,25 @@ class LlmService
 
     # Main conversation call with structured output (no tools)
     def call_with_structured_output(messages:, response_format:, model: nil, **options)
-      model = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ].sample
-      model_to_use = model || Rails.configuration.default_ai_model
+      default_pool = [ "mistralai/mistral-medium-3.1", "anthropic/claude-4-sonnet", "google/gemini-2.5-flash", "meta-llama/llama-4-maverick" ]
+      # In test env, skip pool sampling so VCR cassettes stay stable
+      model_to_use = model || (Rails.env.test? ? nil : default_pool.sample) || Rails.configuration.ai_model
 
-      Rails.logger.info "🤖 LLM call with structured output: #{model_to_use}"
-      Rails.logger.info "📊 Response format: #{response_format.name}"
-      Rails.logger.info "📝 Last message: #{messages.last&.dig(:content)&.first(200)}..."
-      Rails.logger.debug "📚 Full messages: #{messages.map { |m| "#{m[:role]}: #{m[:content]&.first(100)}..." }.join(' | ')}"
+      Rails.logger.info "🤖 LLM structured-output call: #{model_to_use} (#{response_format.name})"
+      Rails.logger.debug { "   last msg: #{messages.last&.dig(:content)&.first(200)}" }
 
       begin
-        # Prepare extras with OpenRouter-specific parameters
-        extras = {
-          temperature: options[:temperature] || 0.9,
-          max_tokens: options[:max_tokens] || 64_000
-        }.merge(options.except(:temperature, :max_tokens))
+        # Prepare extras with OpenRouter-specific parameters.
+        # We do NOT set max_tokens. It's an optional completion cap; on reasoning
+        # models the reasoning tokens eat the cap and the structured answer comes
+        # back empty (finish_reason "stop", content ""), which we'd misread as a
+        # failure. Leave it unset so each provider uses its own (model-max) default.
+        # A caller can still pass one explicitly.
+        extras = { temperature: options[:temperature] || 0.9 }
+        extras[:max_tokens] = options[:max_tokens] if options[:max_tokens]
+        extras.merge!(options.except(:temperature, :max_tokens))
 
         client = OpenRouter::Client.new
-
-        # Log the full request being sent
-        Rails.logger.info "🚀 OpenRouter Structured Output Request:"
-        Rails.logger.info "   Model: #{model_to_use}"
-        Rails.logger.info "   Response format: #{response_format.name}"
-        Rails.logger.info "   Extras: #{extras.inspect}"
 
         response = client.complete(
           messages,
@@ -183,106 +138,59 @@ class LlmService
           extras: extras
         )
 
-        Rails.logger.info "📥 OpenRouter Response:"
-        Rails.logger.info "   Content: #{response.content&.truncate(200)}"
-        Rails.logger.info "   Model: #{response.model}"
-        Rails.logger.info "   Usage: #{response.usage}"
-        Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
+        u = response.usage || {}
+        Rails.logger.info "✅ LLM response: #{response.model} | structured=#{response.structured_output.present?} | " \
+                          "tokens prompt=#{u['prompt_tokens']} completion=#{u['completion_tokens']} total=#{u['total_tokens']} | " \
+                          "cost=$#{u['cost']}"
+        Rails.logger.debug { "   content: #{response.content&.truncate(300)}" }
+
+        # A "successful" call can still come back with empty/unparsable content — some
+        # providers occasionally return finish_reason "stop" with a blank or truncated
+        # body, which yields no structured output and no exception. That's not a timeout,
+        # so it never hit the rescue below and used to fall straight through to the
+        # caller's degraded fallback. Instead, silently resend to a reliable secondary
+        # model (no TTS filler — the visitor never hears the retry).
+        if response.structured_output.blank?
+          Rails.logger.warn "⚠️ #{response.model || model_to_use} returned no parseable structured output " \
+                             "(content=#{response.content.to_s.length} chars); retrying on secondary model(s)"
+          recovered = retry_structured_on_secondary(messages, response_format, extras, exclude: model_to_use)
+          return recovered if recovered
+        end
 
         response
 
       rescue Net::ReadTimeout, Timeout::Error => e
+        Rails.logger.warn "⏰ LLM call timed out with #{model_to_use} (#{e.class}); trying fast fallback models"
 
-        # ====================================================================
-        # TIMEOUT: LLM call timed out - trying faster fallback models
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "⏰ TIMEOUT: LLM call timed out with #{model_to_use} (45s limit)"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "   This prevents 151+ second delays like we saw before"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
-
-        # Try faster fallback models for timeouts
-        fast_fallback_models = [ "openai/gpt-5-mini", "google/gemini-2.5-flash" ]
-        Rails.logger.warn "🚀 Trying #{fast_fallback_models.length} fast fallback models for timeout..."
-
-        fast_fallback_models.each do |fallback_model|
+        FAST_FALLBACK_MODELS.each do |fallback_model|
           begin
-            Rails.logger.info "⚡ Attempting fast fallback model: #{fallback_model}"
-
             response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
-
-            Rails.logger.info ""
-            Rails.logger.info "=" * 70
-            Rails.logger.info "✅ SUCCESS: Fast fallback model #{fallback_model} worked after timeout!"
-            Rails.logger.info "=" * 70
-            Rails.logger.info ""
-
+            Rails.logger.info "✅ Fast fallback model #{fallback_model} recovered after timeout"
             return response
-
           rescue => fallback_error
             Rails.logger.warn "❌ Fast fallback model #{fallback_model} failed: #{fallback_error.message}"
             next
           end
         end
 
-        # If fast fallbacks fail, fall through to regular error handling
         Rails.logger.error "💥 All fast fallback models failed after timeout"
+        OpenStruct.new(
+          content: "I'm having trouble thinking right now. Please try again.",
+          structured_output: nil,
+          usage: { prompt_tokens: 0, completion_tokens: 0 },
+          model: model_to_use,
+          error: "All models timed out"
+        )
 
       rescue StandardError => e
+        Rails.logger.error "❌ LLM structured-output call failed with #{model_to_use}: #{e.class} - #{e.message}"
+        Rails.logger.debug { e.backtrace.first(5).join("\n") }
 
-        # ====================================================================
-        # ERROR: LLM structured output call failed - trying fallback models
-        # ====================================================================
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "❌ ERROR: LLM structured output call failed with #{model_to_use}"
-        Rails.logger.error "   Error: #{e.message}"
-        Rails.logger.error "   Class: #{e.class}"
-        Rails.logger.error "   Backtrace: #{e.backtrace.first(3).join("\n")}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
-
-        # Try fallback models
-        fallback_models = Rails.configuration.fallback_models || []
-        if fallback_models.any?
-          Rails.logger.warn "🔄 Trying #{fallback_models.length} fallback models..."
-
-          fallback_models.shuffle.each do |fallback_model|
-            begin
-              Rails.logger.info "🔄 Attempting fallback model: #{fallback_model}"
-
-              response = attempt_structured_output_call(messages, response_format, fallback_model, extras)
-
-              Rails.logger.info ""
-              Rails.logger.info "=" * 70
-              Rails.logger.info "✅ SUCCESS: Fallback model #{fallback_model} worked!"
-              Rails.logger.info "=" * 70
-              Rails.logger.info ""
-
-              return response
-
-            rescue => fallback_error
-              Rails.logger.warn "❌ Fallback model #{fallback_model} failed: #{fallback_error.message}"
-              next
-            end
-          end
-        end
-
-        # All models failed - return fallback response
-
-        Rails.logger.error ""
-        Rails.logger.error "=" * 70
-        Rails.logger.error "💥 CRITICAL: All LLM models failed - returning fallback response"
-        Rails.logger.error "   Primary: #{model_to_use} - #{e.message}"
-        Rails.logger.error "   Fallbacks tried: #{fallback_models.join(', ')}"
-        Rails.logger.error "=" * 70
-        Rails.logger.error ""
+        # A hard error (bad model id, 429, provider 5xx) shouldn't cost us the whole call —
+        # try a reliable secondary before giving up, so one flaky/misconfigured model never
+        # silently drops a summary or a turn.
+        recovered = retry_structured_on_secondary(messages, response_format, extras, exclude: model_to_use)
+        return recovered if recovered
 
         # Return a mock response with error info
         OpenStruct.new(
@@ -299,32 +207,37 @@ class LlmService
 
     def attempt_structured_output_call(messages, response_format, model, extras)
       client = OpenRouter::Client.new
-
-      Rails.logger.info "🚀 OpenRouter Structured Output Request:"
-      Rails.logger.info "   Model: #{model}"
-      Rails.logger.info "   Response format: #{response_format.name}"
-      Rails.logger.info "   Extras: #{extras.inspect}"
-
-      response = client.complete(
+      client.complete(
         messages,
         model: model,
         response_format: response_format,
         extras: extras
       )
+    end
 
-      Rails.logger.info "📥 OpenRouter Response:"
-      Rails.logger.info "   Content: #{response.content&.truncate(200)}"
-      Rails.logger.info "   Model: #{response.model}"
-      Rails.logger.info "   Structured output available: #{response.structured_output.present?}"
-
-      response
+    # Resend the same request to reliable secondary models, returning the first
+    # response that actually parses into structured output. nil if none recover.
+    def retry_structured_on_secondary(messages, response_format, extras, exclude:)
+      (FAST_FALLBACK_MODELS - [ exclude ]).each do |model|
+        begin
+          resp = attempt_structured_output_call(messages, response_format, model, extras)
+          if resp.structured_output.present?
+            Rails.logger.info "✅ Secondary #{model} recovered structured output after empty primary response"
+            return resp
+          end
+          Rails.logger.warn "⚠️ Secondary #{model} also returned empty structured output"
+        rescue => e
+          Rails.logger.warn "❌ Secondary #{model} failed: #{e.message}"
+        end
+      end
+      nil
     end
 
     public
 
     # Background LLM calls for various purposes (no tools)
     def background_call(prompt:, context: {}, model: nil, **options)
-      model_to_use = model || Rails.configuration.default_ai_model
+      model_to_use = model || Rails.configuration.ai_model
 
       Rails.logger.info "🧠 Background LLM call: #{model_to_use}"
       Rails.logger.debug "📝 Prompt: #{prompt.first(100)}..."
@@ -334,10 +247,10 @@ class LlmService
 
       begin
         client = OpenRouter::Client.new
-        extras = {
-          temperature: options[:temperature] || 0.3,
-          max_tokens: options[:max_tokens] || 5000
-        }.merge(options.except(:temperature, :max_tokens))
+        # max_tokens left unset (see note in call_with_structured_output).
+        extras = { temperature: options[:temperature] || 0.3 }
+        extras[:max_tokens] = options[:max_tokens] if options[:max_tokens]
+        extras.merge!(options.except(:temperature, :max_tokens))
 
         response = client.complete(
           messages,
@@ -374,51 +287,101 @@ class LlmService
       )
     end
 
+    # One-shot vision call: send an image (base64 data-URI content part) plus a prompt
+    # to a vision-capable model and return the text reply. If the primary raises or
+    # comes back blank, retry once on the configured fallback model (same idea as
+    # retry_structured_on_secondary), then raise — the caller (CameraDescriptionJob)
+    # wants a loud failure, not a degraded description.
+    def call_with_vision(prompt:, image_path:, model: nil)
+      model_to_use = model || Rails.configuration.camera_vision_model
+      messages = vision_messages(prompt, image_path)
+
+      Rails.logger.info "👁️ LLM vision call: #{model_to_use} (#{File.basename(image_path)})"
+
+      begin
+        content = attempt_vision_call(messages, model_to_use)
+        return content if content.present?
+        Rails.logger.warn "⚠️ #{model_to_use} returned an empty vision response; retrying on fallback"
+      rescue StandardError => e
+        Rails.logger.warn "❌ Vision call failed on #{model_to_use}: #{e.message}; retrying on fallback"
+      end
+
+      fallback_model = Rails.configuration.vision_fallback_model
+      content = attempt_vision_call(messages, fallback_model)
+      raise "Vision call returned no content on #{model_to_use} or #{fallback_model}" if content.blank?
+
+      Rails.logger.info "✅ Vision fallback #{fallback_model} recovered"
+      content
+    end
+
+    # Local vision via ollama running on the same host — the snapshot never leaves
+    # the box (the privacy win for the Burn). POSTs one image + prompt to ollama's
+    # /api/generate. On ANY failure (ollama down, timeout, non-200, blank reply) it
+    # falls back to the OpenRouter call_with_vision path so a description still lands.
+    # Deliberately NOT DRY with call_with_vision: the two backends have different
+    # wire shapes and failure modes, and keeping them separate keeps each readable.
+    def call_with_local_vision(prompt:, image_path:)
+      begin
+        content = attempt_local_vision_call(prompt, image_path)
+        return content if content.present?
+        Rails.logger.warn "⚠️ Local vision returned empty; falling back to OpenRouter vision"
+      rescue StandardError => e
+        Rails.logger.warn "❌ Local vision failed (#{e.message}); falling back to OpenRouter vision"
+      end
+
+      call_with_vision(prompt: prompt, image_path: image_path)
+    end
+
     # Check if LLM service is configured and available
     def available?
-      OpenRouter.configured?
+      OpenRouter.configuration.access_token.present?
     end
 
     private
 
+    def vision_messages(prompt, image_path)
+      image_uri = "data:image/jpeg;base64,#{Base64.strict_encode64(File.binread(image_path))}"
+      [ {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: image_uri } }
+        ]
+      } ]
+    end
 
-    def transform_openrouter_response(response, model)
-      Rails.logger.info "Transforming OpenRouter response: #{response&.inspect}"
-      return nil unless response
+    def attempt_vision_call(messages, model)
+      client = OpenRouter::Client.new
+      response = client.complete(messages, model: model, extras: { temperature: 0.3 })
+      response.content
+    end
 
-      choice = response.dig("choices", 0)
-      message = choice&.dig("message")
+    # Raw POST to the local ollama vision endpoint. `think: false` stops the vision
+    # model wasting time on chain-of-thought; keep_alive holds it resident between
+    # turns (warm ~2.5s, cold ~7s while it loads). Raises on any transport/HTTP error
+    # so call_with_local_vision can fall back.
+    def attempt_local_vision_call(prompt, image_path)
+      model = Rails.configuration.local_vision_model
+      uri = URI.join(Rails.configuration.local_vision_url, "/api/generate")
+      Rails.logger.info "👁️ Local vision call: #{model} (#{File.basename(image_path)})"
 
-      {
-        content: message&.dig("content") || "",
-        tool_calls: extract_tool_calls(message),
-        usage: response["usage"] || { prompt_tokens: 0, completion_tokens: 0 },
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.open_timeout = 5
+      http.read_timeout = 60
+      request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json")
+      request.body = {
         model: model,
-        finish_reason: choice&.dig("finish_reason"),
-        raw_response: response
-      }
-    end
+        prompt: prompt,
+        images: [ Base64.strict_encode64(File.binread(image_path)) ],
+        stream: false,
+        think: false,
+        keep_alive: "10m"
+      }.to_json
 
-    def extract_tool_calls(message)
-      return [] unless message&.dig("tool_calls")
+      response = http.request(request)
+      raise "ollama returned HTTP #{response.code}" unless response.code.to_i == 200
 
-      message["tool_calls"].map do |tool_call|
-        OpenStruct.new(
-          name: tool_call.dig("function", "name"),
-          arguments: parse_tool_arguments(tool_call.dig("function", "arguments")),
-          id: tool_call["id"]
-        )
-      end
-    end
-
-    def parse_tool_arguments(arguments_string)
-      Rails.logger.info("tool args are #{arguments_string}")
-      return {} unless arguments_string
-
-      JSON.parse(arguments_string)
-    rescue JSON::ParserError => e
-      Rails.logger.error "Failed to parse tool arguments: #{e.message}"
-      {}
+      JSON.parse(response.body)["response"].to_s.strip
     end
 
     def build_background_messages(prompt, context)

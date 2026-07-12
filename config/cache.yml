@@ -6,11 +6,11 @@ default: &default
     namespace: <%= Rails.env %>
 
 development:
-  database: glitchcube_rails_development_cache
+  database: cache
   <<: *default
 
 test:
-  database: glitchcube_rails_test_cache
+  database: cache
   <<: *default
 
 production:

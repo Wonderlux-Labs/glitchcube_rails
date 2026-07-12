@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# GPS location spoofing/home-camp helpers; only callers are the GPS/GIS bundle. Restore for a future Burn.
+# ============================================================
+
 # Configuration class for GlitchCube system
 # Provides centralized access to configuration values and utility methods
 class GlitchCube
@@ -17,14 +22,8 @@ class GlitchCube
       Gps::GpsTrackingService.new.set_location(coords: "#{lat}, #{lng}")
     end
 
-    def home_camp_coordinates
-      {}
-    end
-
     def gps_spoofing_allowed?
-      return false unless Rails.env.development?
-
-      true
+      Rails.env.development? || Rails.env.test?
     end
 
     # Get home camp coordinates (default to center of Black Rock City)

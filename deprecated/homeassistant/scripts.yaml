@@ -1,0 +1,355 @@
+glitchcube_tts_queued_ui:
+  sequence:
+  - data:
+      entity_id: media_player.square_voice
+      message: '{{ message }}'
+      options:
+        voice: "{% set persona = states('input_text.current_persona') %} {% if persona
+          == 'Buddy' %}\n  en-US-Standard-B\n{% elif persona == 'Jax' %}\n  en-US-Standard-A\n{%
+          elif persona == 'Lomi' %}\n  en-US-Standard-C\n{% elif persona == 'Zorp'
+          %}\n  en-US-Standard-D\n{% else %}\n  en-US-Standard-B\n{% endif %}\n"
+    action: tts.speak
+  alias: GlitchCube TTS Queued - UI
+  mode: queued
+  max: 10
+  description: ''
+weather_forecast:
+  sequence:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.weather_prompt
+    data:
+      value: "Summarize the weather forecast for today and later this week. Current
+        conditions: Temperature {{ states('weather.pirateweather', 'temperature')
+        }}°F, {{ states('weather.pirateweather') }}, humidity {{ state_attr('weather.pirateweather',
+        'humidity') }}%, wind {{ state_attr('weather.pirateweather', 'wind_speed')
+        }} mph.  \nDetailed forecast data: {\n  \"current\": {\n    \"temperature\":
+        \"{{ states('sensor.pirateweather_temperature') }}\",\n    \"summary\": \"{{
+        states('sensor.pirateweather_summary') }}\",\n    \"cloud_coverage\": \"{{
+        states('sensor.pirateweather_cloud_coverage') }}\",\n    \"precip_probability\":
+        \"{{ states('sensor.pirateweather_precip_probability') }}\",\n    \"alerts\":
+        \"{{ states('sensor.pirateweather_alerts') }}\"\n  },\n  \"hourly\": {\n    {%
+        for hour in ['1h', '2h', '3h', '6h', '12h'] -%}\n    \"{{ hour }}\": {\n      \"temperature\":
+        \"{{ states('sensor.pirateweather_temperature_' + hour) }}\",\n      \"summary\":
+        \"{{ states('sensor.pirateweather_summary_' + hour) }}\",\n      \"cloud_coverage\":
+        \"{{ states('sensor.pirateweather_cloud_coverage_' + hour) }}\",\n      \"precip_probability\":
+        \"{{ states('sensor.pirateweather_precip_probability_' + hour) }}\"\n    }{%
+        if not loop.last %},{% endif %}\n    {% endfor -%}\n  },\n  \"daily\": {\n
+        \   {% for day in ['0d', '1d', '2d'] -%}\n    \"{{ day }}\": {\n      \"summary\":
+        \"{{ states('sensor.pirateweather_summary_' + day) }}\",\n      \"cloud_coverage\":
+        \"{{ states('sensor.pirateweather_cloud_coverage_' + day) }}\",\n      \"precip_probability\":
+        \"{{ states('sensor.pirateweather_precip_probability_' + day) }}\",\n      \"moon_phase\":
+        \"{{ states('sensor.pirateweather_moon_phase_' + day) }}\"\n    }{% if not
+        loop.last %},{% endif %}\n    {% endfor -%}\n  }\n}\nPlease provide two separate
+        summaries:  1. HOURLY: A brief summary for the next 12 hours  2. UPCOMING:
+        A summary for the next 2-3 days"
+  - action: homeassistant.update_entity
+    target:
+      entity_id: sensor.llm_weather_response
+    data:
+      entity_id:
+      - sensor.llm_weather_response
+  - delay: 00:00:05
+play_music_on_jukebox:
+  sequence:
+  - action: music_assistant.play_media
+    metadata: {}
+    data:
+      media_id: '{{ media_id }}'
+      enqueue: '{{ enqueue }}'
+      media_type: track
+      artist: '{{ artist }}'
+      album: '{{ album }}'
+    target:
+      entity_id: media_player.cube_jukebox
+  - if:
+    - condition: state
+      entity_id: media_player.cube_music
+      state: playing
+    then: []
+    else:
+    - action: media_player.media_play
+      metadata: {}
+      data: {}
+      target:
+        entity_id: media_player.cube_music
+  alias: Play Music On Jukebox
+  description: 'This action lets you play music on the jukebox and better yet it searches
+    for music for you! We set media_type to track by default, and then YOU MUST SEND
+    MEDIA_ID parameter you can send in a normal string like -Nirvana - Smells Like
+    Teen Spirit- or -Coltrane - Giant Steps- and we''ll try to find it for you - You
+    can optionally restrict by artist and even album if you are getting funny results.
+    Enqueue takes a few different options: DIf the content should be played now or
+    be added to the queue. Options are: play: Play now, replace: Replace the existing
+    queue and play now next: Add to the current queue after the currently playing
+    item, replace_next: Replace the current queue after the currently playing item
+    add: Add to the end of the queue This defaults to replace_next...assuming you
+    are in charge but you don''t want to interrupt a song But if you are in full jukebox
+    party mode and tons of people are lining up songs, probably ADD them instead If
+    a user tells you nothing is playing you can force a play of what you want with
+    REPLACE -- TLDR - you must send in media_id which is any string like "Song by
+    Artist" and will do fuzzy search everything else is optional, but you can also
+    send artist and/or album to narrow and you have a variety of queue modes - use
+    play to force, use queue in a music extravaganza, otherwise we can handle'
+  fields:
+    media_id:
+      selector:
+        text:
+      name: media_id
+      description: REQUIRED (this is the song you want to play, fuzzy search is okay,
+        so can do "Watermelon Man by Herbie Hancock" or like "Nirvana - Teen Spirit"
+        and should work for you but the more precise the better
+      required: true
+    artist:
+      selector:
+        text:
+      name: artist
+      description: Artist (optional) - restrict to tracks by artist name
+    album:
+      selector:
+        text:
+      name: album
+      description: optional - restrict to a certain album - great for those deep cuts
+        when you know what version you want!
+    enqueue:
+      selector:
+        select:
+          options:
+          - play
+          - play_next
+          - replace_next
+          - add
+      name: enqueue
+      description: optional - how to play - defaults to replace_next (will always
+        play next but not interrupt a song if playing) - use play to force now - use
+        add if youa re queing up songs for a party or running a whole damn jukebox
+      default: replace_next
+notification:
+  alias: notification
+  description: send to marquee screen
+  fields:
+    text:
+      selector:
+        text:
+      name: text
+      description: text to display
+      required: true
+    duration:
+      selector:
+        number:
+          min: 1
+          max: 100
+          mode: box
+      name: duration
+      description: duration seconds to display
+    wakeup:
+      selector:
+        boolean:
+      name: wakeup
+      description: wakeup screen if asleep
+    rainbow:
+      selector:
+        boolean:
+      name: rainbow
+      description: add animated rainbow colors to text
+    color:
+      selector:
+        text:
+      name: color
+      description: 'hex color code (e.g. #ff0000 for red)'
+  sequence:
+  - action: awtrix.notification
+    metadata: {}
+    data:
+      device: ac07cb1bceee39dce3af75aa6c6d784c
+      wakeup: '{{ wakeup | default(true) }}'
+      text: '{{ text }}'
+      duration: '{{ duration | default(30) }}'
+      color: '{{ color | default(''#d6b135'') }}'
+      rainbow: '{{ rainbow | default(false) }}'
+glitchcube_tts_queued_ui_duplicate:
+  sequence:
+  - data:
+      entity_id: media_player.square_voice
+      message: '{{ message }}'
+    action: tts.speak
+  alias: GlitchCube TTS Queued - UI (Duplicate)
+  mode: queued
+  max: 10
+  description: ''
+cam_analyze_tablet:
+  sequence:
+  - action: llmvision.stream_analyzer
+    data:
+      remember: true
+      use_memory: true
+      message: description of whats going on - include identifiable objects, num people,
+        objects, and clothing items even
+      image_entity:
+      - camera.tablet
+      provider: 01K21T5563YK72553SX49G9WK3
+      model: google/gemini-2.5-flash-lite
+      duration: 3
+      max_frames: 2
+      generate_title: true
+    response_variable: tablet_camera_desc
+  alias: Cam Analyze(tablet)
+  description: ''
+cam_analyze_tablet_duplicate:
+  sequence:
+  - action: llmvision.stream_analyzer
+    data:
+      remember: true
+      use_memory: true
+      image_entity:
+      - camera.tablet
+      provider: 01K21T5563YK72553SX49G9WK3
+      model: google/gemini-2.5-flash-lite
+      duration: 5
+      max_frames: 3
+      generate_title: true
+      max_tokens: 300
+      message: intricate description of all identifiable objects, clothes, vehicles
+        overall scene etc - if humans are in frame focus on them
+    response_variable: tablet_camera_desc_detail
+  alias: Cam Analyze(tablet) (Duplicate)
+  description: ''
+main_cam_analyze_detail:
+  sequence:
+  - action: llmvision.stream_analyzer
+    data:
+      remember: true
+      use_memory: true
+      image_entity:
+      - camera.camera
+      provider: 01K21T5563YK72553SX49G9WK3
+      model: google/gemini-2.5-flash-lite
+      duration: 5
+      max_frames: 3
+      max_tokens: 2000
+      message: intricate description of all identifiable objects, clothes, vehicles
+        overall scene etc - if humans are in frame focus on them
+    response_variable: main_camera_desc_detail
+  alias: Main Cam Analyze (detail)
+  description: ''
+search_jukebox:
+  fields:
+    query:
+      selector:
+        text:
+      name: query
+      description: fuzzy search tracks/artists/albums - for example "Coltrane Blue",
+        "Phish - Divided Sky", or "Techno")
+      required: true
+  sequence:
+  - action: music_assistant.search
+    metadata: {}
+    data:
+      name: '{{ query }}'
+      media_type: track
+      library_only: false
+      config_entry_id: 01K1VK4MYJ75WNGJR5ESSAC2WY
+      limit: 10
+    response_variable: music_query}}
+  alias: Search Jukebox
+  description: ''
+
+# Proactive event triggering scripts
+trigger_proactive_event:
+  alias: "Trigger Proactive Event"
+  description: "Generate and announce a contextual proactive message based on trigger type"
+  fields:
+    trigger_type:
+      description: "Type of proactive trigger"
+      example: "motion_detected"
+      selector:
+        select:
+          options:
+            - "motion_detected"
+            - "event_reminder"
+            - "goal_check_in"
+            - "system_startup"
+            - "location_change"
+            - "time_based"
+            - "battery_low"
+            - "weather_change"
+            - "custom"
+    custom_context:
+      description: "Optional additional context (for custom triggers)"
+      example: "User returned home after long absence"
+      default: ""
+      selector:
+        text:
+          multiline: true
+  sequence:
+    - service: rest_command.glitchcube_proactive
+      data:
+        trigger: "{{ trigger_type }}"
+        context: |
+          {
+            {% if custom_context and custom_context != '' %}
+            "custom_context": {{ custom_context | to_json }},
+            {% endif %}
+            "time": "{{ now().strftime('%A %I:%M %p') }}",
+            "location": "{{ states('sensor.glitchcube_location_context') | default('unknown') }}",
+            "zone": "{{ state_attr('sensor.glitchcube_location_context', 'zone') | default('unknown') }}",
+            "current_persona": "{{ states('input_select.current_persona') | default('buddy') }}",
+            "battery_level": "{{ states('sensor.glitchcube_battery') | default('unknown') }}",
+            "temperature": "{{ states('sensor.outside_temperature') | default('unknown') }}",
+            "people_home": {{ states.person | selectattr('state', 'eq', 'home') | list | length }},
+            "motion_detected": {{ is_state('binary_sensor.motion_detected', 'on') }},
+            "system_uptime": "{{ states('sensor.system_uptime') | default('unknown') }}"
+          }
+    - service: system_log.write
+      data:
+        message: "Triggered proactive event: {{ trigger_type }} at {{ now() }}"
+        level: info
+
+# Quick trigger scripts for common scenarios
+proactive_motion_greeting:
+  alias: "Motion Detected Greeting"
+  description: "Natural greeting when motion is detected"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "motion_detected"
+
+proactive_event_reminder:
+  alias: "Event Reminder"
+  description: "Remind about upcoming events"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "event_reminder"
+
+proactive_goal_checkin:
+  alias: "Goal Check-in"
+  description: "Check in on current goals and progress"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "goal_check_in"
+
+proactive_system_startup:
+  alias: "System Startup Announcement"
+  description: "Announce system is ready after startup"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "system_startup"
+
+proactive_location_update:
+  alias: "Location Change Notification"
+  description: "Comment on location change or offer local info"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "location_change"
+
+proactive_time_based:
+  alias: "Time-based Suggestions"
+  description: "Time-appropriate suggestions or observations"
+  sequence:
+    - service: script.trigger_proactive_event
+      data:
+        trigger_type: "time_based"

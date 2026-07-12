@@ -1,0 +1,30 @@
+#!/bin/bash
+# GlitchCube boot supervisor entrypoint.
+#
+# Run by the com.glitchcube.boot LaunchAgent (RunAtLoad + KeepAlive) in the
+# logged-in GUI session. Ensures the HASS VM is up, then execs foreman in the
+# foreground so launchd supervises it and restarts on crash.
+#
+# launchd (and non-login shells) get a bare PATH with only system Ruby 2.6, so
+# we set PATH explicitly to reach rbenv shims + Homebrew.
+set -u
+
+export PATH="/Users/estiens/.rbenv/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+APP_ROOT="/Users/estiens/code/glitchcube-main/glitchcube_rails"
+cd "$APP_ROOT" || { echo "[glitchcube-boot] cannot cd to $APP_ROOT" >&2; exit 1; }
+
+# Ruby guard: rbenv shims resolve .ruby-version only if that version is installed.
+want="$(cat .ruby-version 2>/dev/null)"
+have="$(ruby -e 'print RUBY_VERSION' 2>/dev/null)"
+if [ "$have" != "$want" ]; then
+  echo "[glitchcube-boot] Ruby $want required but got '${have:-none}'." >&2
+  echo "[glitchcube-boot] Install it:  rbenv install $want   (then retry)" >&2
+  exit 1
+fi
+
+# Best-effort: start the Home Assistant VM. Never blocks the app.
+"$APP_ROOT/bin/ensure-hass-vm" || true
+
+# Foreground process runner — foreman exit => launchd KeepAlive restarts us.
+exec foreman start -f Procfile.dev

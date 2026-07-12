@@ -48,7 +48,7 @@ RSpec.describe "Conversation API", type: :request do
       }
 
       expect {
-        setup_result = ConversationNewOrchestrator::Setup.call(session_id: session_id, context: context)
+        setup_result = ConversationOrchestrator::Setup.call(session_id: session_id, context: context)
         unless setup_result.success?
           puts "Setup failed: #{setup_result.error}"
         end
@@ -78,7 +78,7 @@ RSpec.describe "Conversation API", type: :request do
         source: "hass_conversation"
       }
 
-      setup_result = ConversationNewOrchestrator::Setup.call(session_id: session_id, context: context)
+      setup_result = ConversationOrchestrator::Setup.call(session_id: session_id, context: context)
       expect(setup_result.success?).to be true
 
       # Check that agent_id is extracted and could be used for persona switching

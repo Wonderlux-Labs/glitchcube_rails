@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# BRC-geography location context (GPS); empty, never-populated tables. Restore for a future Burn.
+# ============================================================
+
 # DONT CHANGE THIS IMPLMENTATION JUST USE IT OR EXTEND IT MUCH BETTER NOW
 
 module Gps

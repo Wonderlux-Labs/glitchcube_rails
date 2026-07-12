@@ -4,48 +4,27 @@ default: &default
     schedule: every minute
     queue: default
 
-
-  weather_forecast_update:
-    class: Recurring::Content::WeatherForecastSummarizerJob
-    schedule: "0 * * * *"     # Every hour at the top of the hour
+  random_persona:
+    class: Recurring::Persona::RandomPersonaJob
+    schedule: "*/5 * * * *"   # Check every 5 min; switches once a 30–90 min interval elapses
     queue: default
 
-  conversation_summarizer:
-    class: Recurring::System::Summaries::ConversationSummarizerJob
-    schedule: "*/30 * * * *"  # Every 30 minutes
-    queue: default
+  # NOTE: the interaction-chunk summarizer (Recurring::Memory::SummarizerJob) is NO LONGER a
+  # cron job — it's enqueued per-persona every ~N turns by SummaryTriggers, and flushed on
+  # persona switch by PersonaSummarizerService.
 
-  goal_monitor:
-    class: Recurring::Persona::GoalMonitorJob
-    schedule: "*/5 * * * *"   # Every 5 minutes
-    queue: default
-
-
-  daily_summarizer:
-    class: Recurring::System::Summaries::DailySummarizerJob
-    schedule: "0 3 * * *"     # Daily at 3 AM
-    queue: default
-
-  summary_consolidation:
-    class: Recurring::System::Summaries::SummaryConsolidationJob
-    schedule: "30 2 * * *"    # Daily at 2:30 AM (before daily summarizer)
+  overall_summary:
+    class: Recurring::Memory::OverallSummarizerJob
+    schedule: "5 * * * *"     # Hourly (:05) — fold the newest handoff reports into the one overall
     queue: default
 
 production:
   <<: *default
-  
+
   # Production-specific jobs
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
-
-  random_persona:
-    class: Recurring::Persona::RandomPersonaJob
-    schedule: "*/5"
-  gps_sensor_update:
-    class: Recurring::System::GpsSensorUpdateJob
-    schedule: "*/5 * * * *"   # Every 5 minutes
-    queue: default
 
   host_registration:
     class: Recurring::System::HostRegistrationJob
@@ -54,14 +33,8 @@ production:
 
 development:
   <<: *default
-  
-  # Development-specific overrides (faster intervals for testing)
-  gps_sensor_update:
-    class: Recurring::System::GpsSensorUpdateJob
-    schedule: "*/3 * * * *"   # Every 3 minutes in dev (faster)
-    queue: default
 
   host_registration:
     class: Recurring::System::HostRegistrationJob
-    schedule: "*/3 * * * *"   # Every 1 minute in dev (faster)
+    schedule: "*/3 * * * *"   # Every 3 minutes in dev (faster)
     queue: default

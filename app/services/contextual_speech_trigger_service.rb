@@ -1,5 +1,10 @@
 # app/services/contextual_speech_trigger_service.rb
 
+# ============================================================
+# DORMANT — NOT USED IN THE CURRENT (REGIONAL) ITERATION
+# Only consumed by the disabled Performance Mode service; no live caller.
+# ============================================================
+
 class ContextualSpeechTriggerService
   class Error < StandardError; end
   class NoResponseError < Error; end
@@ -28,7 +33,6 @@ class ContextualSpeechTriggerService
   def initialize
     @llm_service = LlmService
     @prompt_service = PromptService
-    @tool_calling_service = ToolCallingService.new
   end
 
   # Main method to trigger contextual speech
@@ -234,7 +238,7 @@ class ContextualSpeechTriggerService
       - Daily transition (sunrise, sunset, midnight, etc.)
       - Event timing (art burns, ceremonies, performances)
       - Personal milestone (time since arrival, goal deadlines)
-      - Burning Man schedule milestone
+      - Burn event schedule milestone
 
       Consider:
       - How does this time milestone affect your character?
@@ -423,22 +427,23 @@ class ContextualSpeechTriggerService
     # Parse the response for metadata
     response_data = parse_response_metadata(llm_response)
 
-    # Extract tool intents if present
-    tool_intents = response_data[:tool_intents] || []
-
-    # Execute tool intents if any
+    # Hand any environment instruction to the Home Assistant conversation agent —
+    # same path as EnvironmentDirectorJob. There's no Conversation row here (this is
+    # a one-shot trigger, not a persona turn), so we call conversation_process
+    # directly rather than enqueuing the job.
+    instruction = response_data[:environment_instruction]
     tool_results = {}
-    if tool_intents.any?
-      Rails.logger.info "🔧 Executing #{tool_intents.length} tool intents from contextual speech"
-
-      tool_intents.each_with_index do |intent, index|
-        begin
-          result = @tool_calling_service.execute_intent(intent, context)
-          tool_results["intent_#{index + 1}"] = result
-        rescue StandardError => e
-          Rails.logger.error "❌ Tool intent execution failed: #{e.message}"
-          tool_results["intent_#{index + 1}"] = { success: false, error: e.message }
-        end
+    if instruction.present?
+      Rails.logger.info "🎬 Handing environment instruction to HA agent from contextual speech: #{instruction}"
+      begin
+        tool_results["environment"] = HomeAssistantService.instance.conversation_process(
+          text: instruction,
+          agent_id: Rails.configuration.hass_action_agent,
+          conversation_id: "cube_env_ctx_#{persona}"
+        )
+      rescue StandardError => e
+        Rails.logger.error "❌ Environment instruction execution failed: #{e.message}"
+        tool_results["environment"] = { success: false, error: e.message }
       end
     end
 
@@ -446,7 +451,7 @@ class ContextualSpeechTriggerService
       persona: persona,
       speech_text: extract_speech_text(llm_response),
       metadata: response_data,
-      tool_intents: tool_intents,
+      environment_instruction: instruction,
       tool_results: tool_results,
       timestamp: Time.current.iso8601,
       context: context
@@ -462,12 +467,9 @@ class ContextualSpeechTriggerService
     metadata[:questions] = response[/\[QUESTIONS?:\s*([^\]]+)\]/i, 1]&.strip
     metadata[:goal] = response[/\[GOALS?:\s*([^\]]+)\]/i, 1]&.strip
 
-    # Look for tool intents
-    tool_intent_match = response.match(/\[TOOL_INTENTS?:\s*([^\]]+)\]/i)
-    if tool_intent_match
-      intent_text = tool_intent_match[1].strip
-      metadata[:tool_intents] = intent_text.split(/[,;]/).map(&:strip).reject(&:empty?)
-    end
+    # Look for a single plain-English environment instruction
+    environment_match = response.match(/\[ENVIRONMENT:\s*([^\]]+)\]/i)
+    metadata[:environment_instruction] = environment_match[1].strip if environment_match
 
     metadata.compact
   end
@@ -479,7 +481,7 @@ class ContextualSpeechTriggerService
                         .gsub(/\[MOOD:\s*[^\]]+\]/i, "")
                         .gsub(/\[QUESTIONS?:\s*[^\]]+\]/i, "")
                         .gsub(/\[GOALS?:\s*[^\]]+\]/i, "")
-                        .gsub(/\[TOOL_INTENTS?:\s*[^\]]+\]/i, "")
+                        .gsub(/\[ENVIRONMENT:\s*[^\]]+\]/i, "")
                         .strip
 
     clean_text.present? ? clean_text : nil

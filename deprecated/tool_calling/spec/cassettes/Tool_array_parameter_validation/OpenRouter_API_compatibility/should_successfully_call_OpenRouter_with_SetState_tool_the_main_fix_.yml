@@ -1,0 +1,234 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197111-3mTtRw6W7AAoIBBtBDJl
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:45:11 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a101874cdb512440-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197111-3mTtRw6W7AAoIBBtBDJl
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:45:11 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197244-TDplLzXho44rpNYmAnAM
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:47:25 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018a904fe2e977-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197244-TDplLzXho44rpNYmAnAM
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:47:25 GMT
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"user","content":"Turn on lights with red color"}],"model":"google/gemini-3.1-flash-lite","temperature":0.1,"max_tokens":50,"tools":[{"type":"function","function":{"name":"set_light_state","description":"Unified
+        control for cube lights: turn on/off, set brightness, color, and transitions","parameters":{"type":"object","properties":{"entity_id":{"type":"string","description":"Light
+        entity to control","enum":["light.cube_voice_ring","light.cube_light_top","light.cube_inner"]},"state":{"type":"string","description":"Turn
+        light on or off pass on even if on to change state","enum":["on","off"]},"brightness":{"type":"number","description":"Brightness
+        percentage (0-100)","minimum":0,"maximum":100},"rgb_color":{"type":"string","description":"RGB
+        color as comma-separated string ''R,G,B'' values (0-255). Example: ''255,0,0''
+        for red, ''0,255,0'' for green"},"transition":{"type":"number","description":"Transition
+        time in seconds for smooth changes","minimum":0,"maximum":60}},"required":["entity_id","state"]}}}],"tool_choice":"auto"}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:23 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Generation-Id:
+      - gen-1782197303-XFOycKvZ3tFzEKHmJVrM
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018bf888b4f2d1-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n{\"id\":\"gen-1782197303-XFOycKvZ3tFzEKHmJVrM\",\"object\":\"chat.completion\",\"created\":1782197303,\"model\":\"google/gemini-3.1-flash-lite-20260507\",\"provider\":\"Google
+        AI Studio\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"length\",\"native_finish_reason\":\"MAX_TOKENS\",\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":null,\"reasoning_details\":[{\"type\":\"reasoning.encrypted\",\"data\":\"EkUKQwEMOdbHm5mIjnfaj/1mHCQl4c9ebq1+SCihk+DJ8Vb6tkNO6Kf90NTgReXGgnJG2mKAs4uwel5iem4A/HItQVor+Io=\",\"format\":\"google-gemini-v1\",\"index\":0}]}}],\"usage\":{\"prompt_tokens\":270,\"completion_tokens\":0,\"total_tokens\":270,\"cost\":0.0000675,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0000675,\"upstream_inference_prompt_cost\":0.0000675,\"upstream_inference_completions_cost\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Tue, 23 Jun 2026 06:48:23 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1782197303-XFOycKvZ3tFzEKHmJVrM
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Tue, 23 Jun 2026 06:48:23 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,cf-ray
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1018bfd8e6de62d-IAD
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1782197303-XFOycKvZ3tFzEKHmJVrM
+        not found","code":404}}'
+  recorded_at: Tue, 23 Jun 2026 06:48:23 GMT
+recorded_with: VCR 6.4.0

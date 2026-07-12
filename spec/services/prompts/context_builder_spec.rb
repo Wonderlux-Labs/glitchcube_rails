@@ -2,200 +2,231 @@
 require 'rails_helper'
 
 RSpec.describe Prompts::ContextBuilder do
-  let(:conversation) { create(:conversation) }
-  let(:extra_context) { {} }
-  let(:user_message) { "Hello there!" }
-
-  # Mock external dependencies
-  before do
-    allow(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("active")
-    allow(HaDataSync).to receive(:low_power_mode?).and_return(false)
-    allow(HaDataSync).to receive(:get_context_attribute).and_return(nil)
-    allow(HaDataSync).to receive(:extended_location).and_return("Burning Man")
-    allow(GoalService).to receive(:current_goal_status).and_return(nil)
-    allow(Time).to receive(:current).and_return(Time.parse("2025-08-23 14:30:00 UTC"))
-  end
+  before { allow(HomeAssistantService).to receive(:entity).and_return(nil) }
 
   describe '.build' do
-    it 'delegates to instance method' do
-      expect_any_instance_of(described_class).to receive(:build).and_return("test context")
-
-      result = described_class.build(
-        conversation: conversation,
-        extra_context: extra_context,
-        user_message: user_message
-      )
-
-      expect(result).to eq("test context")
+    it 'delegates to the instance' do
+      expect_any_instance_of(described_class).to receive(:build).and_return("ctx")
+      expect(described_class.build(persona: "buddy")).to eq("ctx")
     end
   end
 
   describe '#build' do
-    subject do
-      described_class.new(
-        conversation: conversation,
-        extra_context: extra_context,
-        user_message: user_message
-      ).build
-    end
+    subject { described_class.new(persona: persona_slug).build }
+    let(:persona_slug) { nil }
 
-    it 'includes basic time context' do
-      expect(subject).to include("Time:")
-      expect(subject).to include("2:30 PM on Saturday")
-    end
-
-    it 'builds session context when conversation exists' do
-      expect(subject).to include("Session: #{conversation.session_id}")
-      expect(subject).to include("Message count: #{conversation.messages.count}")
-      expect(subject).to include("Should end?: Think about wrapping up")
-    end
-
-    context 'when conversation is nil' do
-      let(:conversation) { nil }
-
-      it 'still includes basic time context' do
-        expect(subject).to include("Time:")
+    context 'world state' do
+      it 'injects the world-state sensor content verbatim' do
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_return({ "attributes" => { "content" => "It is 12:55 AM and it is dark out." } })
+        expect(subject).to include("Right now: It is 12:55 AM and it is dark out.")
       end
 
-      it 'does not include session context' do
-        expect(subject).not_to include("Session:")
-      end
-    end
-
-    context 'cube mode context' do
-      it 'includes cube mode when available' do
-        expect(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("performance")
-        expect(subject).to include("Cube mode: performance")
+      it 'places live world state LAST, after the bigger picture' do
+        create(:summary, summary_type: 'overall', summary_text: 'A rowdy night.', created_at: 1.minute.ago)
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_return({ "attributes" => { "content" => "It is dark out." } })
+        expect(subject.index("The bigger picture")).to be < subject.index("Right now:")
       end
 
-      it 'excludes cube mode when unavailable' do
-        expect(HaDataSync).to receive(:entity_state).with("sensor.cube_mode").and_return("unavailable")
-        expect(subject).not_to include("Cube mode:")
-      end
-
-      it 'handles cube mode errors gracefully' do
-        expect(HaDataSync).to receive(:entity_state).and_raise(StandardError, "Connection failed")
-        expect(Rails.logger).to receive(:warn).with(/Could not fetch sensor.cube_mode/)
-
+      it 'fails open when the fetch raises' do
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_raise(StandardError, "HASS down")
+        expect(Rails.logger).to receive(:warn).with(/Could not load sensor.glitchcube_world_state/)
         expect { subject }.not_to raise_error
       end
     end
 
-    context 'goal context' do
-      let(:goal_status) do
-        {
-          goal_id: 'make_friends',
-          goal_description: 'Have meaningful conversations with visitors',
-          category: 'social_goals',
-          started_at: 10.minutes.ago,
-          time_remaining: 1200, # 20 minutes
-          expired: false
-        }
+    context 'camera view' do
+      def stub_camera(state)
+        allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
+          .and_return({ "state" => state })
       end
 
-      before do
-        allow(GoalService).to receive(:current_goal_status).and_return(goal_status)
+      it 'injects the camera description when the input_text is present' do
+        stub_camera("Two people in glittery jackets, laughing.")
+        expect(subject).to include("Right now, your camera shows: Two people in glittery jackets, laughing.")
       end
 
-      it 'includes goal information' do
-        expect(subject).to include('Current Goal: Have meaningful conversations with visitors')
-        expect(subject).to include('Time remaining: 20m')
+      it 'omits the camera view when the camera is disabled in config, even with a description present' do
+        allow(Rails.configuration).to receive(:disable_camera).and_return(true)
+        stub_camera("Two people in glittery jackets, laughing.")
+        expect(subject).not_to include("your camera shows")
       end
 
-      context 'when goal is expired' do
-        before do
-          goal_status[:expired] = true
-          goal_status[:time_remaining] = 0
-        end
-
-        it 'shows expiration warning' do
-          expect(subject).to include('⏰ Goal has expired - consider completing or switching goals')
-        end
+      it 'injects nothing when the input_text is an empty string' do
+        stub_camera("")
+        expect(subject).not_to include("your camera shows")
       end
 
-      context 'when in safety mode' do
-        before do
-          allow(HaDataSync).to receive(:low_power_mode?).and_return(true)
-        end
+      it 'injects nothing when the entity is missing (nil)' do
+        # default before-block already returns nil for every entity
+        expect(subject).not_to include("your camera shows")
+      end
 
-        it 'shows safety mode message instead of regular goal' do
-          expect(subject).to include('YOU ARE IN SAFETY MODE!')
-          expect(subject).to include('YOUR BATTERY PERCENTAGE IS DROPPING')
-        end
+      it 'places the camera view LAST, after the live world state' do
+        allow(HomeAssistantService).to receive(:entity).with("sensor.glitchcube_world_state")
+          .and_return({ "attributes" => { "content" => "It is dark out." } })
+        stub_camera("One person leaning in close.")
+        expect(subject.index("Right now:")).to be < subject.index("Right now, your camera shows:")
+      end
+
+      it 'fails open when the fetch raises' do
+        allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
+          .and_raise(StandardError, "HASS down")
+        expect(Rails.logger).to receive(:warn).with(/Could not load input_text.current_camera_state/)
+        expect { subject }.not_to raise_error
       end
     end
 
-    context 'source context' do
-      let(:extra_context) { { source: 'web_interface' } }
+    context 'glitch premonition (imminent persona switch)' do
+      def stub_next_switch(time)
+        allow(Rails.cache).to receive(:read).and_call_original
+        allow(Rails.cache).to receive(:read)
+          .with(Recurring::Persona::RandomPersonaJob::NEXT_SWITCH_KEY)
+          .and_return(time&.iso8601)
+      end
 
-      it 'includes source information' do
-        expect(subject).to include('Source: web_interface')
+      it 'injects the premonition when the next switch is within 3 minutes' do
+        stub_next_switch(2.minutes.from_now)
+        expect(subject).to include("You feel a glitch coming on")
+      end
+
+      it 'injects the premonition when the switch time has already passed (tick pending)' do
+        stub_next_switch(1.minute.ago)
+        expect(subject).to include("You feel a glitch coming on")
+      end
+
+      it 'injects nothing when the switch is further out' do
+        stub_next_switch(20.minutes.from_now)
+        expect(subject).not_to include("glitch coming on")
+      end
+
+      it 'injects nothing when no switch is scheduled' do
+        stub_next_switch(nil)
+        expect(subject).not_to include("glitch coming on")
+      end
+
+      it 'places the premonition LAST, below the camera view' do
+        allow(HomeAssistantService).to receive(:entity).with("input_text.current_camera_state")
+          .and_return({ "state" => "One person leaning in close." })
+        stub_next_switch(1.minute.from_now)
+        expect(subject.index("your camera shows")).to be < subject.index("You feel a glitch coming on")
+      end
+
+      it 'fails open when the cached timestamp is garbage' do
+        allow(Rails.cache).to receive(:read).and_call_original
+        allow(Rails.cache).to receive(:read)
+          .with(Recurring::Persona::RandomPersonaJob::NEXT_SWITCH_KEY)
+          .and_return("not a time")
+        expect(Rails.logger).to receive(:warn).with(/Could not load glitch premonition/)
+        expect { subject }.not_to raise_error
       end
     end
 
-    context 'tool results context' do
-      let(:extra_context) do
-        {
-          tool_results: {
-            'lights.turn_on' => { success: true, message: 'Lights turned on successfully' },
-            'sound.play' => { success: false, error: 'Audio file not found' }
-          }
-        }
+    context 'overall memory (the world board)' do
+      it 'injects the latest overall summary, not truncated, in a structural layout' do
+        create(:summary, summary_type: 'overall', summary_text: 'The whole night has been rowdy.',
+               metadata: { durable_facts: 'Camp Trashy: possible fashion show tomorrow.',
+                           recurring_visitors: 'Marco: wants a lavender-purple glow.',
+                           active_threads: 'Laurie is back at midnight for a reading.',
+                           director_note: 'Devices are failing across every stint.' }.to_json,
+               created_at: 1.minute.ago)
+
+        expect(subject).to include("## The bigger picture")
+        expect(subject).to include("The whole night has been rowdy.")
+        expect(subject).to include("## Durable places / camps / event facts")
+        expect(subject).to include("Camp Trashy: possible fashion show tomorrow.")
+        expect(subject).to include("## Recurring visitors")
+        expect(subject).to include("Marco: wants a lavender-purple glow.")
+        expect(subject).to include("## Still in the air")
+        expect(subject).to include("Laurie is back at midnight for a reading.")
+        expect(subject).to include("## A note to all of the cube's personas right now")
+        expect(subject).to include("Devices are failing across every stint.")
       end
 
-      it 'includes tool results' do
-        expect(subject).to include('Recent tool results:')
-        expect(subject).to include('lights.turn_on: ✅ SUCCESS - Lights turned on successfully')
-        expect(subject).to include('sound.play: ❌ FAILED - Audio file not found')
-      end
-    end
-
-    context 'enhanced context injection' do
-      before do
-        allow(HaDataSync).to receive(:get_context_attribute).with("time_of_day").and_return("afternoon")
-        allow(HaDataSync).to receive(:get_context_attribute).with("day_of_week").and_return("Friday")
-        allow(HaDataSync).to receive(:get_context_attribute).with("current_location").and_return("Center Camp")
+      it 'does not hard-truncate a long overall narrative' do
+        long = "x" * 2000
+        create(:summary, summary_type: 'overall', summary_text: long, created_at: 1.minute.ago)
+        expect(subject).to include(long)
       end
 
-      it 'includes time context from Home Assistant' do
-        expect(subject).to include('Current time context: It is afternoon on Friday at Center Camp')
-      end
+      it 'orders the world-board sections narrative → facts → visitors → threads → director' do
+        create(:summary, summary_type: 'overall', summary_text: 'A rowdy night.',
+               metadata: { durable_facts: 'Camp Trashy.', recurring_visitors: 'Marco.',
+                           active_threads: 'Laurie at midnight.', director_note: 'Lights lag.' }.to_json,
+               created_at: 1.minute.ago)
 
-      context 'when Event model is defined' do
-        before do
-          # Mock Event model with empty results but proper chain
-          event_relation = double("EventRelation")
-          allow(event_relation).to receive(:limit).and_return([])
-          allow(event_relation).to receive(:any?).and_return(false)
-
-          allow(Event).to receive(:where).and_return(event_relation)
-        end
-
-        it 'attempts to include upcoming events' do
-          # Both calls should happen - one for high-priority, one for nearby
-          # The nearby call happens because HaDataSync.extended_location returns "Burning Man"
-          expect(Event).to receive(:where).twice.and_call_original
-          subject
-        end
+        i_narrative = subject.index("The bigger picture")
+        i_facts     = subject.index("Durable places")
+        i_visitors  = subject.index("Recurring visitors")
+        i_threads   = subject.index("Still in the air")
+        i_director  = subject.index("A note to all of the cube's personas")
+        expect([ i_narrative, i_facts, i_visitors, i_threads, i_director ]).to eq([ i_narrative, i_facts, i_visitors, i_threads, i_director ].sort)
       end
     end
 
-    describe 'time duration formatting' do
-      let(:builder) { described_class.new(conversation: conversation, extra_context: {}, user_message: nil) }
+    context "the cube's recent history (handoffs)" do
+      let!(:zorp) { Persona.create!(slug: "zorp", name: "Zorp") }
+      let!(:crash) { Persona.create!(slug: "crash", name: "Crash") }
 
-      it 'formats seconds correctly' do
-        expect(builder.send(:format_time_duration, 45)).to eq('45s')
+      it 'injects the last two neutral handoff reports, persona-labeled' do
+        create(:summary, summary_type: 'handoff', persona: crash, summary_text: 'Crash sparred with a rowdy crowd.',
+               start_time: 40.minutes.ago, end_time: 20.minutes.ago, created_at: 20.minutes.ago)
+        create(:summary, summary_type: 'handoff', persona: zorp, summary_text: 'Zorp read a few visitors.',
+               start_time: 20.minutes.ago, end_time: 5.minutes.ago, created_at: 5.minutes.ago)
+
+        expect(subject).to include("recent history")
+        expect(subject).to include("Crash").and include("Crash sparred with a rowdy crowd.")
+        expect(subject).to include("Zorp").and include("Zorp read a few visitors.")
+      end
+    end
+
+    context 'persona memory' do
+      let(:persona_slug) { "zorp" }
+      let!(:zorp) { Persona.create!(slug: "zorp", name: "Zorp") }
+
+      it 'injects the current persona summary and its self-steering note' do
+        create(:summary, persona: zorp, summary_type: 'persona',
+               summary_text: 'You did a lot of cosmic readings.',
+               metadata: { ooc_note: 'Ease off the butt-readings.' }.to_json,
+               created_at: 1.minute.ago)
+
+        expect(subject).to include("What you (Zorp) remember")
+        expect(subject).to include("You did a lot of cosmic readings.")
+        expect(subject).to include("A note to yourself: Ease off the butt-readings.")
       end
 
-      it 'formats minutes correctly' do
-        expect(builder.send(:format_time_duration, 90)).to eq('1m')
-        expect(builder.send(:format_time_duration, 300)).to eq('5m')
+      it 'injects nothing persona-specific when no persona is given' do
+        create(:summary, persona: zorp, summary_type: 'persona', summary_text: 'zorp memory', created_at: 1.minute.ago)
+        result = described_class.new(persona: nil).build
+        expect(result).not_to include("remember from your recent time")
       end
+    end
 
-      it 'formats hours and minutes correctly' do
-        expect(builder.send(:format_time_duration, 3661)).to eq('1h 1m')
-        expect(builder.send(:format_time_duration, 7200)).to eq('2h 0m')
+    context 'your current session (current-stint interaction chunks)' do
+      let(:persona_slug) { "zorp" }
+      let!(:zorp) { Persona.create!(slug: "zorp", name: "Zorp") }
+
+      it "injects this persona's chunks since its last fold, and excludes already-folded ones" do
+        # The fold's folded_through_at cursor is the boundary — chunks created at/before it are folded.
+        fold = create(:summary, persona: zorp, summary_type: 'persona', summary_text: 'prior self',
+                      created_at: 30.minutes.ago,
+                      metadata: { folded_through_at: 34.minutes.ago.iso8601(6) }.to_json)
+        create(:summary, persona: zorp, summary_type: 'interaction', summary_text: 'FOLDED chunk',
+               start_time: 40.minutes.ago, end_time: 35.minutes.ago, created_at: 35.minutes.ago)
+        create(:summary, persona: zorp, summary_type: 'interaction', summary_text: 'FRESH chunk',
+               start_time: 10.minutes.ago, end_time: 5.minutes.ago, created_at: 5.minutes.ago)
+
+        expect(fold).to be_present
+        expect(subject).to include("Your current session so far")
+        expect(subject).to include("FRESH chunk")
+        expect(subject).not_to include("FOLDED chunk")
       end
+    end
+
+    it 'returns an empty string when nothing is available' do
+      expect(subject).to eq("")
     end
   end
 end

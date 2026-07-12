@@ -9,8 +9,6 @@ class ConversationLog < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
   scope :chronological, -> { order(created_at: :asc) }
 
-  # Automatically sync narrative data to Home Assistant after each conversation
-  after_commit :sync_narrative_data_to_ha, on: [ :create, :update ]
 
   def tool_results_json
     return {} if tool_results.blank?
@@ -34,12 +32,28 @@ class ConversationLog < ApplicationRecord
     self.metadata = hash.to_json
   end
 
-  private
+  # Token/cost usage for this turn's brain call (see LlmIntention#usage_for),
+  # or {} on turns before this was tracked / where the LLM call failed.
+  def usage
+    metadata_json["usage"] || {}
+  end
 
-  def sync_narrative_data_to_ha
-    # Perform HA sync in background to avoid blocking the main thread
-    WorldStateUpdaters::NarrativeConversationSyncJob.perform_later(id)
-  rescue StandardError => e
-    Rails.logger.error "Failed to queue narrative sync job for conversation_log #{id}: #{e&.message}"
+  # Full-fidelity rendering for the summarizers: the visitor line, what the persona
+  # said, its private thought, and the device actions it ATTEMPTED that turn. Lets a
+  # summary observe what actually happened (including whether actions had any effect),
+  # not just the spoken words.
+  def transcript_line
+    narrative = metadata_json["narrative"] || {}
+    lines = [ "Visitor: #{user_message}" ]
+    thought = narrative["inner_monologue"].presence
+    lines << (thought ? "Cube (privately: #{thought}): #{ai_response}" : "Cube: #{ai_response}")
+
+    actions = Array(narrative["actions"]).filter_map do |a|
+      next unless a.is_a?(Hash)
+
+      [ a["action_name"], a["description"] ].compact_blank.join(": ").presence
+    end
+    lines << "  → attempted device actions: #{actions.join('; ')}" if actions.any?
+    lines.join("\n")
   end
 end

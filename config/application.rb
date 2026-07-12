@@ -11,8 +11,9 @@ module GlitchcubeRails
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
-    # Use SQL structure format instead of schema.rb for PostGIS compatibility
-    config.active_record.schema_format = :sql
+    # Ruby schema format. pgvector round-trips cleanly via the neighbor gem;
+    # PostGIS has been removed from the database layer.
+    config.active_record.schema_format = :ruby
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
@@ -27,8 +28,12 @@ module GlitchcubeRails
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    config.time_zone = "Pacific Time (US & Canada)"
+    config.time_zone = "Eastern Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Referenced by the admin dashboard and BackendHealthService for uptime —
+    # was read in both places but never actually set.
+    config.booted_at = Time.current
 
     # Clear all SolidQueue jobs on Rails start (persistence not important)
     config.after_initialize do
