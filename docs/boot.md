@@ -12,15 +12,23 @@ Mac boots
        │                                           the Ollama.app server start — neither works headless/over SSH)
        ├─ brew services LaunchAgents           ← already installed, not managed here:
        │    postgresql@16, mosquitto (MQTT), redis, memcached, colima
-       ├─ Ollama.app (login item)              ← local camera-vision server on :11434
+       ├─ Ollama.app (own login item)          ← local camera-vision server on :11434
        │    (qwen3-vl:4b in ~/.ollama/models). NOT a brew service — the brew ollama
-       │    formula was removed to avoid a duplicate :11434 server. Nothing to add here.
+       │    formula was removed to avoid a duplicate :11434 server. Unmanaged here;
+       │    never seen it die. We only *log* whether it's up (see below).
+       ├─ com.glitchcube.squeezelite           ← Squeezelite audio player, KeepAlive
+       │    (LaunchAgent, RunAtLoad+KeepAlive)     so it restarts on crash. Replaces the
+       │                                           old plain "Squeezelite" Login Item.
        └─ com.glitchcube.boot  (LaunchAgent, RunAtLoad — no babysitter)
             └─ bin/glitchcube-boot
-                 ├─ bin/ensure-hass-vm         ← starts the "glitch" UTM VM (Home Assistant)
-                 └─ foreman start -f Procfile.dev
-                      ├─ web:  Puma on :4567    (Rails, development env)
-                      └─ jobs: bin/jobs         (SolidQueue)
+                 ├─ bin/ensure-hass-vm         ← starts the "glitch" UTM VM (Home Assistant),
+                 │                               then (backgrounded, +60s) attaches the SkyConnect
+                 │                               zigbee dongle to the VM via `utmctl usb connect`
+                 ├─ bin/check-services         ← (backgrounded, +15s) logs Ollama + Squeezelite
+                 │                               state into boot.out.log — snapshot, doesn't start them
+                 └─ bin/dev                     ← foreman over Procfile.dev (fwds TERM/INT +
+                      ├─ web:  Puma on :4567       force-kills after a grace period, so stops
+                      └─ jobs: bin/jobs            don't hang). web = Rails/Puma (dev), jobs = SolidQueue.
 ```
 
 Postgres, MQTT, Redis, etc. are **already** auto-started by their own Homebrew `brew services`
@@ -91,11 +99,48 @@ the ollama server ride the auto-login GUI session above. The old `mediamtx` RTSP
 webcam→RTSP publisher are retired — remove them from prod when convenient; they cost nothing
 while unused. See `docs/superpowers/specs/2026-07-11-rails-camera-snapshot-design.md`.
 
+## Zigbee dongle (SkyConnect)
+
+Home Assistant's ZHA integration needs the SkyConnect coordinator (Silicon Labs CP210x,
+VID:PID `10C4:EA60`) passed through to the VM. UTM does **not** auto-attach it on VM start even
+with USB sharing on, so `bin/ensure-hass-vm` attaches it explicitly with `utmctl usb connect glitch
+10C4:EA60`. This runs backgrounded after a 60s delay (so HASS/ZHA has time to come up first) and
+never blocks Rails boot. The connect is idempotent — "already connected" is treated as success, so
+it's safe on every boot and on manual re-runs.
+
+If the dongle is ever replaced, re-check the VID:PID with `/Applications/UTM.app/Contents/MacOS/utmctl
+usb list` and update `ZIGBEE_USB` in `bin/ensure-hass-vm`.
+
+**Gotcha — wedged dongle after an unclean VM kill.** A passed-through USB device detaches from the
+host while the VM owns it. If the VM is *force*-killed (not shut down cleanly), macOS can fail to
+hand the dongle back: it stays physically plugged and visible in `ioreg` (`SkyConnect v1.0`, idVendor
+`4292`) but **disappears from `utmctl usb list`**, so nothing can attach it. The fix is a physical
+unplug/replug — it then re-enumerates free for UTM to grab. Symptom to recognize: `utmctl usb connect`
+returns `Error: Device not found` and `utmctl usb list` doesn't show SkyConnect. (Its *location* also
+changes across replugs, e.g. `524291`→`524292` — which is why we attach by stable VID:PID, not
+location.)
+
+## Support services (Ollama & Squeezelite)
+
+Two always-on helpers live outside the boot supervisor. `bin/check-services` reports both, and the
+boot supervisor logs a snapshot of them into `boot.out.log` ~15s after login (it does **not** start
+them). Check anytime with `bin/glitchcube-ctl status`.
+
+- **Ollama** — the camera-vision server on `:11434` (see Camera vision above). Auto-starts via its
+  own registered background item, runs in the auto-login GUI session, and has never been seen to die.
+  Unmanaged: we only observe it. If it were ever down, `CameraDescriptionJob` falls back to OpenRouter.
+- **Squeezelite** — the audio player. Supervised by the `com.glitchcube.squeezelite` LaunchAgent
+  (`RunAtLoad` + **`KeepAlive`**), installed by `bin/install-boot`, so it **restarts on crash**. This
+  replaces the old plain "Squeezelite" Login Item, which had no crash recovery — `install-boot` removes
+  that Login Item so the app isn't double-launched. Args mirror the app's bundled `squeezelite.plist`
+  (`-a 100`), with the log/name files redirected to `~/Library/Logs/` (a user LaunchAgent can't write
+  `/var/log`). It's independent of Rails: `bin/glitchcube-ctl stop` does not touch audio.
+
 ## Adding other services later
 
-Two clean options, no changes to the supervisor:
+Two clean options:
 
-- **Part of the app lifecycle** (starts/stops with Rails): add a line to `Procfile.dev`. foreman
-  runs it alongside web/jobs.
+- **Part of the app lifecycle** (starts/stops with Rails): add its `spawn(...)` to `bin/dev`
+  alongside the web + jobs children (it already forwards TERM/INT to all of them).
 - **Independent long-running daemon**: prefer a Homebrew `brew services` LaunchAgent so it has its
   own lifecycle and logs.

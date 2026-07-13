@@ -1,21 +1,17 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env bash
+# Rails dev runner — foreman over a Procfile (Puma on :4567 + SolidQueue jobs).
+#
+# foreman is installed directly in this Ruby (rbenv 3.3.9), NOT bundled, so it's
+# invoked bare (not `bundle exec`). It supervises both processes, forwards
+# SIGTERM/SIGINT to their process groups, and escalates to SIGKILL after a grace
+# period — so a stop never hangs on a wedged SolidQueue worker.
+#
+# Defaults to development via Procfile.dev. For a production variant later, add a
+# Procfile.prod (set RAILS_ENV=production there) and run:  PROCFILE=Procfile.prod bin/dev
 
-require "fileutils"
+# Ensure a UTF-8 locale: without one Ruby defaults to US-ASCII and foreman's .env
+# parser dies on any non-ASCII byte. (The launchd plist sets this too.)
+export LANG="${LANG:-en_US.UTF-8}"
+export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
-# Run Rails with SolidQueue in development
-APP_ROOT = File.expand_path("..", __dir__)
-Dir.chdir(APP_ROOT) do
-  puts "Starting Rails server and SolidQueue worker..."
-  
-  # Start both server and jobs in parallel
-  pids = []
-  
-  # Start Rails server on port 4567, bound to all interfaces
-  pids << spawn("bin/rails", "server", "-p", "4567", "-b", "0.0.0.0", *ARGV)
-  
-  # Start SolidQueue worker
-  pids << spawn("bin/jobs")
-  
-  # Wait for both processes
-  Process.waitall
-end
+exec foreman start -f "${PROCFILE:-Procfile.dev}" "$@"

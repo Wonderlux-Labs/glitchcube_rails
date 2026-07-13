@@ -51,3 +51,7 @@ gem "geocoder"
 # gem "langchainrb_rails"
 # gem "neighbor"
 gem "ruby-openai"
+
+# NOTE: foreman is intentionally NOT bundled. It's a process manager, not an app
+# dependency — it's installed directly in this Ruby (rbenv 3.3.9) and invoked as
+# bare `foreman` (see bin/dev and bin/glitchcube-boot), never `bundle exec`.

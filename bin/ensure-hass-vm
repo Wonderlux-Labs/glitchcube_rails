@@ -11,7 +11,33 @@
 UTMCTL="/Applications/UTM.app/Contents/MacOS/utmctl"
 VM_NAME="glitch"   # verify with: "$UTMCTL" list  (from the logged-in session)
 
+# Zigbee coordinator (Home Assistant SkyConnect / Silicon Labs CP210x). ZHA needs
+# this passed through, but UTM does NOT auto-attach it on VM start even with USB
+# sharing on, so we connect it explicitly below. Verify the VID:PID with:
+#   "$UTMCTL" usb list   →   SkyConnect v1.0 ... 10C4:EA60
+ZIGBEE_USB="10C4:EA60"
+
 log() { echo "[ensure-hass-vm] $*" >&2; }
+
+# Attach the zigbee dongle to the VM. Best-effort and idempotent: utmctl exits 0
+# even when it fails, so we parse output — "already connected" counts as success.
+# Retries because on a fresh VM boot the guest USB controller isn't ready instantly.
+connect_zigbee() {
+  local out
+  for _ in $(seq 1 15); do
+    out="$("$UTMCTL" usb connect "$VM_NAME" "$ZIGBEE_USB" 2>&1)"
+    case "$out" in
+      "")
+        log "connected zigbee dongle $ZIGBEE_USB to '$VM_NAME'"; return 0 ;;
+      *"already connected"*)
+        log "zigbee dongle $ZIGBEE_USB already connected to '$VM_NAME'"; return 0 ;;
+      *)
+        log "connect zigbee attempt failed ($out) — retrying"; sleep 2 ;;
+    esac
+  done
+  log "gave up connecting zigbee dongle $ZIGBEE_USB — ZHA may be offline in HASS"
+  return 0
+}
 
 if [ ! -x "$UTMCTL" ]; then
   log "utmctl not found at $UTMCTL — skipping VM start"
@@ -40,5 +66,11 @@ else
   log "VM '$VM_NAME' status='$status' — starting"
   "$UTMCTL" start "$VM_NAME" || log "utmctl start '$VM_NAME' failed — continuing"
 fi
+
+# VM is up (or was already) — attach the zigbee dongle for ZHA. Backgrounded so
+# it never blocks Rails boot: wait 60s to give Home Assistant / ZHA time to come
+# up, then connect (with retries). Runs whether the VM was freshly started or
+# already up, so it also re-attaches a dropped dongle on a manual re-run.
+( sleep 60; connect_zigbee ) &
 
 exit 0

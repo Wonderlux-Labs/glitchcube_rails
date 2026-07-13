@@ -35,6 +35,12 @@
     <string>/Users/estiens/.rbenv/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>HOME</key>
     <string>/Users/estiens</string>
+    <!-- launchd has no locale, so Ruby defaults to US-ASCII and chokes on any
+         UTF-8 it reads (this bit foreman parsing .env). Force a UTF-8 locale. -->
+    <key>LANG</key>
+    <string>en_US.UTF-8</string>
+    <key>LC_ALL</key>
+    <string>en_US.UTF-8</string>
   </dict>
 
   <key>StandardOutPath</key>
