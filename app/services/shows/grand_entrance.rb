@@ -51,7 +51,7 @@ module Shows
     def anomaly_moment
       HostAudio.say(ANOMALY_LINES.sample)
       marquee(TRANSITION_MESSAGES.sample, rainbow: true, duration: 60)
-      light_effect(GLITCH_SCENES.sample)
+      top_light_effect(GLITCH_SCENES.sample)
     end
 
     def play_theme_song

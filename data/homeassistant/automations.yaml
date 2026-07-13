@@ -9,6 +9,9 @@
     color at full brightness, so the ring identifies who's talking. The ring is
     otherwise the assistant's thinking/listening indicator and gets overridden
     freely during a turn — this just resets it to the persona's color on switch.
+    (3) Set the Govee top light (light.top_light) to the SAME signature color as a
+    solid ambient glow — the top light is internal-only (not exposed to Assist), so
+    this automation owns its idle look. Swap in per-persona swirl DIY scenes later.
   triggers:
   - trigger: state
     entity_id:
@@ -31,6 +34,14 @@
         {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
             'crash': [0,255,65], 'jax': [0,120,255]}
            .get(states('input_select.current_persona'), [255,255,255]) }}
+  # (3) Govee top light — same signature color, solid, as the persona's ambient glow.
+  #     Skip while the jukebox is playing so we don't stomp the sound-reactive look
+  #     (the "Top light: sound-reactive with jukebox" automation restores the persona
+  #     color when playback stops). script.set_top_light_persona_color owns the map.
+  - if:
+    - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
+    then:
+    - action: script.set_top_light_persona_color
   mode: single
 
 - id: persona_switching_silence
@@ -284,3 +295,133 @@
       volume_level: >-
         {{ (states('input_number.quiet_mode_max_volume') | float(50)) / 100 }}
   mode: restart
+
+- id: top_light_sound_reactive_with_jukebox
+  alias: "Top light: sound-reactive with jukebox"
+  description: >-
+    The Govee top light (light.top_light) reacts to the music WHILE the jukebox plays,
+    and returns to the persona's signature color when it stops. On jukebox_internal ->
+    playing, call set_music_reactive_lighting with no effect (it picks a random
+    sound-reactive DIY scene — "Music reactive jazz" / "A music reactive smoky" — which
+    pulse to audio on the device's own mic). On jukebox_internal leaving 'playing'
+    (paused/idle/off/stopped), restore the persona color via
+    script.set_top_light_persona_color. This light is internal-only (not exposed to
+    Assist); the WLED body/head are the Assist-controlled lights. Easy to disable: just
+    turn this automation off. To broaden the random pool later, add the built-in music
+    modes (switch.cube_light_music_mode + select.cube_light_music_mode:
+    Energic/Rhythm/Spectrum/Rolling) to set_music_reactive_lighting.
+  triggers:
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    to: playing
+    id: jukebox_play
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    from: playing
+    id: jukebox_stop
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - "{{ trigger.id == 'jukebox_play' }}"
+      sequence:
+      - action: script.set_music_reactive_lighting
+        data: {}
+    - conditions:
+      - "{{ trigger.id == 'jukebox_stop' }}"
+      sequence:
+      - action: script.set_top_light_persona_color
+        data: {}
+  mode: restart
+
+- id: top_light_turn_indicator_blink_test
+  alias: "Top light: turn indicator (blink test)"
+  description: >-
+    DIAGNOSTIC. While input_boolean.top_light_turn_indicator is ON, blink the Govee top
+    light off -> 1s -> back to the persona color when the assist satellite enters
+    'listening' and 'processing'. Purpose: eyeball whether the CLOUD-controlled Govee
+    lands in tune with the turn (the marquee + the local voice LED ring already show
+    LISTENING/THINKING instantly, with no cloud lag). Skipped while the jukebox is
+    playing so it doesn't stomp the sound-reactive look. Once we've judged the lag:
+    either evolve this into a real cue (distinct listening vs thinking looks) or delete
+    it and turn the boolean off. mode: restart so a fast listening->processing hop just
+    re-blinks instead of queuing.
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: listening
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: processing
+  conditions:
+  - "{{ is_state('input_boolean.top_light_turn_indicator', 'on') }}"
+  - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id: light.top_light
+  - delay: "00:00:01"
+  - action: script.set_top_light_persona_color
+    data: {}
+  mode: restart
+
+- id: presence_nudge_when_idle
+  alias: "Presence: nudge idle visitor to start a conversation (alpha)"
+  description: >-
+    ALPHA / rough first cut — a place to hang this behavior. When the presence sensor has
+    seen someone for a little while and the cube is just sitting idle (no conversation in
+    progress), nudge them to start one: scroll a marquee hint and have the CURRENT persona
+    call out in its own voice via assist_satellite.announce (which speaks WITHOUT opening a
+    listening session — it uses the selected pipeline's TTS voice). Gated by
+    input_boolean.presence_nudge_enabled so it's trivial to silence; guarded to satellite
+    'idle' + not-persona-switching so it never talks over an active turn or a show. Re-fires
+    each time someone re-enters (presence off->on->30s). Tune the delay, add a re-nudge
+    cadence, or drop the voice half as needed. Sensor: binary_sensor.presence_sensor
+    (device_class occupancy). Fires when BOTH have held for 30s: someone in range AND the
+    satellite idle — whichever crosses 30s last is the trigger (so it also nudges after a
+    conversation ends while the person is still standing there). Both durations checked as
+    conditions too, so a trigger can't fire on a momentary state.
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.presence_sensor
+    to: "on"
+    for: "00:00:30"
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: idle
+    for: "00:00:30"
+  conditions:
+  - "{{ is_state('input_boolean.presence_nudge_enabled', 'on') }}"
+  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+  # 3-minute debounce: don't re-nudge if we nudged within the last 3 min — someone
+  # lingering while idle would otherwise re-fire on every presence/idle state blip.
+  # `this` = this automation's own state object, so there's no entity_id to keep in
+  # sync. Tune the 3 min later (or lift it into a helper if we want it adjustable).
+  - "{{ this.attributes.last_triggered is none or (now() - this.attributes.last_triggered) > timedelta(minutes=3) }}"
+  - condition: state
+    entity_id: binary_sensor.presence_sensor
+    state: "on"
+    for: "00:00:30"
+  - condition: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    state: idle
+    for: "00:00:30"
+  actions:
+  # Full-brightness, timed marquee via the AWTRIX script (it bumps BRI so the sign is
+  # readable even when the idle screen is dimmed, then restores it) — a raw
+  # marquee/notify with hold:false scrolled by unseen. script.turn_on = fire-and-forget
+  # so the marquee's hold duration doesn't block the announce below.
+  - action: script.turn_on
+    target:
+      entity_id: script.awtrix_marquee_message
+    data:
+      variables:
+        message: 'SAY "HEY GLITCH CUBE" TO WAKE ME UP'
+        color: "#00AEEF"
+        duration: 30
+  - action: assist_satellite.announce
+    target:
+      entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    data:
+      message: "Hey — over here. Say 'Hey Glitch Cube' to wake me up."
+  mode: single

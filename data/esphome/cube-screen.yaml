@@ -23,6 +23,32 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: false
+  # LCD BRING-UP. Confirmed on this unit: DCDC3 (backlight) + LDO2 (panel logic) power ON
+  # but the panel stays black because martydingo never releases the LCD RESET line — on the
+  # M5Core2 that reset is AXP192 GPIO4 (reg 0x96 bit 0x02), configured via reg 0x95. Held in
+  # reset, the ILI9342C ignores every SPI init write => black. We MUST release it BEFORE the
+  # display driver runs its init. Setup order is i2c bus (1000) -> display (HARDWARE=800) ->
+  # axp192 (DATA=600), so this runs at IO priority 900: bus is up, display/axp192 are not.
+  # We power the panel + backlight ourselves here (axp192.setup() hasn't run yet) and pulse
+  # the reset. martydingo's later setup re-asserts the same rails and never touches 0x96.
+  on_boot:
+    priority: 900
+    then:
+      - lambda: |-
+          auto *ax = id(axp192_id);
+          uint8_t v = 0;
+          // Panel logic power (LDO2 bit2) + backlight (DCDC3 bit1) ON; motor (LDO3 bit3) OFF.
+          ax->read_byte(0x12, &v); ax->write_byte(0x12, (v | 0x06) & ~0x08);
+          ax->write_byte(0x27, 0xe0);                        // DCDC3 backlight ~3.1V
+          ax->read_byte(0x28, &v); ax->write_byte(0x28, (v & 0x0f) | 0xf0);  // LDO2 = 3.3V
+          // Configure AXP192 GPIO4 as output (LCD reset), per M5Stack AXP192::begin().
+          ax->read_byte(0x95, &v); ax->write_byte(0x95, (v & 0x72) | 0x84);
+          // Pulse LCD reset: low 120ms, then release high 120ms (reg 0x96 bit 0x02).
+          ax->read_byte(0x96, &v); ax->write_byte(0x96, v & ~0x02);
+          delay(120);
+          ax->read_byte(0x96, &v); ax->write_byte(0x96, v | 0x02);
+          delay(120);
+          ESP_LOGI("m5_lcd", "panel powered + LCD reset released (AXP192 GPIO4) before display init");
 
 esp32:
   board: m5stack-core-esp32
@@ -237,16 +263,20 @@ sensor:
   # AXP192 must be present or the LCD stays dark. brightness sets the backlight.
   - platform: axp192
     model: M5CORE2
+    id: axp192_id
     address: 0x34
     i2c_id: bus_a
     update_interval: 30s
-    brightness: 75%
+    # Backlight LEVEL (DCDC3 voltage). NOTE: this only has any visible effect once the
+    # DCDC3 output is actually ENABLED — which martydingo forgets to do; see the on_boot
+    # fix at the top of this file. With that in place, this sets how bright. Tune to taste.
+    brightness: 100%
     battery_level:
       name: "Battery Level"
   - platform: mpu6886
     address: 0x68
     i2c_id: bus_a
-    update_interval: 60s
+    update_interval: 1s
     accel_x:
       name: "Accel X"
     accel_y:

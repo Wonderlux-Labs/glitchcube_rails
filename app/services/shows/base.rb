@@ -33,8 +33,8 @@ module Shows
       run_script("awtrix_marquee_message", message: message, **opts)
     end
 
-    def light_effect(name)
-      run_script("set_cube_light_effect", effect: name)
+    def top_light_effect(name)
+      run_script("set_top_light_effect", effect: name)
     end
 
     # Fire-and-forget: calling script.<name> directly over REST BLOCKS until the

@@ -97,6 +97,25 @@ input_boolean:
     name: "Strobe Light"
     icon: mdi:flash
 
+  # Diagnostic toggle for the "Top light: turn indicator (blink test)" automation.
+  # While ON, the Govee top light (light.top_light) blinks off->1s->on when the
+  # assist satellite enters 'listening' and 'processing', so we can eyeball whether
+  # the cloud-controlled Govee lands in tune with the turn (the marquee + voice ring
+  # already show LISTENING/THINKING instantly). Flip OFF to silence the experiment;
+  # delete both this and the automation once we've decided keep/refine/drop.
+  top_light_turn_indicator:
+    name: "Top light turn indicator (blink test)"
+    initial: true
+    icon: mdi:lightbulb-alert
+
+  # Master enable for the alpha "Presence: nudge idle visitor" automation. When ON and
+  # someone lingers in front of the cube without starting a conversation, the cube nudges
+  # them (marquee hint + a persona-voice call-out). Flip OFF to silence the nudge entirely.
+  presence_nudge_enabled:
+    name: "Presence nudge (idle visitor)"
+    initial: true
+    icon: mdi:account-alert
+
   # HASS-side kill switch for the camera pipeline. CameraDescriptionJob checks this
   # before every capture, so automations (a nighttime timer, an event mode, whatever)
   # can turn the cube's look off without touching Rails. Rails has its own independent

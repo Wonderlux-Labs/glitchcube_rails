@@ -53,7 +53,7 @@ RSpec.describe Shows::GrandEntrance do
     expect(marquee_messages.any? { |m| described_class::TRANSITION_MESSAGES.include?(m) }).to be true
 
     light_call = fake_ha.service_calls_for("script")
-      .find { |c| c[:data][:entity_id] == "script.set_cube_light_effect" }
+      .find { |c| c[:data][:entity_id] == "script.set_top_light_effect" }
     expect(described_class::GLITCH_SCENES).to include(light_call[:data].dig(:variables, :effect))
   end
 

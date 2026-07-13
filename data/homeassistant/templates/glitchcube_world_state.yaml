@@ -54,26 +54,22 @@
           {%- set daytime = is_state('sun.sun', 'above_horizon') -%}
           It is {{ now().strftime('%-I:%M %p') }} on {{ now().strftime('%A') }} and it is {{ 'daytime' if daytime else 'dark out' }}.
           {%- if w not in ['unknown', 'unavailable', none] %} The weather is {{ w | replace('_', ' ') }}{% if t is not none %}, around {{ t }}°F{% endif %}{% if h is not none %} with {{ h }}% humidity{% endif %}{% if ws is not none %} and winds near {{ ws | round }} mph{% endif %}.{% endif %}
-          {#- Your main cube light (light.cube_light) — your inner glow. Report the active
-              scene/effect name if one is running, otherwise the solid color; always the
-              brightness. The scene selects reset to 'None' when a solid color is set, so
-              they're the reliable tell for "is a named look running." (The device's built-
-              in music mode is retired — we don't read its switch.) -#}
-          {%- set cube = 'light.cube_light' -%}
-          {%- if is_state(cube, 'on') -%}
-            {%- set bri = state_attr(cube, 'brightness') or 255 -%}
-            {%- set bripct = (bri / 255 * 100) | round -%}
-            {%- set none_vals = ['None', 'none', 'unknown', 'unavailable'] -%}
-            {%- set scene = states('select.cube_light_scene') -%}
-            {%- set diy = states('select.cube_light_diy_scene') -%}
-            {%- if scene not in none_vals -%}
-              {{ ' Your cube light is running the "' ~ scene ~ '" effect, at about ' ~ bripct ~ '% brightness.' }}
-            {%- elif diy not in none_vals -%}
-              {{ ' Your cube light is running the "' ~ diy ~ '" effect, at about ' ~ bripct ~ '% brightness.' }}
-            {%- else -%}
-              {{ ' Your cube light is a solid ' ~ (color_name(cube) | trim) ~ ', at about ' ~ bripct ~ '% brightness.' }}
-            {%- endif -%}
-          {%- else %} Your cube light is off — no inner glow right now.{%- endif -%}
+          {#- Your body light and head light — current look each: the running effect if one
+              is active (any effect other than 'Solid'), else the solid color; plus brightness. -#}
+          {%- for seg in [('light.cube_body_wled', 'body'), ('light.cube_head_wled', 'head')] -%}
+            {%- set ent = seg[0] -%}
+            {%- set label = seg[1] -%}
+            {%- if is_state(ent, 'on') -%}
+              {%- set bri = state_attr(ent, 'brightness') or 255 -%}
+              {%- set bripct = (bri / 255 * 100) | round -%}
+              {%- set fx = state_attr(ent, 'effect') -%}
+              {%- if fx and fx not in ['Solid', 'None', 'none', 'unknown', 'unavailable'] -%}
+                {{ ' Your ' ~ label ~ ' light is running the "' ~ fx ~ '" effect, at about ' ~ bripct ~ '% brightness.' }}
+              {%- else -%}
+                {{ ' Your ' ~ label ~ ' light is a solid ' ~ (color_name(ent) | trim) ~ ', at about ' ~ bripct ~ '% brightness.' }}
+              {%- endif -%}
+            {%- else %} Your {{ label }} light is off.{%- endif -%}
+          {%- endfor -%}
           {#- The jukebox: track / artist / volume when actually playing, else quiet. It
               keeps stale media_title metadata while idle, so only trust it when playing. -#}
           {%- set jb = 'media_player.jukebox_internal' -%}
