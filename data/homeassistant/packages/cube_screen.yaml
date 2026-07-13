@@ -1,0 +1,41 @@
+# M5Stack Core2 status screen — HA helpers.
+#
+# These four helpers drive the ESPHome `cube-screen` device (see
+# data/esphome/cube-screen.yaml). The firmware subscribes to them by entity_id and
+# renders the screen; HA writes them from automations / scripts / the brain.
+#
+#   input_text.m5_screen_text   — text / caption line
+#   input_text.m5_screen_emoji  — single mood emoji (drawn big; text becomes its caption)
+#   input_text.m5_screen_color  — background colour: a name (red/green/blue/yellow/
+#                                 orange/purple/cyan/pink/white) or "#RRGGBB"; empty = black.
+#                                 Foreground auto-contrasts. Colour + blank = colour badge.
+#   input_boolean.m5_screen_blank — clear the screen (show only the background) without
+#                                   wiping the stored text + emoji, so it can be restored.
+#
+# NOTE: these were first created live via the HA API (they exist in .storage). When this
+# package is loaded on that same instance, delete the .storage copies first, otherwise HA
+# suffixes the YAML entities (input_text.m5_screen_text_2, …) and the device stops matching.
+
+input_text:
+  m5_screen_text:
+    name: M5 Screen Text
+    initial: "GlitchCube ready"
+    max: 255
+    icon: mdi:format-text
+
+  m5_screen_emoji:
+    name: M5 Screen Emoji
+    initial: "🤖"
+    max: 8
+    icon: mdi:emoticon-outline
+
+  m5_screen_color:
+    name: M5 Screen Color
+    initial: ""
+    max: 16
+    icon: mdi:palette
+
+input_boolean:
+  m5_screen_blank:
+    name: M5 Screen Blank
+    icon: mdi:monitor-off

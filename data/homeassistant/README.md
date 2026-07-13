@@ -36,6 +36,9 @@ Contents:
   - `glitchcube_core.yaml` — input helpers Rails reads/writes (`input_select.current_persona`,
     `input_select.cube_mode`, host routing, `input_boolean.quiet_mode` +
     `input_number.quiet_mode_max_volume`, etc.).
+  - `cube_screen.yaml` — helpers driving the ESPHome `cube-screen` M5Stack Core2 display
+    (`input_text.m5_screen_text` / `_emoji` / `_color`, `input_boolean.m5_screen_blank`).
+    Mirror of the entity_ids the firmware in `data/esphome/cube-screen.yaml` subscribes to.
 - `templates/` — plain YAML template-entity files, merged into the config root's single
   `template:` key via `!include_dir_merge_list` (each file is a bare list, no `template:`
   wrapper — see the comment in either file). These live outside `packages/` at the
