@@ -33,23 +33,27 @@ RSpec.describe "Action Execution Integration", type: :integration do
   describe "ActionExecutor" do
     let(:orchestrator) { ConversationOrchestrator.new(session_id: session_id, message: "test message", context: context) }
 
-    it "joins the brain's actions and dispatches them to the translator job" do
+    it "splits the brain's channels into the sound lane and the main lane" do
       allow(EnvironmentDirectorJob).to receive(:perform_later)
 
       result = ConversationOrchestrator::ActionExecutor.call(
-        llm_response: { "actions" => [
-          { "action_name" => "cube_light", "description" => "Turn the lights orange" },
-          { "action_name" => "sound", "description" => "play heavy metal" }
-        ] },
+        llm_response: {
+          "lights" => "Turn the lights orange",
+          "sound" => "play heavy metal"
+        },
         session_id: session_id,
         conversation_id: session_id,
         user_message: "make it spooky"
       )
 
       expect(result.success?).to be true
-      # All environment changes go through one translator (no per-domain fan-out)
+      # `sound` → audio agent lane
       expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-        hash_including(instruction: "cube_light: Turn the lights orange; sound: play heavy metal")
+        hash_including(instruction: "play heavy metal", convo_prefix: "cube_sound")
+      )
+      # everything else → main action agent lane
+      expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
+        hash_including(instruction: "lights: Turn the lights orange", convo_prefix: "cube_env")
       )
       expect(result.data[:dispatched_environment]).to be true
     end

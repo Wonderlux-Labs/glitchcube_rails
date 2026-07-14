@@ -7,17 +7,11 @@ module Prompts
       new.load_persona_config(persona_id)
     end
 
-    # The full tool catalog (lib/prompts/tools.yml) keyed by tool slug. Loaded fresh each
-    # call so edits show up without a restart during authoring.
-    def self.tools_config
-      path = Rails.root.join("lib", "prompts", "tools.yml")
-      return {} unless File.exist?(path)
-
-      (YAML.load_file(path) || {})["tools"] || {}
-    end
-
-    def self.persona_tools(persona_id)
-      new.persona_tools(persona_id)
+    # The shared, plain-English description of what the cube can do (its action channels).
+    # One block, identical for every persona — no per-persona include/exclude. Loaded fresh
+    # each call so edits show up without a restart during authoring.
+    def self.tools_prompt
+      read_general("tools.txt")
     end
 
     # Raw text of the wrapper that goes BEFORE the persona sheet.
@@ -47,14 +41,6 @@ module Prompts
     rescue StandardError => e
       Rails.logger.error "Error loading persona config for #{persona_id}: #{e.message}"
       load_persona_yaml(persona_id)
-    end
-
-    # The tool slugs this persona may use. Prefers the DB config (if a `tools` field is
-    # ever added there); falls back to the persona YAML, which is where they're authored today.
-    def persona_tools(persona_id)
-      cfg = load_persona_config(persona_id) || {}
-      keys = cfg["tools"].presence || (load_persona_yaml(persona_id) || {})["tools"]
-      Array(keys)
     end
 
     def load_persona_yaml(persona_id)

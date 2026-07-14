@@ -1,18 +1,23 @@
 # app/services/schemas/narrative_response_schema.rb
 #
-# Structured output returned by the conversation LLM. The character returns what
-# it says out loud plus an optional list of `actions` — structured environment
-# changes. Each action is just { action_name, description }: which channel, and
-# a plain-English description. A downstream HASS agent interprets the description
-# into real device commands, so we deliberately keep this simple — no RGB values,
-# no effect enums. Over-specifying here breaks narrative consistency.
+# Structured output returned by the conversation LLM. The character returns what it
+# says out loud plus a set of OPTIONAL, plain-English action channels — one string
+# per channel describing the INTENT, not exact device settings. Downstream, `sound`
+# is routed to the audio/jukebox HASS agent and everything else to the main action
+# agent (see ConversationOrchestrator::ActionExecutor); each agent does its own
+# tool-calling. We deliberately keep this simple — no RGB values, no effect enums,
+# no per-channel action objects. Over-specifying here breaks narrative consistency.
 #
-# `strict: false` so the model is free to return an empty `actions` list (or omit
-# it) on turns where nothing should change — most turns are just talk.
+# `strict: false` so the model can omit any/all action channels on turns where
+# nothing should change — most turns are just talk.
 class Schemas::NarrativeResponseSchema
-  # Channels the character can act on. Kept loose on purpose; the HASS agent does
-  # its best with whatever plain-English description comes through.
-  ACTION_CHANNELS = %w[cube_light top_light jukebox mood_music sound_efx announcement marquee switch].freeze
+  # The plain-English action channels the character can fill in. All optional.
+  ACTION_CHANNELS = %w[lights sound marquee other_actions].freeze
+
+  # The narrative (non-action) keys. Anything in the structured output that ISN'T one of
+  # these is treated as a plain-English action channel — so an unexpected extra key still
+  # gets routed to the main agent rather than silently dropped.
+  NARRATIVE_KEYS = %w[speech inner_monologue continue_conversation ooc_questions].freeze
 
   def self.schema
     OpenRouter::Schema.define("narrative_response", strict: false) do
@@ -22,15 +27,17 @@ class Schemas::NarrativeResponseSchema
       string :inner_monologue, required: true,
              description: "What your character is thinking privately this turn. Never spoken aloud. Can contradict the speech. A sentence or two."
 
-      array :actions,
-            description: "Physical changes you want to make this turn, using only the channels in YOUR TOOLS (which shows example actions for each). Multiple actions per turn are allowed and encouraged when more than one thing should happen. Use an empty list on talk-only turns — you do NOT need to act every turn. You may be playful, ironic, or contradictory." do
-        object do
-          string :action_name, required: true,
-                 description: "The channel to use — one of the action_name values listed in YOUR TOOLS in the system prompt."
-          string :description, required: true,
-                 description: "Plain-English intent for that channel — a separate agent turns it into real device commands, so describe what you want, not exact settings. See YOUR TOOLS for example phrasings per channel."
-        end
-      end
+      string :lights, required: false,
+             description: "OPTIONAL. Plain-English description of what you want your body's LEDs to do this turn — you have a HEAD strip and a BODY strip (WLED) you can light together or differently, any color/brightness/effect. e.g. \"whole body deep purple, slow breathing\" or \"body dark red, head twinkling pink and red\". Omit if you don't want to change your lights."
+
+      string :sound, required: false,
+             description: "OPTIONAL. Plain-English description of anything you want to play — a front-and-center song, quiet background/mood music, or a short sound effect/stinger. e.g. \"play Around the World by Daft Punk and crank it up\", \"put on low mysterious flute music in the background\", \"hit a sad trombone\". Omit if you don't want to play anything."
+
+      string :marquee, required: false,
+             description: "OPTIONAL. Plain-English text (and optional color) for the scrolling sign on your body, under ~255 chars. e.g. \"THE STARS FORGOT YOUR NAME in pink\". Omit to leave the sign alone."
+
+      string :other_actions, required: false,
+             description: "OPTIONAL. Plain-English catch-all for anything else you can do. Right now: run a systems check (\"run a systems check\") or switch persona (\"change persona to Neon\"). Omit if none apply."
 
       boolean :continue_conversation, required: true,
               description: "Whether to keep listening without a wake word. Err toward true; false only when the conversation has clearly ended (a goodbye) or the input is environmental noise, not someone talking to you."

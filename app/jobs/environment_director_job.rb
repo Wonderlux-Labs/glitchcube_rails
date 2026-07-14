@@ -10,19 +10,27 @@
 # next turn).
 #
 # This replaces the old in-Rails translator (ToolCallingService + Tools::Registry).
+#
+# One job runs per LANE (see ConversationOrchestrator::ActionExecutor): the `sound`
+# channel goes to the audio agent, everything else to the main action agent, and both
+# run in parallel. `agent_id` and `convo_prefix` are passed per lane so each agent keeps
+# its OWN running context and the two don't stomp each other. Both append to the
+# conversation's `pending_ha_results`, so whichever finishes first (or at all) still
+# lands in the next turn's prompt — order doesn't matter.
 class EnvironmentDirectorJob < ApplicationJob
   queue_as :default
 
-  def perform(instruction:, session_id:, conversation_id:, user_message:, persona: nil)
-    agent_id = Rails.configuration.hass_action_agent
-    Rails.logger.info "🎬 EnvironmentDirectorJob → #{agent_id}: #{instruction}"
+  def perform(instruction:, session_id:, conversation_id:, user_message:, persona: nil,
+              agent_id: nil, convo_prefix: "cube_env")
+    agent_id ||= Rails.configuration.hass_action_agent
+    Rails.logger.info "🎬 EnvironmentDirectorJob [#{convo_prefix}] → #{agent_id}: #{instruction}"
 
     response = HomeAssistantService.instance.conversation_process(
       text: instruction,
       agent_id: agent_id,
-      # Stable per-conversation id so the agent keeps its own running context
+      # Stable per-lane, per-conversation id so each agent keeps its own running context
       # of what it has already done for this cube conversation.
-      conversation_id: "cube_env_#{conversation_id}"
+      conversation_id: "#{convo_prefix}_#{conversation_id}"
     )
 
     reply = extract_agent_reply(response)

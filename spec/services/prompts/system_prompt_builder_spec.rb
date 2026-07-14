@@ -77,33 +77,18 @@ RSpec.describe Prompts::SystemPromptBuilder do
       before do
         allow(Prompts::ConfigurationLoader).to receive(:base_system_prompt)
           .and_return("# YOUR TOOLS\n\n{{TOOLS}}\n\n# YOUR PERSONA")
-        allow(Prompts::ConfigurationLoader).to receive(:tools_config).and_return({
-          "lighting" => { "name" => "lighting controls", "action_names" => %w[cube_light top_light], "description" => "control the lights",
-                          "examples" => [ { "action_name" => "cube_light", "description" => "warm amber, slow pulse" } ] },
-          "jukebox"  => { "name" => "jukebox controls",  "action_names" => %w[sound],                "description" => "play music" }
-        })
-        allow(Prompts::ConfigurationLoader).to receive(:persona_tools).with("buddy").and_return([ "lighting" ])
       end
 
-      it 'renders a tool the persona is allowed, with its action_names' do
-        expect(subject).to include("lighting controls")
-        expect(subject).to include("action_name: cube_light, top_light")
-      end
+      it 'fills the {{TOOLS}} placeholder with the shared tools description' do
+        allow(Prompts::ConfigurationLoader).to receive(:tools_prompt).and_return("- lights — your LEDs\n- sound — play music")
 
-      it 'renders the tool\'s example actions as JSON under it' do
-        expect(subject).to include('e.g. {"action_name": "cube_light", "description": "warm amber, slow pulse"}')
-      end
-
-      it 'omits a tool the persona is not allowed' do
-        expect(subject).not_to include("jukebox controls")
-      end
-
-      it 'fills the {{TOOLS}} placeholder' do
+        expect(subject).to include("- lights — your LEDs")
+        expect(subject).to include("- sound — play music")
         expect(subject).not_to include("{{TOOLS}}")
       end
 
-      it 'shows a fallback line when the persona has no tools' do
-        allow(Prompts::ConfigurationLoader).to receive(:persona_tools).with("buddy").and_return([])
+      it 'shows a fallback line when there is no tools description' do
+        allow(Prompts::ConfigurationLoader).to receive(:tools_prompt).and_return(nil)
         expect(subject).to include("no special tools")
       end
     end

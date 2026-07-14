@@ -48,11 +48,12 @@ class ConversationLog < ApplicationRecord
     thought = narrative["inner_monologue"].presence
     lines << (thought ? "Cube (privately: #{thought}): #{ai_response}" : "Cube: #{ai_response}")
 
-    actions = Array(narrative["actions"]).filter_map do |a|
-      next unless a.is_a?(Hash)
-
-      [ a["action_name"], a["description"] ].compact_blank.join(": ").presence
-    end
+    # The brain returns plain-English action channels as top-level keys
+    # (lights/sound/marquee/other_actions, plus any other non-narrative key). Anything
+    # that isn't a narrative key is an attempted device action.
+    actions = narrative
+              .except(*Schemas::NarrativeResponseSchema::NARRATIVE_KEYS)
+              .filter_map { |channel, desc| "#{channel}: #{desc}".presence if desc.present? }
     lines << "  → attempted device actions: #{actions.join('; ')}" if actions.any?
     lines.join("\n")
   end

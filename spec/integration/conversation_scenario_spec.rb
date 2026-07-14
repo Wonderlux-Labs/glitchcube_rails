@@ -18,17 +18,15 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
     )
   end
 
-  # What the brain LLM "decides": a line to say + a list of plain-English
-  # environment actions (the shape the translator consumes).
+  # What the brain LLM "decides": a line to say + plain-English action channels
+  # (the shape the two-lane dispatcher consumes).
   let(:narrative) do
     {
       "speech" => "Ooh, making it nice and spooky for you!",
       "continue_conversation" => true,
       "inner_monologue" => "spooky vibes incoming",
-      "actions" => [
-        { "action_name" => "cube_light", "description" => "turn the lights deep orange" },
-        { "action_name" => "sound", "description" => "play spooky music" }
-      ]
+      "lights" => "turn the lights deep orange",
+      "sound" => "play spooky music"
     }
   end
 
@@ -53,7 +51,7 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
 
   after { HomeAssistantService.reset_instance! }
 
-  it "speaks the brain's words and routes the environment change through the single translator" do
+  it "speaks the brain's words and routes the environment change through the two-lane translator" do
     response = ConversationOrchestrator.new(
       session_id: session_id,
       message: "make it spooky in here",
@@ -63,10 +61,15 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
     # The cube said what the brain decided (HASS-formatted response).
     expect(response.to_s).to include("spooky")
 
-    # All environment changes went through ONE translator job (no per-domain
-    # fan-out), carrying the brain's actions joined into one instruction.
+    # The `sound` channel goes to the audio agent on its own lane...
     expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-      hash_including(instruction: "cube_light: turn the lights deep orange; sound: play spooky music")
+      hash_including(instruction: "play spooky music", convo_prefix: "cube_sound",
+                     agent_id: Rails.configuration.hass_sound_agent)
+    )
+    # ...and everything else goes to the main action agent.
+    expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
+      hash_including(instruction: "lights: turn the lights deep orange", convo_prefix: "cube_env",
+                     agent_id: Rails.configuration.hass_action_agent)
     )
 
     # The turn was persisted.
