@@ -13,6 +13,13 @@ play_music_on_jukebox:
           - replace_next
       default: replace
   sequence:
+  # Front-and-center music: set the jukebox to full listening volume first.
+  - action: media_player.volume_set
+    metadata: {}
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: 0.85
   - action: music_assistant.play_media
     metadata: {}
     target:
@@ -32,6 +39,51 @@ play_music_on_jukebox:
     the next song, you can use replace_next. We don't want to run very long queues,
     so you will either be playing immediately or just choosing the next song, by default
     it uses replace
+
+# Same as play_music_on_jukebox, but for ambiance: ducks the jukebox to a quiet
+# background level (0.25) before playing so music sits UNDER the conversation.
+play_background_music:
+  fields:
+    query:
+      selector:
+        text:
+      required: true
+      name: query
+    queue:
+      selector:
+        select:
+          options:
+          - replace
+          - replace_next
+      default: replace
+  sequence:
+  # Background/mood music: duck the jukebox to a quiet ambient level first.
+  - action: media_player.volume_set
+    metadata: {}
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: 0.25
+  - action: music_assistant.play_media
+    metadata: {}
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+    data:
+      media_id: '{{ query }}'
+      media_type: track
+      enqueue: "{{ queue | default('replace', true) }}"
+  alias: Play Background Music
+  description: This is the best way to play mood or background music on the jukebox.
+    It plays quietly UNDER the conversation so it's ambient texture, not a front-and-center
+    song. Query is a fuzzy search param that will find the best match, generally it
+    should be something like Nirvana - Smells Like Teen Spirit, but you could also use
+    Artist - Album - Title if you want. For an ambiguous mood, search first — sound
+    effect libraries, mood music compilations, etc. Queue is optional, by default it
+    is set to replace and will start playing automatically. If there is currently a
+    song playing and you want to queue the next one, use replace_next. We don't want
+    to run very long queues, so you will either be playing immediately or just choosing
+    the next song, by default it uses replace
 
 # --- DEV mocks -------------------------------------------------------------------
 # Safe stand-ins for the real audio actions: instead of actually playing anything,
@@ -396,6 +448,314 @@ awtrix_install_idle_apps:
       speed: 4
   mode: single
 
+# --- Cube WLED lighting (Assist-facing) ------------------------------------------
+# The ONE addressable-LED control exposed to the Assist action agent. The cube's show
+# LEDs are a single sound-reactive WLED controller with two outputs: the HEAD strip
+# (~30 LEDs, light.glitch_head_wled) and the BODY strip (~60 LEDs, light.cube_body_wled).
+# This script hides that plumbing — the agent just picks a strip (both/head/body), an
+# optional color + brightness, and an effect. `both` fans the SAME command out to head
+# and body in one call; to give them different looks, call the script twice (once with
+# led_strip: head, once with led_strip: body). Routing/mapping lives here so the agent
+# only ever sees one lighting tool. NOT the top light — that's internal (see below).
+set_cube_lights:
+  alias: Set Cube Lights
+  description: >-
+    The cube's main light control — its addressable RGB LEDs, split into a HEAD strip and a
+    BODY strip driven by one sound-reactive WLED controller. Use this for ANY look on the
+    cube's body/head: a plain solid color, a mood, or an animated/audio-reactive effect.
+    Pick `led_strip`: "both" (default — same look on head and body), "head", or "body". To
+    make the head and body DIFFERENT, call this twice, once per strip. `color` is an RGB
+    color and `brightness` is 1-100%; both are optional and, if omitted, are left unchanged.
+    `effect` defaults to "Solid" — i.e. if you don't pass an effect you're just setting a
+    solid RGB color. Pass any other effect name to animate. IMPORTANT: each call sets the
+    COMPLETE look and effect resets to Solid when you don't specify one, so if you want to
+    keep an animation running and only tweak color/brightness, pass that same effect again.
+    Many effects are SOUND-REACTIVE and pulse to live audio from the mic — great while music
+    is playing on the jukebox: GEQ, Freqwave, Freqmatrix, Waterfall, Matripix, Gravcenter,
+    Gravcentric, DJ Light, Blurz, Puddlepeak, Pixelwave, Rocktaves, Midnoise, Noisemeter,
+    "PS Sonic Stream", "PS Sonic Boom", "PS GEQ 1D". Some good picks by mood — CALM/AMBIENT:
+    Breathe, Aurora, Pacifica, Lake, Colorwaves, Palette, Colorloop, Glitter, Twinkleup,
+    "Slow Transition". PLAYFUL/COLORFUL: Rainbow, "Rainbow Runner", Colorful, "Chase Rainbow",
+    "Pride 2015", "Sinelon Rainbow". WARM/FIRE: "Fire 2012", "Fire Flicker", Candle, "PS Fire",
+    "Sun Radiation", Sunrise. PARTY/ENERGETIC: Strobe, "Blink Rainbow", Fireworks,
+    "Fireworks Starburst", Plasma, Blends, "Dancing Shadows". EERIE/GLITCHY (on brand):
+    "Halloween Eyes", "Ghost Rider", "Black Hole", Matrix, "Noise 1", Phased,
+    "Distortion Waves", Frizzles, Octopus, Soap. The full WLED effect catalog is in the
+    effect list if you want something else.
+  fields:
+    led_strip:
+      name: LED strip
+      description: Which part of the cube to light. "both" (default) sends the same look to
+        head and body; "head" or "body" targets just one. Call twice to differ them.
+      default: both
+      selector:
+        select:
+          options:
+          - both
+          - head
+          - body
+    color:
+      name: Color
+      description: RGB color for the lights. Optional — omit to leave the current color
+        unchanged (e.g. when you only want to change brightness or start an effect).
+      selector:
+        color_rgb:
+    brightness:
+      name: Brightness
+      description: Overall brightness, 1-100 percent. Optional — omit to leave brightness
+        unchanged.
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+    effect:
+      name: Effect
+      description: Which WLED effect to run. Defaults to "Solid" (a plain solid color — pass
+        this, or omit effect, when you just want a color). Any other value animates; many are
+        sound-reactive. See the description for picks by mood.
+      default: Solid
+      selector:
+        select:
+          options:
+          - Solid
+          - Blink
+          - Breathe
+          - Wipe
+          - Wipe Random
+          - Random Colors
+          - Sweep
+          - Dynamic
+          - Colorloop
+          - Rainbow
+          - Scan
+          - Scan Dual
+          - Fade
+          - Theater
+          - Theater Rainbow
+          - Running
+          - Saw
+          - Twinkle
+          - Dissolve
+          - Dissolve Rnd
+          - Sparkle
+          - Sparkle Dark
+          - Sparkle+
+          - Strobe
+          - Strobe Rainbow
+          - Strobe Mega
+          - Blink Rainbow
+          - Android
+          - Chase
+          - Chase Random
+          - Chase Rainbow
+          - Chase Flash
+          - Chase Flash Rnd
+          - Rainbow Runner
+          - Colorful
+          - Traffic Light
+          - Sweep Random
+          - Chase 2
+          - Aurora
+          - Stream
+          - Scanner
+          - Lighthouse
+          - Fireworks
+          - Rain
+          - Tetrix
+          - Fire Flicker
+          - Gradient
+          - Loading
+          - Rolling Balls
+          - Fairy
+          - Two Dots
+          - Fairytwinkle
+          - Running Dual
+          - Image
+          - Chase 3
+          - Tri Wipe
+          - Tri Fade
+          - Lightning
+          - ICU
+          - Multi Comet
+          - Scanner Dual
+          - Stream 2
+          - Oscillate
+          - Pride 2015
+          - Juggle
+          - Palette
+          - Fire 2012
+          - Colorwaves
+          - Bpm
+          - Fill Noise
+          - Noise 1
+          - Noise 2
+          - Noise 3
+          - Noise 4
+          - Colortwinkles
+          - Lake
+          - Meteor
+          - Copy Segment
+          - Railway
+          - Ripple
+          - Twinklefox
+          - Twinklecat
+          - Halloween Eyes
+          - Solid Pattern
+          - Solid Pattern Tri
+          - Spots
+          - Spots Fade
+          - Glitter
+          - Candle
+          - Fireworks Starburst
+          - Fireworks 1D
+          - Bouncing Balls
+          - Sinelon
+          - Sinelon Dual
+          - Sinelon Rainbow
+          - Popcorn
+          - Drip
+          - Plasma
+          - Percent
+          - Ripple Rainbow
+          - Heartbeat
+          - Pacifica
+          - Candle Multi
+          - Solid Glitter
+          - Sunrise
+          - Phased
+          - Twinkleup
+          - Noise Pal
+          - Sine
+          - Phased Noise
+          - Flow
+          - Chunchun
+          - Dancing Shadows
+          - Washing Machine
+          - Rotozoomer
+          - Blends
+          - TV Simulator
+          - Dynamic Smooth
+          - Spaceships
+          - Crazy Bees
+          - Ghost Rider
+          - Blobs
+          - Scrolling Text
+          - Drift Rose
+          - Distortion Waves
+          - Soap
+          - Octopus
+          - Waving Cell
+          - Pixels
+          - Pixelwave
+          - Juggles
+          - Matripix
+          - Gravimeter
+          - Plasmoid
+          - Puddles
+          - Midnoise
+          - Noisemeter
+          - Freqwave
+          - Freqmatrix
+          - GEQ
+          - Waterfall
+          - Freqpixels
+          - Noisefire
+          - Puddlepeak
+          - Noisemove
+          - Noise2D
+          - Perlin Move
+          - Ripple Peak
+          - Firenoise
+          - Squared Swirl
+          - PacMan
+          - DNA
+          - Matrix
+          - Metaballs
+          - Freqmap
+          - Gravcenter
+          - Gravcentric
+          - Gravfreq
+          - DJ Light
+          - Funky Plank
+          - Shimmer
+          - Pulser
+          - Blurz
+          - Drift
+          - Waverly
+          - Sun Radiation
+          - Colored Bursts
+          - Julia
+          - Game Of Life
+          - Tartan
+          - Polar Lights
+          - Swirl
+          - Lissajous
+          - Frizzles
+          - Plasma Ball
+          - Flow Stripe
+          - Hiphotic
+          - Sindots
+          - DNA Spiral
+          - Black Hole
+          - Wavesins
+          - Rocktaves
+          - Akemi
+          - PS Volcano
+          - PS Fire
+          - PS Fireworks
+          - PS Vortex
+          - PS Fuzzy Noise
+          - PS Ballpit
+          - PS Box
+          - PS Attractor
+          - PS Impact
+          - PS Waterfall
+          - PS Spray
+          - PS GEQ 2D
+          - PS GEQ Nova
+          - PS Ghost Rider
+          - PS Blobs
+          - PS DripDrop
+          - PS Pinball
+          - PS Dancing Shadows
+          - PS Fireworks 1D
+          - PS Sparkler
+          - PS Hourglass
+          - PS Spray 1D
+          - PS 1D Balance
+          - PS Chase
+          - PS Starburst
+          - PS GEQ 1D
+          - PS Fire 1D
+          - PS Sonic Stream
+          - PS Sonic Boom
+          - PS Springy
+          - PS Galaxy
+          - Color Clouds
+          - Slow Transition
+  sequence:
+  # Route the friendly both/head/body choice to the real WLED entities. `both` targets
+  # them together so one call sets an identical look on head and body.
+  - action: light.turn_on
+    target:
+      entity_id: >-
+        {{ {'both': ['light.glitch_head_wled', 'light.cube_body_wled'],
+            'head': ['light.glitch_head_wled'],
+            'body': ['light.cube_body_wled']}.get(led_strip | default('both', true),
+            ['light.glitch_head_wled', 'light.cube_body_wled']) }}
+    # Build the payload: always set the effect (Solid by default), and only include
+    # color/brightness when the caller actually passed them so we don't clobber them.
+    data: >-
+      {{ {'effect': effect | default('Solid', true)}
+         | combine({'rgb_color': color} if (color is defined and color) else {})
+         | combine({'brightness_pct': brightness | int} if (brightness is defined and brightness is not none) else {}) }}
+  # queued so a quick head-call-then-body-call runs in order instead of dropping one.
+  mode: queued
+  max: 10
+
 # --- Top light preset effects ----------------------------------------------------
 # INTERNAL ONLY — the top light is NOT exposed to Voice Assist; Assist controls the WLED
 # body/head segments instead. These scripts and the top-light automations are the only
@@ -417,15 +777,15 @@ awtrix_install_idle_apps:
 #                                  automation calls it while the jukebox plays. The device's
 #                                  old built-in "music mode" switch is left untouched.
 
-# Set the top light to the current persona's signature color, solid, full brightness —
-# the top light's default ambient glow. Central home for the persona->RGB map (mirrors the
+# Set the top light to the current persona's signature color, solid, dimmed to a low
+# ambient level (brightness 15) — the top light's default ambient glow. Central home for the persona->RGB map (mirrors the
 # voice LED ring colors in the Persona Switcher automation); called by that automation, by
 # the sound-reactive-jukebox revert, and by the blink-test restore.
 set_top_light_persona_color:
   alias: Set Top Light to Persona Color
   description: >-
     Internal helper: put the current persona's signature color on the Govee top light as a
-    solid, full-brightness ambient glow. Not for Assist — the top light is not exposed.
+    solid, dim (brightness 15) ambient glow. Not for Assist — the top light is not exposed.
     This is the canonical "back to normal" path: it FIRST turns the device music-mode
     switch OFF (the built-in Spectrum/Rolling/etc. reactive modes need it on, and a solid
     color won't stick while it's on), then sets the color — so every revert must go
@@ -438,7 +798,7 @@ set_top_light_persona_color:
     target:
       entity_id: light.top_light
     data:
-      brightness: 255
+      brightness: 15
       rgb_color: >-
         {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
             'crash': [0,255,65], 'jax': [0,120,255]}
