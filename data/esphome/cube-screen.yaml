@@ -67,6 +67,10 @@ external_components:
     refresh: 1d
 
 logger:
+  # The mpu6886 logs every accel/gyro read at DEBUG — a line/second at our poll rate.
+  # Silence just that component; everything else keeps default verbosity.
+  logs:
+    mpu6886: WARN
 
 # Native API for Home Assistant. New encryption key (in secrets.yaml) → after the
 # first flash HA will show this device as needing to be (re-)added; adopt it and
@@ -109,7 +113,7 @@ globals:
   - id: screen_text
     type: std::string
     restore_value: no
-    initial_value: '"GlitchCube"'
+    initial_value: '""'
   - id: screen_emoji
     type: std::string
     restore_value: no
@@ -118,19 +122,6 @@ globals:
     type: std::string
     restore_value: no
     initial_value: '""'
-  - id: screen_blank
-    type: bool
-    restore_value: no
-    initial_value: 'false'
-
-binary_sensor:
-  # Blank / clear the screen from HA without wiping the stored text + emoji.
-  - platform: homeassistant
-    id: ha_screen_blank
-    entity_id: input_boolean.m5_screen_blank
-    on_state:
-      - lambda: 'id(screen_blank) = x;'
-      - component.update: m5_display
 
 text_sensor:
   # Caption text. When an emoji is set this becomes a small line under it.
@@ -165,9 +156,6 @@ text_sensor:
 # --- Fonts ------------------------------------------------------------------------
 # gfonts:// are fetched at compile time — no local font files needed.
 font:
-  - file: "gfonts://Roboto@700"
-    id: font_title
-    size: 26
   - file: "gfonts://Roboto"
     id: font_body
     size: 20
@@ -183,7 +171,8 @@ font:
        "😜","🤪","😏","😝","🤭","🥰","😐","🤔","🧐","😶","🙄","😌","😴","🥱",
        "😢","😭","😔","😟","🙁","😞","😠","😡","🤬","😤","😮","😲","😱","😨",
        "🤯","🤒","🤢","😈","👿","🤖","👻","👽","💀","🔥","✨","⭐","💯","⚡",
-       "🧡","💛","💚","💙","💜"]
+       "🧡","💛","💚","💙","💜",
+       "👂","🎧","💭","⚠","🚫","🕺","💃","🎵","🎶","🎉","🎊","❌","✅","✔","👍"]
 
 # --- Display ----------------------------------------------------------------------
 # model: M5STACK == the 320x240 ILI9342C on the Core2. If colours look inverted on
@@ -216,7 +205,8 @@ display:
       };
       Color bg = to_color(id(screen_color));
       it.fill(bg);
-      if (id(screen_blank)) return;   // cleared / colour-badge mode: just the background
+      // No explicit blank flag: empty text + empty emoji already leaves just the
+      // background (clear the input_texts from HA to blank the screen).
 
       // Foreground auto-picks black or white for contrast against the background.
       uint16_t lum = (bg.r * 299 + bg.g * 587 + bg.b * 114) / 1000;
@@ -233,11 +223,10 @@ display:
         return;
       }
 
-      // Text mode: "GlitchCube" header + word-wrapped body.
-      it.print(160, 6, id(font_title), fg, TextAlign::TOP_CENTER, "GlitchCube");
+      // Text mode: word-wrapped body only (no hardcoded header — HA drives all text).
       const int max_w = 300;
       const int line_h = 26;
-      int y = 48;
+      int y = 12;
       std::string line;
       size_t i = 0;
       while (true) {
@@ -276,7 +265,12 @@ sensor:
   - platform: mpu6886
     address: 0x68
     i2c_id: bus_a
-    update_interval: 1s
+    # Sample rate for the "cube moved / fell over" use case. 2s is responsive enough to
+    # notice handling/orientation changes without hammering HA's recorder (this publishes
+    # 7 sensors each tick). Bump down for snappier detection, up to spare the recorder.
+    # Better long-term: compute a single "moved"/"fell over" binary_sensor on the ESP and
+    # publish only that, instead of streaming raw accel/gyro/temp.
+    update_interval: 2s
     accel_x:
       name: "Accel X"
     accel_y:
