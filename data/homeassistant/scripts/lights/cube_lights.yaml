@@ -234,6 +234,20 @@ set_cube_lights:
           - Color Clouds
           - Slow Transition
   sequence:
+  # Claim the turn FIRST (before the wait) so the same-edge end-of-speech restore in the
+  # "Cube Expression" automation can never beat us to the flag: both that restore and the
+  # wait below release on the SAME event (voice media leaving 'playing'). The action agent
+  # calls this DURING the turn, so the flag is normally set seconds before end-of-speech.
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.cube_light_command_this_turn
+  # Hold the light change until the cube stops speaking so it doesn't stomp the "talking"
+  # effect. Key off the VOICE media player, not the satellite 'responding' state — the
+  # firmware blips responding->idle->listening mid-speech, which would release too early.
+  # Outside a conversation the media player isn't playing, so this passes through instantly.
+  - wait_template: "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+    timeout: "00:00:25"
+    continue_on_timeout: true
   # Route the friendly both/head/body choice to the real WLED entities. `both` targets
   # them together so one call sets an identical look on head and body.
   - action: light.turn_on

@@ -145,6 +145,16 @@ input_boolean:
     initial: false
     icon: mdi:sleep
 
+  # Set ON (first action) by script.set_cube_lights the instant a brain light command
+  # arrives; read at end-of-speech by the "Cube Expression" automation to decide
+  # keep-the-new-look vs restore-the-pre-turn snapshot; reset OFF at each turn start.
+  # Setting it BEFORE the deferral wait is deliberate: the turn-end restore and the
+  # script's wait release on the SAME media-stop event, so the flag must already be set.
+  cube_light_command_this_turn:
+    name: "Cube light command landed this turn"
+    initial: false
+    icon: mdi:lightbulb-on-outline
+
 input_number:
   # The volume cap (percent, 0-100) applied everywhere while quiet_mode is ON.
   # Read by the auto-duck automation and by Rails' HostAudio. Tune it live to find
@@ -158,6 +168,60 @@ input_number:
     unit_of_measurement: "%"
     mode: slider
     icon: mdi:volume-medium
+
+  # --- Conversation stats -------------------------------------------------------
+  # Pushed every 5 min by Rails' Recurring::System::ConversationStatsJob (read-only
+  # dashboards; nothing on the HASS side writes these). A "conversation" is one
+  # Conversation session; a "round" is one logged turn (ConversationLog row).
+  # mode: box with a high max so large lifetime totals aren't clamped.
+  conversations_total:
+    name: "Conversations (total)"
+    initial: 0
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+    icon: mdi:forum
+  rounds_total:
+    name: "Conversation Rounds (total)"
+    initial: 0
+    min: 0
+    max: 10000000
+    step: 1
+    mode: box
+    icon: mdi:message-reply-text
+  conversations_last_6h:
+    name: "Conversations (last 6h)"
+    initial: 0
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+    icon: mdi:forum
+  rounds_last_6h:
+    name: "Conversation Rounds (last 6h)"
+    initial: 0
+    min: 0
+    max: 10000000
+    step: 1
+    mode: box
+    icon: mdi:message-reply-text
+  conversations_last_1h:
+    name: "Conversations (last 1h)"
+    initial: 0
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+    icon: mdi:forum
+  rounds_last_1h:
+    name: "Conversation Rounds (last 1h)"
+    initial: 0
+    min: 0
+    max: 10000000
+    step: 1
+    mode: box
+    icon: mdi:message-reply-text
 
 input_button:
   trigger_alarm:
