@@ -23,6 +23,11 @@ default: &default
     schedule: "5 * * * *"     # Hourly (:05) — fold the newest handoff reports into the one overall
     queue: default
 
+  conversation_stats:
+    class: Recurring::System::ConversationStatsJob
+    schedule: "*/5 * * * *"   # Every 5 min — push conversation/round counts to HASS input_numbers
+    queue: default
+
 production:
   <<: *default
 
