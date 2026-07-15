@@ -37,6 +37,15 @@ input_text:
     max: 100
     icon: mdi:server-network
 
+  # Human-readable age of the most recent conversation turn ("5 minutes ago",
+  # "2 hours ago", "just now", "never"). Pushed every 5 min by Rails'
+  # Recurring::System::ConversationStatsJob alongside the conversation-stat input_numbers.
+  last_conversation_at:
+    name: "Last Conversation"
+    initial: "never"
+    max: 64
+    icon: mdi:clock-outline
+
   backend_health_status:
     name: Backend Health Status
     initial: "unknown"
