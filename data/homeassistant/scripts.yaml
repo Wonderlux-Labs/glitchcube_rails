@@ -1,3 +1,7 @@
+# ONE play script for both front-and-center songs AND quiet background/mood music — the
+# required `volume` decides which (no more duplicate play_background_music). A required,
+# no-default volume forces the calling agent to choose a level deliberately; the description
+# anchors the two bands (25-35 background, 80-90 front-and-center).
 play_music_on_jukebox:
   fields:
     query:
@@ -5,6 +9,20 @@ play_music_on_jukebox:
         text:
       required: true
       name: query
+    volume:
+      name: Volume
+      description: >-
+        Playback volume, 0-100 percent. REQUIRED — choose deliberately: 25-35 for quiet
+        background/mood music that sits UNDER the conversation, 80-90 for a front-and-center
+        song, a dance party, or anytime the music should take the room.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
     queue:
       selector:
         select:
@@ -13,13 +31,13 @@ play_music_on_jukebox:
           - replace_next
       default: replace
   sequence:
-  # Front-and-center music: set the jukebox to full listening volume first.
+  # The volume you pass sets whether this is a front-and-center song or background texture.
   - action: media_player.volume_set
     metadata: {}
     target:
       entity_id: media_player.jukebox_internal
     data:
-      volume_level: 0.85
+      volume_level: "{{ (volume | float) / 100 }}"
   - action: music_assistant.play_media
     metadata: {}
     target:
@@ -30,140 +48,14 @@ play_music_on_jukebox:
       media_type: track
       enqueue: "{{ queue | default('replace', true) }}"
   alias: Play Music on Jukebox
-  description: This is the best way to play music on the jukebox. Query is a fuzzy
-    search param that will find the best match, generally it should be something like
-    Nirvana - Smells Like Teen Spirit, but you could also use Artist - Album - Title
-    if you want. If you get the title name slightly wrong it is pretty forgiving.
-    Queue is an optional param, by default it is set to replace and will start playing
-    automatically. If there is currently a song playing, and you want to queue up
-    the next song, you can use replace_next. We don't want to run very long queues,
-    so you will either be playing immediately or just choosing the next song, by default
-    it uses replace
-
-# Same as play_music_on_jukebox, but for ambiance: ducks the jukebox to a quiet
-# background level (0.25) before playing so music sits UNDER the conversation.
-play_background_music:
-  fields:
-    query:
-      selector:
-        text:
-      required: true
-      name: query
-    queue:
-      selector:
-        select:
-          options:
-          - replace
-          - replace_next
-      default: replace
-  sequence:
-  # Background/mood music: duck the jukebox to a quiet ambient level first.
-  - action: media_player.volume_set
-    metadata: {}
-    target:
-      entity_id: media_player.jukebox_internal
-    data:
-      volume_level: 0.25
-  - action: music_assistant.play_media
-    metadata: {}
-    target:
-      entity_id:
-      - media_player.jukebox_internal
-    data:
-      media_id: '{{ query }}'
-      media_type: track
-      enqueue: "{{ queue | default('replace', true) }}"
-  alias: Play Background Music
-  description: This is the best way to play mood or background music on the jukebox.
-    It plays quietly UNDER the conversation so it's ambient texture, not a front-and-center
-    song. Query is a fuzzy search param that will find the best match, generally it
-    should be something like Nirvana - Smells Like Teen Spirit, but you could also use
-    Artist - Album - Title if you want. For an ambiguous mood, search first — sound
-    effect libraries, mood music compilations, etc. Queue is optional, by default it
-    is set to replace and will start playing automatically. If there is currently a
-    song playing and you want to queue the next one, use replace_next. We don't want
-    to run very long queues, so you will either be playing immediately or just choosing
-    the next song, by default it uses replace
-
-# --- DEV mocks -------------------------------------------------------------------
-# Safe stand-ins for the real audio actions: instead of actually playing anything,
-# each just records the requested query/effect into an input_text so we can SEE what
-# the HASS action agent chose to call, without waking a house. Expose THESE to Assist
-# (and unexpose the real play_music_on_jukebox above) while testing. Wire up real
-# behavior and hide the dev ones later.
-
-play_song_on_jukebox_dev:
-  alias: Play Song on Jukebox (dev)
   description: >-
-    Play a specific, named song front and center on the cube's jukebox. `query` is a
-    fuzzy search — give it a song as "Title by Artist" (e.g. "Under Pressure by Queen"),
-    or "Artist - Album - Title" if you want to be precise. Be as specific as you can and
-    we'll find the best match; slightly-wrong titles are forgiving. Use this to actually
-    play a song, not for background ambiance.
-  fields:
-    query:
-      name: Query
-      description: The song to play, e.g. "Ol' 55 by Tom Waits" or "Nirvana - Nevermind - Come As You Are"
-      required: true
-      example: "Play That Funky Music by Wild Cherry"
-      selector:
-        text:
-  sequence:
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.dev_jukebox_song
-    data:
-      value: "{{ query }}"
-
-play_mood_music_dev:
-  alias: Play Mood Music (dev)
-  description: >-
-    Put on background mood music for ambiance. Searchable across most of Spotify — give a
-    vibe, genre, or a specific track/artist as `query`. This plays quietly UNDER the
-    conversation (it ducks its own volume so you can still be heard), so it's texture, not
-    a front-and-center song. Use it to set a mood, not to feature a track.
-  fields:
-    query:
-      name: Query
-      description: The vibe or track for background music, e.g. "slow dark ambient", "lo-fi beats", or "Boards of Canada"
-      required: true
-      example: "moody late-night jazz"
-      selector:
-        text:
-  sequence:
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.dev_mood_music
-    data:
-      value: "{{ query }}"
-
-play_sound_effect_dev:
-  alias: Play Sound Effect (dev)
-  description: >-
-    Fire a short sound effect / stinger for comic or dramatic accent. Pick one of the
-    available effects. Use sparingly, as punctuation — not as background music.
-  fields:
-    effect:
-      name: Effect
-      description: Which sound effect to play
-      required: true
-      selector:
-        select:
-          options:
-          - chime
-          - tada
-          - sad trombone
-          - siren
-          - airhorn
-          - record scratch
-          - crickets
-          - drumroll
-  sequence:
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.dev_sound_effect
-    data:
-      value: "{{ effect }}"
+    The one way to play music on the jukebox — for BOTH front-and-center songs and quiet
+    background/mood music; the `volume` you pass decides which. `query` is a fuzzy search that
+    finds the best match — give it "Artist - Title" (e.g. "Nirvana - Smells Like Teen Spirit")
+    or "Artist - Album - Title" to be precise; slightly-wrong titles are forgiving. `volume` is
+    REQUIRED (25-35 = background under the conversation, 80-90 = front-and-center / dance party).
+    `queue` is optional: default `replace` plays immediately, `replace_next` queues it as the
+    next track. Keep queues short — you're either playing now or picking the next song.
 
 loudspeaker_announcement:
   alias: Loudspeaker Announcement (dev)
@@ -229,40 +121,6 @@ search_jukebox:
   - stop: "search complete"
     response_variable: results
 
-set_marquee_text_dev:
-  alias: Set Marquee Text (dev)
-  description: >-
-    Set the text on the cube's scrolling marquee sign. Provide the `message`; optionally a
-    `color` and whether it should `blink`. Use it to put words on the sign — promos, jokes,
-    heckles, fourth-wall breaks, whatever you want people to read.
-  fields:
-    message:
-      name: Message
-      description: The text to show on the marquee (keep it under ~255 chars)
-      required: true
-      example: "JAX DOESN'T PLAY THAT"
-      selector:
-        text:
-    color:
-      name: Color
-      description: Optional — color for the text, e.g. "hot pink"
-      required: false
-      selector:
-        text:
-    blink:
-      name: Blink
-      description: Whether the text should blink
-      required: false
-      default: false
-      selector:
-        boolean:
-  sequence:
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.marquee_text
-    data:
-      value: "{% if color | default('') %}{{ color }} - {% endif %}{{ message }}"
-
 # --- AWTRIX marquee (real) -------------------------------------------------------
 # Drives the physical AWTRIX LED sign (HASS device "awtrix_marquee") directly over
 # MQTT. The awtrix.* services are NOT registered on this box, so we publish to the
@@ -310,12 +168,13 @@ awtrix_marquee_message:
           unit_of_measurement: s
   sequence:
   - variables:
-      # Capture the current (idle) brightness so we can restore it after the message.
+      # Capture the current (idle) brightness so the tail can restore it after the message.
       # The AWTRIX matrix light's brightness IS the device BRI setting (0-255); the idle
       # screen often runs dim, which would make an un-boosted message hard to read.
       prev_bri: "{{ state_attr('light.cube_awtrix_marquee_matrix', 'brightness') | int(255) }}"
+      dur: "{{ (duration | default(20, true)) | int }}"
       notify_payload: >-
-        {% set p = {"text": message, "duration": (duration | default(20, true)) | int} %}
+        {% set p = {"text": message, "duration": dur} %}
         {% if rainbow | default(false, true) %}{% set p = p | combine({"rainbow": true}) %}
         {% elif color | default('', true) %}{% set p = p | combine({"color": color}) %}{% endif %}
         {{ p | to_json }}
@@ -329,16 +188,50 @@ awtrix_marquee_message:
     data:
       topic: marquee/notify
       payload: "{{ notify_payload | trim }}"
-  # Hold full brightness for the life of the message (+1s buffer), then restore the
-  # prior idle brightness. mode:queued so back-to-back messages each capture/restore
-  # the real idle level in order instead of clobbering each other.
-  - delay: "{{ (duration | default(20, true)) | int + 1 }}"
+  # NON-BLOCKING: fire-and-forget the brightness restore so this script returns instantly
+  # (the calling conversation agent no longer waits out the whole message duration). The
+  # tail sleeps for the message's life, then restores the captured idle brightness.
+  - action: script.turn_on
+    target:
+      entity_id: script.awtrix_marquee_restore_brightness
+    data:
+      variables:
+        prev_bri: "{{ prev_bri }}"
+        dur: "{{ dur }}"
+  mode: queued
+  max: 5
+
+awtrix_marquee_restore_brightness:
+  alias: AWTRIX Marquee Restore Brightness
+  description: >-
+    Internal tail for awtrix_marquee_message. After a message's duration elapses, restore
+    the marquee to its pre-message (idle) brightness. Fired non-blocking via script.turn_on
+    so the message script returns immediately. Not for Assist — no agent should call this.
+  fields:
+    prev_bri:
+      name: Previous brightness
+      description: Brightness (0-255) to restore after the message.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    dur:
+      name: Duration
+      description: Message duration in seconds (the tail waits this + 1s before restoring).
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 120
+  sequence:
+  - delay: "{{ (dur | default(20, true)) | int + 1 }}"
   - action: mqtt.publish
     data:
       topic: marquee/settings
-      payload: "{{ {'BRI': prev_bri} | to_json }}"
-  mode: queued
-  max: 5
+      payload: "{{ {'BRI': prev_bri | int(255)} | to_json }}"
+  mode: parallel
+  max: 10
 
 awtrix_marquee_clear:
   alias: AWTRIX Marquee Clear
@@ -968,70 +861,6 @@ set_top_light_effect:
         option: "{{ effect }}"
   mode: single
 
-set_music_reactive_lighting:
-  alias: Set Music-Reactive Lighting
-  description: >-
-    Make the top light pulse LIVE to whatever sound is playing. Pass a specific look, or
-    omit `effect` for a random pick (the jukebox automation calls it with no arg). Two
-    kinds, driven differently:
-      - DIY reactive scenes ("Music reactive jazz", "A music reactive smoky") react on
-        their own and do NOT use the device music-mode switch.
-      - Built-in music modes ("Energic", "Rhythm", "Spectrum", "Rolling") REQUIRE
-        switch.cube_light_music_mode ON — this script turns it on for them.
-    IMPORTANT: getting back to a normal/solid look must turn that switch back OFF; always
-    revert through script.set_top_light_persona_color (it does). For a static scene or
-    color instead, use set_top_light_effect or set the light directly.
-  fields:
-    effect:
-      name: Effect
-      description: Which sound-reactive look to run; omit for a random pick.
-      required: false
-      selector:
-        select:
-          options:
-          - "Music reactive jazz"
-          - "A music reactive smoky"
-          - "Energic"
-          - "Rhythm"
-          - "Spectrum"
-          - "Rolling"
-  sequence:
-  - variables:
-      diy_reactive:
-        - "Music reactive jazz"
-        - "A music reactive smoky"
-      builtin_modes:
-        - "Energic"
-        - "Rhythm"
-        - "Spectrum"
-        - "Rolling"
-      chosen: >-
-        {{ effect if (effect is defined and effect) else (diy_reactive + builtin_modes) | random }}
-  - choose:
-    # Built-in music mode: needs the music-mode switch ON, then pick the style.
-    - conditions:
-      - "{{ chosen in builtin_modes }}"
-      sequence:
-      - action: switch.turn_on
-        target:
-          entity_id: switch.cube_light_music_mode
-      - action: select.select_option
-        target:
-          entity_id: select.cube_light_music_mode
-        data:
-          option: "{{ chosen }}"
-    # DIY reactive scene: does NOT use music mode — ensure the switch is OFF, then select.
-    default:
-    - action: switch.turn_off
-      target:
-        entity_id: switch.cube_light_music_mode
-    - action: select.select_option
-      target:
-        entity_id: select.cube_light_diy_scene
-      data:
-        option: "{{ chosen }}"
-  mode: single
-
 # --- Sound effects ---------------------------------------------------------------
 # Short stinger SFX played through the JUKEBOX speaker (media_player.jukebox_internal), NOT the
 # voice-assistant media player — playing SFX to the VA speaker breaks wake-word/assist
@@ -1044,7 +873,10 @@ play_sound_effect:
   description: >-
     Fire a short sound effect / stinger through the cube's jukebox speaker for comic or
     dramatic punctuation. Use sparingly — as an accent, not background. Pick one of the
-    available effects.
+    available effects. If you're asked for a different sound effect that none of these
+    fit, you'll have to go through the regular search-jukebox-and-play process, which has
+    more latency. These are quick one-offs; other sound effects you can search for are
+    more for slow, dramatic, or comic background mood.
   fields:
     effect:
       name: Effect

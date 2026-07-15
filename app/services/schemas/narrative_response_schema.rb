@@ -27,17 +27,21 @@ class Schemas::NarrativeResponseSchema
       string :inner_monologue, required: true,
              description: "What your character is thinking privately this turn. Never spoken aloud. Can contradict the speech. A sentence or two."
 
+      # Channel descriptions are intentionally terse here — the authoritative guidance
+      # (examples, the anti-lazy-genre steer, act-vs-don't-act) lives in the "# YOUR TOOLS"
+      # section of the system prompt (lib/prompts/general/tools.txt). Keep this in sync at
+      # the one-liner level only; don't re-duplicate the full text here.
       string :lights, required: false,
-             description: "OPTIONAL. Plain-English description of what you want your body's LEDs to do this turn — you have a HEAD strip and a BODY strip (WLED) you can light together or differently, any color/brightness/effect. e.g. \"whole body deep purple, slow breathing\" or \"body dark red, head twinkling pink and red\". Omit if you don't want to change your lights."
+             description: "OPTIONAL. Plain-English INTENT for your head/body LEDs (see YOUR TOOLS). Omit to leave your lights unchanged."
 
       string :sound, required: false,
-             description: "OPTIONAL. Plain-English description of anything you want to play — a front-and-center song, quiet background/mood music, or a short sound effect/stinger. e.g. \"play Around the World by Daft Punk and crank it up\", \"put on low mysterious flute music in the background\", \"hit a sad trombone\". Omit if you don't want to play anything."
+             description: "OPTIONAL. Plain-English INTENT for what to play — a song, background/mood music, or a short SFX (see YOUR TOOLS). Omit to leave current audio as-is."
 
       string :marquee, required: false,
-             description: "OPTIONAL. Plain-English text (and optional color) for the scrolling sign on your body, under ~255 chars. e.g. \"THE STARS FORGOT YOUR NAME in pink\". Omit to leave the sign alone."
+             description: "OPTIONAL. Plain-English text (and optional color) for the scrolling sign (see YOUR TOOLS). Omit to leave the sign alone."
 
       string :other_actions, required: false,
-             description: "OPTIONAL. Plain-English catch-all for anything else you can do. Right now: run a systems check (\"run a systems check\") or switch persona (\"change persona to Neon\"). Omit if none apply."
+             description: "OPTIONAL. Plain-English catch-all — right now only a systems check or a persona switch (see YOUR TOOLS). Omit if none apply."
 
       boolean :continue_conversation, required: true,
               description: "Whether to keep listening without a wake word. Err toward true; false only when the conversation has clearly ended (a goodbye) or the input is environmental noise, not someone talking to you."

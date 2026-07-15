@@ -45,13 +45,13 @@ Rails.application.configure do
   # we fold back into the next turn's history. There are two lanes, dispatched in
   # parallel (see ConversationOrchestrator::ActionExecutor):
   #   - hass_action_agent — lights, marquee, other_actions, and anything else.
-  #   - hass_sound_agent  — the `sound` channel only. Audio (searching the jukebox,
-  #     deciding what to play) is slower and benefits from a more iterative agent.
-  # Both default to the SAME agent for now; point HASS_SOUND_AGENT at a dedicated
-  # audio agent once one exists.
-  action_agent = ENV.fetch("HASS_ACTION_AGENT", "conversation.anthropic_claude_sonnet_4_6")
-  config.hass_action_agent = action_agent
-  config.hass_sound_agent = ENV.fetch("HASS_SOUND_AGENT", action_agent)
+  #   - hass_sound_agent  — the `sound` channel only (the jukebox: searching the
+  #     library, deciding what to play), which is slower and more iterative.
+  # These are straight config, not env-overridden: each points at a dedicated HASS
+  # conversation agent. To change behavior, switch the MODEL on that agent in Home
+  # Assistant (config_entries subentry) — no Rails change needed.
+  config.hass_action_agent = "conversation.default_hass_tools_agent"
+  config.hass_sound_agent  = "conversation.glitchcube_jukebox_agent"
 
   # === The one model knob ===
   # We make LLM calls in exactly one place now (the conversation flow), so there

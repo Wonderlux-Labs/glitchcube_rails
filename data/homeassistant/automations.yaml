@@ -296,44 +296,6 @@
         {{ (states('input_number.quiet_mode_max_volume') | float(50)) / 100 }}
   mode: restart
 
-- id: top_light_sound_reactive_with_jukebox
-  alias: "Top light: sound-reactive with jukebox"
-  description: >-
-    The Govee top light (light.top_light) reacts to the music WHILE the jukebox plays,
-    and returns to the persona's signature color when it stops. On jukebox_internal ->
-    playing, call set_music_reactive_lighting with no effect (it picks a random
-    sound-reactive DIY scene — "Music reactive jazz" / "A music reactive smoky" — which
-    pulse to audio on the device's own mic). On jukebox_internal leaving 'playing'
-    (paused/idle/off/stopped), restore the persona color via
-    script.set_top_light_persona_color. This light is internal-only (not exposed to
-    Assist); the WLED body/head are the Assist-controlled lights. Easy to disable: just
-    turn this automation off. To broaden the random pool later, add the built-in music
-    modes (switch.cube_light_music_mode + select.cube_light_music_mode:
-    Energic/Rhythm/Spectrum/Rolling) to set_music_reactive_lighting.
-  triggers:
-  - trigger: state
-    entity_id: media_player.jukebox_internal
-    to: playing
-    id: jukebox_play
-  - trigger: state
-    entity_id: media_player.jukebox_internal
-    from: playing
-    id: jukebox_stop
-  conditions: []
-  actions:
-  - choose:
-    - conditions:
-      - "{{ trigger.id == 'jukebox_play' }}"
-      sequence:
-      - action: script.set_music_reactive_lighting
-        data: {}
-    - conditions:
-      - "{{ trigger.id == 'jukebox_stop' }}"
-      sequence:
-      - action: script.set_top_light_persona_color
-        data: {}
-  mode: restart
-
 - id: top_light_turn_indicator_blink_test
   alias: "Top light: turn indicator (blink test)"
   description: >-
