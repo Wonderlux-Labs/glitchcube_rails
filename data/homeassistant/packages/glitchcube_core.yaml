@@ -83,14 +83,13 @@ input_boolean:
     icon: mdi:flash
 
   # Diagnostic toggle for the "Top light: turn indicator (blink test)" automation.
-  # While ON, the Govee top light (light.top_light) blinks off->1s->on when the
-  # assist satellite enters 'listening' and 'processing', so we can eyeball whether
-  # the cloud-controlled Govee lands in tune with the turn (the marquee + voice ring
-  # already show LISTENING/THINKING instantly). Flip OFF to silence the experiment;
-  # delete both this and the automation once we've decided keep/refine/drop.
+  # While ON, the Govee top light (light.top_light) blinks off->1s->on when the assist
+  # satellite enters 'listening' and 'processing'. The top light is no longer in use, so
+  # this is OFF by default — the blink-test automation stays gated off and nothing else
+  # drives the top light. Flip ON only if the top light is revived.
   top_light_turn_indicator:
     name: "Top light turn indicator (blink test)"
-    initial: true
+    initial: false
     icon: mdi:lightbulb-alert
 
   # Master enable for the alpha "Presence: nudge idle visitor" automation. When ON and

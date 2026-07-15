@@ -43,16 +43,8 @@ enter_rest_mode:
       color: [255, 0, 0]
       brightness: 25
       effect: Solid
-  # ...and the Govee top light (music-mode switch off first, per the revert rule).
-  - action: switch.turn_off
-    target:
-      entity_id: switch.cube_light_music_mode
-  - action: light.turn_on
-    target:
-      entity_id: light.top_light
-    data:
-      rgb_color: [255, 0, 0]
-      brightness: 64            # ~25%
+  # (The Govee top light is no longer used, so rest mode no longer sets it. The
+  #  script.set_top_light_* scripts remain in scripts/lights/top_light.yaml if revived.)
   # Marquee: dim the sign, then hold the resting message (hold:true = stays until
   # dismissed; the idle-cycle only touches the background app underneath).
   - action: mqtt.publish
