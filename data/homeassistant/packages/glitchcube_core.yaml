@@ -1,5 +1,10 @@
 # GlitchCube core input helpers
 # Rails reads/writes these to drive persona, mode, and dynamic host routing.
+#
+# CURRENTLY NOT USED (kept for future use, nothing reacts to them today):
+#   - input_select.cube_mode — the rest-mode scripts SET it (low_power while offline,
+#     conversation on wake) as a status flag, but nothing READS it to change behavior yet.
+#   - input_text.glitchcube_breaking_news — reserved; not read or written anywhere.
 
 input_select:
   current_persona:
@@ -53,26 +58,6 @@ input_text:
     initial: ""
     max: 255
     icon: mdi:message-text-outline
-
-  # DEV mocks — the play_*_dev scripts write the agent's chosen query/effect here instead
-  # of actually playing audio, so we can watch what got called without waking the house.
-  dev_jukebox_song:
-    name: "DEV Jukebox Song"
-    max: 255
-    icon: mdi:music
-  dev_mood_music:
-    name: "DEV Mood Music"
-    max: 255
-    icon: mdi:playlist-music
-  dev_sound_effect:
-    name: "DEV Sound Effect"
-    max: 100
-    icon: mdi:music-note
-
-  announcement:
-    name: "DEV Announcement"
-    max: 255
-    icon: mdi:bullhorn
 
   # What the cube's camera currently sees. Rails owns the pipeline now:
   # CameraDescriptionJob (on the Rails host, where the webcam is plugged in) grabs a

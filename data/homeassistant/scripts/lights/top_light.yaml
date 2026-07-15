@@ -13,16 +13,14 @@
 #                                  select.cube_light_diy_scene. (Rails shows call this for
 #                                  the grand-entrance glitch beat; slated to move to the
 #                                  automation layer later.)
-#   set_music_reactive_lighting -> the sound-reactive DIY scenes only (they pulse to audio
-#                                  on their own). Called with no effect it picks one at
-#                                  random. The "Top light: sound-reactive with jukebox"
-#                                  automation calls it while the jukebox plays. The device's
-#                                  old built-in "music mode" switch is left untouched.
+# (A sound-reactive top-light script + its jukebox automation used to live here; both were
+#  retired. For music-reactive light now, use the WLED sound-reactive effects in
+#  script.set_cube_lights.)
 
 # Set the top light to the current persona's signature color, solid, dimmed to a low
 # ambient level (brightness 15) — the top light's default ambient glow. Central home for the persona->RGB map (mirrors the
-# voice LED ring colors in the Persona Switcher automation); called by that automation, by
-# the sound-reactive-jukebox revert, and by the blink-test restore.
+# voice LED ring colors in the Persona Switcher automation); called by that automation and
+# by the blink-test restore.
 set_top_light_persona_color:
   alias: Set Top Light to Persona Color
   description: >-
@@ -57,8 +55,7 @@ set_top_light_effect:
     holiday looks (Christmas*, Halloween, Ghost, Valentine's Day…) and planet themes (Mars,
     Jupiter, Milky Way) are in here too. Custom DIY looks: "Cyberpunk"/"Acid" are glitchy
     neon, "A vintage lava lamp"/"Slow Rainbow" are slow retro drifts, "Forest Rave" is
-    frenetic. For a look that pulses live to music/sound, use set_music_reactive_lighting.
-    For a plain solid color, set the light directly instead of using this.
+    frenetic. For a plain solid color, set the light directly instead of using this.
   fields:
     effect:
       name: Effect
@@ -165,9 +162,8 @@ set_top_light_effect:
           - "Motunui"
           - "Heart of the Island"
           - "Wayfinding"
-          # Non-reactive DIY scenes (select.cube_light_diy_scene). Sound-reactive DIY
-          # scenes live in set_music_reactive_lighting instead. Add new DIY scenes to
-          # whichever script fits as they're created on the device.
+          # Non-reactive DIY scenes (select.cube_light_diy_scene). Add new DIY scenes
+          # here as they're created on the device.
           - "Happy Blinker"
           - "Snakes swirl"
           - "Slow Rainbow"
