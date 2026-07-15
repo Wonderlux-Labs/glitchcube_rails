@@ -16,6 +16,8 @@
   - trigger: state
     entity_id:
     - input_select.current_persona
+  - trigger: homeassistant
+    event: start
   conditions: []
   actions:
   - action: select.select_option
@@ -25,15 +27,9 @@
       option: >-
         {{ {'buddy': 'Buddy', 'jax': 'Jax', 'neon': 'Neon', 'zorp': 'Zorp', 'crash': 'Crash'}
            .get(states('input_select.current_persona'), 'preferred') }}
-  - action: light.turn_on
-    target:
-      entity_id: light.cube_cube_voice_led_ring
-    data:
-      brightness: 255
-      rgb_color: >-
-        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
-            'crash': [0,255,65], 'jax': [0,120,255]}
-           .get(states('input_select.current_persona'), [255,255,255]) }}
+  # (2) Head + body strips + Voice PE ring -> persona signature color. The script owns the
+  #     map (was inline here); it also gets called on HA start so a reboot re-asserts the look.
+  - action: script.sync_lights_to_persona
   # (3) Govee top light — same signature color, solid, as the persona's ambient glow.
   #     Skip while the jukebox is playing so we don't stomp the sound-reactive look
   #     (the "Top light: sound-reactive with jukebox" automation restores the persona
