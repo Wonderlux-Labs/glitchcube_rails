@@ -43,6 +43,26 @@ awtrix_marquee_message:
           min: 1
           max: 120
           unit_of_measurement: s
+    icon:
+      name: Icon
+      description: >-
+        Optional AWTRIX icon ID (a number, as a string) shown to the LEFT of the text. Use
+        one only occasionally, when it genuinely fits the moment — most messages need no icon.
+        Some good ones to reach for: smile 87, heart 61, matrix 653, warning 555, lightning
+        95, fireworks 4353, skull 148, lightbulb 2448, angry 72120, sleepy 71431, question
+        30710, exclamation 6134, dance 4128. Omit for no icon.
+      required: false
+      selector:
+        text:
+    repeat:
+      name: Repeat
+      description: How many times the notification scrolls before it dismisses. Defaults to 2.
+      required: false
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 10
   sequence:
   - variables:
       # Capture the current (idle) brightness so the tail can restore it after the message.
@@ -50,10 +70,12 @@ awtrix_marquee_message:
       # screen often runs dim, which would make an un-boosted message hard to read.
       prev_bri: "{{ state_attr('light.cube_awtrix_marquee_matrix', 'brightness') | int(255) }}"
       dur: "{{ (duration | default(20, true)) | int }}"
+      rep: "{{ (repeat | default(2, true)) | int }}"
       notify_payload: >-
-        {% set p = {"text": message, "duration": dur} %}
+        {% set p = {"text": message, "duration": dur, "repeat": rep} %}
         {% if rainbow | default(false, true) %}{% set p = p | combine({"rainbow": true}) %}
         {% elif color | default('', true) %}{% set p = p | combine({"color": color}) %}{% endif %}
+        {% if icon | default('', true) %}{% set p = p | combine({"icon": icon | string}) %}{% endif %}
         {{ p | to_json }}
   # Force full brightness FIRST so the notification is always readable, even when the
   # idle screen was dimmed down.
