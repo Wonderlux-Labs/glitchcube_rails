@@ -18,13 +18,24 @@
   <key>RunAtLoad</key>
   <true/>
 
-  <!-- Boot/power-cycle starter, NOT a babysitter. No KeepAlive: if we stop it
-       ourselves during development it stays stopped. Restart manually with:
-         launchctl kickstart gui/$(id -u)/com.glitchcube.boot
-       To opt into crash-restart, set this <true/> — but then a plain pkill gets
-       resurrected too; stop via `launchctl bootout` to keep it down. -->
+  <!-- Crash recovery: KeepAlive=true so launchd restarts the whole stack (glitchcube-boot
+       -> foreman -> Puma + SolidQueue) whenever it exits. A post-boot Rails crash self-heals
+       instead of leaving the cube dark until the next power-cycle.
+       Because a plain TERM would just be resurrected, `bin/glitchcube-ctl stop` takes it down
+       with `launchctl bootout` (job removed -> stays down for maintenance; the plist is still
+       on disk so a real reboot starts it again via RunAtLoad). `restart` sends a graceful TERM
+       and lets KeepAlive respawn it. glitchcube-boot reaps any orphaned Puma/SolidQueue from a
+       hard-killed previous instance before re-exec'ing foreman, so restarts never double-run
+       workers or lose port 4567. -->
   <key>KeepAlive</key>
-  <false/>
+  <true/>
+
+  <!-- Minimum seconds between (re)launches. Softens the log/CPU cost of a permanent-error
+       crash loop (e.g. a bad migration): ~2 tries/min instead of launchd's default 6. Note
+       boot.{out,err}.log are NOT rotated — if you ever see a persistent loop, fix the cause
+       (it's failing loudly) or add newsyslog rotation for those two files. -->
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
 
   <key>WorkingDirectory</key>
   <string>/Users/estiens/code/glitchcube-main/glitchcube_rails</string>

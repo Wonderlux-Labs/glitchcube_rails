@@ -1,12 +1,14 @@
 #!/bin/bash
 # Control the GlitchCube boot supervisor (com.glitchcube.boot LaunchAgent).
 #
-# The agent has KeepAlive=false: stopping it stays stopped, but the job remains
-# loaded so RunAtLoad still fires on the next power-cycle. Use these during dev.
+# The agent runs KeepAlive=true: launchd restarts the whole stack if it crashes. So
+# `stop` fully BOOTS IT OUT of launchd to keep it down (a plain TERM would be instantly
+# resurrected); the plist stays installed, so a real power-cycle still starts it via
+# RunAtLoad. `restart` sends a graceful TERM and lets KeepAlive respawn it.
 #
 #   bin/glitchcube-ctl start     # run it now (VM + Rails + jobs)
-#   bin/glitchcube-ctl stop      # stop it, stays stopped until you start / reboot
-#   bin/glitchcube-ctl restart   # stop + start
+#   bin/glitchcube-ctl stop      # bootout — stays down until you start / reboot
+#   bin/glitchcube-ctl restart   # graceful TERM; KeepAlive respawns it
 #   bin/glitchcube-ctl status    # launchd state + last exit code
 #   bin/glitchcube-ctl logs      # tail the supervisor logs
 #   bin/glitchcube-ctl unload    # remove it from launchd entirely (no RunAtLoad on
@@ -24,19 +26,26 @@ case "${1:-}" in
       || launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$LABEL.plist"
     ;;
   stop)
-    launchctl kill TERM "$TARGET"
+    # KeepAlive=true would resurrect a plain TERM, so fully bootout to keep it down.
+    # The plist stays on disk, so a real reboot still starts it (RunAtLoad).
+    if launchctl bootout "$TARGET" 2>/dev/null; then
+      echo "stopped $LABEL (booted out — stays down until 'start' or a reboot)"
+    else
+      echo "$LABEL was not running"
+    fi
     ;;
   restart)
-    # Graceful: TERM the supervisor so foreman forwards it to Puma + jobs and
-    # SolidQueue deregisters cleanly, wait for it to exit, THEN start fresh.
-    # (kickstart -k SIGKILLs the whole tree — that orphans jobs and can leave two
-    # SolidQueue supervisors overlapping on the next start.)
-    launchctl kill TERM "$TARGET" 2>/dev/null || true
-    for _ in $(seq 1 30); do
-      launchctl print "$TARGET" 2>/dev/null | grep -q 'state = running' || break
-      sleep 1
-    done
-    launchctl kickstart "$TARGET"
+    # Graceful: TERM the supervisor so foreman forwards it to Puma + jobs and SolidQueue
+    # shuts down cleanly; foreman exits and KeepAlive respawns the whole stack (the fresh
+    # boot reaps any orphans). No kickstart -k (that SIGKILLs the tree and orphans jobs).
+    # If it was stopped (booted out), there's nothing to signal — just bootstrap it.
+    if launchctl print "$TARGET" >/dev/null 2>&1; then
+      launchctl kill TERM "$TARGET"
+      echo "sent TERM to $LABEL — KeepAlive is respawning it. Watch: bin/glitchcube-ctl logs"
+    else
+      launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$LABEL.plist"
+      echo "was stopped — bootstrapped $LABEL"
+    fi
     ;;
   status)
     echo "--- boot supervisor ($LABEL) ---"

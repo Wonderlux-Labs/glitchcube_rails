@@ -38,6 +38,22 @@ fi
 # exiting would kill Rails. This runs in <1s (curl has a 3s cap) before exec.
 "$APP_ROOT/bin/check-services" 2>&1 | sed 's/^/[support] /' || true
 
+# Reap orphans from a previous (crashed) instance BEFORE we start a fresh foreman.
+# launchd (KeepAlive=true) respawns us on any exit, but a hard-killed foreman can leave
+# Puma workers holding :4567 and a SolidQueue supervisor still draining jobs — which would
+# make the new Puma fail to bind and double-run SolidQueue. launchd runs only ONE boot
+# instance at a time, so anything matching here is a stray from the dead instance, safe to
+# kill. (The Rails startup hook separately clears the SolidQueue *jobs table*; this clears
+# the leftover OS *processes*.) A clean first boot matches nothing — this is a no-op there.
+stale_port_pids="$(lsof -ti tcp:4567 2>/dev/null || true)"
+if [ -n "$stale_port_pids" ]; then
+  echo "[glitchcube-boot] reaping stale :4567 holder(s): $stale_port_pids" >&2
+  # shellcheck disable=SC2086
+  kill -9 $stale_port_pids 2>/dev/null || true
+fi
+pkill -f 'solid-queue' 2>/dev/null || true   # orphaned SolidQueue supervisor + workers
+pkill -f 'bin/jobs'    2>/dev/null || true   # the Procfile 'jobs' wrapper that spawns them
+
 # Foreground process runner — foreman over Procfile.dev (Puma on :4567 + jobs).
 # foreman is installed directly in this Ruby (rbenv 3.3.9), NOT bundled, so it's
 # invoked bare (the shims dir is on PATH above). It forwards TERM/INT to both

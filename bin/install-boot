@@ -55,8 +55,10 @@ fi
 cat <<EOF
 
 Done. Installed two LaunchAgents:
-  - $LABEL (boot supervisor): starts VM + Rails at login/power-cycle. Does NOT
-    auto-restart on crash (deliberate) — stop it during dev and it stays stopped.
+  - $LABEL (boot supervisor): starts VM + Rails at login/power-cycle AND
+    auto-restarts the whole stack on crash (KeepAlive). To take it down for
+    maintenance use 'bin/glitchcube-ctl stop' (bootout) — a plain kill just gets
+    resurrected. It still starts on the next reboot (RunAtLoad).
   - $SQ_LABEL (Squeezelite): KeepAlive, so audio restarts on crash.
 
 Control the boot supervisor with:  bin/glitchcube-ctl {start|stop|restart|status|logs}
