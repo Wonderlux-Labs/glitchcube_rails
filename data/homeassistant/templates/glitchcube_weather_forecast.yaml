@@ -1,0 +1,84 @@
+# GlitchCube weather-forecast sensor  (source of truth; deployed to
+# HASS /config/templates/glitchcube_weather_forecast.yaml)
+#
+# Modern HASS no longer exposes `forecast` as a readable attribute — daily
+# forecast data (precip probability, next-day high, tonight's low) is only
+# available via the `weather.get_forecasts` service. A plain state-based
+# template sensor can't call a service, so this is a TRIGGER-based sensor:
+# every 15 min (and on HA start) it calls get_forecasts against the AccuWeather
+# "Burn Weather" entity and caches the numbers we care about as attributes.
+#
+# The world-state sensor (glitchcube_world_state.yaml) reads these attributes
+# and folds them into the brain's ambient context — it stays state-based so it
+# still re-renders live for lights/jukebox, and just picks up whatever this
+# sensor last cached.
+#
+# Attributes:
+#   precip_chance  — % chance of precipitation over today+tomorrow (max of the
+#                    two daily entries). true precip probability, NOT the
+#                    thunderstorm_probability_day_N sensors (those differ).
+#   tonight_low    — tonight's forecast low (°F), for the "it's daytime" case
+#   tomorrow_high  — tomorrow's forecast high (°F), for the "it's nighttime" case
+#
+# Lives in templates/ — see the header of glitchcube_world_state.yaml for why
+# this is a bare list merged via !include_dir_merge_list.
+
+- trigger:
+    - platform: homeassistant
+      event: start
+    - platform: time_pattern
+      minutes: "/15"
+  action:
+    - service: weather.get_forecasts
+      data:
+        type: daily
+      target:
+        entity_id: weather.sensors_burn_weather
+      response_variable: resp
+  sensor:
+    - name: "GlitchCube Weather Forecast"
+      unique_id: glitchcube_weather_forecast
+      icon: mdi:weather-partly-rainy
+      state: >-
+        {%- set fc = resp['weather.sensors_burn_weather'].forecast -%}
+        {%- set td = now().date() -%}
+        {%- set ns = namespace(d0=none, d1=none) -%}
+        {%- for e in fc -%}
+          {%- if (e.datetime | as_datetime | as_local).date() >= td -%}
+            {%- if ns.d0 is none %}{% set ns.d0 = e %}
+            {%- elif ns.d1 is none %}{% set ns.d1 = e %}{% endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- set pp = [ns.d0.precipitation_probability | default(0, true), ns.d1.precipitation_probability | default(0, true)] | max -%}
+        {{ pp }}% precip, low {{ ns.d0.templow | round }}° / high {{ ns.d1.temperature | round }}°
+      attributes:
+        precip_chance: >-
+          {%- set fc = resp['weather.sensors_burn_weather'].forecast -%}
+          {%- set td = now().date() -%}
+          {%- set ns = namespace(d0=none, d1=none) -%}
+          {%- for e in fc -%}
+            {%- if (e.datetime | as_datetime | as_local).date() >= td -%}
+              {%- if ns.d0 is none %}{% set ns.d0 = e %}
+              {%- elif ns.d1 is none %}{% set ns.d1 = e %}{% endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ [ns.d0.precipitation_probability | default(0, true), ns.d1.precipitation_probability | default(0, true)] | max }}
+        tonight_low: >-
+          {%- set fc = resp['weather.sensors_burn_weather'].forecast -%}
+          {%- set td = now().date() -%}
+          {%- set ns = namespace(d0=none) -%}
+          {%- for e in fc -%}
+            {%- if ns.d0 is none and (e.datetime | as_datetime | as_local).date() >= td %}{% set ns.d0 = e %}{% endif -%}
+          {%- endfor -%}
+          {{ ns.d0.templow | round if ns.d0 else '' }}
+        tomorrow_high: >-
+          {%- set fc = resp['weather.sensors_burn_weather'].forecast -%}
+          {%- set td = now().date() -%}
+          {%- set ns = namespace(d0=none, d1=none) -%}
+          {%- for e in fc -%}
+            {%- if (e.datetime | as_datetime | as_local).date() >= td -%}
+              {%- if ns.d0 is none %}{% set ns.d0 = e %}
+              {%- elif ns.d1 is none %}{% set ns.d1 = e %}{% endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ ns.d1.temperature | round if ns.d1 else '' }}

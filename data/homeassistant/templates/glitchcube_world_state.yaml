@@ -9,8 +9,9 @@
 #   state   — short human summary (must stay < 255 chars for HASS)
 #   content — a plain-English paragraph the brain reads verbatim
 #
-# Today it composites weather + time + day/night. Future: append cube-light
-# state, now-playing, motion, etc. right here as those devices come online.
+# Today it composites weather (current + forecast look-ahead from the sibling
+# glitchcube_weather_forecast sensor) + time + day/night + lights + jukebox.
+# Future: append motion, etc. right here as those devices come online.
 #
 # Lives in templates/ (not packages/) so it's a plain YAML file alongside
 # automations.yaml/scripts.yaml — included via `template: !include_dir_merge_list
@@ -54,6 +55,14 @@
           {%- set daytime = is_state('sun.sun', 'above_horizon') -%}
           It is {{ now().strftime('%-I:%M %p') }} on {{ now().strftime('%A') }} and it is {{ 'daytime' if daytime else 'dark out' }}.
           {%- if w not in ['unknown', 'unavailable', none] %} The weather is {{ w | replace('_', ' ') }}{% if t is not none %}, around {{ t }}°F{% endif %}{% if h is not none %} with {{ h }}% humidity{% endif %}{% if ws is not none %} and winds near {{ ws | round }} mph{% endif %}.{% endif %}
+          {#- Forecast look-ahead from the get_forecasts-backed sensor: precip chance if
+              it's worth mentioning, plus tonight's low (by day) or tomorrow's high (by night). -#}
+          {%- set pc = state_attr('sensor.glitchcube_weather_forecast', 'precip_chance') | int(0) -%}
+          {%- set tlow = state_attr('sensor.glitchcube_weather_forecast', 'tonight_low') -%}
+          {%- set thigh = state_attr('sensor.glitchcube_weather_forecast', 'tomorrow_high') -%}
+          {%- if pc >= 20 %} There's about a {{ pc }}% chance of precipitation in the next day.{% endif -%}
+          {%- if daytime and tlow not in [none, ''] %} Tonight's low will be around {{ tlow }}°F.
+          {%- elif not daytime and thigh not in [none, ''] %} Tomorrow's high will be around {{ thigh }}°F.{% endif -%}
           {#- Your body light and head light — current look each: color + brightness percent,
               plus the running effect if one is active (any effect other than 'Solid'). -#}
           {%- for seg in [('light.cube_body_wled', 'body'), ('light.glitch_head_wled', 'head')] -%}
