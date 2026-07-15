@@ -28,6 +28,11 @@ default: &default
     schedule: "*/5 * * * *"   # Every 5 min — push conversation/round counts to HASS input_numbers
     queue: default
 
+  backend_health:
+    class: Recurring::System::BackendHealthJob
+    schedule: every minute    # Heartbeat: refresh sensor.glitchcube_backend_health +
+    queue: default            # input_text.backend_health_status so HASS never shows stale/unknown
+
 production:
   <<: *default
 

@@ -9,6 +9,16 @@
   ProgramArguments mirror the app's bundled squeezelite.plist (-a 100 latency,
   a name/log file), but the log + name files are redirected to a user-writable
   path — a user LaunchAgent cannot write the bundle's /var/log target.
+
+  -m 6c:44:c7:71:72:bf PINS the SlimProto player id (== MAC). Without it,
+  squeezelite adopts whatever MAC the first enumerated interface reports — on this
+  Mac that's an Apple private interface (anpi*) whose locally-administered MAC is
+  RE-RANDOMIZED on a cold boot. A changed MAC = a brand-new player in Music
+  Assistant, which orphans the configured `media_player.jukebox_internal` (bound to
+  player id up6c44c77172bf == this MAC). Pinning it keeps the identity stable across
+  full power-cycles so the jukebox always maps to the same MA player. (Value is the
+  MAC MA already knows the internal jukebox by — do NOT change it without also
+  re-binding the player in Music Assistant.)
 -->
 <plist version="1.0">
 <dict>
@@ -18,6 +28,8 @@
   <key>ProgramArguments</key>
   <array>
     <string>/Applications/Squeezelite.app/Contents/MacOS/Squeezelite</string>
+    <string>-m</string>
+    <string>6c:44:c7:71:72:bf</string>
     <string>-a</string>
     <string>100</string>
     <string>-f</string>

@@ -24,7 +24,10 @@ log() { echo "[ensure-hass-vm] $*" >&2; }
 # Retries because on a fresh VM boot the guest USB controller isn't ready instantly.
 connect_zigbee() {
   local out
-  for _ in $(seq 1 15); do
+  # ~30 attempts × 2s ≈ 1 min of retrying. On a cold power-cycle the guest USB
+  # controller can take a while to appear after the VM starts, so keep this window
+  # generous — it's fully detached and best-effort, so waiting longer costs nothing.
+  for _ in $(seq 1 30); do
     out="$("$UTMCTL" usb connect "$VM_NAME" "$ZIGBEE_USB" 2>&1)"
     case "$out" in
       "")
@@ -47,30 +50,45 @@ fi
 # Launch UTM in the background if it isn't already running (-g: don't steal focus).
 open -ga UTM
 
-# Wait for the UTM backend/XPC to answer after launch (up to ~60s).
-status=""
-for _ in $(seq 1 30); do
-  status="$("$UTMCTL" status "$VM_NAME" 2>/dev/null)"
-  [ -n "$status" ] && break
-  sleep 2
-done
+# Everything past here — waiting for the UTM backend to answer, starting the VM,
+# and attaching the zigbee dongle — is SLOW on a cold boot (utmctl can take tens of
+# seconds to respond while UTM launches) and is NOT something Rails needs to wait
+# for: Rails does not need HASS to boot, and HASS calls simply fail until it comes
+# online. So run all of it in a detached background subshell and return immediately,
+# letting bin/glitchcube-boot `exec foreman` right away — Rails boots FIRST, the VM
+# and HASS come up in parallel.
+#
+# Safe wrt foreman: this subshell is a child of THIS ensure-hass-vm process, which
+# exits on the next line. It therefore reparents to launchd, NOT to foreman, so it
+# can never trip foreman's "a child exited — tear the whole stack down" behavior
+# (the reason bin/glitchcube-boot keeps its own pre-exec work synchronous).
+(
+  # Wait for the UTM backend/XPC to answer after launch (up to ~60s).
+  status=""
+  for _ in $(seq 1 30); do
+    status="$("$UTMCTL" status "$VM_NAME" 2>/dev/null)"
+    [ -n "$status" ] && break
+    sleep 2
+  done
 
-if [ -z "$status" ]; then
-  log "utmctl did not respond for VM '$VM_NAME' within timeout — continuing without it"
-  exit 0
-fi
+  if [ -z "$status" ]; then
+    log "utmctl did not respond for VM '$VM_NAME' within timeout — continuing without it"
+    exit 0
+  fi
 
-if [ "$status" = "started" ]; then
-  log "VM '$VM_NAME' already started"
-else
-  log "VM '$VM_NAME' status='$status' — starting"
-  "$UTMCTL" start "$VM_NAME" || log "utmctl start '$VM_NAME' failed — continuing"
-fi
+  if [ "$status" = "started" ]; then
+    log "VM '$VM_NAME' already started"
+  else
+    log "VM '$VM_NAME' status='$status' — starting"
+    "$UTMCTL" start "$VM_NAME" || log "utmctl start '$VM_NAME' failed — continuing"
+  fi
 
-# VM is up (or was already) — attach the zigbee dongle for ZHA. Backgrounded so
-# it never blocks Rails boot: wait 60s to give Home Assistant / ZHA time to come
-# up, then connect (with retries). Runs whether the VM was freshly started or
-# already up, so it also re-attaches a dropped dongle on a manual re-run.
-( sleep 60; connect_zigbee ) &
+  # VM is up (or was already) — attach the zigbee dongle for ZHA. Wait 60s to give
+  # Home Assistant / ZHA time to come up, then connect (with retries). Best-effort:
+  # a missing/again-failing dongle is logged and ignored — ZHA is nice-to-have and
+  # must never hold anything else up. Re-attaches a dropped dongle on a manual re-run.
+  sleep 60
+  connect_zigbee
+) < /dev/null &
 
 exit 0
