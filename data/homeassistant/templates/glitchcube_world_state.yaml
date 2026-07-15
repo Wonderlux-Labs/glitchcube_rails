@@ -54,19 +54,20 @@
           {%- set daytime = is_state('sun.sun', 'above_horizon') -%}
           It is {{ now().strftime('%-I:%M %p') }} on {{ now().strftime('%A') }} and it is {{ 'daytime' if daytime else 'dark out' }}.
           {%- if w not in ['unknown', 'unavailable', none] %} The weather is {{ w | replace('_', ' ') }}{% if t is not none %}, around {{ t }}°F{% endif %}{% if h is not none %} with {{ h }}% humidity{% endif %}{% if ws is not none %} and winds near {{ ws | round }} mph{% endif %}.{% endif %}
-          {#- Your body light and head light — current look each: the running effect if one
-              is active (any effect other than 'Solid'), else the solid color; plus brightness. -#}
-          {%- for seg in [('light.cube_body_wled', 'body'), ('light.cube_head_wled', 'head')] -%}
+          {#- Your body light and head light — current look each: color + brightness percent,
+              plus the running effect if one is active (any effect other than 'Solid'). -#}
+          {%- for seg in [('light.cube_body_wled', 'body'), ('light.glitch_head_wled', 'head')] -%}
             {%- set ent = seg[0] -%}
             {%- set label = seg[1] -%}
             {%- if is_state(ent, 'on') -%}
               {%- set bri = state_attr(ent, 'brightness') or 255 -%}
               {%- set bripct = (bri / 255 * 100) | round -%}
+              {%- set col = color_name(ent) | trim -%}
               {%- set fx = state_attr(ent, 'effect') -%}
               {%- if fx and fx not in ['Solid', 'None', 'none', 'unknown', 'unavailable'] -%}
-                {{ ' Your ' ~ label ~ ' light is running the "' ~ fx ~ '" effect, at about ' ~ bripct ~ '% brightness.' }}
+                {{ ' Your ' ~ label ~ ' light is ' ~ col ~ ', running the "' ~ fx ~ '" effect, at ' ~ bripct ~ '% brightness.' }}
               {%- else -%}
-                {{ ' Your ' ~ label ~ ' light is a solid ' ~ (color_name(ent) | trim) ~ ', at about ' ~ bripct ~ '% brightness.' }}
+                {{ ' Your ' ~ label ~ ' light is a solid ' ~ col ~ ', at ' ~ bripct ~ '% brightness.' }}
               {%- endif -%}
             {%- else %} Your {{ label }} light is off.{%- endif -%}
           {%- endfor -%}
