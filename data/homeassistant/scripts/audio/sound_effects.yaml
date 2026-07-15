@@ -1,0 +1,64 @@
+# --- Sound effects ---------------------------------------------------------------
+# Short stinger SFX played through the JUKEBOX speaker (media_player.jukebox_internal), NOT the
+# voice-assistant media player — playing SFX to the VA speaker breaks wake-word/assist
+# listening. Files live in /media/sounds/effects/ on the box (free-to-use, sourced from
+# Wikimedia Commons; see CREDITS.txt there for per-file license/attribution). Addressed
+# via the media_source local scheme the cube already uses for its chimes.
+
+play_sound_effect:
+  alias: Play Sound Effect
+  description: >-
+    Fire a short sound effect / stinger through the cube's jukebox speaker for comic or
+    dramatic punctuation. Use sparingly — as an accent, not background. Pick one of the
+    available effects. If you're asked for a different sound effect that none of these
+    fit, you'll have to go through the regular search-jukebox-and-play process, which has
+    more latency. These are quick one-offs; other sound effects you can search for are
+    more for slow, dramatic, or comic background mood.
+  fields:
+    effect:
+      name: Effect
+      description: Which sound effect to play
+      required: true
+      selector:
+        select:
+          options:
+          - "Applause"
+          - "Laugh Track"
+          - "Cymbal Crash"
+          - "Explosion"
+          - "Cha-Ching (Cash Register)"
+          - "Typewriter Ding"
+          - "Bell Ding"
+          - "Referee Whistle"
+          - "Wind Chime"
+          - "Cowbell"
+          - "Alarm Clock"
+          - "Cat Meow"
+          - "Dog Bark"
+          - "Rooster Crow"
+          - "Sheep Bleat"
+  sequence:
+  - variables:
+      files:
+        "Applause": applause.mp3
+        "Laugh Track": laugh.mp3
+        "Cymbal Crash": cymbal_crash.mp3
+        "Explosion": explosion.mp3
+        "Cha-Ching (Cash Register)": cash_register.mp3
+        "Typewriter Ding": typewriter.mp3
+        "Bell Ding": bell_ding.mp3
+        "Referee Whistle": whistle.mp3
+        "Wind Chime": wind_chime.mp3
+        "Cowbell": cowbell.mp3
+        "Alarm Clock": alarm_clock.mp3
+        "Cat Meow": cat_meow.mp3
+        "Dog Bark": dog_bark.mp3
+        "Rooster Crow": rooster.mp3
+        "Sheep Bleat": sheep.mp3
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      media_content_type: music
+      media_content_id: "media-source://media_source/local/sounds/effects/{{ files[effect] }}"
+  mode: single

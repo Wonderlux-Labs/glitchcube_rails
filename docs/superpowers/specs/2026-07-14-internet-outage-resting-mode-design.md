@@ -18,18 +18,15 @@ Two independent pieces:
 
 ## Part 1 — HASS connectivity + rest/wake
 
-### Connectivity sensor — `packages/glitchcube_connectivity.yaml` (new)
+### Connectivity sensor + flag — `packages/glitchcube_connectivity.yaml`
 
-- `binary_sensor` (device_class `connectivity`), **Internet Connection**, polled
-  ~30s, `on` when **either** `1.1.1.1` or `8.8.8.8` answers a ping.
-  - Preferred mechanism: `command_line` binary sensor running a short ping.
-  - **Caveat to verify on the box:** HAOS's command_line container may not be able
-    to raw-`ping` without extra privilege. Verify over SSH (`ssh root@glitch`); if
-    ping fails there, fall back to an equivalent `rest` probe (GET a
-    `generate_204` endpoint, `on` = HTTP 204 reachable). Same on/off semantics —
-    the choice is purely "what actually runs on this HA."
+- **`binary_sensor.internet`** — the built-in HASS `ping` integration (configured
+  in the UI, not YAML), `on` when the internet is reachable. The automations
+  trigger off it directly. (An earlier draft shipped a `command_line` ping sensor;
+  dropped in favor of the native integration.)
 - `input_boolean.internet_resting` — marks that we're in rest mode. Gates both
   automations so they can't double-fire, and is the flag the wake path keys off.
+  This is the only thing the package now defines.
 
 ### Enter rest — `script.enter_rest_mode` + automation
 
@@ -90,17 +87,32 @@ show and the show un-mutes it. Lights get resynced by the entrance too.
 
 ### File placement note
 
-`automation:`/`script:` stay in `automations.yaml`/`scripts.yaml` (a package
-can't also own those keys without an include collision). Only helpers
-(`command_line`, `input_boolean`, `rest_command`) live in packages.
+The config was also reorganized into a directory-per-domain layout in this change:
+`automation: !include_dir_merge_list automations/` and
+`script: !include_dir_merge_named scripts/` (note the different directive —
+scripts are a named dict, not a list). So the rest-mode pieces live at:
+- `automations/connectivity/internet_down_enter_rest.yaml`,
+  `automations/connectivity/internet_up_wake_from_rest.yaml`
+- `scripts/connectivity/rest_mode.yaml` (`enter_rest_mode`, `wake_from_rest`)
+
+Input helpers stay in `packages/` (they're finicky when split this way):
+`input_boolean.internet_resting` lives in `packages/glitchcube_core.yaml`. The
+`rest_command` lives in `packages/glitchcube_rails_triggers.yaml`.
 
 ## Part 2 — Rails: wake endpoint + smarter rotation
 
 ### Endpoint
 
-- Route: `POST /api/v1/persona/grand_entrance`.
-- `Api::V1::PersonasController#grand_entrance` → `CubePersona.set_random(entrance: :grand)`,
-  `render_api_success(enqueued: true)`. Fire-and-forget (mirrors `audio#theme_song`).
+HASS only ever had one Rails rest_command (`theme_song`). Rather than add a
+per-action controller, consolidate all HASS→Rails triggers into one
+`Api::V1::HomeAssistantWebhookController` (routed under `/api/v1/hass/*`) and
+retire `AudioController`.
+
+- `POST /api/v1/hass/theme_song` → `#theme_song` (moved verbatim from AudioController).
+- `POST /api/v1/hass/grand_entrance` → `#grand_entrance` → `CubePersona.set_random(entrance: :grand)`,
+  `render_api_success(enqueued: true)`. Fire-and-forget.
+- The `glitchcube_play_theme_song` rest_command URL updates to the new path in
+  the same change.
 
 ### Smarter `set_random`
 
@@ -153,9 +165,12 @@ end
 
 ## Deployment
 
-HASS files are scp'd to `glitch` and reloaded as usual (diff before overwrite per
-the config-sync rule; HASS UI edits strip comments). Rails changes ship with the
-app.
+HASS files are scp'd to `glitch.local` and reloaded as usual (diff before
+overwrite per the config-sync rule; HASS UI edits strip comments). Because the
+config was restructured, the deploy now syncs the whole `automations/` and
+`scripts/` trees plus `configuration.yaml` and `packages/`, not just two files —
+and the theme_song rest_command URL moved to `/api/v1/hass/…`, so the HASS and
+Rails sides must deploy together. Rails changes ship with the app.
 
 ## Out of scope / deliberately not done
 

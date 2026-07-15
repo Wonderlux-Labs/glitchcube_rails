@@ -1,0 +1,50 @@
+# --- Persona switching -------------------------------------------------------
+# The quick, fanfare-free persona switch. It writes input_select.current_persona,
+# which the "Persona Switcher" automation watches to swap the Assist voice pipeline —
+# so the script needs not touch the pipeline itself. `persona` is optional; omit it to
+# pick a random one (excluding whoever is current).
+#
+# The GRAND entrance (anomaly VO, theme song, marquee, arrival announcement) is NOT a
+# HASS script anymore — it's Rails-side (Shows::GrandEntrance), sequenced in Ruby with
+# audio played straight off the Rails host. Rails raises input_boolean.persona_switching
+# for the duration, as a hook for any HASS-side automations that want to react.
+
+set_persona_quick:
+  alias: Set Persona (quick)
+  description: >-
+    Switch the cube's active persona with NO fanfare — just change who's in charge.
+    This is the lightweight path for dev/manual switches and (eventually) direct Assist
+    requests like "let me talk to Buddy again". Give a `persona`, or omit it to pick a
+    random one (never the current persona). The full arrival ceremony lives Rails-side
+    (Shows::GrandEntrance).
+  fields:
+    persona:
+      name: Persona
+      description: Which persona to switch to. Omit for a random pick.
+      required: false
+      example: buddy
+      selector:
+        select:
+          options:
+          - buddy
+          - jax
+          - zorp
+          - crash
+          - neon
+  sequence:
+  - variables:
+      target: >-
+        {{ persona | default('', true) or
+           (state_attr('input_select.current_persona', 'options')
+            | reject('eq', states('input_select.current_persona')) | list | random) }}
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.current_persona
+    data:
+      option: "{{ target }}"
+  # Light touch so a manual switch is visible on the sign. (Add an SFX here later if wanted.)
+  - action: script.awtrix_marquee_message
+    data:
+      message: "{{ target | upper }}"
+      duration: 8
+  mode: single

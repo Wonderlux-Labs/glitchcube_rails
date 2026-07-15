@@ -149,6 +149,17 @@ input_boolean:
     initial: false
     icon: mdi:volume-low
 
+  # Raised while the cube is asleep during an internet outage (set by
+  # script.enter_rest_mode, cleared by script.wake_from_rest). Gates the two
+  # connectivity automations (automations/connectivity/) so they can't double-fire,
+  # and is the flag the wake path keys off. Connectivity itself is the built-in
+  # `ping` integration's binary_sensor.internet. Starts off; if HA reboots mid-outage
+  # the down automation's /5-min re-assert re-establishes rest.
+  internet_resting:
+    name: "Internet Resting (cube asleep, offline)"
+    initial: false
+    icon: mdi:sleep
+
 input_number:
   # The volume cap (percent, 0-100) applied everywhere while quiet_mode is ON.
   # Read by the auto-duck automation and by Rails' HostAudio. Tune it live to find

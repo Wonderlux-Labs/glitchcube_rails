@@ -9,8 +9,8 @@ module Recurring
     class RandomPersonaJob < ApplicationJob
       queue_as :default
 
-      MIN_MINUTES = 30
-      MAX_MINUTES = 90
+      MIN_MINUTES = 20
+      MAX_MINUTES = 50
       NEXT_SWITCH_KEY = "persona_next_switch_at"
 
       def perform

@@ -1,0 +1,94 @@
+# ONE play script for both front-and-center songs AND quiet background/mood music — the
+# required `volume` decides which (no more duplicate play_background_music). A required,
+# no-default volume forces the calling agent to choose a level deliberately; the description
+# anchors the two bands (25-35 background, 80-90 front-and-center).
+play_music_on_jukebox:
+  fields:
+    query:
+      selector:
+        text:
+      required: true
+      name: query
+    volume:
+      name: Volume
+      description: >-
+        Playback volume, 0-100 percent. REQUIRED — choose deliberately: 25-35 for quiet
+        background/mood music that sits UNDER the conversation, 80-90 for a front-and-center
+        song, a dance party, or anytime the music should take the room.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+    queue:
+      selector:
+        select:
+          options:
+          - replace
+          - replace_next
+      default: replace
+  sequence:
+  # The volume you pass sets whether this is a front-and-center song or background texture.
+  - action: media_player.volume_set
+    metadata: {}
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: "{{ (volume | float) / 100 }}"
+  - action: music_assistant.play_media
+    metadata: {}
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+    data:
+      media_id: '{{ query }}'
+      media_type: track
+      enqueue: "{{ queue | default('replace', true) }}"
+  alias: Play Music on Jukebox
+  description: >-
+    The one way to play music on the jukebox — for BOTH front-and-center songs and quiet
+    background/mood music; the `volume` you pass decides which. `query` is a fuzzy search that
+    finds the best match — give it "Artist - Title" (e.g. "Nirvana - Smells Like Teen Spirit")
+    or "Artist - Album - Title" to be precise; slightly-wrong titles are forgiving. `volume` is
+    REQUIRED (25-35 = background under the conversation, 80-90 = front-and-center / dance party).
+    `queue` is optional: default `replace` plays immediately, `replace_next` queues it as the
+    next track. Keep queues short — you're either playing now or picking the next song.
+
+search_jukebox:
+  alias: Search Jukebox
+  description: >-
+    Search the jukebox catalog for tracks WITHOUT playing anything — use it to check what's
+    available or pin down the exact track before you play it. `query` is required; optionally
+    narrow with `artist` and/or `album`. Returns up to 5 matching tracks.
+  fields:
+    query:
+      name: Query
+      description: What to search for — a song title or keywords
+      required: true
+      example: "closing time tom waits"
+      selector:
+        text:
+    artist:
+      name: Artist
+      description: Optional — restrict results to this artist
+      required: false
+      selector:
+        text:
+    album:
+      name: Album
+      description: Optional — restrict results to this album
+      required: false
+      selector:
+        text:
+  sequence:
+  - action: music_assistant.search
+    data: >-
+      {{ {"config_entry_id": "01KW61TG3CGY2SHG5CH6WEKZMM", "limit": 5, "media_type": ["track"], "name": query}
+         | combine({"artist": artist} if artist | default('') else {})
+         | combine({"album": album} if album | default('') else {}) }}
+    response_variable: results
+  - stop: "search complete"
+    response_variable: results

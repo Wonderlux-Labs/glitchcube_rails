@@ -37,7 +37,7 @@ module HostAudio
     end
 
     # Picks a random theme song off disk and plays it through the host speaker.
-    # Used by the grand-entrance show (capped) and by the /api/v1/audio/theme_song
+    # Used by the grand-entrance show (capped) and by the /api/v1/hass/theme_song
     # endpoint HASS hits (uncapped, whole song) to draw people over when the cube
     # has been idle. Returns the file played, or nil when the dir is empty.
     def play_random_theme_song(max_seconds: nil, volume: nil)

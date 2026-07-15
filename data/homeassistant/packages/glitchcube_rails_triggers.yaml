@@ -9,6 +9,10 @@
 #
 # Call from an automation with e.g.  action: rest_command.glitchcube_play_theme_song
 # Test it from Developer Tools > Actions the same way.
+#
+# All of these land on ONE Rails controller (Api::V1::HomeAssistantWebhookController,
+# routed under /api/v1/hass/*) — add new HASS->Rails triggers there, not a new
+# controller per action.
 
 rest_command:
   # Play a random theme song out the cube's host speaker (fire-and-forget on the
@@ -17,7 +21,19 @@ rest_command:
   # blast a song to draw people over. That automation isn't written yet.
   glitchcube_play_theme_song:
     url: >-
-      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/audio/theme_song
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/theme_song
+    method: POST
+    content_type: "application/json"
+    payload: "{}"
+
+  # Wake the cube with a fresh persona's grand entrance (Shows::GrandEntrance on
+  # the Rails side: anomaly VO, lights, theme song, arrival announce). Rails picks
+  # a random persona that avoids the current cube-dominator and the previous
+  # session's persona. Fire-and-forget — the endpoint kicks off the show and
+  # returns. Used by the "internet back up" recovery automation.
+  glitchcube_grand_entrance:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/grand_entrance
     method: POST
     content_type: "application/json"
     payload: "{}"

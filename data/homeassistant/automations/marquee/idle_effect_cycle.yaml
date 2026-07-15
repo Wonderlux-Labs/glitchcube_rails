@@ -1,0 +1,18 @@
+- id: cube_awtrix_idle_effect_cycle
+  alias: Cube AWTRIX - idle effect cycle
+  description: >-
+    Timing layer for the marquee idle screen. Every 2 minutes (and on HA start), call
+    script.set_marquee_idle with no args so it picks a random ambient effect + random
+    palette + random speed. The SCRIPT owns WHAT shows; this owns WHEN. To curate, pass
+    explicit args in the data: below, add conditions, or change the interval — e.g. a
+    single fixed look, or a weighted/random pick of known-good arg combos.
+  triggers:
+  - trigger: time_pattern
+    minutes: "/2"
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: script.set_marquee_idle
+    data: {}
+  mode: single
