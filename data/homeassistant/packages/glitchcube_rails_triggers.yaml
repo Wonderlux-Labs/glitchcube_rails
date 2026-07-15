@@ -37,3 +37,24 @@ rest_command:
     method: POST
     content_type: "application/json"
     payload: "{}"
+
+  # A quick glitch fit (Shows::GlitchShort on the Rails side): one short
+  # glitch-radio stab out the host speaker while the WLED strips spasm, for as
+  # long as the clip runs. Saves the light state first and restores it after;
+  # mic muted for the duration. Fire-and-forget.
+  glitchcube_glitch_short:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/glitch_short
+    method: POST
+    content_type: "application/json"
+    payload: "{}"
+
+  # The extended glitch-out (Shows::GlitchLong): a long static bed, a short stab,
+  # then another long bed (~45-85s) with the WLED strips glitching throughout.
+  # Saves + restores the lights; mic muted throughout. Fire-and-forget.
+  glitchcube_glitch_long:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/glitch_long
+    method: POST
+    content_type: "application/json"
+    payload: "{}"

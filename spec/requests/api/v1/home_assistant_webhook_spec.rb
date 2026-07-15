@@ -28,4 +28,26 @@ RSpec.describe "Home Assistant webhook API", type: :request do
       expect(response.parsed_body).to include("success" => true)
     end
   end
+
+  describe "POST /api/v1/hass/glitch_short" do
+    it "enqueues the short glitch show and returns success" do
+      expect {
+        post '/api/v1/hass/glitch_short', as: :json
+      }.to have_enqueued_job(ShowJob).with("glitch_short")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include("success" => true)
+    end
+  end
+
+  describe "POST /api/v1/hass/glitch_long" do
+    it "enqueues the long glitch show and returns success" do
+      expect {
+        post '/api/v1/hass/glitch_long', as: :json
+      }.to have_enqueued_job(ShowJob).with("glitch_long")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include("success" => true)
+    end
+  end
 end

@@ -42,6 +42,37 @@ RSpec.describe Shows::GrandEntrance do
       .to eq([ "input_boolean.persona_switching" ])
   end
 
+  # cube_mode is the whole-cube status flag: a show flips it to "performance" and
+  # returns it to "conversation" after (separate from the persona_switching flag).
+  it 'runs the show in performance mode and returns to conversation when it ends' do
+    show.call
+
+    mode_calls = cube_mode_calls
+    expect(mode_calls.map { |c| c[:service] }).to eq(%w[select_option select_option])
+    expect(mode_calls.map { |c| c[:data][:option] }).to eq(%w[performance conversation])
+  end
+
+  it 'wraps the entire show: performance up before the switching flag, conversation after arrival' do
+    show.call
+
+    calls = fake_ha.service_calls
+    perf_at = calls.index { |c| c[:domain] == "input_select" && c[:data][:option] == "performance" }
+    flag_up_at = calls.index { |c| c[:domain] == "input_boolean" && c[:service] == "turn_on" }
+    arrival_at = calls.index { |c| c[:domain] == "assist_satellite" }
+    conv_at = calls.index { |c| c[:domain] == "input_select" && c[:data][:option] == "conversation" }
+
+    expect(perf_at).to be < flag_up_at
+    expect(arrival_at).to be < conv_at
+  end
+
+  it 'returns cube_mode to conversation even when the show crashes' do
+    allow(HostAudio).to receive(:play).and_raise("ffplay exploded")
+
+    expect { show.call }.to raise_error("ffplay exploded")
+
+    expect(cube_mode_calls.map { |c| c[:data][:option] }).to eq(%w[performance conversation])
+  end
+
   it 'announces the anomaly on the host speaker, marquee, and lights' do
     show.call
 
@@ -130,5 +161,10 @@ RSpec.describe Shows::GrandEntrance do
   def marquee_calls
     fake_ha.service_calls_for("script")
       .select { |c| c[:data][:entity_id] == "script.awtrix_marquee_message" }
+  end
+
+  def cube_mode_calls
+    fake_ha.service_calls_for("input_select")
+      .select { |c| c[:data][:entity_id] == "input_select.cube_mode" }
   end
 end

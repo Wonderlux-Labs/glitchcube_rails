@@ -21,17 +21,17 @@ set_cube_lights:
     COMPLETE look and effect resets to Solid when you don't specify one, so if you want to
     keep an animation running and only tweak color/brightness, pass that same effect again.
     Many effects are SOUND-REACTIVE and pulse to live audio from the mic — great while music
-    is playing on the jukebox: GEQ, Freqwave, Freqmatrix, Waterfall, Matripix, Gravcenter,
-    Gravcentric, DJ Light, Blurz, Puddlepeak, Pixelwave, Rocktaves, Midnoise, Noisemeter,
-    "PS Sonic Stream", "PS Sonic Boom", "PS GEQ 1D". Some good picks by mood — CALM/AMBIENT:
-    Breathe, Aurora, Pacifica, Lake, Colorwaves, Palette, Colorloop, Glitter, Twinkleup,
-    "Slow Transition". PLAYFUL/COLORFUL: Rainbow, "Rainbow Runner", Colorful, "Chase Rainbow",
-    "Pride 2015", "Sinelon Rainbow". WARM/FIRE: "Fire 2012", "Fire Flicker", Candle, "PS Fire",
-    "Sun Radiation", Sunrise. PARTY/ENERGETIC: Strobe, "Blink Rainbow", Fireworks,
-    "Fireworks Starburst", Plasma, Blends, "Dancing Shadows". EERIE/GLITCHY (on brand):
-    "Halloween Eyes", "Ghost Rider", "Black Hole", Matrix, "Noise 1", Phased,
-    "Distortion Waves", Frizzles, Octopus, Soap. The full WLED effect catalog is in the
-    effect list if you want something else.
+    is playing on the jukebox: Freqwave, Freqmatrix, Waterfall, Matripix, Gravcenter,
+    Gravcentric, Gravfreq, DJ Light, Blurz, Puddlepeak, Pixelwave, Rocktaves, Midnoise,
+    Noisemeter, "PS Sonic Stream", "PS Sonic Boom", "PS GEQ 1D". Some good picks by mood —
+    CALM/AMBIENT: Breathe, Aurora, Pacifica, Lake, Colorwaves, Palette, Colorloop, Glitter,
+    Twinkleup, "Slow Transition". PLAYFUL/COLORFUL: Rainbow, "Rainbow Runner", Colorful,
+    "Chase Rainbow", "Pride 2015", "Sinelon Rainbow". WARM/FIRE: "Fire 2012", "Fire Flicker",
+    Candle, "PS Fire 1D", Noisefire, Sunrise. PARTY/ENERGETIC: Strobe, "Blink Rainbow",
+    Fireworks, "Fireworks Starburst", Plasma, Blends, "Dancing Shadows". EERIE/GLITCHY (on
+    brand): "Halloween Eyes", ICU, "Noise 1", Phased, "Phased Noise", "TV Simulator",
+    Lightning, Chunchun. The curated strip-friendly effect list has more if you want
+    something else.
   fields:
     led_strip:
       name: LED strip
@@ -184,20 +184,9 @@ set_cube_lights:
           - Chunchun
           - Dancing Shadows
           - Washing Machine
-          - Rotozoomer
           - Blends
           - TV Simulator
           - Dynamic Smooth
-          - Spaceships
-          - Crazy Bees
-          - Ghost Rider
-          - Blobs
-          - Scrolling Text
-          - Drift Rose
-          - Distortion Waves
-          - Soap
-          - Octopus
-          - Waving Cell
           - Pixels
           - Pixelwave
           - Juggles
@@ -209,65 +198,24 @@ set_cube_lights:
           - Noisemeter
           - Freqwave
           - Freqmatrix
-          - GEQ
           - Waterfall
           - Freqpixels
           - Noisefire
           - Puddlepeak
           - Noisemove
-          - Noise2D
           - Perlin Move
           - Ripple Peak
-          - Firenoise
-          - Squared Swirl
           - PacMan
-          - DNA
-          - Matrix
-          - Metaballs
           - Freqmap
           - Gravcenter
           - Gravcentric
           - Gravfreq
           - DJ Light
-          - Funky Plank
           - Shimmer
-          - Pulser
           - Blurz
-          - Drift
-          - Waverly
-          - Sun Radiation
-          - Colored Bursts
-          - Julia
-          - Game Of Life
-          - Tartan
-          - Polar Lights
-          - Swirl
-          - Lissajous
-          - Frizzles
-          - Plasma Ball
           - Flow Stripe
-          - Hiphotic
-          - Sindots
-          - DNA Spiral
-          - Black Hole
           - Wavesins
           - Rocktaves
-          - Akemi
-          - PS Volcano
-          - PS Fire
-          - PS Fireworks
-          - PS Vortex
-          - PS Fuzzy Noise
-          - PS Ballpit
-          - PS Box
-          - PS Attractor
-          - PS Impact
-          - PS Waterfall
-          - PS Spray
-          - PS GEQ 2D
-          - PS GEQ Nova
-          - PS Ghost Rider
-          - PS Blobs
           - PS DripDrop
           - PS Pinball
           - PS Dancing Shadows
@@ -283,7 +231,6 @@ set_cube_lights:
           - PS Sonic Stream
           - PS Sonic Boom
           - PS Springy
-          - PS Galaxy
           - Color Clouds
           - Slow Transition
   sequence:

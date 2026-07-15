@@ -102,6 +102,8 @@ Input helpers stay in packages (they're finicky when split into include-dirs).
   `Api::V1::HomeAssistantWebhookController` (`/api/v1/hass/*`):
   - `glitchcube_play_theme_song` → `/api/v1/hass/theme_song`
   - `glitchcube_grand_entrance` → `/api/v1/hass/grand_entrance`
+  - `glitchcube_glitch_short` → `/api/v1/hass/glitch_short` (`Shows::GlitchShort`: one short glitch-radio stab + WLED spasm)
+  - `glitchcube_glitch_long` → `/api/v1/hass/glitch_long` (`Shows::GlitchLong`: long bed → short stab → long bed, ~45-85s)
 
 **Connectivity signal:** `binary_sensor.internet` is the built-in HASS `ping`
 integration (configured in the UI, not YAML) — the rest-mode automations trigger off it.

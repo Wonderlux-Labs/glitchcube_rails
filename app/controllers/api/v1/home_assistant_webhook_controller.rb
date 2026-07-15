@@ -25,4 +25,20 @@ class Api::V1::HomeAssistantWebhookController < Api::V1::BaseController
     CubePersona.set_random(entrance: :grand)
     render_api_success(enqueued: true)
   end
+
+  # POST /api/v1/hass/glitch_short
+  # A quick glitch fit: one short glitch-radio stab + WLED spasm, lights saved
+  # and restored. Fire-and-forget.
+  def glitch_short
+    ShowJob.perform_later("glitch_short")
+    render_api_success(enqueued: true)
+  end
+
+  # POST /api/v1/hass/glitch_long
+  # The extended glitch-out: long static bed -> short stab -> long bed, WLED
+  # glitching throughout, lights saved and restored. Fire-and-forget.
+  def glitch_long
+    ShowJob.perform_later("glitch_long")
+    render_api_success(enqueued: true)
+  end
 end

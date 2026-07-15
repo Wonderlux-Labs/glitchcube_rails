@@ -39,11 +39,13 @@ module Shows
     end
 
     def call
-      switching do
-        anomaly_moment
-        play_theme_song
+      performing do
+        switching do
+          anomaly_moment
+          play_theme_song
+        end
+        announce_arrival
       end
-      announce_arrival
     end
 
     private
