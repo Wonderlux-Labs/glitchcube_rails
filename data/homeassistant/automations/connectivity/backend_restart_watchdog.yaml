@@ -1,0 +1,33 @@
+# --- Backend wedged: last-resort restart -----------------------------------------
+# sensor.glitchcube_backend (templates/glitchcube_backend_health.yaml) reads "online"
+# only while Rails' once-a-minute heartbeat is < 3 min old, else UNAVAILABLE. That
+# heartbeat is written by a SolidQueue job, so it stops the moment the JOB workers
+# wedge — even while Puma is still answering HTTP. That specific state (jobs stuck /
+# backend degraded but the web thread alive) is both when a fresh boot helps AND when
+# the restart rest_command can still land, so it's the trigger here.
+#
+# 15-min debounce so a normal reboot / HASS-VM restart / brief blip never trips it.
+# Rails throttles honored restarts (10-min cooldown that survives the reboot), so even
+# if this re-fires there's no boot loop. If Rails is FULLY down the rest_command just
+# fails harmlessly — this can only ever HELP or no-op, never make things worse.
+#
+# NOTE: verify sensor.glitchcube_backend behaves as expected on the live box before
+# trusting this unattended — it was added without a running backend to test against.
+
+- id: backend_restart_watchdog
+  alias: "Backend: last-resort restart when wedged too long"
+  description: >-
+    If sensor.glitchcube_backend has been unavailable for 15 minutes (heartbeat dead
+    → jobs wedged / backend degraded), ask Rails to gracefully restart its whole
+    stack. Reachable only while Puma still serves HTTP; harmless no-op otherwise.
+  triggers:
+  - trigger: state
+    entity_id: sensor.glitchcube_backend
+    to: "unavailable"
+    for: "00:15:00"
+  conditions: []
+  actions:
+  - action: rest_command.glitchcube_restart_backend
+    data:
+      reason: "backend unavailable 15m (heartbeat dead)"
+  mode: single

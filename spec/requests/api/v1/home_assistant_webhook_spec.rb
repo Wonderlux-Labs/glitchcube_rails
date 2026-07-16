@@ -50,4 +50,32 @@ RSpec.describe "Home Assistant webhook API", type: :request do
       expect(response.parsed_body).to include("success" => true)
     end
   end
+
+  describe "POST /api/v1/hass/restart" do
+    before { Rails.cache.delete(Api::V1::HomeAssistantWebhookController::RESTART_CACHE_KEY) }
+
+    it "spawns a detached restart and reports restarted: true" do
+      # NEVER actually restart the backend from a test — assert on the spawn instead.
+      expect(Process).to receive(:spawn).with(/glitchcube-ctl.* restart/, pgroup: true).and_return(4242)
+      expect(Process).to receive(:detach).with(4242)
+
+      post '/api/v1/hass/restart', params: { reason: "test" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["data"]).to include("restarted" => true, "reason" => "test")
+    end
+
+    it "honors the cooldown and does NOT spawn a second restart" do
+      allow(Process).to receive(:spawn).and_return(1)
+      allow(Process).to receive(:detach)
+
+      post '/api/v1/hass/restart', as: :json          # first one goes through
+      expect(response.parsed_body["data"]).to include("restarted" => true)
+
+      expect(Process).not_to receive(:spawn)          # second is throttled
+      post '/api/v1/hass/restart', as: :json
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["data"]).to include("restarted" => false, "reason" => "cooldown")
+    end
+  end
 end
