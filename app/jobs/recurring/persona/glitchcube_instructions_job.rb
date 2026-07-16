@@ -4,7 +4,7 @@ module Recurring
   module Persona
     # Sets a brief instruction from the cube behind the persona to be worked into the
     # prompt that carries over from persona to persona.
-    
+
     class GlitchcubeInstructionsJob < ApplicationJob
       queue_as :default
 
