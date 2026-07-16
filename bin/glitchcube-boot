@@ -1,9 +1,10 @@
 #!/bin/bash
 # GlitchCube boot supervisor entrypoint.
 #
-# Run by the com.glitchcube.boot LaunchAgent (RunAtLoad + KeepAlive) in the
-# logged-in GUI session. Ensures the HASS VM is up, then execs foreman in the
-# foreground so launchd supervises it and restarts on crash.
+# Run by the com.glitchcube.boot LaunchAgent (RunAtLoad) in the logged-in GUI
+# session. Ensures the HASS VM is up, then execs bin/dev (foreman over
+# Procfile.dev) in the foreground so launchd supervises it (and, if KeepAlive is
+# turned on, restarts it on crash).
 #
 # launchd (and non-login shells) get a bare PATH with only system Ruby 2.6, so
 # we set PATH explicitly to reach rbenv shims + Homebrew.
@@ -23,8 +24,40 @@ if [ "$have" != "$want" ]; then
   exit 1
 fi
 
-# Best-effort: start the Home Assistant VM. Never blocks the app.
+# Best-effort: start the Home Assistant VM + attach the zigbee dongle. Never
+# blocks the app.
 "$APP_ROOT/bin/ensure-hass-vm" || true
 
-# Foreground process runner — foreman exit => launchd KeepAlive restarts us.
+# Sanity snapshot of the unmanaged support services (Ollama :11434, Squeezelite)
+# into boot.out.log — we don't start them here (they auto-start on their own), we
+# just record what we see for field debugging.
+#
+# MUST be synchronous (not backgrounded): we `exec foreman` below, so this process
+# BECOMES foreman. A backgrounded child here would be foreman's child, and foreman
+# shuts the whole stack down when ANY child process exits — so a background snapshot
+# exiting would kill Rails. This runs in <1s (curl has a 3s cap) before exec.
+"$APP_ROOT/bin/check-services" 2>&1 | sed 's/^/[support] /' || true
+
+# Reap orphans from a previous (crashed) instance BEFORE we start a fresh foreman.
+# launchd (KeepAlive=true) respawns us on any exit, but a hard-killed foreman can leave
+# Puma workers holding :4567 and a SolidQueue supervisor still draining jobs — which would
+# make the new Puma fail to bind and double-run SolidQueue. launchd runs only ONE boot
+# instance at a time, so anything matching here is a stray from the dead instance, safe to
+# kill. (The Rails startup hook separately clears the SolidQueue *jobs table*; this clears
+# the leftover OS *processes*.) A clean first boot matches nothing — this is a no-op there.
+stale_port_pids="$(lsof -ti tcp:4567 2>/dev/null || true)"
+if [ -n "$stale_port_pids" ]; then
+  echo "[glitchcube-boot] reaping stale :4567 holder(s): $stale_port_pids" >&2
+  # shellcheck disable=SC2086
+  kill -9 $stale_port_pids 2>/dev/null || true
+fi
+pkill -f 'solid-queue' 2>/dev/null || true   # orphaned SolidQueue supervisor + workers
+pkill -f 'bin/jobs'    2>/dev/null || true   # the Procfile 'jobs' wrapper that spawns them
+
+# Foreground process runner — foreman over Procfile.dev (Puma on :4567 + jobs).
+# foreman is installed directly in this Ruby (rbenv 3.3.9), NOT bundled, so it's
+# invoked bare (the shims dir is on PATH above). It forwards TERM/INT to both
+# process groups and force-kills after a grace period, so a launchd stop shuts
+# them down cleanly and never hangs. foreman exit => launchd (with KeepAlive)
+# would restart us.
 exec foreman start -f Procfile.dev

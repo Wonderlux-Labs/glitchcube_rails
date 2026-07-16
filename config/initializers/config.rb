@@ -39,11 +39,19 @@ Rails.application.configure do
   config.home_assistant_url = ENV.fetch("HOME_ASSISTANT_URL", "http://glitch.local:8123")
   config.home_assistant_timeout = ENV.fetch("HOME_ASSISTANT_TIMEOUT", "30").to_i
 
-  # The HASS conversation agent the cube offloads its `actions` to. This agent
-  # (an LLM with the Assist API enabled) interprets plain-English requests
-  # ("play some jazz", "romantic lights"), controls the exposed devices, and
-  # replies in natural language — which we fold back into the next turn's history.
-  config.hass_action_agent = ENV.fetch("HASS_ACTION_AGENT", "conversation.anthropic_claude_sonnet_4_6")
+  # The cube offloads its plain-English action channels to HASS conversation agents
+  # (LLMs with the Assist API enabled) that own ALL the tool-calling — picking devices,
+  # resolving "romantic lights" to RGB, retrying — and reply in natural language, which
+  # we fold back into the next turn's history. There are two lanes, dispatched in
+  # parallel (see ConversationOrchestrator::ActionExecutor):
+  #   - hass_action_agent — lights, marquee, other_actions, and anything else.
+  #   - hass_sound_agent  — the `sound` channel only (the jukebox: searching the
+  #     library, deciding what to play), which is slower and more iterative.
+  # These are straight config, not env-overridden: each points at a dedicated HASS
+  # conversation agent. To change behavior, switch the MODEL on that agent in Home
+  # Assistant (config_entries subentry) — no Rails change needed.
+  config.hass_action_agent = "conversation.default_hass_tools_agent"
+  config.hass_sound_agent  = "conversation.glitchcube_jukebox_agent"
 
   # === The one model knob ===
   # We make LLM calls in exactly one place now (the conversation flow), so there

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Squeezelite audio player, supervised with KeepAlive so it restarts on crash.
+  Replaces the old "Squeezelite" Login Item, which had NO crash recovery.
+  Install via bin/install-boot. Concrete bigbuddy paths — bigbuddy is the only prod host.
+
+  Runs as a user LaunchAgent (gui domain) so it has the logged-in audio session.
+  ProgramArguments mirror the app's bundled squeezelite.plist (-a 100 latency,
+  a name/log file), but the log + name files are redirected to a user-writable
+  path — a user LaunchAgent cannot write the bundle's /var/log target.
+
+  -m 6c:44:c7:71:72:bf PINS the SlimProto player id (== MAC). Without it,
+  squeezelite adopts whatever MAC the first enumerated interface reports — on this
+  Mac that's an Apple private interface (anpi*) whose locally-administered MAC is
+  RE-RANDOMIZED on a cold boot. A changed MAC = a brand-new player in Music
+  Assistant, which orphans the configured `media_player.jukebox_internal` (bound to
+  player id up6c44c77172bf == this MAC). Pinning it keeps the identity stable across
+  full power-cycles so the jukebox always maps to the same MA player. (Value is the
+  MAC MA already knows the internal jukebox by — do NOT change it without also
+  re-binding the player in Music Assistant.)
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.glitchcube.squeezelite</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Applications/Squeezelite.app/Contents/MacOS/Squeezelite</string>
+    <string>-m</string>
+    <string>6c:44:c7:71:72:bf</string>
+    <string>-a</string>
+    <string>100</string>
+    <string>-f</string>
+    <string>/Users/estiens/Library/Logs/Squeezelite.log</string>
+    <string>-N</string>
+    <string>/Users/estiens/Library/Logs/Squeezelite.name</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- The whole point vs the old Login Item: if Squeezelite dies, respawn it. -->
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/estiens/Library/Logs/squeezelite.launchd.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/estiens/Library/Logs/squeezelite.launchd.err.log</string>
+</dict>
+</plist>

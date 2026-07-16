@@ -8,7 +8,7 @@ RSpec.describe ConversationOrchestrator::ResponseSynthesizer do
       "speech" => "I've turned on the lights for you.",
       "continue_conversation" => false,
       "inner_monologue" => "User requested light control",
-      "actions" => [ { "action_name" => "cube_light", "description" => "warm amber, dim" } ]
+      "lights" => "warm amber, dim"
     }
   end
 
@@ -47,7 +47,7 @@ RSpec.describe ConversationOrchestrator::ResponseSynthesizer do
           text: "I've turned on the lights for you.",
           continue_conversation: false,
           inner_monologue: "User requested light control",
-          actions: [ { "action_name" => "cube_light", "description" => "warm amber, dim" } ],
+          actions: [ { "action_name" => "lights", "description" => "warm amber, dim" } ],
           speech_text: "I've turned on the lights for you.",
           success: true
         )

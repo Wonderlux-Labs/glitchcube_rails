@@ -9,6 +9,11 @@ default: &default
     schedule: "*/5 * * * *"   # Check every 5 min; switches once a 30–90 min interval elapses
     queue: default
 
+  glitchcube_instructions:
+    class: Recurring::Persona::GlitchcubeInstructionsJob
+    schedule: "*/5 * * * *"   # Check every 5 min; rotates the cube-HQ instruction once a 60–180 min interval elapses
+    queue: default
+
   # NOTE: the interaction-chunk summarizer (Recurring::Memory::SummarizerJob) is NO LONGER a
   # cron job — it's enqueued per-persona every ~N turns by SummaryTriggers, and flushed on
   # persona switch by PersonaSummarizerService.
@@ -17,6 +22,16 @@ default: &default
     class: Recurring::Memory::OverallSummarizerJob
     schedule: "5 * * * *"     # Hourly (:05) — fold the newest handoff reports into the one overall
     queue: default
+
+  conversation_stats:
+    class: Recurring::System::ConversationStatsJob
+    schedule: "*/5 * * * *"   # Every 5 min — push conversation/round counts to HASS input_numbers
+    queue: default
+
+  backend_health:
+    class: Recurring::System::BackendHealthJob
+    schedule: every minute    # Heartbeat: refresh sensor.glitchcube_backend_health +
+    queue: default            # input_text.backend_health_status so HASS never shows stale/unknown
 
 production:
   <<: *default

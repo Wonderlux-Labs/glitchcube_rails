@@ -1,0 +1,95 @@
+# --- Internet "resting" mode -----------------------------------------------------
+# Put the cube to sleep when the internet is gone (script.enter_rest_mode) and wake
+# it back up when it returns (script.wake_from_rest). Driven by the connectivity
+# automations in automations.yaml; the sensor + internet_resting flag live in
+# packages/glitchcube_connectivity.yaml. See
+# docs/superpowers/specs/2026-07-14-internet-outage-resting-mode-design.md.
+
+# Go to sleep: hold a "come back later" sign, dim everything to low red, mute the
+# mic, stop the music, drop into low_power. Idempotent — the down automation
+# re-runs this every 5 min while the outage lasts, so it also re-asserts the sign
+# after e.g. a marquee power-cycle.
+enter_rest_mode:
+  alias: Enter Rest Mode (internet down)
+  description: >-
+    Put the cube to sleep during an internet outage: mark it resting + low_power,
+    mute the mic, stop media, set all lights to a battery-light dim red, and hold a
+    permanent "THE GLITCHCUBE IS CURRENTLY RESTING" message on the marquee. Safe to
+    call repeatedly.
+  sequence:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.internet_resting
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.cube_mode
+    data:
+      option: low_power
+  # Mute the mic — nothing works offline, don't invite conversations. The wake
+  # path leaves this to the grand entrance's persona_switching drop to un-mute.
+  - action: switch.turn_on
+    target:
+      entity_id: switch.cube_cube_voice_mute
+  # No point playing to no one; saves battery too.
+  - action: media_player.media_stop
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+      - media_player.cube_cube_voice_media_player
+  # Dim red on the WLED head+body...
+  - action: script.set_cube_lights
+    data:
+      led_strip: both
+      color: [255, 0, 0]
+      brightness: 25
+      effect: Solid
+  # (The Govee top light is no longer used, so rest mode no longer sets it. The
+  #  script.set_top_light_* scripts remain in scripts/lights/top_light.yaml if revived.)
+  # Marquee: dim the sign, then hold the resting message (hold:true = stays until
+  # dismissed; the idle-cycle only touches the background app underneath).
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 30}'
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify
+      payload: >-
+        {{ {"text": "THE GLITCHCUBE IS CURRENTLY RESTING - PLEASE CHECK BACK LATER",
+            "hold": true, "color": "#FF0000"} | to_json }}
+  mode: single
+
+# Wake up: clear the sign, restore normal marquee brightness + a fresh idle screen,
+# back to conversation mode, then kick off the Rails grand entrance. The entrance
+# (Shows::GrandEntrance) owns the rest — anomaly VO, lights re-sync, theme song,
+# arrival announce — and its persona_switching drop un-mutes the mic, so we do NOT
+# un-mute here (mic stays shut through the show).
+wake_from_rest:
+  alias: Wake From Rest (internet back)
+  description: >-
+    Wake the cube after the internet returns: dismiss the resting marquee message,
+    restore normal marquee brightness + idle screen, return to conversation mode,
+    clear the resting flag, and trigger a fresh persona's grand entrance (which
+    resyncs the lights, plays a song, announces arrival, and un-mutes the mic).
+  sequence:
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify/dismiss
+      payload: ""
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 150}'
+  - action: script.set_marquee_idle
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.cube_mode
+    data:
+      option: conversation
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.internet_resting
+  # Fire-and-forget: Rails picks a fresh persona (not the cube-dominator, not the
+  # previous session) and runs the whole arrival show.
+  - action: rest_command.glitchcube_grand_entrance
+  mode: single

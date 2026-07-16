@@ -53,6 +53,14 @@ RSpec.describe EnvironmentDirectorJob, type: :job do
 
       described_class.new.perform(**job_params)
     end
+
+    it 'honors a per-lane agent_id and conversation prefix (the sound lane)' do
+      described_class.new.perform(**job_params.merge(agent_id: 'conversation.sound_agent', convo_prefix: 'cube_sound'))
+
+      request = fake_ha.conversation_requests.last
+      expect(request[:agent_id]).to eq('conversation.sound_agent')
+      expect(request[:conversation_id]).to eq("cube_sound_#{conversation.id}")
+    end
   end
 
   describe 'storing results on the conversation' do

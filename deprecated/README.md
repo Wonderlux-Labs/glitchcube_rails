@@ -20,6 +20,9 @@ live instance long ago; treat it as a grab-bag of examples, not a source of trut
 - `config_home_assistant/` — was `config/home_assistant/`; held `proactive_conversation.yaml`.
 - `gps_scene_creator_automation.yaml` — was a stray HASS automation file living in
   `app/services/gps/` (the "Cube Voice — Scene Creator" voice automation).
+- `startup.sh` — was `bin/startup.sh`; an old boot script hardcoded to a dead user
+  (`/Users/eristmini/`) with a production `rails server -d` setup. Superseded by the
+  `bin/glitchcube-boot` LaunchAgent chain (see `docs/boot.md`).
 
 ## If you need one of these
 

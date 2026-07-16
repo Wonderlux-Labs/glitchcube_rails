@@ -1,0 +1,241 @@
+# --- AWTRIX marquee (real) -------------------------------------------------------
+# Drives the physical AWTRIX LED sign (HASS device "awtrix_marquee") directly over
+# MQTT. The awtrix.* services are NOT registered on this box, so we publish to the
+# device's own MQTT topic. The topic PREFIX is "marquee" — reported by
+# sensor.cube_awtrix_marquee_device_topic — NOT the HASS entity name "awtrix_marquee".
+# A notification interrupts the app loop, shows the text, then returns to normal.
+
+awtrix_marquee_message:
+  alias: AWTRIX Marquee Message
+  description: >-
+    Flash a message across the cube's LED marquee sign. Only `message` is required —
+    optionally give it a `color` (hex like "#FF00AA"), turn on `rainbow` text, or set
+    how many seconds it shows (`duration`). It interrupts the sign to show your text,
+    then returns to the normal display.
+  fields:
+    message:
+      name: Message
+      description: The text to scroll across the marquee (keep it under ~255 chars)
+      required: true
+      example: "JAX DOESN'T PLAY THAT"
+      selector:
+        text:
+    color:
+      name: Color
+      description: Optional text color as a hex string, e.g. "#FF00AA". Ignored when rainbow is on.
+      required: false
+      selector:
+        text:
+    rainbow:
+      name: Rainbow
+      description: Rainbow-cycle the text color (overrides color)
+      required: false
+      default: false
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: Seconds to display before returning to the normal loop
+      required: false
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 120
+          unit_of_measurement: s
+    icon:
+      name: Icon
+      description: >-
+        Optional AWTRIX icon ID (a number, as a string) shown to the LEFT of the text. Use
+        one only occasionally, when it genuinely fits the moment — most messages need no icon.
+        Some good ones to reach for: smile 87, heart 61, matrix 653, warning 555, lightning
+        95, fireworks 4353, skull 148, lightbulb 2448, angry 72120, sleepy 71431, question
+        30710, exclamation 6134, dance 4128. Omit for no icon.
+      required: false
+      selector:
+        text:
+    repeat:
+      name: Repeat
+      description: How many times the notification scrolls before it dismisses. Defaults to 2.
+      required: false
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 10
+  sequence:
+  - variables:
+      # Capture the current (idle) brightness so the tail can restore it after the message.
+      # The AWTRIX matrix light's brightness IS the device BRI setting (0-255); the idle
+      # screen often runs dim, which would make an un-boosted message hard to read.
+      prev_bri: "{{ state_attr('light.cube_awtrix_marquee_matrix', 'brightness') | int(255) }}"
+      dur: "{{ (duration | default(20, true)) | int }}"
+      rep: "{{ (repeat | default(2, true)) | int }}"
+      notify_payload: >-
+        {% set p = {"text": message, "duration": dur, "repeat": rep} %}
+        {% if rainbow | default(false, true) %}{% set p = p | combine({"rainbow": true}) %}
+        {% elif color | default('', true) %}{% set p = p | combine({"color": color}) %}{% endif %}
+        {% if icon | default('', true) %}{% set p = p | combine({"icon": icon | string}) %}{% endif %}
+        {{ p | to_json }}
+  # Force full brightness FIRST so the notification is always readable, even when the
+  # idle screen was dimmed down.
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 255}'
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify
+      payload: "{{ notify_payload | trim }}"
+  # NON-BLOCKING: fire-and-forget the brightness restore so this script returns instantly
+  # (the calling conversation agent no longer waits out the whole message duration). The
+  # tail sleeps for the message's life, then restores the captured idle brightness.
+  - action: script.turn_on
+    target:
+      entity_id: script.awtrix_marquee_restore_brightness
+    data:
+      variables:
+        prev_bri: "{{ prev_bri }}"
+        dur: "{{ dur }}"
+  mode: queued
+  max: 5
+
+awtrix_marquee_restore_brightness:
+  alias: AWTRIX Marquee Restore Brightness
+  description: >-
+    Internal tail for awtrix_marquee_message. After a message's duration elapses, restore
+    the marquee to its pre-message (idle) brightness. Fired non-blocking via script.turn_on
+    so the message script returns immediately. Not for Assist — no agent should call this.
+  fields:
+    prev_bri:
+      name: Previous brightness
+      description: Brightness (0-255) to restore after the message.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    dur:
+      name: Duration
+      description: Message duration in seconds (the tail waits this + 1s before restoring).
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 120
+  sequence:
+  - delay: "{{ (dur | default(20, true)) | int + 1 }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: "{{ {'BRI': prev_bri | int(255)} | to_json }}"
+  mode: parallel
+  max: 10
+
+awtrix_marquee_clear:
+  alias: AWTRIX Marquee Clear
+  description: >-
+    Clear/dismiss the current message on the cube's LED marquee sign, returning it to
+    its normal display.
+  sequence:
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify/dismiss
+      payload: ""
+  mode: single
+
+# --- AWTRIX idle screen (single always-on background app) ------------------------
+# The marquee runs ONE always-on custom app named "idle" — the only app in its loop —
+# plus transient notifications (awtrix_marquee_message) that overlay it. Device is set
+# ATRANS=false (no app transitions; a 1-app loop has nothing to transition to), so an
+# effect published to marquee/custom/idle with NO duration holds indefinitely until the
+# next publish (verified on device 2026-07-09). Division of labor: AUTOMATIONS decide
+# WHEN to change the idle screen; the set_marquee_idle SCRIPT decides WHAT it shows.
+
+# set_marquee_idle — the "what". Call with nothing for a random effect/palette/speed, or
+# pass any subset to dial in a specific look. Publishes retained, no duration.
+set_marquee_idle:
+  alias: Set Marquee Idle Effect
+  description: >-
+    Set the marquee's always-on "idle" screen to an effect (the only thing shown besides
+    notifications). Call with no args for a random ambient effect + random palette + random
+    speed (3-5); or pass any of effect/palette/speed/blend/brightness to pin a look. Great
+    for tuning in Developer Tools → Actions: play until a combo looks best, then put that
+    combo in an automation. Publishes to marquee/custom/idle over MQTT, retained, NO duration.
+  fields:
+    effect:
+      name: Effect
+      description: Effect name. Omit for a random ambient effect.
+      required: false
+      selector:
+        select:
+          options: [Fade, MovingLine, BrickBreaker, PingPong, Radar, Checkerboard,
+            Fireworks, PlasmaCloud, Ripple, Snake, Pacifica, TheaterChase, Plasma,
+            Matrix, SwirlIn, SwirlOut, LookingEyes, TwinklingStars, ColorWaves]
+    palette:
+      name: Palette
+      description: Color palette. Omit for a random palette.
+      required: false
+      selector:
+        select:
+          options: [Rainbow, Cloud, Ocean, Forest, Party, Lava, Heat]
+    speed:
+      name: Speed
+      description: 1-8, higher = faster. Omit for a random 3-5.
+      required: false
+      selector:
+        number: { min: 1, max: 8, mode: box }
+    blend:
+      name: Blend
+      description: Blend the palette across the effect.
+      required: false
+      selector:
+        boolean:
+    brightness:
+      name: Brightness
+      description: Global matrix brightness 0-255. Omit to leave unchanged.
+      required: false
+      selector:
+        number: { min: 0, max: 255, mode: slider }
+  sequence:
+  - variables:
+      ambient_pool: [PlasmaCloud, Ripple, Pacifica, TwinklingStars, ColorWaves, Plasma,
+        Matrix, SwirlIn, SwirlOut, Fireworks, Radar, PingPong]
+      palette_pool: [Rainbow, Cloud, Ocean, Forest, Party, Lava, Heat]
+      eff: "{{ effect | default(ambient_pool | random, true) }}"
+      pal: "{{ palette | default(palette_pool | random, true) }}"
+      spd: "{{ (speed | default(range(3, 6) | random, true)) | int }}"
+      bln: "{{ blend | default(true) }}"
+  - if: "{{ brightness is defined and brightness not in [none, ''] }}"
+    then:
+    - action: mqtt.publish
+      data:
+        topic: marquee/settings
+        payload: "{{ {'BRI': brightness | int} | to_json }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/custom/idle
+      retain: true
+      payload: "{{ {'effect': eff, 'effectSettings': {'speed': spd, 'palette': pal, 'blend': bln}} | to_json }}"
+  mode: queued
+  max: 10
+
+# Seed after a device reflash: disable app transitions (single-app loop) and set a
+# baseline idle effect via the script above. Run once; the automation cycles it after.
+awtrix_install_idle_apps:
+  alias: AWTRIX Seed Idle App
+  description: >-
+    Post-reflash seed for the marquee: turn OFF app transitions (ATRANS, a device setting
+    wiped by reflash) since the loop is a single app, then set a baseline idle effect. The
+    idle-cycle automation takes over from there.
+  sequence:
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"ATRANS":false}'
+  - action: script.set_marquee_idle
+    data:
+      effect: Pacifica
+      palette: Ocean
+      speed: 4
+  mode: single

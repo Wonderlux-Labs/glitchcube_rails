@@ -20,11 +20,48 @@ launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
 launchctl bootstrap "$DOMAIN" "$DST"
 echo "bootstrapped $DOMAIN/$LABEL"
 
+# --- Squeezelite (KeepAlive audio player) -------------------------------------
+# Supervise Squeezelite with launchd so it restarts on crash, replacing the old
+# "Squeezelite" Login Item (no crash recovery). This stops the currently running
+# Squeezelite and hands it to launchd, so audio blips for a second here.
+SQ_LABEL="com.glitchcube.squeezelite"
+SQ_SRC="$APP_ROOT/deploy/launchd/$SQ_LABEL.plist"
+SQ_DST="$HOME/Library/LaunchAgents/$SQ_LABEL.plist"
+
+if [ -f "$SQ_SRC" ]; then
+  echo
+  mkdir -p "$HOME/Library/Logs"
+  cp "$SQ_SRC" "$SQ_DST"
+  echo "installed $SQ_DST"
+
+  # Drop the Login Item so the app isn't double-launched alongside the agent.
+  if osascript -e 'tell application "System Events" to delete login item "Squeezelite"' 2>/dev/null; then
+    echo "removed 'Squeezelite' Login Item"
+  else
+    echo "no 'Squeezelite' Login Item to remove (ok)"
+  fi
+
+  # Kill any Squeezelite from the Login Item so the agent owns the single instance.
+  if pkill -x Squeezelite 2>/dev/null; then echo "stopped existing Squeezelite"; sleep 1; fi
+
+  launchctl bootout "$DOMAIN/$SQ_LABEL" 2>/dev/null || true
+  launchctl bootstrap "$DOMAIN" "$SQ_DST"
+  echo "bootstrapped $DOMAIN/$SQ_LABEL (KeepAlive — restarts on crash)"
+else
+  echo "skip squeezelite: $SQ_SRC not found"
+fi
+# ------------------------------------------------------------------------------
+
 cat <<EOF
 
-Done. The supervisor starts everything at login / power-cycle.
-It does NOT auto-restart on crash (deliberate) — stop it during dev and it stays
-stopped. Control it with:  bin/glitchcube-ctl {start|stop|restart|status|logs}
+Done. Installed two LaunchAgents:
+  - $LABEL (boot supervisor): starts VM + Rails at login/power-cycle AND
+    auto-restarts the whole stack on crash (KeepAlive). To take it down for
+    maintenance use 'bin/glitchcube-ctl stop' (bootout) — a plain kill just gets
+    resurrected. It still starts on the next reboot (RunAtLoad).
+  - $SQ_LABEL (Squeezelite): KeepAlive, so audio restarts on crash.
+
+Control the boot supervisor with:  bin/glitchcube-ctl {start|stop|restart|status|logs}
 
 Before relying on unattended power-outage recovery, confirm:
   1. Auto-login is ON for 'estiens' (System Settings > Users & Groups).
@@ -33,7 +70,9 @@ Before relying on unattended power-outage recovery, confirm:
      (if different, update VM_NAME in bin/ensure-hass-vm)
 
 Useful commands:
-  bin/glitchcube-ctl restart                # restart now
-  bin/glitchcube-ctl logs                   # watch logs
-  launchctl bootout $DOMAIN/$LABEL          # fully uninstall the agent
+  bin/glitchcube-ctl status                 # both agents + support services
+  bin/glitchcube-ctl restart                # restart the boot supervisor now
+  bin/glitchcube-ctl logs                   # watch supervisor logs
+  launchctl bootout $DOMAIN/$LABEL          # uninstall the boot supervisor
+  launchctl bootout $DOMAIN/$SQ_LABEL       # uninstall the squeezelite agent
 EOF

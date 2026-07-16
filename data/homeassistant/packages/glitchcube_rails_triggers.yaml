@@ -9,6 +9,10 @@
 #
 # Call from an automation with e.g.  action: rest_command.glitchcube_play_theme_song
 # Test it from Developer Tools > Actions the same way.
+#
+# All of these land on ONE Rails controller (Api::V1::HomeAssistantWebhookController,
+# routed under /api/v1/hass/*) — add new HASS->Rails triggers there, not a new
+# controller per action.
 
 rest_command:
   # Play a random theme song out the cube's host speaker (fire-and-forget on the
@@ -17,7 +21,42 @@ rest_command:
   # blast a song to draw people over. That automation isn't written yet.
   glitchcube_play_theme_song:
     url: >-
-      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/audio/theme_song
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/theme_song
+    method: POST
+    content_type: "application/json"
+    payload: "{}"
+
+  # Bring a persona onto the cube with a full grand entrance (Shows::GrandEntrance
+  # on the Rails side: anomaly VO, lights, theme song, arrival announce).
+  # Fire-and-forget — the endpoint kicks off the show and returns. Optional
+  # `persona` names who takes over; omit it (blank) and Rails picks a random persona
+  # that avoids the current cube-dominator and the previous session's persona.
+  # Callers: the "internet back up" recovery automation (no persona) and
+  # script.hand_off_the_cube (a persona giving up its turn, optional persona).
+  glitchcube_grand_entrance:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/grand_entrance
+    method: POST
+    content_type: "application/json"
+    payload: '{"persona": "{{ persona | default("", true) }}"}'
+
+  # A quick glitch fit (Shows::GlitchShort on the Rails side): one short
+  # glitch-radio stab out the host speaker while the WLED strips spasm, for as
+  # long as the clip runs. Saves the light state first and restores it after;
+  # mic muted for the duration. Fire-and-forget.
+  glitchcube_glitch_short:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/glitch_short
+    method: POST
+    content_type: "application/json"
+    payload: "{}"
+
+  # The extended glitch-out (Shows::GlitchLong): a long static bed, a short stab,
+  # then another long bed (~45-85s) with the WLED strips glitching throughout.
+  # Saves + restores the lights; mic muted throughout. Fire-and-forget.
+  glitchcube_glitch_long:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/glitch_long
     method: POST
     content_type: "application/json"
     payload: "{}"

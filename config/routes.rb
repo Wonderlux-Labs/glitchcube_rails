@@ -16,8 +16,12 @@ Rails.application.routes.draw do
       # New conversation orchestrator route (matches HASS agent)
       post "conversation", to: "conversation#handle"
 
-      # Host-speaker audio triggers (HASS -> Rails via rest_command)
-      post "audio/theme_song", to: "audio#theme_song"
+      # HASS -> Rails action webhooks (rest_command). One controller for all of
+      # them (see Api::V1::HomeAssistantWebhookController).
+      post "hass/theme_song", to: "home_assistant_webhook#theme_song"
+      post "hass/grand_entrance", to: "home_assistant_webhook#grand_entrance"
+      post "hass/glitch_short", to: "home_assistant_webhook#glitch_short"
+      post "hass/glitch_long", to: "home_assistant_webhook#glitch_long"
 
       namespace :home_assistant do
         get "health", to: "home_assistant#health"

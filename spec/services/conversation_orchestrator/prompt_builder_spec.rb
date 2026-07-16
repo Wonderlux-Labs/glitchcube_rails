@@ -204,5 +204,98 @@ RSpec.describe ConversationOrchestrator::PromptBuilder do
         expect(result.data).to eq(mock_prompt_data)
       end
     end
+
+    # Both action lanes (the sound/jukebox agent AND the main action agent) append
+    # their replies to the SAME pending_ha_results queue (see EnvironmentDirectorJob).
+    # This exercises the real cross-turn contract with a persisted Conversation:
+    #   1. the NEXT turn folds in BOTH agents' results, exactly once each;
+    #   2. a LATER turn does NOT re-inject them — only genuinely new results fold in.
+    context 'folding both agents\' results across turns (inject-once)' do
+      let(:persona) { instance_double(CubePersona, name: "Jax") }
+
+      # A real record so metadata_json actually persists between PromptBuilder calls.
+      let(:conversation) do
+        create(:conversation, session_id: "both_lanes_spec").tap do |c|
+          c.update!(metadata_json: {
+            "pending_ha_results" => [
+              { # sound lane → jukebox agent
+                "instruction" => "play Otis Redding - Try a Little Tenderness, loud",
+                "ha_response" => "Now playing Try a Little Tenderness by Otis Redding, front-and-center.",
+                "persona" => "jax", "timestamp" => 20.seconds.ago.iso8601, "processed" => false
+              },
+              { # action lane → main action agent
+                "instruction" => "lights: warm amber over the whole body, slow breathing",
+                "ha_response" => "Set the whole cube to a dim warm amber with a slow breathing pulse.",
+                "persona" => "jax", "timestamp" => 20.seconds.ago.iso8601, "processed" => false
+              }
+            ]
+          })
+        end
+      end
+
+      # Fresh prompt_data on EVERY call (own messages array), so injected system
+      # notes can't bleed from one turn's result into the next turn's assertions.
+      before do
+        allow(PromptService).to receive(:build_prompt_for) do
+          {
+            messages: [
+              { role: "system", content: "You are Jax." },
+              { role: "user", content: user_message }
+            ],
+            system_prompt: "You are Jax."
+          }
+        end
+      end
+
+      def injected_results(result)
+        result.data[:messages].select { |m| m[:role] == "system" && m[:content].include?("Result:") }
+      end
+
+      it 'injects BOTH agents\' results on the next turn, then never again' do
+        # --- Turn N+1: both lanes fold in, once each ---
+        first = described_class.call(conversation: conversation, persona: persona,
+                                     user_message: user_message, context: context)
+        first_texts = injected_results(first).map { |m| m[:content] }
+
+        expect(first_texts).to include(
+          a_string_including("Otis Redding"),   # sound/jukebox agent
+          a_string_including("warm amber")       # main action agent
+        )
+        expect(first_texts.size).to eq(2)
+
+        # both are now marked processed in the PERSISTED metadata
+        expect(conversation.reload.metadata_json["pending_ha_results"].map { |r| r["processed"] })
+          .to all(be true)
+
+        # --- Turn N+2: same conversation, nothing new dispatched ---
+        second = described_class.call(conversation: conversation, persona: persona,
+                                      user_message: "and then what?", context: context)
+
+        expect(injected_results(second)).to be_empty # already-injected results do NOT return
+      end
+
+      it 'injects ONLY the newly-added result on a later turn' do
+        # Turn N+1 folds in the original two.
+        described_class.call(conversation: conversation, persona: persona,
+                             user_message: user_message, context: context)
+
+        # A new agent reply lands after that turn.
+        md = conversation.reload.metadata_json
+        md["pending_ha_results"] << {
+          "instruction" => "marquee: THE GRUNT in gold",
+          "ha_response" => "Marquee set to THE GRUNT in gold.",
+          "persona" => "jax", "timestamp" => Time.current.iso8601, "processed" => false
+        }
+        conversation.update!(metadata_json: md)
+
+        # Turn N+2 folds in ONLY that new one.
+        later = described_class.call(conversation: conversation, persona: persona,
+                                     user_message: "keep going", context: context)
+        texts = injected_results(later).map { |m| m[:content] }
+
+        expect(texts.size).to eq(1)
+        expect(texts.first).to include("THE GRUNT")
+      end
+    end
   end
 end

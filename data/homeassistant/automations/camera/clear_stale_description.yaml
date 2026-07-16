@@ -1,0 +1,21 @@
+- id: camera_clear_stale_description
+  alias: "Camera: clear stale description"
+  description: >-
+    Blank input_text.current_camera_state once it has sat unchanged for 3 minutes, so a
+    stale camera look never lingers in the brain's prompt. The non-empty condition is the
+    guard: clearing sets the value to "" (a state change that restarts the 3-min timer),
+    but 3 min later the condition is false and nothing re-fires. ContextBuilder omits the
+    line entirely when this is empty, so clearing simply removes the camera block.
+  triggers:
+  - trigger: state
+    entity_id: input_text.current_camera_state
+    for: "00:03:00"
+  conditions:
+  - "{{ states('input_text.current_camera_state') | trim != '' }}"
+  actions:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.current_camera_state
+    data:
+      value: ""
+  mode: single

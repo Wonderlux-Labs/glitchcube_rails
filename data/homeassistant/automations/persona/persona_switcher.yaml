@@ -1,0 +1,33 @@
+- id: '1755313710558'
+  alias: Persona Switcher
+  description: >-
+    When input_select.current_persona changes (and on HA start): (1) select the
+    matching Assist pipeline on the Cube Voice device — pipelines all share one
+    conversation agent (conversation.glitch_cube_neon) and differ only by TTS voice,
+    so this is purely a voice swap; personas without their own pipeline fall back to
+    "preferred". (2) Sync the head + body WLED strips and the Voice PE LED ring to that
+    persona's signature color via script.sync_lights_to_persona (which owns the map) —
+    the ring identifies who's talking; the strips give the cube the persona's resting
+    color, which the Cube Expression automation then modulates through each turn. The
+    Govee top light is no longer driven here (its scripts are kept for possible revival).
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.current_persona
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.cube_cube_voice_assistant
+    data:
+      option: >-
+        {{ {'buddy': 'Buddy', 'jax': 'Jax', 'neon': 'Neon', 'zorp': 'Zorp', 'crash': 'Crash'}
+           .get(states('input_select.current_persona'), 'preferred') }}
+  # (2) Head + body strips + Voice PE ring -> persona signature color. The script owns the
+  #     map (was inline here); it also gets called on HA start so a reboot re-asserts the look.
+  - action: script.sync_lights_to_persona
+  # The Govee top light is no longer used — nothing here drives it. script.set_top_light_*
+  # stays in scripts/lights/top_light.yaml in case we revive the top light later.
+  mode: single

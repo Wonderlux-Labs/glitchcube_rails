@@ -1,0 +1,35 @@
+# --- Internet outage: rest + wake ------------------------------------------------
+# The cube can't do anything without its cloud brain, so when the internet has been
+# down a while it goes to sleep (script.enter_rest_mode) and when it comes back it
+# wakes with a fresh persona's grand entrance (script.wake_from_rest). Sensor +
+# flag: packages/glitchcube_connectivity.yaml. Scripts: scripts.yaml. Design:
+# docs/superpowers/specs/2026-07-14-internet-outage-resting-mode-design.md.
+
+- id: internet_down_enter_rest
+  alias: "Internet down: enter rest mode"
+  description: >-
+    When the internet has been unreachable for 5 minutes, put the cube to sleep
+    (dim red lights, muted mic, stopped media, low_power, permanent "resting"
+    marquee). Also re-asserts every 5 min while still down so the sign survives a
+    marquee power-cycle. script.enter_rest_mode is idempotent.
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.internet
+    to: "off"
+    for: "00:05:00"
+    id: went_down
+  # Re-assert tick: keep the resting state fresh while the outage persists.
+  - trigger: time_pattern
+    minutes: "/5"
+    id: reassert
+  conditions:
+  # went_down = the real 5-min-offline edge (this is what INITIATES rest). The
+  # periodic tick only RE-asserts an already-resting cube (still offline) so it
+  # never short-circuits the 5-min debounce. enter_rest_mode is idempotent.
+  - >-
+    {{ trigger.id == 'went_down'
+       or (is_state('input_boolean.internet_resting', 'on')
+           and is_state('binary_sensor.internet', 'off')) }}
+  actions:
+  - action: script.enter_rest_mode
+  mode: single

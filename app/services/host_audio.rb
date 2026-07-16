@@ -19,6 +19,10 @@ module HostAudio
   # without them just no-ops, so a checkout still runs.
   THEME_SONGS_DIR = Rails.root.join("data/rails_media/theme_songs")
 
+  # Glitch-radio SFX for the glitch shows, pre-sorted by length: clips <=15s in
+  # short/, longer beds in long/ (see Shows::GlitchShort / GlitchLong).
+  GLITCH_EFX_DIR = Rails.root.join("data/rails_media/glitch_efx")
+
   class << self
     # Plays an audio file to its natural end (-autoexit). Pass `max_seconds` to
     # cap it — the last FADE_SECONDS fade out so a cut-off never sounds like a
@@ -37,7 +41,7 @@ module HostAudio
     end
 
     # Picks a random theme song off disk and plays it through the host speaker.
-    # Used by the grand-entrance show (capped) and by the /api/v1/audio/theme_song
+    # Used by the grand-entrance show (capped) and by the /api/v1/hass/theme_song
     # endpoint HASS hits (uncapped, whole song) to draw people over when the cube
     # has been idle. Returns the file played, or nil when the dir is empty.
     def play_random_theme_song(max_seconds: nil, volume: nil)
@@ -50,6 +54,13 @@ module HostAudio
       Rails.logger.info "🎭 Theme song: #{File.basename(song)}"
       play(song, max_seconds: max_seconds, volume: volume)
       song
+    end
+
+    # A random glitch-radio clip off disk: kind is :short (<=15s stabs) or :long
+    # (30s+ static beds). Returns the file path, or nil when that dir is empty
+    # (the glitch shows degrade gracefully to a lights-only burst).
+    def random_glitch_efx(kind)
+      Dir[GLITCH_EFX_DIR.join(kind.to_s, "*.mp3")].sample
     end
 
     def say(text, voice: SAY_VOICE, volume: nil)

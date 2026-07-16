@@ -35,8 +35,15 @@ class ConversationOrchestrator::ResponseSynthesizer
       speech = "#{inner}...wait, did I just say that out loud?"
     end
 
-    # actions is a list of { "action_name" => ..., "description" => ... }.
-    actions = Array(structured_data["actions"]).select { |a| a.is_a?(Hash) && a["description"].present? }
+    # The brain now returns plain-English action channels as top-level keys
+    # (lights/sound/marquee/other_actions, plus any other non-narrative key). Normalize
+    # them into the uniform [{ "action_name", "description" }] list the rest of the
+    # pipeline (logging, transcripts) already understands. The actual routing/dispatch
+    # reads the raw channels in ActionExecutor.
+    narrative_keys = Schemas::NarrativeResponseSchema::NARRATIVE_KEYS
+    actions = structured_data
+              .reject { |k, v| narrative_keys.include?(k.to_s) || v.blank? }
+              .map { |k, v| { "action_name" => k.to_s, "description" => v.to_s } }
 
     persona_obj = Prompts::PersonaLoader.load(@prompt_data[:persona].to_s)
     tts_voice, tts_language = persona_obj.tts_voice

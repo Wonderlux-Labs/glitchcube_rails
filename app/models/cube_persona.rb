@@ -32,11 +32,35 @@ class CubePersona
 
   # The autonomous rotation always makes a grand entrance (fanfare on the cube).
   def self.set_random(entrance: :grand)
-    # Only rotate among active personas (Persona.active); fall back to the full list
-    # if none are seeded/active.
+    set_current_persona(rotation_candidates.sample, entrance: entrance)
+  end
+
+  # The active pool minus the persona currently dominating the cube (most total
+  # turns) and the one from the previous session, so no persona hogs the cube and
+  # we never bounce straight back to whoever just left. If those two overlap we
+  # choose from 4; if distinct, from 3. Never empty (falls back to the full pool).
+  def self.rotation_candidates
     pool = Persona.active.pluck(:slug).map(&:to_sym)
     pool = PERSONAS if pool.empty?
-    set_current_persona(pool.sample, entrance: entrance)
+    excluded = [ most_talkative_persona(pool), previous_session_persona ].compact.uniq
+    (pool - excluded).presence || pool
+  end
+
+  # The pool member with the most total conversation turns (summed message_count).
+  # Nil when there's no conversation history yet, so nothing gets excluded on this
+  # axis on a fresh cube.
+  def self.most_talkative_persona(pool)
+    counts = Conversation.where.not(persona: nil).group(:persona).sum(:message_count)
+    return nil if counts.empty?
+
+    pool.select { |slug| counts[slug.to_s].to_i.positive? }
+        .max_by { |slug| counts[slug.to_s].to_i }
+  end
+
+  # The persona whose stint most recently ended, read off the newest `persona`
+  # summary (written when a stint ends). Nil before any persona summary exists.
+  def self.previous_session_persona
+    Summary.persona.order(created_at: :desc).first&.persona&.slug&.to_sym
   end
 
   # entrance:

@@ -39,11 +39,13 @@ module Shows
     end
 
     def call
-      switching do
-        anomaly_moment
-        play_theme_song
+      performing do
+        switching do
+          anomaly_moment
+          play_theme_song
+        end
+        announce_arrival
       end
-      announce_arrival
     end
 
     private
@@ -51,7 +53,7 @@ module Shows
     def anomaly_moment
       HostAudio.say(ANOMALY_LINES.sample)
       marquee(TRANSITION_MESSAGES.sample, rainbow: true, duration: 60)
-      light_effect(GLITCH_SCENES.sample)
+      top_light_effect(GLITCH_SCENES.sample)
     end
 
     def play_theme_song

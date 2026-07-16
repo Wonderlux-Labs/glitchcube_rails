@@ -1,5 +1,10 @@
 # GlitchCube core input helpers
 # Rails reads/writes these to drive persona, mode, and dynamic host routing.
+#
+# CURRENTLY NOT USED (kept for future use, nothing reacts to them today):
+#   - input_select.cube_mode — the rest-mode scripts SET it (low_power while offline,
+#     conversation on wake) as a status flag, but nothing READS it to change behavior yet.
+#   - input_text.glitchcube_breaking_news — reserved; not read or written anywhere.
 
 input_select:
   current_persona:
@@ -32,6 +37,15 @@ input_text:
     max: 100
     icon: mdi:server-network
 
+  # Human-readable age of the most recent conversation turn ("5 minutes ago",
+  # "2 hours ago", "just now", "never"). Pushed every 5 min by Rails'
+  # Recurring::System::ConversationStatsJob alongside the conversation-stat input_numbers.
+  last_conversation_at:
+    name: "Last Conversation"
+    initial: "never"
+    max: 64
+    icon: mdi:clock-outline
+
   backend_health_status:
     name: Backend Health Status
     initial: "unknown"
@@ -53,26 +67,6 @@ input_text:
     initial: ""
     max: 255
     icon: mdi:message-text-outline
-
-  # DEV mocks — the play_*_dev scripts write the agent's chosen query/effect here instead
-  # of actually playing audio, so we can watch what got called without waking the house.
-  dev_jukebox_song:
-    name: "DEV Jukebox Song"
-    max: 255
-    icon: mdi:music
-  dev_mood_music:
-    name: "DEV Mood Music"
-    max: 255
-    icon: mdi:playlist-music
-  dev_sound_effect:
-    name: "DEV Sound Effect"
-    max: 100
-    icon: mdi:music-note
-
-  announcement:
-    name: "DEV Announcement"
-    max: 255
-    icon: mdi:bullhorn
 
   # What the cube's camera currently sees. Rails owns the pipeline now:
   # CameraDescriptionJob (on the Rails host, where the webcam is plugged in) grabs a
@@ -96,6 +90,26 @@ input_boolean:
   strobe_light:
     name: "Strobe Light"
     icon: mdi:flash
+
+  # Diagnostic toggle for the "Top light: turn indicator (blink test)" automation.
+  # While ON, the Govee top light (light.top_light) blinks off->1s->on when the assist
+  # satellite enters 'listening' and 'processing'. The top light is no longer in use, so
+  # this is OFF by default — the blink-test automation stays gated off and nothing else
+  # drives the top light. Flip ON only if the top light is revived.
+  top_light_turn_indicator:
+    name: "Top light turn indicator (blink test)"
+    initial: false
+    icon: mdi:lightbulb-alert
+
+  # Master enable for BOTH presence-nudge automations. When ON and someone lingers in front
+  # of the cube without starting a conversation, the cube nudges them: a one-shot persona
+  # voice call-out on arrival ("Presence: announce nudge") plus a repeating marquee wake-hint
+  # every ~3 min while present — or whenever the presence sensor is offline ("Presence:
+  # marquee nudge"). Flip OFF to silence both.
+  presence_nudge_enabled:
+    name: "Presence nudge (idle visitor)"
+    initial: true
+    icon: mdi:account-alert
 
   # HASS-side kill switch for the camera pipeline. CameraDescriptionJob checks this
   # before every capture, so automations (a nighttime timer, an event mode, whatever)
@@ -130,6 +144,27 @@ input_boolean:
     initial: false
     icon: mdi:volume-low
 
+  # Raised while the cube is asleep during an internet outage (set by
+  # script.enter_rest_mode, cleared by script.wake_from_rest). Gates the two
+  # connectivity automations (automations/connectivity/) so they can't double-fire,
+  # and is the flag the wake path keys off. Connectivity itself is the built-in
+  # `ping` integration's binary_sensor.internet. Starts off; if HA reboots mid-outage
+  # the down automation's /5-min re-assert re-establishes rest.
+  internet_resting:
+    name: "Internet Resting (cube asleep, offline)"
+    initial: false
+    icon: mdi:sleep
+
+  # Set ON (first action) by script.set_cube_lights the instant a brain light command
+  # arrives; read at end-of-speech by the "Cube Expression" automation to decide
+  # keep-the-new-look vs restore-the-pre-turn snapshot; reset OFF at each turn start.
+  # Setting it BEFORE the deferral wait is deliberate: the turn-end restore and the
+  # script's wait release on the SAME media-stop event, so the flag must already be set.
+  cube_light_command_this_turn:
+    name: "Cube light command landed this turn"
+    initial: false
+    icon: mdi:lightbulb-on-outline
+
 input_number:
   # The volume cap (percent, 0-100) applied everywhere while quiet_mode is ON.
   # Read by the auto-duck automation and by Rails' HostAudio. Tune it live to find
@@ -143,6 +178,60 @@ input_number:
     unit_of_measurement: "%"
     mode: slider
     icon: mdi:volume-medium
+
+  # --- Conversation stats -------------------------------------------------------
+  # Pushed every 5 min by Rails' Recurring::System::ConversationStatsJob (read-only
+  # dashboards; nothing on the HASS side writes these). A "conversation" is one
+  # Conversation session; a "round" is one logged turn (ConversationLog row).
+  # mode: box with a high max so large lifetime totals aren't clamped.
+  conversations_total:
+    name: "Conversations (total)"
+    initial: 0
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+    icon: mdi:forum
+  rounds_total:
+    name: "Conversation Rounds (total)"
+    initial: 0
+    min: 0
+    max: 10000000
+    step: 1
+    mode: box
+    icon: mdi:message-reply-text
+  conversations_last_6h:
+    name: "Conversations (last 6h)"
+    initial: 0
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+    icon: mdi:forum
+  rounds_last_6h:
+    name: "Conversation Rounds (last 6h)"
+    initial: 0
+    min: 0
+    max: 10000000
+    step: 1
+    mode: box
+    icon: mdi:message-reply-text
+  conversations_last_1h:
+    name: "Conversations (last 1h)"
+    initial: 0
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+    icon: mdi:forum
+  rounds_last_1h:
+    name: "Conversation Rounds (last 1h)"
+    initial: 0
+    min: 0
+    max: 10000000
+    step: 1
+    mode: box
+    icon: mdi:message-reply-text
 
 input_button:
   trigger_alarm:

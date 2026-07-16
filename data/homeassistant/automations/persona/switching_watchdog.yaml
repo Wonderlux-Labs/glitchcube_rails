@@ -1,0 +1,23 @@
+- id: persona_switching_stuck_watchdog
+  alias: "Persona switching: watchdog (unstick after 2 min)"
+  description: >-
+    Safety net for input_boolean.persona_switching. Rails (Shows::Base#switching) raises the
+    flag for the duration of a grand-entrance show and drops it in an `ensure` — but that drop
+    is a blocking HASS call, so a network blip or a Rails process killed mid-show can leave the
+    flag stuck ON. While it's stuck, the "silence during the show" automation keeps the mic
+    muted forever (it only unmutes on the flag's off-edge). No real show runs longer than ~2
+    min (grand entrance < 120s, glitch_long ≤ 85s), so if the flag has been continuously on
+    that long it's stuck: force it off. That off-edge fires the silence automation's unmute and
+    the cube recovers on its own.
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.persona_switching
+    to: "on"
+    for:
+      minutes: 2
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.persona_switching
+  mode: single

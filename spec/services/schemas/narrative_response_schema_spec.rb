@@ -18,8 +18,11 @@ RSpec.describe Schemas::NarrativeResponseSchema do
   describe 'the emitted JSON schema shape' do
     let(:props) { described_class.schema.to_h.dig(:schema, :properties) }
 
-    it 'exposes the narrative keys including the optional ooc_questions field' do
-      expect(props.keys).to contain_exactly(:speech, :inner_monologue, :actions, :continue_conversation, :ooc_questions)
+    it 'exposes the narrative keys, the optional action channels, and ooc_questions' do
+      expect(props.keys).to contain_exactly(
+        :speech, :inner_monologue, :lights, :sound, :marquee, :other_actions,
+        :continue_conversation, :ooc_questions
+      )
     end
 
     it 'types ooc_questions as a string' do
@@ -42,14 +45,10 @@ RSpec.describe Schemas::NarrativeResponseSchema do
       expect(props[:continue_conversation][:type]).to eq('boolean')
     end
 
-    it 'types actions as a list of { action_name, description } objects, both required' do
-      actions = props[:actions]
-      expect(actions[:type]).to eq('array')
-
-      item = actions[:items]
-      expect(item[:type]).to eq('object')
-      expect(item[:properties].keys).to contain_exactly(:action_name, :description)
-      expect(item[:required]).to contain_exactly('action_name', 'description')
+    it 'types the action channels as optional strings' do
+      %i[lights sound marquee other_actions].each do |channel|
+        expect(props[channel][:type]).to eq('string'), "expected #{channel} to be a string"
+      end
     end
   end
 end

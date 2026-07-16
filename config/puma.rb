@@ -34,8 +34,12 @@ bind "tcp://0.0.0.0:4567"
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 
-# Run the Solid Queue supervisor inside of Puma for single-server deployments
-plugin :solid_queue
+# Run the Solid Queue supervisor inside Puma ONLY when explicitly requested.
+# This app runs SolidQueue as its own process (Procfile `jobs: bin/jobs`), so we
+# must NOT also start it here: doing both spawns two supervisors — duplicate
+# recurring schedulers — and the in-Puma fork crashes in development
+# ("uninitialized constant SolidQueue"), which then takes the whole stack down.
+plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.

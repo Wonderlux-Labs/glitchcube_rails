@@ -1,0 +1,18 @@
+- id: internet_up_wake_from_rest
+  alias: "Internet up: wake from rest mode"
+  description: >-
+    When the internet has been back for 3 minutes AND the cube is resting, wake it:
+    clear the sign, return to conversation mode, and trigger a fresh persona's grand
+    entrance (which resyncs lights, plays a song, announces arrival, un-mutes).
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.internet
+    to: "on"
+    for: "00:03:00"
+  conditions:
+  - condition: state
+    entity_id: input_boolean.internet_resting
+    state: "on"
+  actions:
+  - action: script.wake_from_rest
+  mode: single

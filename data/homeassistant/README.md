@@ -1,90 +1,151 @@
 # Home Assistant config — the files we actually run
 
 This mirrors the **GlitchCube-authored files that are live on the HASS box**
-(`root@glitch:/config`) right now — not a full HASS config, just the parts we
-own and maintain. Keep this in sync when you change config on the box.
+(`root@glitch.local:/config`) — not a full HASS config, just the parts we own.
+The repo is **canonical**: deploy by scp'ing this tree over (see the bottom).
+Keep this inventory in sync when you add/remove an automation, script, or helper.
 
-Contents:
-- `configuration.yaml` — the config root (enables `packages: !include_dir_named packages`
-  and `template: !include_dir_merge_list templates/`).
-- `automations.yaml`:
-  - "Persona Switcher" — swaps the Assist pipeline when `input_select.current_persona`
-    changes. Targets `select.cube_cube_voice_assistant` — the single live pipeline select
-    on the "Cube Voice" device (a Home Assistant Voice PE, ESPHome-based; entity IDs were
-    renamed from the `home_assistant_voice_09739d_*`/`square_voice` defaults to
-    `cube_cube_voice_*`). Its firmware also exposes a `select.cube_cube_voice_assistant_2`
-    sibling that isn't wired to anything active — don't target it. There's a second,
-    unrelated "Square Voice" device in the registry — a stale Music Assistant-created
-    shadow of the same physical speaker (`media_player.square_voice_2`,
-    `button.square_voice_favorite_current_song`); harmless but not renamed.
-  - "Cube Voice - Continuation Chime" — the Voice PE only plays its wake-word chime on a
-    *local* wake-word detection; `continue_conversation` (server-driven, no local wake
-    word) skips it, so the LED ring spins back into listening silently. This automation
-    replays the chime for that case specifically, keyed on the assist satellite's
-    `responding -> listening` transition (a fresh wake word is `idle -> listening`, so
-    it doesn't double up). See `media/sounds/` below for the sound asset.
-- `scripts.yaml` — HASS scripts exposed to the tool-calling HASS agent, e.g.
-  `play_music_on_jukebox` (plays a track on `media_player.jukebox_internal` via Music Assistant).
-  - "Quiet mode: auto-duck jukebox" (`automation.quiet_mode_auto_duck_jukebox`) — while
-    `input_boolean.quiet_mode` is on, keeps `media_player.jukebox_internal` at/below
-    `input_number.quiet_mode_max_volume` (percent). Fires on jukebox volume change,
-    quiet_mode → on, or the cap changing; caps regardless of play state (pre-ducks idle so
-    the next track can't blip loud). Rails' `HostAudio` applies the same cap to its own
-    direct host playback (ffplay/say). For a real quiet-hours placement (<80 dB @ 40 ft),
-    add an automation that toggles `quiet_mode` on a schedule — deliberately not written yet.
-- `packages/` — our config packages:
-  - `glitchcube_core.yaml` — input helpers Rails reads/writes (`input_select.current_persona`,
-    `input_select.cube_mode`, host routing, `input_boolean.quiet_mode` +
-    `input_number.quiet_mode_max_volume`, etc.).
-- `templates/` — plain YAML template-entity files, merged into the config root's single
-  `template:` key via `!include_dir_merge_list` (each file is a bare list, no `template:`
-  wrapper — see the comment in either file). These live outside `packages/` at the
-  top level next to `automations.yaml`/`scripts.yaml` on request, **not** because it
-  changes editability — YAML-defined template entities have no config entry, so they
-  can't be assigned a device or edited via a GUI form either way (that's only possible
-  for entities created through Settings → Devices & Services → Helpers → Template,
-  a completely different, non-YAML storage mechanism we deliberately don't use here).
-  - `glitchcube_world_state.yaml` — the composite **world-state template sensor**
-    (`sensor.glitchcube_world_state`); its `content` attribute is injected into every
-    persona prompt by `Prompts::ContextBuilder`. Extend this template as devices come
-    online — no Rails change needed.
-  - `glitchcube_cube_state.yaml` — trigger-based template sensor (`sensor.cube_state`)
-    holding the brain's own turn output (`speech`, `inner_monologue` attributes) for
-    display. Updated by `CubeStateUpdateJob` firing the `glitchcube_cube_state_update`
-    event each turn — the opposite direction from world-state (this is read OUT of
-    the brain, not INTO it).
-- `custom_components/glitchcube_conversation/` — the custom HASS conversation
-  integration that proxies visitor speech to the Rails `/api/v1/conversation` endpoint.
-- `media/sounds/` — audio assets played via `media_player.play_media` with a
-  `media-source://media_source/local/...` content ID (e.g. the continuation chime,
-  `wake_word_triggered.flac`, pulled straight from the [Voice PE firmware's own sound
-  assets](https://github.com/esphome/home-assistant-voice-pe/tree/dev/sounds) so it's
-  the exact same chime). **Gotcha:** this deploys to the HAOS top-level `/media`
-  directory, a separate bind mount from `/config` — NOT `/config/media` (that path
-  looks plausible but Core never reads it; `media-source://media_source/local/...`
-  resolves to `/media` on the host). Confirmed via `homeassistant.components.esphome
-  .ffmpeg_proxy` logging a 404 against `/media/local/...` when the file was in the
-  wrong place.
+Box-only files NOT tracked here (never overwrite/delete them): `secrets.yaml`,
+`scenes.yaml`, `.storage/`, the HA database.
 
-Theme songs deliberately do NOT live here: they're in `data/rails_media/theme_songs/`
-(outside this deploy tree), played by Rails straight off the host speaker via `ffplay`
-(`HostAudio` / `Shows::GrandEntrance`). Never scp them to the box — the VM doesn't have
-the disk for them and nothing there plays them.
+## Layout (`configuration.yaml` includes)
 
-## Deploying a change to the box
+| Key | Include | Where |
+|---|---|---|
+| `automation:` | `!include_dir_merge_list automations/` | one automation per file, in `<domain>/` folders |
+| `script:` | `!include_dir_merge_named scripts/` | scripts grouped by topic per file (named dict — NOT a list) |
+| `template:` | `!include_dir_merge_list templates/` | template sensors |
+| `homeassistant.packages:` | `!include_dir_named packages/` | input helpers + rest_commands |
+| `scene:` | `!include scenes.yaml` | **box-only**, not in this repo |
 
+Automations keep an `id:` and their `alias:`, so entity_ids / unique_ids (and
+therefore Assist exposure, areas, and registry settings) are stable across the
+split. Automations call scripts by `script.<slug>` at runtime — file location is
+irrelevant to that.
+
+## Automations — `automations/<domain>/` (10)
+
+**persona/**
+- `persona_switcher.yaml` — on `input_select.current_persona` change: swap the Assist
+  TTS pipeline on the Cube Voice device, recolor the Voice PE LED ring to the persona's
+  signature color, and set the Govee top light (`light.top_light`) to that same color.
+- `switching_silence.yaml` — while `input_boolean.persona_switching` is up (a Rails
+  grand-entrance show), mute the mic + stop media; unmute when it drops.
+
+**voice/**
+- `mic_guard_and_marquee.yaml` — self-STT fix (mute on `responding`, unmute on real
+  playback end) plus the LISTENING/THINKING marquee status labels.
+
+**marquee/**
+- `idle_effect_cycle.yaml` — every ~2 min, pick a random idle effect for the AWTRIX sign.
+
+**camera/**
+- `clear_stale_description.yaml` — blank `input_text.current_camera_state` after ~3 min so a stale look never lingers.
+
+**audio/**
+- `quiet_mode_autoduck_jukebox.yaml` — while `input_boolean.quiet_mode` is on, cap
+  `media_player.jukebox_internal` at `input_number.quiet_mode_max_volume`.
+
+**lights/**
+- `top_light_turn_indicator_blink_test.yaml` — diagnostic: blink the Govee top light on listening/processing (gated by `input_boolean.top_light_turn_indicator`).
+
+**presence/**
+- `nudge_when_idle.yaml` — when someone lingers without starting a conversation, nudge them (marquee hint + persona voice call-out). Gated by `input_boolean.presence_nudge_enabled`.
+
+**connectivity/** — internet-outage "resting" mode (see the spec at
+`docs/superpowers/specs/2026-07-14-internet-outage-resting-mode-design.md`)
+- `internet_down_enter_rest.yaml` — `binary_sensor.internet` off 5 min → `script.enter_rest_mode` (+ a `/5` re-assert while still down).
+- `internet_up_wake_from_rest.yaml` — `binary_sensor.internet` on 3 min while resting → `script.wake_from_rest`.
+
+## Scripts — `scripts/<domain>/` (14)
+
+**audio/**
+- `jukebox.yaml` — `play_music_on_jukebox` (play a track/query, volume-aware), `search_jukebox` (search the library).
+- `sound_effects.yaml` — `play_sound_effect` (one of the bundled SFX via the jukebox).
+
+**marquee/** — `marquee.yaml`
+- `awtrix_marquee_message` — flash a message (color/rainbow/duration) on the LED sign.
+- `awtrix_marquee_restore_brightness` — restore the idle BRI (helper).
+- `awtrix_marquee_clear` — dismiss the current message.
+- `set_marquee_idle` — set the always-on idle screen (effect/palette/speed).
+- `awtrix_install_idle_apps` — post-reflash seed (ATRANS off + baseline idle).
+
+**lights/**
+- `cube_lights.yaml` — `set_cube_lights`: the Assist-facing WLED head/body control (color/brightness/effect; many sound-reactive).
+- `top_light.yaml` — `set_top_light_persona_color` (dim persona-color ambient glow), `set_top_light_effect` (a preset Govee scene).
+
+**persona/** — `persona.yaml`
+- `set_persona_quick` — fanfare-free persona switch (dev/Assist).
+
+**connectivity/** — `rest_mode.yaml`
+- `enter_rest_mode` — sleep the cube during an outage: dim-red lights, muted mic, stopped media, `low_power`, held "RESTING" marquee. Idempotent.
+- `wake_from_rest` — wake after the outage: clear the sign, back to `conversation`, fire `rest_command.glitchcube_grand_entrance` (which resyncs lights, plays a song, announces arrival, un-mutes).
+
+## Input helpers & rest_commands — `packages/`
+
+Input helpers stay in packages (they're finicky when split into include-dirs).
+
+- `glitchcube_core.yaml`
+  - `input_select`: `current_persona`; `cube_mode` (**currently unused** — set by rest mode as a status flag, nothing reads it).
+  - `input_text`: `glitchcube_host` (Rails host:port), `backend_health_status`,
+    `marquee_text`, `current_camera_state`; `glitchcube_breaking_news` (**currently unused**).
+  - `input_boolean`: `usb_charger`, `strobe_light`, `top_light_turn_indicator`,
+    `presence_nudge_enabled`, `disable_camera`, `persona_switching`, `quiet_mode`,
+    **`internet_resting`** (cube asleep/offline — set by the rest-mode scripts).
+  - `input_number`: `quiet_mode_max_volume`. `input_button`: `trigger_alarm`.
+
+  (Dev-mock helpers `dev_jukebox_song` / `dev_mood_music` / `dev_sound_effect` /
+  `announcement` and the `loudspeaker_announcement` dev script were removed.)
+- `cube_screen.yaml` — M5Stack Core2 display helpers (`input_text.m5_screen_text` /
+  `_emoji` / `_color`); entity_ids the ESPHome `cube-screen` firmware subscribes to.
+- `glitchcube_rails_triggers.yaml` — HASS→Rails `rest_command`s, all hitting the one
+  `Api::V1::HomeAssistantWebhookController` (`/api/v1/hass/*`):
+  - `glitchcube_play_theme_song` → `/api/v1/hass/theme_song`
+  - `glitchcube_grand_entrance` → `/api/v1/hass/grand_entrance`
+  - `glitchcube_glitch_short` → `/api/v1/hass/glitch_short` (`Shows::GlitchShort`: one short glitch-radio stab + WLED spasm)
+  - `glitchcube_glitch_long` → `/api/v1/hass/glitch_long` (`Shows::GlitchLong`: long bed → short stab → long bed, ~45-85s)
+
+**Connectivity signal:** `binary_sensor.internet` is the built-in HASS `ping`
+integration (configured in the UI, not YAML) — the rest-mode automations trigger off it.
+
+## Templates — `templates/` (2)
+
+- `glitchcube_world_state.yaml` — `sensor.glitchcube_world_state`; its `content` is
+  injected into every persona prompt by `Prompts::ContextBuilder`. Extend as devices
+  come online, no Rails change needed.
+- `glitchcube_cube_state.yaml` — trigger-based `sensor.cube_state` holding the brain's
+  own turn output (`speech`, `inner_monologue`) for display; updated by `CubeStateUpdateJob`.
+
+## Custom component & media
+
+- `custom_components/glitchcube_conversation/` — the custom conversation integration that
+  proxies visitor speech to Rails `/api/v1/conversation`.
+- `media/sounds/` — audio assets played via `media_player.play_media`
+  (`media-source://media_source/local/...`). **Gotcha:** these deploy to the HAOS
+  top-level `/media` mount, NOT `/config/media` (Core never reads the latter).
+
+Theme songs are NOT here — they live in `data/rails_media/theme_songs/` (outside this
+tree), played by Rails off the host speaker (`HostAudio` / `Shows::GrandEntrance`). Never
+scp them to the box.
+
+## Deploying to the box (repo is canonical)
+
+```bash
+# from data/homeassistant/ — push the config the box loads:
+sshpass -p easytoremember scp -r configuration.yaml automations scripts packages templates \
+  root@glitch.local:/config/
+# reorg gotcha: if the box still has old monolith automations.yaml/scripts.yaml, delete them:
+sshpass -p easytoremember ssh root@glitch.local 'rm -f /config/automations.yaml /config/scripts.yaml'
+# validate, then apply (a structural/include or new-helper change needs a restart):
+sshpass -p easytoremember ssh root@glitch.local 'ha core check && ha core restart'
+# media/sounds/* deploy to a DIFFERENT root:
+sshpass -p easytoremember scp media/sounds/<f> root@glitch.local:/media/sounds/
 ```
-sshpass -e scp <file> root@glitch:/config/<path>     # SSHPASS=easytoremember
-# validate BEFORE reloading:  POST /api/config/core/check_config  (needs the long-lived token)
-# then reload — a NEW template/integration needs a core restart:
-#   POST /api/services/homeassistant/restart
 
-# local media (media/sounds/*) deploys to a DIFFERENT root — not /config:
-sshpass -e scp <file> root@glitch:/media/sounds/<path>
-```
+Removing an automation/script from the repo leaves an orphaned `unavailable` entity in
+the box's registry (harmless; bulk-delete in the HA UI if you want it tidy).
 
 ## Not this: `deprecated/homeassistant/`
 
-That is an **old, drifted grab-bag snapshot** of a much larger HASS config from the
-pre-amnesiacube era — reference only, not what runs today. This `data/homeassistant/`
-is the curated, current truth.
+An old, drifted snapshot of a much larger pre-amnesiacube config — reference only. This
+`data/homeassistant/` tree is the current truth.

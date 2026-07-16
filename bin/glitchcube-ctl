@@ -1,14 +1,18 @@
 #!/bin/bash
 # Control the GlitchCube boot supervisor (com.glitchcube.boot LaunchAgent).
 #
-# The agent has KeepAlive=false: stopping it stays stopped, but the job remains
-# loaded so RunAtLoad still fires on the next power-cycle. Use these during dev.
+# The agent runs KeepAlive=true: launchd restarts the whole stack if it crashes. So
+# `stop` fully BOOTS IT OUT of launchd to keep it down (a plain TERM would be instantly
+# resurrected); the plist stays installed, so a real power-cycle still starts it via
+# RunAtLoad. `restart` sends a graceful TERM and lets KeepAlive respawn it.
 #
 #   bin/glitchcube-ctl start     # run it now (VM + Rails + jobs)
-#   bin/glitchcube-ctl stop      # stop it, stays stopped until you start / reboot
-#   bin/glitchcube-ctl restart   # stop + start
+#   bin/glitchcube-ctl stop      # bootout — stays down until you start / reboot
+#   bin/glitchcube-ctl restart   # graceful TERM; KeepAlive respawns it
 #   bin/glitchcube-ctl status    # launchd state + last exit code
 #   bin/glitchcube-ctl logs      # tail the supervisor logs
+#   bin/glitchcube-ctl unload    # remove it from launchd entirely (no RunAtLoad on
+#                                # reboot). Re-add with: bin/install-boot
 set -euo pipefail
 
 APP_ROOT="/Users/estiens/code/glitchcube-main/glitchcube_rails"
@@ -22,19 +26,60 @@ case "${1:-}" in
       || launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$LABEL.plist"
     ;;
   stop)
-    launchctl kill TERM "$TARGET"
+    # KeepAlive=true would resurrect a plain TERM, so fully bootout to keep it down.
+    # The plist stays on disk, so a real reboot still starts it (RunAtLoad).
+    if launchctl bootout "$TARGET" 2>/dev/null; then
+      echo "stopped $LABEL (booted out — stays down until 'start' or a reboot)"
+    else
+      echo "$LABEL was not running"
+    fi
     ;;
   restart)
-    launchctl kickstart -k "$TARGET"
+    # Graceful: TERM the supervisor so foreman forwards it to Puma + jobs and SolidQueue
+    # shuts down cleanly; foreman exits and KeepAlive respawns the whole stack (the fresh
+    # boot reaps any orphans). No kickstart -k (that SIGKILLs the tree and orphans jobs).
+    # If it was stopped (booted out), there's nothing to signal — just bootstrap it.
+    if launchctl print "$TARGET" >/dev/null 2>&1; then
+      launchctl kill TERM "$TARGET"
+      echo "sent TERM to $LABEL — KeepAlive is respawning it. Watch: bin/glitchcube-ctl logs"
+    else
+      launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$LABEL.plist"
+      echo "was stopped — bootstrapped $LABEL"
+    fi
     ;;
   status)
-    launchctl print "$TARGET" | grep -E 'state|last exit|pid|program' || true
+    echo "--- boot supervisor ($LABEL) ---"
+    if launchctl print "$TARGET" >/dev/null 2>&1; then
+      launchctl print "$TARGET" 2>/dev/null | grep -E 'state|last exit|pid|program'
+    elif [ -f "$HOME/Library/LaunchAgents/$LABEL.plist" ]; then
+      # Booted out by `stop` (or unload) — the plist is still installed, so this is
+      # STOPPED, not uninstalled. It'll also start again on the next reboot (RunAtLoad).
+      echo "STOPPED (booted out) — start now with: bin/glitchcube-ctl start"
+    else
+      echo "not installed (run bin/install-boot)"
+    fi
+    echo "--- squeezelite agent (com.glitchcube.squeezelite) ---"
+    launchctl print "gui/$(id -u)/com.glitchcube.squeezelite" 2>/dev/null \
+      | grep -E 'state|last exit|pid' || echo "not installed (still a Login Item?)"
+    echo "--- support services ---"
+    "$APP_ROOT/bin/check-services"
     ;;
   logs)
     tail -f "$APP_ROOT/log/boot.out.log" "$APP_ROOT/log/boot.err.log"
     ;;
+  unload)
+    # Fully remove the boot supervisor from launchd (stops it AND clears the job,
+    # so it will NOT start on the next login/reboot). Re-add with bin/install-boot.
+    # Leaves the squeezelite agent alone. bootout also delivers SIGTERM, so foreman
+    # + Puma + SolidQueue shut down cleanly on the way out.
+    if launchctl bootout "$TARGET" 2>/dev/null; then
+      echo "unloaded $LABEL (re-add with: bin/install-boot)"
+    else
+      echo "$LABEL was not loaded"
+    fi
+    ;;
   *)
-    echo "usage: bin/glitchcube-ctl {start|stop|restart|status|logs}" >&2
+    echo "usage: bin/glitchcube-ctl {start|stop|restart|status|logs|unload}" >&2
     exit 1
     ;;
 esac

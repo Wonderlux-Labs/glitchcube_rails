@@ -1,0 +1,35 @@
+- id: jukebox_now_playing_marquee
+  alias: "Jukebox: NOW PLAYING marquee (jax/neon only)"
+  description: >-
+    When jax or neon is the active persona and a new track starts on the jukebox, flash a
+    "NOW PLAYING: <song> by <artist>" notification across the marquee with a random colored
+    music-note icon. Triggers on the media_title attribute changing (which fires both when
+    playback first starts and on every subsequent track), gated to state == playing so a
+    pause/stop doesn't announce. Other personas stay silent on the sign.
+  triggers:
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    attribute: media_title
+  conditions:
+  - condition: state
+    entity_id: media_player.jukebox_internal
+    state: "playing"
+  - condition: template
+    value_template: "{{ states('input_select.current_persona') in ['jax', 'neon'] }}"
+  - condition: template
+    value_template: >-
+      {{ state_attr('media_player.jukebox_internal', 'media_title') not in [none, '', 'unknown'] }}
+  actions:
+  - variables:
+      title: "{{ state_attr('media_player.jukebox_internal', 'media_title') }}"
+      artist: "{{ state_attr('media_player.jukebox_internal', 'media_artist') }}"
+      # Colored music-note icons on the AWTRIX device — one picked at random per track.
+      note_icon: "{{ [39263, 39264, 39273, 39275, 39295, 39302, 39349] | random }}"
+  - action: script.awtrix_marquee_message
+    data:
+      message: >-
+        {% if artist not in [none, '', 'unknown'] %}NOW PLAYING: {{ title }} by {{ artist }}{% else %}NOW PLAYING: {{ title }}{% endif %}
+      icon: "{{ note_icon }}"
+      duration: 15
+      repeat: 2
+  mode: restart

@@ -1,0 +1,26 @@
+#!/bin/bash
+# Report the state of the always-on support services that live OUTSIDE the boot
+# supervisor: the Ollama vision server (:11434) and Squeezelite (audio player).
+#
+# Informational only — prints one line each, never fails. Used by:
+#   - bin/glitchcube-boot   (a boot-time snapshot into boot.out.log)
+#   - bin/glitchcube-ctl status
+#
+# Ollama auto-starts via its own registered background item and has never been
+# seen to die (nothing here restarts it — we only observe it). Squeezelite is
+# supervised with KeepAlive by com.glitchcube.squeezelite once bin/install-boot
+# has been run; before that it's a plain Login Item with no crash recovery.
+set -u
+
+if curl -sf -m 3 http://localhost:11434/api/tags >/dev/null 2>&1; then
+  echo "ollama:      up (:11434)"
+else
+  echo "ollama:      DOWN (:11434 not responding)"
+fi
+
+sq_pids="$(pgrep -x Squeezelite | tr '\n' ' ')"
+if [ -n "$sq_pids" ]; then
+  echo "squeezelite: up (pid ${sq_pids% })"
+else
+  echo "squeezelite: DOWN"
+fi
