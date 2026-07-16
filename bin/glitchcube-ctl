@@ -49,8 +49,15 @@ case "${1:-}" in
     ;;
   status)
     echo "--- boot supervisor ($LABEL) ---"
-    launchctl print "$TARGET" 2>/dev/null | grep -E 'state|last exit|pid|program' \
-      || echo "not installed (run bin/install-boot)"
+    if launchctl print "$TARGET" >/dev/null 2>&1; then
+      launchctl print "$TARGET" 2>/dev/null | grep -E 'state|last exit|pid|program'
+    elif [ -f "$HOME/Library/LaunchAgents/$LABEL.plist" ]; then
+      # Booted out by `stop` (or unload) — the plist is still installed, so this is
+      # STOPPED, not uninstalled. It'll also start again on the next reboot (RunAtLoad).
+      echo "STOPPED (booted out) — start now with: bin/glitchcube-ctl start"
+    else
+      echo "not installed (run bin/install-boot)"
+    fi
     echo "--- squeezelite agent (com.glitchcube.squeezelite) ---"
     launchctl print "gui/$(id -u)/com.glitchcube.squeezelite" 2>/dev/null \
       | grep -E 'state|last exit|pid' || echo "not installed (still a Login Item?)"
