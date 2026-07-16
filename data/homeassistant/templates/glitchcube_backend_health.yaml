@@ -1,0 +1,26 @@
+# GlitchCube backend liveness sensor (source of truth; deployed to
+# HASS /config/templates/glitchcube_backend_health.yaml)
+#
+# Rails' Recurring::System::BackendHealthJob writes input_text.backend_health_status
+# = "online_<ISO8601>" every minute. HASS states pushed by Rails do NOT self-expire, so
+# when Rails is down (stopped or crashed) that value just goes stale and still reads
+# "online" — a last-known lie. This sensor makes the staleness observable: it stays
+# "online" only while the newest heartbeat is < 3 min old (tolerates ~2 missed beats),
+# otherwise it goes UNAVAILABLE. Re-renders every minute (it references now()), so it
+# flips within ~1 min of the backend actually going away.
+#
+# Use sensor.glitchcube_backend as the "is the Rails backend reachable?" indicator;
+# sensor.glitchcube_backend_health still carries the detailed db/ha/llm breakdown while up.
+#
+# Bare list (no `template:` key) — merged in via `template: !include_dir_merge_list
+# templates/` in configuration.yaml.
+
+- sensor:
+    - name: "GlitchCube Backend"
+      unique_id: glitchcube_backend
+      icon: mdi:heart-pulse
+      state: "online"
+      availability: >-
+        {% set v = states('input_text.backend_health_status') %}
+        {% set ts = as_datetime(v.split('_', 1)[1]) if (v is string and '_' in v) else none %}
+        {{ ts is not none and (now() - ts).total_seconds() < 180 }}
