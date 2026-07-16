@@ -50,4 +50,15 @@ RSpec.describe "Home Assistant webhook API", type: :request do
       expect(response.parsed_body).to include("success" => true)
     end
   end
+
+  describe "POST /api/v1/hass/idle_announce" do
+    it "enqueues the idle musing and returns success" do
+      expect {
+        post '/api/v1/hass/idle_announce', as: :json
+      }.to have_enqueued_job(IdleAnnounceJob)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include("success" => true)
+    end
+  end
 end

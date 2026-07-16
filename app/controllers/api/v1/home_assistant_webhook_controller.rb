@@ -48,4 +48,12 @@ class Api::V1::HomeAssistantWebhookController < Api::V1::BaseController
     ShowJob.perform_later("glitch_long")
     render_api_success(enqueued: true)
   end
+
+  # POST /api/v1/hass/idle_announce
+  # The current persona muses out loud while idle -> assist_satellite.announce
+  # (speaks without opening the mic). Fire-and-forget.
+  def idle_announce
+    IdleAnnounceJob.perform_later
+    render_api_success(enqueued: true)
+  end
 end
