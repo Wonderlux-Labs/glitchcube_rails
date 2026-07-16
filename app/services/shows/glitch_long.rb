@@ -14,8 +14,9 @@ module Shows
       performing do
         switching do
           preserving_lights do
+            volume = glitch_volume
             segments.each do |kind, seconds|
-              play_glitching(HostAudio.random_glitch_efx(kind), max_seconds: seconds)
+              play_glitching(HostAudio.random_glitch_efx(kind), max_seconds: seconds, volume: volume)
             end
           end
         end

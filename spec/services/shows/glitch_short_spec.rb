@@ -19,7 +19,7 @@ RSpec.describe Shows::GlitchShort do
   it 'plays one random short glitch clip to its natural end (uncapped)' do
     show.call
 
-    expect(HostAudio).to have_received(:play).with(clip, max_seconds: nil)
+    expect(HostAudio).to have_received(:play).with(clip, max_seconds: nil, volume: a_value_between(25, 50))
     expect(HostAudio).to have_received(:random_glitch_efx).with(:short)
   end
 

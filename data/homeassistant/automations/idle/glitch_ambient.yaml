@@ -1,0 +1,39 @@
+- id: idle_glitch_ambient_show
+  alias: "Idle: ambient glitch show (roll every ~10 min)"
+  description: >-
+    Keeps the cube from sitting in dead silence. Once it's been idle 15 minutes, roll a
+    weighted die and — 50% of the time — kick off a SHORT glitch show, 25% a LONG one, and
+    25% do nothing. Then re-roll every ~10 minutes for as long as the cube stays idle. The
+    shows run Rails-side (Shows::GlitchShort / GlitchLong via their rest_commands) and play
+    at a low random volume so they just burble in the background, never blare like a cued
+    song. Idle = the assist satellite has been 'idle' a full 15 min (any conversation resets
+    that clock), and we skip while a persona switch / another show is running
+    (input_boolean.persona_switching). This is the only thing that fires the glitch
+    rest_commands. Cadence: a 1-min time pattern gates on "idle 15 min" + "last rolled >10
+    min ago", so the first roll lands at 15 min idle and every 10 min after.
+  triggers:
+  - trigger: time_pattern
+    minutes: "/1"
+  conditions:
+  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+  - condition: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    state: idle
+    for: "00:15:00"
+  # First roll at 15 min idle, then one every 10 min while still idle. `this` = this
+  # automation's own state, so last_triggered updates on every roll (even a "nothing" one).
+  - "{{ this.attributes.last_triggered is none or (now() - this.attributes.last_triggered) > timedelta(minutes=10) }}"
+  actions:
+  - variables:
+      # 1-100. 1-50 short (50%), 51-75 long (25%), 76-100 nothing (25%).
+      roll: "{{ (range(1, 101) | list) | random }}"
+  - choose:
+    - conditions: "{{ roll <= 50 }}"
+      sequence:
+      - action: rest_command.glitchcube_glitch_short
+    - conditions: "{{ roll <= 75 }}"
+      sequence:
+      - action: rest_command.glitchcube_glitch_long
+    # roll 76-100: do nothing — the quiet outcome. The roll still counts, so the next
+    # one is ~10 min out.
+  mode: single

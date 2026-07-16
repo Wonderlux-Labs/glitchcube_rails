@@ -11,7 +11,7 @@ module Shows
       performing do
         switching do
           preserving_lights do
-            play_glitching(HostAudio.random_glitch_efx(:short))
+            play_glitching(HostAudio.random_glitch_efx(:short), volume: glitch_volume)
           end
         end
       end

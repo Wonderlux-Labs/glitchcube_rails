@@ -29,9 +29,9 @@ RSpec.describe Shows::GlitchLong do
 
     show.call
 
-    expect(HostAudio).to have_received(:play).with("/tmp/glitch_efx/long/clip.mp3", max_seconds: 30).ordered
-    expect(HostAudio).to have_received(:play).with("/tmp/glitch_efx/short/clip.mp3", max_seconds: 5).ordered
-    expect(HostAudio).to have_received(:play).with("/tmp/glitch_efx/long/clip.mp3", max_seconds: 25).ordered
+    expect(HostAudio).to have_received(:play).with("/tmp/glitch_efx/long/clip.mp3", max_seconds: 30, volume: a_value_between(25, 50)).ordered
+    expect(HostAudio).to have_received(:play).with("/tmp/glitch_efx/short/clip.mp3", max_seconds: 5, volume: a_value_between(25, 50)).ordered
+    expect(HostAudio).to have_received(:play).with("/tmp/glitch_efx/long/clip.mp3", max_seconds: 25, volume: a_value_between(25, 50)).ordered
     expect(HostAudio).to have_received(:random_glitch_efx).with(:long).twice
     expect(HostAudio).to have_received(:random_glitch_efx).with(:short).once
   end

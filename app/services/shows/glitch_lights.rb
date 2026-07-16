@@ -30,14 +30,24 @@ module Shows
     BEAT_PAUSE_RANGE = (0.12..0.45) # dwell between beats
     FALLBACK_BEATS = 12 # a clipless burst (empty efx dir) so the show isn't dead air
 
+    # Glitch shows only burble in the background — a low random level so they never
+    # blare like a cued jukebox song. HASS quiet_mode can still cap this lower.
+    GLITCH_VOLUME_RANGE = (25..50)
+
     private
+
+    # A random low playback volume (percent) for a glitch run. Pick once per show so
+    # the level holds steady across a long show's segments instead of jumping.
+    def glitch_volume
+      rand(GLITCH_VOLUME_RANGE)
+    end
 
     # Glitch the strips while a clip plays — capped (long-show segments) or to its
     # natural end (short show). A nil clip (empty efx dir) still throws the
     # fallback burst so the show isn't dead air.
-    def play_glitching(clip, max_seconds: nil)
+    def play_glitching(clip, max_seconds: nil, volume: nil)
       if clip
-        glitch_lights { HostAudio.play(clip, max_seconds: max_seconds) }
+        glitch_lights { HostAudio.play(clip, max_seconds: max_seconds, volume: volume) }
       else
         glitch_lights
       end
