@@ -6,6 +6,12 @@ gem "propshaft"
 gem "pg"
 gem "puma"
 
+# Last-resort backstop: reclaim a Puma thread (and its DB connection) if a
+# conversation turn wedges past the service timeout. Required as ...base so it does
+# NOT auto-insert with its 15s default — we insert it explicitly with our own
+# 120s service timeout in config/initializers/rack_timeout.rb.
+gem "rack-timeout", require: "rack/timeout/base"
+
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
 gem "solid_queue"

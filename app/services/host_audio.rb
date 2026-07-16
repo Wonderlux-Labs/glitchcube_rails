@@ -11,6 +11,13 @@ module HostAudio
   SAY_VOICE = "Zarvox" # maximum robot
   SAY_TIMEOUT = 30
 
+  # Hard kill ceiling for an uncapped play (max_seconds: nil). ffplay -autoexit
+  # exits on its own at end-of-file, so this never truncates a real song — it only
+  # fires if the player WEDGES (audio-device contention is a known trouble spot),
+  # so a stuck ffplay can't pin a SolidQueue worker forever. No theme song or
+  # glitch bed runs anywhere near this long.
+  UNCAPPED_KILL_CEILING = 600
+
   # Fallback cap (percent) when quiet_mode is on but the HASS input_number is
   # missing/blank. Mirrors the input_number's own initial value.
   DEFAULT_QUIET_VOLUME = 50
@@ -37,7 +44,9 @@ module HostAudio
       parts << "-volume #{vol.round}" if vol
       parts << %(-af "afade=t=out:st=#{max_seconds - FADE_SECONDS}:d=#{FADE_SECONDS}") if max_seconds
       parts << Shellwords.escape(path.to_s)
-      run(parts.join(" "), timeout: max_seconds && max_seconds + 10)
+      # A cap tracks max_seconds; an uncapped play still gets a hard kill ceiling so
+      # a wedged ffplay is never joined on forever (host_audio.rb#run timeout: nil).
+      run(parts.join(" "), timeout: max_seconds ? max_seconds + 10 : UNCAPPED_KILL_CEILING)
     end
 
     # Picks a random theme song off disk and plays it through the host speaker.

@@ -43,7 +43,7 @@ RSpec.describe HostAudio do
       end
     end
 
-    it 'plays untruncated with no cap, fade, or timeout when max_seconds is omitted' do
+    it 'plays untruncated (no cap/fade) but still enforces a hard kill ceiling when max_seconds is omitted' do
       described_class.play("/tmp/song.mp3")
 
       expect(described_class).to have_received(:run) do |command, timeout:|
@@ -52,7 +52,9 @@ RSpec.describe HostAudio do
         expect(command).not_to include("-t ")
         expect(command).not_to include("afade")
         expect(command).to include(Shellwords.escape("/tmp/song.mp3"))
-        expect(timeout).to be_nil
+        # A wedged ffplay must never be joined on forever: uncapped play still
+        # gets the hard kill ceiling so it can't pin a SolidQueue worker.
+        expect(timeout).to eq(described_class::UNCAPPED_KILL_CEILING)
       end
     end
 
