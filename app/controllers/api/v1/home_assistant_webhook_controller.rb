@@ -18,11 +18,18 @@ class Api::V1::HomeAssistantWebhookController < Api::V1::BaseController
   end
 
   # POST /api/v1/hass/grand_entrance
-  # Wake the cube: switch to a fresh random persona with a grand entrance. Called
-  # by the HASS "internet back up" recovery automation. set_random enqueues the
-  # show and returns immediately.
+  # Switch to another persona with a full grand entrance. Two callers:
+  #   - the HASS "internet back up" recovery automation (no persona → random)
+  #   - a persona voluntarily handing off the cube via Assist (optional `persona`
+  #     names who takes over; blank/unknown falls back to a random pick).
+  # Either way set_* enqueues the show and returns immediately.
   def grand_entrance
-    CubePersona.set_random(entrance: :grand)
+    requested = params[:persona].to_s.downcase.strip
+    if requested.present? && Persona.active.exists?(slug: requested)
+      CubePersona.set_current_persona(requested, entrance: :grand)
+    else
+      CubePersona.set_random(entrance: :grand)
+    end
     render_api_success(enqueued: true)
   end
 

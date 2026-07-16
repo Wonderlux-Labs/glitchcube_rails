@@ -101,9 +101,11 @@ input_boolean:
     initial: false
     icon: mdi:lightbulb-alert
 
-  # Master enable for the alpha "Presence: nudge idle visitor" automation. When ON and
-  # someone lingers in front of the cube without starting a conversation, the cube nudges
-  # them (marquee hint + a persona-voice call-out). Flip OFF to silence the nudge entirely.
+  # Master enable for BOTH presence-nudge automations. When ON and someone lingers in front
+  # of the cube without starting a conversation, the cube nudges them: a one-shot persona
+  # voice call-out on arrival ("Presence: announce nudge") plus a repeating marquee wake-hint
+  # every ~3 min while present — or whenever the presence sensor is offline ("Presence:
+  # marquee nudge"). Flip OFF to silence both.
   presence_nudge_enabled:
     name: "Presence nudge (idle visitor)"
     initial: true

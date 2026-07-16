@@ -26,17 +26,19 @@ rest_command:
     content_type: "application/json"
     payload: "{}"
 
-  # Wake the cube with a fresh persona's grand entrance (Shows::GrandEntrance on
-  # the Rails side: anomaly VO, lights, theme song, arrival announce). Rails picks
-  # a random persona that avoids the current cube-dominator and the previous
-  # session's persona. Fire-and-forget — the endpoint kicks off the show and
-  # returns. Used by the "internet back up" recovery automation.
+  # Bring a persona onto the cube with a full grand entrance (Shows::GrandEntrance
+  # on the Rails side: anomaly VO, lights, theme song, arrival announce).
+  # Fire-and-forget — the endpoint kicks off the show and returns. Optional
+  # `persona` names who takes over; omit it (blank) and Rails picks a random persona
+  # that avoids the current cube-dominator and the previous session's persona.
+  # Callers: the "internet back up" recovery automation (no persona) and
+  # script.hand_off_the_cube (a persona giving up its turn, optional persona).
   glitchcube_grand_entrance:
     url: >-
       http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/grand_entrance
     method: POST
     content_type: "application/json"
-    payload: "{}"
+    payload: '{"persona": "{{ persona | default("", true) }}"}'
 
   # A quick glitch fit (Shows::GlitchShort on the Rails side): one short
   # glitch-radio stab out the host speaker while the WLED strips spasm, for as

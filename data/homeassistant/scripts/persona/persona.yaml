@@ -12,11 +12,8 @@
 set_persona_quick:
   alias: Set Persona (quick)
   description: >-
-    Switch the cube's active persona with NO fanfare — just change who's in charge.
-    This is the lightweight path for dev/manual switches and (eventually) direct Assist
-    requests like "let me talk to Buddy again". Give a `persona`, or omit it to pick a
-    random one (never the current persona). The full arrival ceremony lives Rails-side
-    (Shows::GrandEntrance).
+    Quietly switch the cube's active persona — no fanfare, just change who's in charge.
+    Give a `persona`, or omit it to pick a random one (never the current persona).
   fields:
     persona:
       name: Persona
@@ -47,4 +44,34 @@ set_persona_quick:
     data:
       message: "{{ target | upper }}"
       duration: 8
+  mode: single
+
+# --- Hand off the cube (grand entrance) --------------------------------------
+# The theatrical persona switch: the current persona gives up its turn and hands the
+# cube to another, who arrives with a full grand entrance. Exposed to Assist so a
+# persona can trigger it in character. Fire-and-forget: it pokes Rails
+# (rest_command.glitchcube_grand_entrance) and returns; the show runs async.
+hand_off_the_cube:
+  alias: Hand Off The Cube (grand entrance)
+  description: >-
+    Hand the cube to another persona, who takes over with a full grand entrance. Give a
+    `persona` to name who takes over, or omit it for a random pick.
+  fields:
+    persona:
+      name: Persona
+      description: Which persona takes over the cube. Omit for a random pick.
+      required: false
+      example: neon
+      selector:
+        select:
+          options:
+          - buddy
+          - jax
+          - zorp
+          - crash
+          - neon
+  sequence:
+  - action: rest_command.glitchcube_grand_entrance
+    data:
+      persona: "{{ persona | default('', true) }}"
   mode: single
