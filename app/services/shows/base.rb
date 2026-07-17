@@ -10,8 +10,10 @@ module Shows
     CUBE_MODE = "input_select.cube_mode"
     SATELLITE = "assist_satellite.cube_cube_voice_assist_satellite"
 
-    # The cube's two addressable show strips (one WLED controller, two outputs).
-    WLED_LIGHTS = %w[light.glitch_head_wled light.cube_body_wled].freeze
+    # The cube's one addressable show strip, on its body (the WLED controller's
+    # second output — the old head strip — is unused; the head cube is lit by the
+    # Voice PE's firmware-controlled LED ring).
+    WLED_LIGHTS = %w[light.cube_body_wled].freeze
     RESTORE_SCENE = "scene.shows_light_restore"
 
     private

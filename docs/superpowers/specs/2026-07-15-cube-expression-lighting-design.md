@@ -1,3 +1,5 @@
+> **SUPERSEDED 2026-07-17:** the cube_expression automation and its cube_light_command_this_turn flag were REMOVED — the head cube is now the Voice PE's firmware-controlled LED ring (listening/processing effects live in firmware) and set_cube_lights drives a single body strip (light.cube_body_wled, no led_strip field). Kept as historical design record.
+
 # Cube Expression Lighting — Design
 
 **Date:** 2026-07-15

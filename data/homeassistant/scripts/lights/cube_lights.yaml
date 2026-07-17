@@ -1,20 +1,16 @@
 # --- Cube WLED lighting (Assist-facing) ------------------------------------------
 # The ONE addressable-LED control exposed to the Assist action agent. The cube's show
-# LEDs are a single sound-reactive WLED controller with two outputs: the HEAD strip
-# (~30 LEDs, light.glitch_head_wled) and the BODY strip (~60 LEDs, light.cube_body_wled).
-# This script hides that plumbing — the agent just picks a strip (both/head/body), an
-# optional color + brightness, and an effect. `both` fans the SAME command out to head
-# and body in one call; to give them different looks, call the script twice (once with
-# led_strip: head, once with led_strip: body). Routing/mapping lives here so the agent
-# only ever sees one lighting tool. NOT the top light — that's internal (see below).
+# LEDs are a single sound-reactive WLED strip on the cube's BODY (light.cube_body_wled).
+# (The controller's second output — the old head strip — is unused and unexposed; the
+# head cube is lit by the Voice PE's built-in LED ring, firmware-controlled.) The agent
+# just picks an optional color + brightness and an effect; routing lives here so the
+# agent only ever sees one lighting tool.
 set_cube_lights:
   alias: Set Cube Lights
   description: >-
-    The cube's main light control — its addressable RGB LEDs, split into a HEAD strip and a
-    BODY strip driven by one sound-reactive WLED controller. Use this for ANY look on the
-    cube's body/head: a plain solid color, a mood, or an animated/audio-reactive effect.
-    Pick `led_strip`: "both" (default — same look on head and body), "head", or "body". To
-    make the head and body DIFFERENT, call this twice, once per strip. `color` is an RGB
+    The cube's main light control — the addressable RGB LED strip on its body, driven by a
+    sound-reactive WLED controller. Use this for ANY look on the cube: a plain solid color,
+    a mood, or an animated/audio-reactive effect. `color` is an RGB
     color and `brightness` is 1-100%; both are optional and, if omitted, are left unchanged.
     `effect` defaults to "Solid" — i.e. if you don't pass an effect you're just setting a
     solid RGB color. Pass any other effect name to animate. IMPORTANT: each call sets the
@@ -33,17 +29,6 @@ set_cube_lights:
     Lightning, Chunchun. The curated strip-friendly effect list has more if you want
     something else.
   fields:
-    led_strip:
-      name: LED strip
-      description: Which part of the cube to light. "both" (default) sends the same look to
-        head and body; "head" or "body" targets just one. Call twice to differ them.
-      default: both
-      selector:
-        select:
-          options:
-          - both
-          - head
-          - body
     color:
       name: Color
       description: RGB color for the lights. Optional — omit to leave the current color
@@ -234,35 +219,22 @@ set_cube_lights:
           - Color Clouds
           - Slow Transition
   sequence:
-  # Claim the turn FIRST (before the wait) so the same-edge end-of-speech restore in the
-  # "Cube Expression" automation can never beat us to the flag: both that restore and the
-  # wait below release on the SAME event (voice media leaving 'playing'). The action agent
-  # calls this DURING the turn, so the flag is normally set seconds before end-of-speech.
-  - action: input_boolean.turn_on
-    target:
-      entity_id: input_boolean.cube_light_command_this_turn
-  # Hold the light change until the cube stops speaking so it doesn't stomp the "talking"
-  # effect. Key off the VOICE media player, not the satellite 'responding' state — the
+  # Hold the light change until the cube stops speaking so it lands with (not under) the
+  # words. Key off the VOICE media player, not the satellite 'responding' state — the
   # firmware blips responding->idle->listening mid-speech, which would release too early.
   # Outside a conversation the media player isn't playing, so this passes through instantly.
   - wait_template: "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
     timeout: "00:00:25"
     continue_on_timeout: true
-  # Route the friendly both/head/body choice to the real WLED entities. `both` targets
-  # them together so one call sets an identical look on head and body.
   - action: light.turn_on
     target:
-      entity_id: >-
-        {{ {'both': ['light.glitch_head_wled', 'light.cube_body_wled'],
-            'head': ['light.glitch_head_wled'],
-            'body': ['light.cube_body_wled']}.get(led_strip | default('both', true),
-            ['light.glitch_head_wled', 'light.cube_body_wled']) }}
+      entity_id: light.cube_body_wled
     # Build the payload: always set the effect (Solid by default), and only include
     # color/brightness when the caller actually passed them so we don't clobber them.
     data: >-
       {{ {'effect': effect | default('Solid', true)}
          | combine({'rgb_color': color} if (color is defined and color) else {})
          | combine({'brightness_pct': brightness | int} if (brightness is defined and brightness is not none) else {}) }}
-  # queued so a quick head-call-then-body-call runs in order instead of dropping one.
+  # queued so back-to-back calls run in order instead of dropping one.
   mode: queued
   max: 10

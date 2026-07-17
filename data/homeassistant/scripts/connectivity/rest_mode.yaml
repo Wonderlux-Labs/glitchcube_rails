@@ -36,10 +36,9 @@ enter_rest_mode:
       entity_id:
       - media_player.jukebox_internal
       - media_player.cube_cube_voice_media_player
-  # Dim red on the WLED head+body...
+  # Dim red on the body WLED strip...
   - action: script.set_cube_lights
     data:
-      led_strip: both
       color: [255, 0, 0]
       brightness: 25
       effect: Solid

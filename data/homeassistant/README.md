@@ -27,8 +27,8 @@ irrelevant to that.
 
 **persona/**
 - `persona_switcher.yaml` — on `input_select.current_persona` change: swap the Assist
-  TTS pipeline on the Cube Voice device, recolor the Voice PE LED ring to the persona's
-  signature color, and set the Govee top light (`light.top_light`) to that same color.
+  TTS pipeline on the Cube Voice device and call `script.sync_lights_to_persona` (body
+  WLED strip + Voice PE LED ring to the persona's signature color).
 - `switching_silence.yaml` — while `input_boolean.persona_switching` is up (a Rails
   grand-entrance show), mute the mic + stop media; unmute when it drops.
 
@@ -57,11 +57,10 @@ irrelevant to that.
 - `internet_down_enter_rest.yaml` — `binary_sensor.internet` off 5 min → `script.enter_rest_mode` (+ a `/5` re-assert while still down).
 - `internet_up_wake_from_rest.yaml` — `binary_sensor.internet` on 3 min while resting → `script.wake_from_rest`.
 
-## Scripts — `scripts/<domain>/` (14)
+## Scripts — `scripts/<domain>/` (13)
 
 **audio/**
 - `jukebox.yaml` — `play_music_on_jukebox` (play a track/query, volume-aware), `search_jukebox` (search the library).
-- `sound_effects.yaml` — `play_sound_effect` (one of the bundled SFX via the jukebox).
 
 **marquee/** — `marquee.yaml`
 - `awtrix_marquee_message` — flash a message (color/rainbow/duration) on the LED sign.
@@ -71,7 +70,10 @@ irrelevant to that.
 - `awtrix_install_idle_apps` — post-reflash seed (ATRANS off + baseline idle).
 
 **lights/**
-- `cube_lights.yaml` — `set_cube_lights`: the Assist-facing WLED head/body control (color/brightness/effect; many sound-reactive).
+- `cube_lights.yaml` — `set_cube_lights`: the Assist-facing control for the single body
+  WLED strip (color/brightness/effect; many sound-reactive). The old head strip is
+  unused/unexposed — the head cube is the Voice PE's firmware-controlled LED ring, which
+  runs its own listening/processing effects (no HASS expression automations anymore).
 - `top_light.yaml` — `set_top_light_persona_color` (dim persona-color ambient glow), `set_top_light_effect` (a preset Govee scene).
 
 **persona/** — `persona.yaml`

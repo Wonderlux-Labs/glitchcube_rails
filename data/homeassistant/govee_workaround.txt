@@ -1,0 +1,117 @@
+Govee top-light body-WLED stand-in — REMOVED from set_cube_lights 2026-07-17 (not in use
+unless the Govee ends up wired onto the body again). If needed, paste this block back into
+data/homeassistant/scripts/lights/cube_lights.yaml at the end of set_cube_lights's sequence,
+right before `mode: queued`. NOTE: written before set_cube_lights went single-strip — it
+references the removed `led_strip` field, so the `_tl_is_body` line needs rework (with one
+body-only strip, every call targets the body, so it can just be `true`).
+
+  # === TEMPORARY: body-WLED strip stand-in ======================================
+  # The BODY strip (light.cube_body_wled) is physically dead on this build; the Govee
+  # top light (light.top_light) is wired onto the cube body as a stand-in tonight. Mirror
+  # the BODY look onto the top light so it matches — colors are exact; effects map to a
+  # similar-mood Govee scene (best-effort). Only fires for body-targeting calls (both/body);
+  # a head-only call leaves the top light alone. DELETE THIS BLOCK (down to `mode:`) when the
+  # replacement strip is installed — the WLED dispatch above is untouched.
+  - variables:
+      _tl_eff: "{{ effect | default('Solid', true) }}"
+      _tl_is_body: "{{ (led_strip | default('both', true)) in ['both', 'body'] }}"
+      # WLED effect -> similar-mood Govee scene (all exist in set_top_light_effect's list).
+      # NOTE: the Govee `switch.cube_light_music_mode` (mic-reactive) does NOT hold on via
+      # govee2mqtt on this device, so the WLED sound-reactive effects map to the lively
+      # "Rainbow" scene instead of true reactivity — a "close enough" energetic stand-in.
+      _tl_scene_map:
+        Freqwave: Rainbow
+        Freqmatrix: Rainbow
+        Waterfall: Rainbow
+        Matripix: Rainbow
+        Gravcenter: Rainbow
+        Gravcentric: Rainbow
+        Gravfreq: Rainbow
+        DJ Light: Rainbow
+        Blurz: Rainbow
+        Puddlepeak: Rainbow
+        Pixelwave: Rainbow
+        Rocktaves: Rainbow
+        Midnoise: Rainbow
+        Noisemeter: Rainbow
+        PS Sonic Stream: Rainbow
+        PS Sonic Boom: Rainbow
+        PS GEQ 1D: Rainbow
+        Breathe: Breathe
+        Aurora: Aurora
+        Colorwaves: Aurora
+        Palette: Aurora
+        Plasma: Aurora
+        Blends: Aurora
+        Pacifica: Ocean
+        Lake: Ocean
+        Colorloop: Rainbow
+        Rainbow: Rainbow
+        Rainbow Runner: Rainbow
+        Colorful: Rainbow
+        Chase Rainbow: Rainbow
+        Pride 2015: Rainbow
+        Sinelon Rainbow: Rainbow
+        Glitter: Starry Sky
+        Twinkleup: Starry Sky
+        Slow Transition: Slow Color Change
+        Fire 2012: Fire
+        Fire Flicker: Fire
+        Candle: Fire
+        PS Fire 1D: Fire
+        Noisefire: Fire
+        Sunrise: Sunrise
+        Strobe: Flash
+        Blink Rainbow: Flash
+        Fireworks: Flash
+        Fireworks Starburst: Flash
+        Dancing Shadows: Ghost
+        Halloween Eyes: Ghost
+        ICU: Ghost
+        Noise 1: Cyberpunk
+        Phased: Cyberpunk
+        Phased Noise: Cyberpunk
+        TV Simulator: Cyberpunk
+        Lightning: Lightning Bats
+        Chunchun: Forest
+      _tl_scene: "{{ _tl_scene_map.get(_tl_eff, '') }}"
+  - choose:
+    # Head-only look — the top light stands in for the BODY, so leave it alone.
+    - conditions:
+      - "{{ not _tl_is_body }}"
+      sequence: []
+    # Solid color -> mirror the exact color + brightness (music mode OFF so it sticks).
+    - conditions:
+      - "{{ _tl_eff == 'Solid' }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_light_music_mode
+      - action: light.turn_on
+        target:
+          entity_id: light.top_light
+        data: >-
+          {{ {} | combine({'rgb_color': color} if (color is defined and color) else {})
+                | combine({'brightness_pct': brightness | int} if (brightness is defined and brightness is not none) else {}) }}
+    # Mapped animated effect -> a similar-mood Govee scene (routes DIY vs built-in).
+    - conditions:
+      - "{{ _tl_scene != '' }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_light_music_mode
+      - action: script.set_top_light_effect
+        data:
+          effect: "{{ _tl_scene }}"
+    # Unknown/unmapped effect -> fall back to mirroring the solid color (safe, non-empty).
+    default:
+    - action: switch.turn_off
+      target:
+        entity_id: switch.cube_light_music_mode
+    - action: light.turn_on
+      target:
+        entity_id: light.top_light
+      data: >-
+        {{ {} | combine({'rgb_color': color} if (color is defined and color) else {})
+              | combine({'brightness_pct': brightness | int} if (brightness is defined and brightness is not none) else {}) }}
+  # === END TEMPORARY body-WLED stand-in =========================================

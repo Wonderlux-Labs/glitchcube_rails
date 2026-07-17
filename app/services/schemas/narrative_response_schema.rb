@@ -32,7 +32,7 @@ class Schemas::NarrativeResponseSchema
       # section of the system prompt (lib/prompts/general/tools.txt). Keep this in sync at
       # the one-liner level only; don't re-duplicate the full text here.
       string :lights, required: false,
-             description: "OPTIONAL. Plain-English INTENT for your head/body LEDs (see YOUR TOOLS). Omit to leave your lights unchanged."
+             description: "OPTIONAL. Plain-English INTENT for your body LEDs (see YOUR TOOLS). Omit to leave your lights unchanged."
 
       string :sound, required: false,
              description: "OPTIONAL. Plain-English INTENT for what to play — a song, background/mood music, or a short SFX (see YOUR TOOLS). Omit to leave current audio as-is."

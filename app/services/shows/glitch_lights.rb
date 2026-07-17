@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 module Shows
-  # The glitch-light vocabulary shared by the glitch shows. Drives the two WLED
-  # show strips (head + body) DIRECTLY — light.turn_on/off, no HASS script hop —
-  # because glitching wants tight, responsive control. Mixed into a Show (needs
-  # #hass and Base::WLED_LIGHTS from Shows::Base).
+  # The glitch-light vocabulary shared by the glitch shows. Drives the body WLED
+  # show strip DIRECTLY — light.turn_on/off, no HASS script hop — because
+  # glitching wants tight, responsive control. Mixed into a Show (needs #hass
+  # and Base::WLED_LIGHTS from Shows::Base).
   #
   # The core trick: play the audio in a background thread and keep firing glitch
   # beats `while` it's alive. When ffplay exits (clip ends, or its max_seconds
@@ -24,7 +24,7 @@ module Shows
       [ 0, 120, 255 ], [ 255, 255, 255 ], [ 255, 60, 0 ]
     ].freeze
 
-    BEATS = %i[cutout color effect split].freeze
+    BEATS = %i[cutout color effect].freeze
 
     BLACKOUT_RANGE = (0.08..0.22)  # a cutout's dark gap
     BEAT_PAUSE_RANGE = (0.12..0.45) # dwell between beats
@@ -87,13 +87,6 @@ module Shows
 
     def beat_effect
       wled(Base::WLED_LIGHTS, effect: GLITCH_EFFECTS.sample)
-    end
-
-    # Desync: head and body take different looks in the same beat.
-    def beat_split
-      head, body = Base::WLED_LIGHTS
-      wled([ head ], effect: GLITCH_EFFECTS.sample)
-      wled([ body ], effect: "Solid", rgb_color: GLITCH_COLORS.sample)
     end
 
     def wled(entity_ids, service: "turn_on", **data)

@@ -36,7 +36,7 @@ RSpec.describe Shows::GlitchLong do
     expect(HostAudio).to have_received(:random_glitch_efx).with(:short).once
   end
 
-  it 'glitches the WLED head+body strips throughout' do
+  it 'glitches the body WLED strip throughout' do
     show.call
 
     light_calls = fake_ha.service_calls_for("light")

@@ -63,23 +63,20 @@
           {%- if pc >= 20 %} There's about a {{ pc }}% chance of precipitation in the next day.{% endif -%}
           {%- if daytime and tlow not in [none, ''] %} Tonight's low will be around {{ tlow }}°F.
           {%- elif not daytime and thigh not in [none, ''] %} Tomorrow's high will be around {{ thigh }}°F.{% endif -%}
-          {#- Your body light and head light — current look each: color + brightness percent,
-              plus the running effect if one is active (any effect other than 'Solid'). -#}
-          {%- for seg in [('light.cube_body_wled', 'body'), ('light.glitch_head_wled', 'head')] -%}
-            {%- set ent = seg[0] -%}
-            {%- set label = seg[1] -%}
-            {%- if is_state(ent, 'on') -%}
-              {%- set bri = state_attr(ent, 'brightness') or 255 -%}
-              {%- set bripct = (bri / 255 * 100) | round -%}
-              {%- set col = color_name(ent) | trim -%}
-              {%- set fx = state_attr(ent, 'effect') -%}
-              {%- if fx and fx not in ['Solid', 'None', 'none', 'unknown', 'unavailable'] -%}
-                {{ ' Your ' ~ label ~ ' light is ' ~ col ~ ', running the "' ~ fx ~ '" effect, at ' ~ bripct ~ '% brightness.' }}
-              {%- else -%}
-                {{ ' Your ' ~ label ~ ' light is a solid ' ~ col ~ ', at ' ~ bripct ~ '% brightness.' }}
-              {%- endif -%}
-            {%- else %} Your {{ label }} light is off.{%- endif -%}
-          {%- endfor -%}
+          {#- Your body light — current look: color + brightness percent, plus the
+              running effect if one is active (any effect other than 'Solid'). -#}
+          {%- set ent = 'light.cube_body_wled' -%}
+          {%- if is_state(ent, 'on') -%}
+            {%- set bri = state_attr(ent, 'brightness') or 255 -%}
+            {%- set bripct = (bri / 255 * 100) | round -%}
+            {%- set col = color_name(ent) | trim -%}
+            {%- set fx = state_attr(ent, 'effect') -%}
+            {%- if fx and fx not in ['Solid', 'None', 'none', 'unknown', 'unavailable'] -%}
+              {{ ' Your body light is ' ~ col ~ ', running the "' ~ fx ~ '" effect, at ' ~ bripct ~ '% brightness.' }}
+            {%- else -%}
+              {{ ' Your body light is a solid ' ~ col ~ ', at ' ~ bripct ~ '% brightness.' }}
+            {%- endif -%}
+          {%- else %} Your body light is off.{%- endif -%}
           {#- The jukebox: track / artist / volume when actually playing, else quiet. It
               keeps stale media_title metadata while idle, so only trust it when playing. -#}
           {%- set jb = 'media_player.jukebox_internal' -%}
