@@ -1,7 +1,7 @@
 # ONE play script for both front-and-center songs AND quiet background/mood music — the
 # required `volume` decides which (no more duplicate play_background_music). A required,
 # no-default volume forces the calling agent to choose a level deliberately; the description
-# anchors the two bands (25-35 background, 80-90 front-and-center).
+# anchors the two bands (50 background, 90 front-and-center, 100 cranked).
 play_music_on_jukebox:
   fields:
     query:
@@ -12,9 +12,10 @@ play_music_on_jukebox:
     volume:
       name: Volume
       description: >-
-        Playback volume, 0-100 percent. REQUIRED — choose deliberately: 25-35 for quiet
-        background/mood music that sits UNDER the conversation, 80-90 for a front-and-center
-        song, a dance party, or anytime the music should take the room.
+        Playback volume, 0-100 percent. REQUIRED — choose deliberately: 50 for quiet
+        background/mood music that sits UNDER the conversation (50 already reads as
+        background on this rig — never go lower), 90 for a front-and-center song, and 100
+        only when it should crank and take the whole room.
       required: true
       selector:
         number:
@@ -53,7 +54,8 @@ play_music_on_jukebox:
     background/mood music; the `volume` you pass decides which. `query` is a fuzzy search that
     finds the best match — give it "Artist - Title" (e.g. "Nirvana - Smells Like Teen Spirit")
     or "Artist - Album - Title" to be precise; slightly-wrong titles are forgiving. `volume` is
-    REQUIRED (25-35 = background under the conversation, 80-90 = front-and-center / dance party).
+    REQUIRED (50 = background under the conversation, 90 = front-and-center song, 100 = crank
+    it / dance party).
     `queue` is optional: default `replace` plays immediately, `replace_next` queues it as the
     next track. Keep queues short — you're either playing now or picking the next song.
 

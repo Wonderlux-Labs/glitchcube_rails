@@ -40,7 +40,8 @@ host's `.env`. Most knobs can also be changed live from `rails c`
 | `SUMMARIZER_MODEL` | `summarizer_model` | `google/gemini-3.5-flash` | Model for the background summarizer tiers (interaction / persona+handoff / overall). |
 | `CAMERA_VISION_MODEL` | `camera_vision_model` | `google/gemini-3.5-flash` | Primary vision model for camera-snapshot descriptions (OpenRouter path). |
 | `VISION_FALLBACK_MODEL` | `vision_fallback_model` | `qwen/qwen3.7-max` | Retried once if the primary vision model raises or returns empty. |
-| `HASS_ACTION_AGENT` | `hass_action_agent` | `conversation.anthropic_claude_sonnet_4_6` | HASS conversation agent the cube offloads plain-English `actions` to. |
+| — (straight config, no env) | `hass_action_agent` | `conversation.default_hass_tools_agent` | HASS agent for the lights/marquee/other_actions lane. To change behavior, switch the MODEL on that agent in HASS — not here. |
+| — (straight config, no env) | `hass_sound_agent` | `conversation.glitchcube_jukebox_agent` | HASS agent for the `sound` lane (the jukebox). Same deal: swap its model in HASS. |
 
 ## Home Assistant
 
