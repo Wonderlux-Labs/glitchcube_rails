@@ -228,5 +228,35 @@ RSpec.describe Prompts::ContextBuilder do
     it 'returns an empty string when nothing is available' do
       expect(subject).to eq("")
     end
+
+    context 'conversation pacing (wrap-it-up nudge)' do
+      subject { described_class.new(persona: nil, conversation: conversation).build }
+      let(:conversation) { create(:conversation) }
+
+      def log_rounds(count)
+        create_list(:conversation_log, count, conversation: conversation)
+      end
+
+      it 'injects nothing before the 5th round' do
+        log_rounds(3) # building round 4
+        expect(subject).not_to include("rounds into this conversation")
+      end
+
+      it 'nudges toward goal-or-wrap-up from the 5th round on' do
+        log_rounds(4) # building round 5
+        expect(subject).to include("You're 5 rounds into this conversation")
+        expect(subject).to include("continue_conversation")
+        expect(subject).to include('saying "Hey Glitch Cube"')
+      end
+
+      it 'keeps counting on later rounds' do
+        log_rounds(7)
+        expect(subject).to include("You're 8 rounds into this conversation")
+      end
+
+      it 'injects nothing when no conversation is given' do
+        expect(described_class.new(persona: nil).build).not_to include("rounds into this conversation")
+      end
+    end
   end
 end

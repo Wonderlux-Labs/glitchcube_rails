@@ -39,8 +39,8 @@ RSpec.describe PromptService do
       subject
     end
 
-    it 'creates ContextBuilder for the current persona' do
-      expect(Prompts::ContextBuilder).to receive(:new).with(persona: persona).and_call_original
+    it 'creates ContextBuilder for the current persona and conversation' do
+      expect(Prompts::ContextBuilder).to receive(:new).with(persona: persona, conversation: conversation).and_call_original
       subject
     end
 

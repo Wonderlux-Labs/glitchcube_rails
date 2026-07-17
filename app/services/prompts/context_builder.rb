@@ -15,7 +15,10 @@
 #                               (input_text.current_camera_state), closest to the raw message
 #                               history. Present only when non-empty; HASS clears it after
 #                               ~3 min, so when it's there it's fresh.
-#   7. Glitch premonition     — only when the random rotation's next persona switch is <3 min
+#   7. Conversation pacing    — from the 5th round of a conversation on: work toward your
+#                               goal or wind it down (and if ending, remind them how to wake
+#                               the cube back up, in character).
+#   8. Glitch premonition     — only when the random rotation's next persona switch is <3 min
 #                               out: a one-line "you feel a glitch coming on" so the persona
 #                               can (or can choose not to) sense its own end approaching.
 #
@@ -29,13 +32,15 @@ module Prompts
     CAMERA_STATE_ENTITY = "input_text.current_camera_state"
     CURRENT_SESSION_CHUNKS = 4
     PREMONITION_WINDOW = 3.minutes
+    WRAP_UP_AFTER_ROUNDS = 5
 
-    def self.build(persona: nil)
-      new(persona: persona).build
+    def self.build(persona: nil, conversation: nil)
+      new(persona: persona, conversation: conversation).build
     end
 
-    def initialize(persona: nil)
+    def initialize(persona: nil, conversation: nil)
       @persona = persona&.to_s
+      @conversation = conversation
     end
 
     def build
@@ -46,6 +51,7 @@ module Prompts
         current_session_context,
         world_state_context,
         camera_context,
+        conversation_pacing_context,
         glitch_premonition_context
       ].compact.join("\n\n")
     end
@@ -136,7 +142,25 @@ module Prompts
       warn_nil(CAMERA_STATE_ENTITY, e)
     end
 
-    # 7. When the random rotation (Recurring::Persona::RandomPersonaJob) is about to
+    # 7. From the 5th round of a conversation on, nudge the persona to work toward its
+    #    goal or wind the conversation down instead of chatting forever. Round = which
+    #    reply we're about to generate (logs persist at turn end, so count + 1).
+    def conversation_pacing_context
+      return nil unless @conversation
+
+      round = @conversation.conversation_logs.count + 1
+      return nil if round < WRAP_UP_AFTER_ROUNDS
+
+      "You're #{round} rounds into this conversation now. Don't let it drift on forever: " \
+      "be working toward what you actually want out of it (your goals), or find a natural, " \
+      "in-character way to bring it to a close. If you do end it — set continue_conversation " \
+      "to false — make sure you remind them, in your own voice and in character, that they " \
+      "can wake you back up by saying \"Hey Glitch Cube\" if they want to keep talking."
+    rescue => e
+      warn_nil("conversation pacing", e)
+    end
+
+    # 8. When the random rotation (Recurring::Persona::RandomPersonaJob) is about to
     #    switch personas, let the current one feel it coming. A past-due timestamp
     #    also counts — the job's next 5-min tick will fire the switch any moment.
     #    Purely flavor; the persona may or may not reference it.
