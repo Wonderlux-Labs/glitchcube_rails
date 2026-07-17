@@ -1,17 +1,17 @@
 - id: presence_marquee_nudge
   alias: "Presence: marquee nudge (repeating wake hint)"
   description: >-
-    Scrolls a "say Hey Glitch Cube to wake me up" hint across the marquee every ~3 min while
+    Scrolls a "say Hey Glitch Cube to wake me up" hint across the marquee every minute while
     a human is detected — OR whenever the presence sensor is unavailable/unknown, so people
-    can still learn how to use the cube if the sensor is offline. The AWTRIX notification is
-    timed (30s) and clears itself, so the sign returns to its idle screen between hints.
-    Time-pattern driven (every 3rd minute) plus an immediate flash on a fresh arrival. Gated
+    can still learn how to use the cube if the sensor is offline. The AWTRIX notification
+    scrolls twice per showing and clears itself, so the sign returns to its idle screen
+    between hints. Time-pattern driven (every minute) plus an immediate flash on a fresh arrival. Gated
     by input_boolean.presence_nudge_enabled; skipped during a persona switch and while the
     satellite is busy (mid-conversation) so it doesn't nag someone already talking. The
     one-shot VOICE call-out lives in the separate "Presence: announce nudge" automation.
   triggers:
   - trigger: time_pattern
-    minutes: "/3"
+    minutes: "/1"
   - trigger: state
     entity_id: binary_sensor.presence_sensor
     to: "on"
@@ -41,4 +41,5 @@
         message: 'SAY "HEY GLITCH CUBE" TO WAKE ME UP'
         color: "#00AEEF"
         duration: 30
+        repeat: 2
   mode: single
