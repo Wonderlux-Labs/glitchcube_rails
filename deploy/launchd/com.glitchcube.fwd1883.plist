@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LAN -> HASS VM relay, port 1883 (MQTT: AWTRIX marquee and any other LAN MQTT
+  clients reach the Mosquitto addon in the NAT'd HASS VM through this).
+  Same rationale as com.glitchcube.fwd8123 — see that file and
+  docs/lakes_of_fire_networking.md. Requires: brew install socat.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.glitchcube.fwd1883</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/socat</string>
+    <string>TCP-LISTEN:1883,fork,reuseaddr</string>
+    <string>TCP:192.168.64.4:1883</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardErrorPath</key>
+  <string>/Users/estiens/Library/Logs/fwd1883.err.log</string>
+</dict>
+</plist>

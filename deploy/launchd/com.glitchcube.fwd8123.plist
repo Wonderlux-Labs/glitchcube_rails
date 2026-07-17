@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LAN -> HASS VM relay, port 8123 (HASS UI + satellite TTS fetch).
+  The HASS VM runs on UTM Shared Network (NAT), so LAN devices (voice satellite,
+  phones on camp Wi-Fi) cannot reach it directly. This socat relay listens on the
+  Mac's interfaces and forwards to the VM over vmnet. Needs no root (port > 1024).
+  pf rdr was tried first and does NOT work here (reply-path asymmetry — the Mac is
+  not the LAN clients' gateway). See docs/lakes_of_fire_networking.md.
+  Requires: brew install socat. Install via bin/install-boot.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.glitchcube.fwd8123</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/socat</string>
+    <string>TCP-LISTEN:8123,fork,reuseaddr</string>
+    <string>TCP:192.168.64.4:8123</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardErrorPath</key>
+  <string>/Users/estiens/Library/Logs/fwd8123.err.log</string>
+</dict>
+</plist>

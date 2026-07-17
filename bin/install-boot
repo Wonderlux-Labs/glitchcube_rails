@@ -52,6 +52,21 @@ else
 fi
 # ------------------------------------------------------------------------------
 
+# --- LAN -> VM socat relays (NAT'd HASS VM) ------------------------------------
+# The HASS VM runs on UTM Shared Network; LAN devices reach it via these relays
+# on the Mac (8123 = HASS/satellite TTS, 1883 = MQTT/AWTRIX). No root needed.
+for FWD_LABEL in com.glitchcube.fwd8123 com.glitchcube.fwd1883; do
+  FWD_SRC="$APP_ROOT/deploy/launchd/$FWD_LABEL.plist"
+  FWD_DST="$HOME/Library/LaunchAgents/$FWD_LABEL.plist"
+  if [ -f "$FWD_SRC" ]; then
+    cp "$FWD_SRC" "$FWD_DST"
+    launchctl bootout "$DOMAIN/$FWD_LABEL" 2>/dev/null || true
+    launchctl bootstrap "$DOMAIN" "$FWD_DST"
+    echo "bootstrapped $DOMAIN/$FWD_LABEL"
+  fi
+done
+# ------------------------------------------------------------------------------
+
 cat <<EOF
 
 Done. Installed two LaunchAgents:

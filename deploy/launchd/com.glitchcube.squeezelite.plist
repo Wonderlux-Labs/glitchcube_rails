@@ -19,6 +19,18 @@
   full power-cycles so the jukebox always maps to the same MA player. (Value is the
   MAC MA already knows the internal jukebox by — do NOT change it without also
   re-binding the player in Music Assistant.)
+
+  -s 192.168.64.4 PINS the slimproto server: the HASS VM runs on UTM Shared
+  Network (NAT) and squeezelite's UDP broadcast discovery cannot cross vmnet NAT.
+  The vmnet lease is sticky by VM MAC. Do NOT use the VM's tailscale IP here —
+  host↔VM tailscale hairpins through the Starlink public IP (~61ms) and MA marks
+  the player unavailable. See docs/lakes_of_fire_networking.md.
+
+  -o "External Headphones" PINS the output device (the cube speaker on the
+  headphone jack). Squeezelite grabs a CoreAudio device when the stream opens and
+  ignores later default-output changes, so an explicit pin is the only reliable
+  routing. If the plug is pulled the device vanishes and squeezelite crash-loops
+  until re-plug (KeepAlive makes that self-healing).
 -->
 <plist version="1.0">
 <dict>
@@ -36,6 +48,12 @@
     <string>/Users/estiens/Library/Logs/Squeezelite.log</string>
     <string>-N</string>
     <string>/Users/estiens/Library/Logs/Squeezelite.name</string>
+    <string>-s</string>
+    <string>192.168.64.4</string>
+    <string>-d</string>
+    <string>slimproto=info</string>
+    <string>-o</string>
+    <string>External Headphones</string>
   </array>
 
   <key>RunAtLoad</key>
