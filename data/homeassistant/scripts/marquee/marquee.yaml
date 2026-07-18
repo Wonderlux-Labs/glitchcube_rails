@@ -199,8 +199,8 @@ set_marquee_idle:
         number: { min: 0, max: 255, mode: slider }
   sequence:
   - variables:
-      ambient_pool: [PlasmaCloud, Ripple, Pacifica, TwinklingStars, ColorWaves, Plasma,
-        Matrix, SwirlIn, SwirlOut, Fireworks, Radar, PingPong]
+      ambient_pool: [PingPong, Matrix, Radar, TwinklingStars, MovingLine, Snake,
+        BrickBreaker, TheaterChase, LookingEyes]
       palette_pool: [Rainbow, Cloud, Ocean, Forest, Party, Lava, Heat]
       eff: "{{ effect | default(ambient_pool | random, true) }}"
       pal: "{{ palette | default(palette_pool | random, true) }}"
@@ -235,7 +235,7 @@ awtrix_install_idle_apps:
       payload: '{"ATRANS":false}'
   - action: script.set_marquee_idle
     data:
-      effect: Pacifica
+      effect: Matrix
       palette: Ocean
       speed: 4
   mode: single
