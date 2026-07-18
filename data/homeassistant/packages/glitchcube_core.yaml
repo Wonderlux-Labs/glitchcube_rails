@@ -101,23 +101,21 @@ input_boolean:
     initial: false
     icon: mdi:lightbulb-alert
 
-  # Master enable for BOTH presence-nudge automations. When ON and someone lingers in front
-  # of the cube without starting a conversation, the cube nudges them: a one-shot persona
-  # voice call-out on arrival ("Presence: announce nudge") plus a repeating marquee wake-hint
-  # every ~3 min while present — or whenever the presence sensor is offline ("Presence:
-  # marquee nudge"). Flip OFF to silence both.
-  presence_nudge_enabled:
-    name: "Presence nudge (idle visitor)"
-    initial: true
-    icon: mdi:account-alert
+  # NOTE (2026-07-18): the presence-nudge automations were removed. The wake-hint now
+  # lives on the AWTRIX itself as a second always-on app that the device cycles with the
+  # idle effect (see scripts/marquee/marquee.yaml + automations/marquee/), so there's no
+  # longer an input_boolean gate for it.
 
   # HASS-side kill switch for the camera pipeline. CameraDescriptionJob checks this
   # before every capture, so automations (a nighttime timer, an event mode, whatever)
   # can turn the cube's look off without touching Rails. Rails has its own independent
   # switch (DISABLE_CAMERA / config.disable_camera); either being on disables the camera.
+  # DEFAULTED ON for Lakes of Fire (2026-07-18): the camera is too dark to be useful, so
+  # the whole capture/describe pipeline is off at boot. Flip OFF to re-enable when lighting
+  # is better.
   disable_camera:
     name: "Disable Camera"
-    initial: false
+    initial: true
     icon: mdi:camera-off
 
   # Raised by Rails for the duration of a grand-entrance persona switch

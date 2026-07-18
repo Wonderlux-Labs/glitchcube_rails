@@ -144,13 +144,16 @@ awtrix_marquee_clear:
       payload: ""
   mode: single
 
-# --- AWTRIX idle screen (single always-on background app) ------------------------
-# The marquee runs ONE always-on custom app named "idle" — the only app in its loop —
-# plus transient notifications (awtrix_marquee_message) that overlay it. Device is set
-# ATRANS=false (no app transitions; a 1-app loop has nothing to transition to), so an
-# effect published to marquee/custom/idle with NO duration holds indefinitely until the
-# next publish (verified on device 2026-07-09). Division of labor: AUTOMATIONS decide
-# WHEN to change the idle screen; the set_marquee_idle SCRIPT decides WHAT it shows.
+# --- AWTRIX background apps (two always-on apps the device cycles) ----------------
+# The marquee runs TWO always-on custom apps that the device auto-cycles: "idle" (an
+# ambient effect) and "wakehint" (the "say Hey Glitchcube to wake me up" hint). App
+# transitions are ON (ATRANS=true) with a 30s cycle time (ATIME=30000, set in the seed
+# below), so the two apps toggle every ~30 seconds. Transient notifications
+# (awtrix_marquee_message) overlay whichever app is showing and then dismiss back to the
+# loop. An effect/text published to marquee/custom/<app> with NO duration holds until the
+# next publish. Division of labor: AUTOMATIONS decide WHEN to change each app; the
+# set_marquee_idle / set_marquee_wakehint SCRIPTS decide WHAT each shows.
+# (Replaced the old presence-nudge marquee automation — the wake hint lives on the sign now.)
 
 # set_marquee_idle — the "what". Call with nothing for a random effect/palette/speed, or
 # pass any subset to dial in a specific look. Publishes retained, no duration.
@@ -220,22 +223,71 @@ set_marquee_idle:
   mode: queued
   max: 10
 
-# Seed after a device reflash: disable app transitions (single-app loop) and set a
-# baseline idle effect via the script above. Run once; the automation cycles it after.
-awtrix_install_idle_apps:
-  alias: AWTRIX Seed Idle App
+# set_marquee_wakehint — the "wakehint" app (the second always-on app the device cycles
+# with the idle effect). Call with no args for a random wake-hint phrase, or pass `message`
+# to pin one. Publishes retained to marquee/custom/wakehint with NO duration, so it holds as
+# an app in the loop until the next publish. The wakehint-cycle automation re-rolls the
+# phrase every minute so the hint varies; the device's ATIME governs how long it shows.
+set_marquee_wakehint:
+  alias: Set Marquee Wake Hint
   description: >-
-    Post-reflash seed for the marquee: turn OFF app transitions (ATRANS, a device setting
-    wiped by reflash) since the loop is a single app, then set a baseline idle effect. The
-    idle-cycle automation takes over from there.
+    Set the marquee's always-on "wakehint" app — the "say Hey Glitchcube to wake me up" hint
+    the device cycles with the idle effect. Call with no args for a random phrase from the
+    pool, or pass `message` to pin one (and optionally `color`). Publishes to
+    marquee/custom/wakehint over MQTT, retained, no duration.
+  fields:
+    message:
+      name: Message
+      description: Wake-hint text. Omit for a random phrase from the pool.
+      required: false
+      selector:
+        text:
+    color:
+      name: Color
+      description: Text color as a hex string. Defaults to cyan (#00AEEF).
+      required: false
+      selector:
+        text:
+  sequence:
+  - variables:
+      phrase_pool:
+      - "SAY 'HEY GLITCHCUBE' TO WAKE ME UP. LOUD AND CLEAR"
+      - "SAY 'HEY GLITCHCUBE' - LOUD AND CLEAR"
+      - "WAKE ME UP: SAY 'HEY GLITCHCUBE'"
+      - "TALK TO ME - JUST SAY 'HEY GLITCHCUBE'"
+      - "SAY IT LOUD: 'HEY GLITCHCUBE'"
+      text: "{{ message | default('', true) or (phrase_pool | random) }}"
+      col: "{{ color | default('#00AEEF', true) }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/custom/wakehint
+      retain: true
+      payload: "{{ {'text': text, 'color': col} | to_json }}"
+  mode: queued
+  max: 10
+
+# Seed after a device reflash: enable app transitions with a 30s cycle time (both wiped by
+# reflash) so the two always-on apps toggle, then seed both apps. Run once; the idle-effect
+# and wakehint cycle automations take over from there.
+awtrix_install_idle_apps:
+  alias: AWTRIX Seed Idle Apps
+  description: >-
+    Post-reflash seed for the marquee. The loop has TWO always-on custom apps that the device
+    auto-cycles: "idle" (ambient effect) and "wakehint" (the say-Hey-Glitchcube hint). Turn
+    app transitions ON (ATRANS) and set the cycle time (ATIME=30s) — both device settings
+    wiped by a reflash — so the two apps toggle every ~30 seconds; then seed both apps.
+    Notifications (awtrix_marquee_message) still overlay whichever app is showing. Run once
+    after a reflash; the idle-effect + wakehint cycle automations take over from there.
   sequence:
   - action: mqtt.publish
     data:
       topic: marquee/settings
-      payload: '{"ATRANS":false}'
+      payload: '{"ATRANS": true, "ATIME": 30000}'
   - action: script.set_marquee_idle
     data:
       effect: Matrix
       palette: Ocean
       speed: 4
+  - action: script.set_marquee_wakehint
+    data: {}
   mode: single

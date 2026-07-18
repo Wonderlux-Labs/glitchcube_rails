@@ -18,9 +18,9 @@
 #   7. Conversation pacing    — from the 5th round of a conversation on: work toward your
 #                               goal or wind it down (and if ending, remind them how to wake
 #                               the cube back up, in character).
-#   8. Glitch premonition     — only when the random rotation's next persona switch is <3 min
-#                               out: a one-line "you feel a glitch coming on" so the persona
-#                               can (or can choose not to) sense its own end approaching.
+#   8. Glitch premonition     — only when the random rotation's next persona switch is <5 min
+#                               out: a "you feel a glitch coming on — say your goodbyes now"
+#                               so the persona can sense its own end and wrap up in character.
 #
 # Nothing here is char-clipped. Each summarizer's own prompt is responsible for keeping its
 # output the right length (handoffs ~2 paragraphs, persona summary ~180 words, chunks ~120
@@ -31,8 +31,16 @@ module Prompts
     WORLD_STATE_SENSOR = "sensor.glitchcube_world_state"
     CAMERA_STATE_ENTITY = "input_text.current_camera_state"
     CURRENT_SESSION_CHUNKS = 4
-    PREMONITION_WINDOW = 3.minutes
+    PREMONITION_WINDOW = 5.minutes
     WRAP_UP_AFTER_ROUNDS = 5
+
+    # Event framing for the night (Lakes of Fire final night, 2026-07-18). Injected
+    # verbatim at the top of the context so every persona knows the situation. Remove
+    # (or update) after the event.
+    EVENT_NOTE = "Tonight is the last night of the burn, but nothing will burn because " \
+                 "of a fire ban. The burn is on brand new land this year and it has been " \
+                 "crowded and forest fires have made it smoky as hell, but it has finally " \
+                 "cleared up."
 
     def self.build(persona: nil, conversation: nil)
       new(persona: persona, conversation: conversation).build
@@ -45,6 +53,7 @@ module Prompts
 
     def build
       [
+        event_note_context,
         overall_summary_context,
         recent_history_context,
         persona_summary_context,
@@ -57,6 +66,11 @@ module Prompts
     end
 
     private
+
+    # 0. Tonight's event framing — a fixed one-liner every persona should know.
+    def event_note_context
+      EVENT_NOTE
+    end
 
     # 1. The structural digest — rendered as a scannable "world board". Not clipped.
     def overall_summary_context
@@ -169,7 +183,10 @@ module Prompts
       return nil if next_at.blank?
       return nil if Time.parse(next_at.to_s) > PREMONITION_WINDOW.from_now
 
-      "You feel a glitch coming on. The cube is getting unstable — someone else is taking over... soon."
+      "You feel a glitch coming on. The cube is getting unstable — you can sense that someone " \
+      "else is about to take over, any moment now. If you're mid-conversation, THIS is the " \
+      "moment to say your goodbyes and wrap things up in your own voice before you glitch out — " \
+      "you won't get a clean chance once the takeover hits."
     rescue => e
       warn_nil("glitch premonition", e)
     end

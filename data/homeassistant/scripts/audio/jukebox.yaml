@@ -1,30 +1,35 @@
-# ONE play script for both front-and-center songs AND quiet background/mood music — the
-# required `volume` decides which (no more duplicate play_background_music). A required,
-# no-default volume forces the calling agent to choose a level deliberately; the description
-# anchors the two bands (50 background, 90 front-and-center, 100 cranked).
-play_music_on_jukebox:
+# Two play scripts for the jukebox — one for front-and-center SONGS, one for background/MOOD
+# music. They're functionally the same (fuzzy-search a track and play it on
+# media_player.jukebox_internal) except for volume and timing, and neither takes a volume
+# field anymore: volume is HARDCODED per script and faded in, so the agent can't leave it in a
+# weird state. (The jukebox_internal media player is still exposed, so the agent CAN nudge
+# volume directly after the fact if it really wants to.)
+#
+#   play_song_on_jukebox       — vol 90, waits for the persona to stop speaking first, fades in.
+#   play_mood_music_on_jukebox — vol 60, starts right away, fades in.
+#
+# Fade: set volume to 0, start playback, then ramp to target over ~3s (6 steps × 0.5s).
+
+play_song_on_jukebox:
+  alias: Play Song on Jukebox
+  description: >-
+    Play a front-and-center SONG on the jukebox — a track meant to take over the room. Volume
+    is fixed at 90 and faded in over ~3s; it waits until the cube has finished speaking before
+    it starts, so the song doesn't stomp the persona's own words. `query` is a fuzzy search —
+    give it "Artist - Title" (e.g. "Nirvana - Smells Like Teen Spirit") or
+    "Artist - Album - Title" to be precise; slightly-wrong titles are forgiving. `queue` is
+    optional: default `replace` plays immediately, `replace_next` queues it as the next track.
   fields:
     query:
+      name: Query
+      description: The track to play, as "Artist - Title" (fuzzy match).
+      required: true
       selector:
         text:
-      required: true
-      name: query
-    volume:
-      name: Volume
-      description: >-
-        Playback volume, 0-100 percent. REQUIRED — choose deliberately: 50 for quiet
-        background/mood music that sits UNDER the conversation (50 already reads as
-        background on this rig — never go lower), 90 for a front-and-center song, and 100
-        only when it should crank and take the whole room.
-      required: true
-      selector:
-        number:
-          min: 0
-          max: 100
-          step: 1
-          unit_of_measurement: "%"
-          mode: slider
     queue:
+      name: Queue
+      description: replace (play now, default) or replace_next (queue as next).
+      required: false
       selector:
         select:
           options:
@@ -32,32 +37,93 @@ play_music_on_jukebox:
           - replace_next
       default: replace
   sequence:
-  # The volume you pass sets whether this is a front-and-center song or background texture.
+  - variables:
+      target: 0.9
+  # Hold until the cube stops speaking so the song lands after the words, not over them.
+  # Outside a conversation the VA media player isn't playing, so this passes through instantly.
+  - wait_template: "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+    timeout: "00:00:25"
+    continue_on_timeout: true
   - action: media_player.volume_set
-    metadata: {}
     target:
       entity_id: media_player.jukebox_internal
     data:
-      volume_level: "{{ (volume | float) / 100 }}"
+      volume_level: 0
   - action: music_assistant.play_media
-    metadata: {}
     target:
       entity_id:
       - media_player.jukebox_internal
     data:
-      media_id: '{{ query }}'
+      media_id: "{{ query }}"
       media_type: track
       enqueue: "{{ queue | default('replace', true) }}"
-  alias: Play Music on Jukebox
+  # Fade 0 -> 90 over ~3s.
+  - repeat:
+      count: 6
+      sequence:
+      - delay: "00:00:00.5"
+      - action: media_player.volume_set
+        target:
+          entity_id: media_player.jukebox_internal
+        data:
+          volume_level: "{{ (target * repeat.index / 6) | round(2) }}"
+  mode: queued
+  max: 5
+
+play_mood_music_on_jukebox:
+  alias: Play Mood Music on Jukebox
   description: >-
-    The one way to play music on the jukebox — for BOTH front-and-center songs and quiet
-    background/mood music; the `volume` you pass decides which. `query` is a fuzzy search that
-    finds the best match — give it "Artist - Title" (e.g. "Nirvana - Smells Like Teen Spirit")
-    or "Artist - Album - Title" to be precise; slightly-wrong titles are forgiving. `volume` is
-    REQUIRED (50 = background under the conversation, 90 = front-and-center song, 100 = crank
-    it / dance party).
-    `queue` is optional: default `replace` plays immediately, `replace_next` queues it as the
-    next track. Keep queues short — you're either playing now or picking the next song.
+    Play quiet background / MOOD music on the jukebox — texture that sits UNDER the
+    conversation, not a front-and-center song. Volume is fixed at 60 and faded in over ~3s,
+    starting right away. `query` is a fuzzy search — build it into a specific real track
+    ("Artist - Title"), not a genre. `queue` is optional: default `replace` plays immediately,
+    `replace_next` queues it as the next track. Use this for "something ambient/under us / mood
+    music"; use play_song_on_jukebox for an actual song to feature.
+  fields:
+    query:
+      name: Query
+      description: The track to play, as "Artist - Title" (fuzzy match).
+      required: true
+      selector:
+        text:
+    queue:
+      name: Queue
+      description: replace (play now, default) or replace_next (queue as next).
+      required: false
+      selector:
+        select:
+          options:
+          - replace
+          - replace_next
+      default: replace
+  sequence:
+  - variables:
+      target: 0.6
+  - action: media_player.volume_set
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: 0
+  - action: music_assistant.play_media
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+    data:
+      media_id: "{{ query }}"
+      media_type: track
+      enqueue: "{{ queue | default('replace', true) }}"
+  # Fade 0 -> 60 over ~3s.
+  - repeat:
+      count: 6
+      sequence:
+      - delay: "00:00:00.5"
+      - action: media_player.volume_set
+        target:
+          entity_id: media_player.jukebox_internal
+        data:
+          volume_level: "{{ (target * repeat.index / 6) | round(2) }}"
+  mode: queued
+  max: 5
 
 search_jukebox:
   alias: Search Jukebox

@@ -1,0 +1,22 @@
+- id: cube_awtrix_wakehint_cycle
+  alias: Cube AWTRIX - wake-hint phrase cycle
+  description: >-
+    Re-roll the marquee's "wakehint" app text every minute so the "say Hey Glitchcube to
+    wake me up" hint varies. The device auto-cycles between the idle-effect app and this
+    wake-hint app every ~30s (ATIME, set in the AWTRIX seed script); this automation only
+    changes WHICH phrase the wake-hint app shows, not the cycling. Skipped during a persona
+    switch (the grand-entrance show owns the sign then). Notifications
+    (awtrix_marquee_message) still override both background apps, so an active
+    conversation's persona marquee messages are unaffected. The SCRIPT
+    (set_marquee_wakehint) owns the phrase pool; this owns WHEN to re-roll.
+  triggers:
+  - trigger: time_pattern
+    minutes: "/1"
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+  actions:
+  - action: script.set_marquee_wakehint
+    data: {}
+  mode: single

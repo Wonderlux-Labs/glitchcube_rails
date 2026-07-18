@@ -1,0 +1,106 @@
+# --- Idle attention (SFX + persona call-out) -------------------------------------
+# Fired by the "Idle: attention ping" automation when the cube's been idle a while, to
+# draw people over. Two scripts: a full persona voiced call-out (chime_tts, its own voice)
+# and a bare sound-effect. Both play out the cube's OWN speaker
+# (media_player.cube_cube_voice_media_player), NOT the jukebox — there's no conversation in
+# flight (the automation requires 3 min idle), so it can't step on a pipeline.
+#
+# SFX files live at /media/sounds/effects/*.mp3 on the box (the same set the retired
+# play_sound_effect script used). chime_tts uses one as a pre-announce chime; play_attention_sfx
+# plays one straight through media_source. Persona -> Nabu Casa cloud voice mirrors the
+# voice_id in each lib/prompts/personas/*.yml.
+
+persona_attention_announce:
+  alias: Persona Attention Announce
+  description: >-
+    Idle attention-grab: play a random "pay attention" sound effect as a pre-chime, then have
+    the CURRENT persona say a short call-out in its own voice via chime_tts, out the cube's own
+    speaker (not the jukebox). Briefly sparkles the body light in the persona color and restores
+    whatever it was. Fire-and-forget from the idle-attention automation.
+  sequence:
+  - variables:
+      persona: "{{ states('input_select.current_persona') }}"
+      # Persona -> Nabu Casa cloud voice + locale (matches lib/prompts/personas/*.yml voice_id).
+      voice_map:
+        buddy: { voice: GuyNeural, language: en-US }
+        jax: { voice: MitchellNeural, language: en-NZ }
+        neon: { voice: LibbyNeural, language: en-GB }
+        zorp: { voice: PrabhatNeural, language: en-IN }
+        crash: { voice: ConnorNeural, language: en-IE }
+      v: "{{ voice_map.get(persona, {'voice': 'JennyNeural', 'language': 'en-US'}) }}"
+      rgb: >-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}.get(persona, [255,255,255]) }}
+      # "Pay attention" sound effects (a curated attention subset of /media/sounds/effects/).
+      sfx_pool:
+      - bell_ding.mp3
+      - cowbell.mp3
+      - cymbal_crash.mp3
+      - rooster.mp3
+      - whistle.mp3
+      - wind_chime.mp3
+      - alarm_clock.mp3
+      - cash_register.mp3
+      chime_file: "/media/sounds/effects/{{ sfx_pool | random }}"
+      # Same random openers the old presence voice-nudge used (always ended with the wake hint).
+      phrases:
+      - "Hey — over here."
+      - "Psst. Over here. The glowing cube."
+      - "Yes, I'm talking. Cubes talk now."
+      - "You look like you have questions."
+      - "Don't be shy — I'm friendlier than I look."
+      - "I see you. The cube sees all."
+      - "Well? Come say hi."
+      - "Bored? Me too."
+      phrase: "{{ phrases | random }} Say 'Hey Glitch Cube' to wake me up."
+  # Snapshot the body light so we can put it back exactly as it was after the sparkle.
+  - action: scene.create
+    data:
+      scene_id: attention_light_restore
+      snapshot_entities:
+      - light.cube_body_wled
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_body_wled
+    data:
+      rgb_color: "{{ rgb }}"
+      brightness_pct: 100
+      effect: Sparkle
+  - action: chime_tts.say
+    data:
+      entity_id: media_player.cube_cube_voice_media_player
+      chime_path: "{{ chime_file }}"
+      message: "{{ phrase }}"
+      tts_platform: cloud
+      language: "{{ v.language }}"
+      options:
+        voice: "{{ v.voice }}"
+  - action: scene.turn_on
+    target:
+      entity_id: scene.attention_light_restore
+  mode: single
+
+play_attention_sfx:
+  alias: Play Attention SFX
+  description: >-
+    Play a single random "pay attention" sound effect out the cube's own speaker (the VA media
+    player, not the jukebox). Used by the idle-attention automation on the ~2-in-3 turns it
+    doesn't do a full persona announce.
+  sequence:
+  - variables:
+      sfx_pool:
+      - bell_ding.mp3
+      - cowbell.mp3
+      - cymbal_crash.mp3
+      - rooster.mp3
+      - whistle.mp3
+      - wind_chime.mp3
+      - alarm_clock.mp3
+      - cash_register.mp3
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.cube_cube_voice_media_player
+    data:
+      media_content_type: music
+      media_content_id: "media-source://media_source/local/sounds/effects/{{ sfx_pool | random }}"
+  mode: single

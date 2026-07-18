@@ -19,6 +19,8 @@ RSpec.describe Shows::GrandEntrance do
     allow(HostAudio).to receive(:play)
     allow(HostAudio).to receive(:say)
     allow(ConversationOrchestrator).to receive(:new).and_return(orchestrator)
+    # Don't actually sleep out the marquee lead-in / speech-wait polling in tests.
+    allow(show).to receive(:sleep)
 
     FileUtils.touch(songs_dir.join("theme_a.mp3"))
     FileUtils.touch(songs_dir.join("theme_b.mp3"))
@@ -81,7 +83,8 @@ RSpec.describe Shows::GrandEntrance do
     end
 
     marquee_messages = marquee_calls.map { |c| c[:data].dig(:variables, :message) }
-    expect(marquee_messages.any? { |m| described_class::TRANSITION_MESSAGES.include?(m) }).to be true
+    expect(marquee_messages).to include("PERSONA SWITCHING")
+    expect(marquee_messages).to include(described_class::UNAVAILABLE_MESSAGE)
 
     light_call = fake_ha.service_calls_for("script")
       .find { |c| c[:data][:entity_id] == "script.set_top_light_effect" }
@@ -96,13 +99,13 @@ RSpec.describe Shows::GrandEntrance do
     expect(fake_ha.service_calls_for("script").map { |c| c[:service] }.uniq).to eq([ "turn_on" ])
   end
 
-  it 'plays a random theme song from the rails media dir, capped at 60 seconds' do
+  it 'plays a random theme song from the rails media dir, capped at 45 seconds' do
     show.call
 
     expect(HostAudio).to have_received(:play) do |path, max_seconds:, **|
       expect(path.to_s).to start_with(songs_dir.to_s)
       expect(path.to_s).to end_with(".mp3")
-      expect(max_seconds).to eq(60)
+      expect(max_seconds).to eq(45)
     end
   end
 

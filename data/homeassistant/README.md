@@ -38,6 +38,8 @@ irrelevant to that.
 
 **marquee/**
 - `idle_effect_cycle.yaml` — every ~2 min, pick a random idle effect for the AWTRIX sign.
+- `wakehint_cycle.yaml` — every ~1 min, re-roll the AWTRIX "wakehint" app phrase (the
+  "say Hey Glitchcube to wake me up" hint, which the device cycles with the idle effect).
 
 **camera/**
 - `clear_stale_description.yaml` — blank `input_text.current_camera_state` after ~3 min so a stale look never lingers.
@@ -45,12 +47,22 @@ irrelevant to that.
 **audio/**
 - `quiet_mode_autoduck_jukebox.yaml` — while `input_boolean.quiet_mode` is on, cap
   `media_player.jukebox_internal` at `input_number.quiet_mode_max_volume`.
+- `idle_attention_ping.yaml` — every 3 min while the satellite's been idle 3 min (and not
+  switching/resting): 1/3 chance the current persona calls out in its own voice (`chime_tts`
+  pre-SFX + a line, out the cube's own speaker via `script.persona_attention_announce`),
+  else 2/3 just a random attention SFX (`script.play_attention_sfx`). Replaced the old
+  presence voice-nudge + idle glitch-show musing.
 
 **lights/**
 - `top_light_turn_indicator_blink_test.yaml` — diagnostic: blink the Govee top light on listening/processing (gated by `input_boolean.top_light_turn_indicator`).
+- `idle_body_light_reset.yaml` — after the satellite's been idle 3 min, snap the body WLED
+  back to full brightness + the current persona color + one of solid/pulse/chase (re-rolled
+  every ~5 min while idle), so personas can't leave it stuck dim or sound-reactive.
 
-**presence/**
-- `nudge_when_idle.yaml` — when someone lingers without starting a conversation, nudge them (marquee hint + persona voice call-out). Gated by `input_boolean.presence_nudge_enabled`.
+**presence/** — REMOVED (2026-07-18). The old presence voice-nudge and repeating marquee
+wake-hint automations are gone. The wake hint now lives on the AWTRIX as a second always-on
+app cycled with the idle effect (see `scripts/marquee/marquee.yaml`), and the idle voice
+call-out moved to `audio/idle_attention_ping.yaml`.
 
 **connectivity/** — internet-outage "resting" mode (see the spec at
 `docs/superpowers/specs/2026-07-14-internet-outage-resting-mode-design.md`)
@@ -60,7 +72,13 @@ irrelevant to that.
 ## Scripts — `scripts/<domain>/` (14)
 
 **audio/**
-- `jukebox.yaml` — `play_music_on_jukebox` (play a track/query, volume-aware), `search_jukebox` (search the library).
+- `jukebox.yaml` — `play_song_on_jukebox` (front-and-center song, fixed vol 90, waits for the
+  cube to stop speaking, fades in), `play_mood_music_on_jukebox` (background/mood, fixed vol
+  60, immediate, fades in), `search_jukebox` (search the library). Neither play tool takes a
+  volume — it's baked per tool.
+- `attention.yaml` — `persona_attention_announce` (idle SFX-pre-chime + current-persona
+  voiced call-out via `chime_tts`, out the cube's own speaker) and `play_attention_sfx`
+  (a bare random attention SFX). Driven by `automations/audio/idle_attention_ping.yaml`.
 - `announcement.yaml` — `system_announcement` (chime + robotic non-persona TTS message over
   the jukebox via `music_assistant.play_announcement`, volume-aware, default 75; ducks and
   auto-resumes whatever was playing). Callable by any persona via the `other_actions` channel.
@@ -69,8 +87,12 @@ irrelevant to that.
 - `awtrix_marquee_message` — flash a message (color/rainbow/duration) on the LED sign.
 - `awtrix_marquee_restore_brightness` — restore the idle BRI (helper).
 - `awtrix_marquee_clear` — dismiss the current message.
-- `set_marquee_idle` — set the always-on idle screen (effect/palette/speed).
-- `awtrix_install_idle_apps` — post-reflash seed (ATRANS off + baseline idle).
+- `set_marquee_idle` — set the "idle" app (ambient effect/palette/speed) — one of two
+  always-on apps the device cycles.
+- `set_marquee_wakehint` — set the "wakehint" app (random "say Hey Glitchcube" phrase) —
+  the other always-on app in the cycle.
+- `awtrix_install_idle_apps` — post-reflash seed: ATRANS **on** + ATIME 30s + seed both the
+  idle-effect and wakehint apps so the device toggles them every ~30s.
 
 **lights/**
 - `cube_lights.yaml` — `set_cube_lights`: the Assist-facing control for the single body
@@ -95,8 +117,9 @@ Input helpers stay in packages (they're finicky when split into include-dirs).
   - `input_text`: `glitchcube_host` (Rails host:port), `backend_health_status`,
     `marquee_text`, `current_camera_state`; `glitchcube_breaking_news` (**currently unused**).
   - `input_boolean`: `usb_charger`, `strobe_light`, `top_light_turn_indicator`,
-    `presence_nudge_enabled`, `disable_camera`, `persona_switching`, `quiet_mode`,
-    **`internet_resting`** (cube asleep/offline — set by the rest-mode scripts).
+    `disable_camera` (**defaulted ON for 2026-07-18** — camera too dark), `persona_switching`,
+    `quiet_mode`, **`internet_resting`** (cube asleep/offline — set by the rest-mode scripts).
+    (`presence_nudge_enabled` removed with the presence-nudge automations.)
   - `input_number`: `quiet_mode_max_volume`. `input_button`: `trigger_alarm`.
 
   (Dev-mock helpers `dev_jukebox_song` / `dev_mood_music` / `dev_sound_effect` /
@@ -110,8 +133,8 @@ Input helpers stay in packages (they're finicky when split into include-dirs).
   `Api::V1::HomeAssistantWebhookController` (`/api/v1/hass/*`):
   - `glitchcube_play_theme_song` → `/api/v1/hass/theme_song`
   - `glitchcube_grand_entrance` → `/api/v1/hass/grand_entrance`
-  - `glitchcube_glitch_short` → `/api/v1/hass/glitch_short` (`Shows::GlitchShort`: one short glitch-radio stab + WLED spasm)
-  - `glitchcube_glitch_long` → `/api/v1/hass/glitch_long` (`Shows::GlitchLong`: long bed → short stab → long bed, ~45-85s)
+  - `glitchcube_glitch_short` → `/api/v1/hass/glitch_short` (`Shows::GlitchShort`: one short glitch-radio stab + WLED spasm) — **now dormant** (the `idle/glitch_ambient.yaml` automation that called it was removed 2026-07-18; endpoint kept)
+  - `glitchcube_glitch_long` → `/api/v1/hass/glitch_long` (`Shows::GlitchLong`: long bed → short stab → long bed, ~45-85s) — **now dormant** (same; endpoint kept)
 
 **Connectivity signal:** `binary_sensor.internet` is the built-in HASS `ping`
 integration (configured in the UI, not YAML) — the rest-mode automations trigger off it.

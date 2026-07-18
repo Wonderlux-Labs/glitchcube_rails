@@ -225,8 +225,8 @@ RSpec.describe Prompts::ContextBuilder do
       end
     end
 
-    it 'returns an empty string when nothing is available' do
-      expect(subject).to eq("")
+    it 'returns only the always-on event note when nothing else is available' do
+      expect(subject).to eq(described_class::EVENT_NOTE)
     end
 
     context 'conversation pacing (wrap-it-up nudge)' do
