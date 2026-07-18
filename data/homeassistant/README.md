@@ -79,6 +79,9 @@ call-out moved to `audio/idle_attention_ping.yaml`.
 - `attention.yaml` — `persona_attention_announce` (idle glitch-static blip pre-chime + the
   current persona's own cloud voice via `tts.cloud_say`, out the cube's own speaker) and
   `play_attention_sfx` (a bare random glitch SFX). Driven by `automations/audio/idle_attention_ping.yaml`.
+- `systems_check.yaml` — `systems_check`: a COSMETIC diagnostic (glitch blip + a cheeky robotic
+  readout in a flat non-persona voice via `tts.cloud_say`). Doesn't check anything; exposed to the
+  action agent so a persona's "run a systems check" has something to call.
 
 **marquee/** — `marquee.yaml`
 - `awtrix_marquee_message` — flash a message (color/rainbow/duration) on the LED sign.
