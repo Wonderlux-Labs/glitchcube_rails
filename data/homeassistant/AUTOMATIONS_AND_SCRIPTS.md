@@ -104,11 +104,11 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
   </details>
 - **`cube_awtrix_wakehint_gate`** — Cube AWTRIX - wake-hint gate (busy vs idle) — _line ~316_
-- **`cube_awtrix_reseed_idle`** — Cube AWTRIX - reseed idle apps (safety net) — _line ~388_
+- **`cube_awtrix_reseed_idle`** — Cube AWTRIX - reseed idle apps (safety net) — _line ~394_
 
 ### persona
 
-- **`1755313710558`** — Persona Switcher — _line ~410_
+- **`1755313710558`** — Persona Switcher — _line ~416_
   <details><summary>context (persona_switcher.yaml)</summary>
 
   > (2) Head + body strips + Voice PE ring -> persona signature color. The script owns the
@@ -117,12 +117,12 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > stays in scripts/lights/top_light.yaml in case we revive the top light later.
 
   </details>
-- **`persona_switching_silence`** — Persona switching: silence during the show — _line ~439_
-- **`persona_switching_stuck_watchdog`** — Persona switching: watchdog (unstick after 2 min) — _line ~477_
+- **`persona_switching_silence`** — Persona switching: silence during the show — _line ~445_
+- **`persona_switching_stuck_watchdog`** — Persona switching: watchdog (unstick after 2 min) — _line ~483_
 
 ### voice
 
-- **`cube_voice_mic_guard_and_marquee`** — Cube Voice - mic guard + marquee status — _line ~500_
+- **`cube_voice_mic_guard_and_marquee`** — Cube Voice - mic guard + marquee status — _line ~506_
   <details><summary>context (mic_guard_and_marquee.yaml)</summary>
 
   > (inline) 563: the mic reopens when the TTS stream finishes DOWNLOADING, not
@@ -384,8 +384,8 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
 ### persona
 
-- **`set_persona_quick`** (`script.set_persona_quick`) — Set Persona (quick) — _line ~1151_
-- **`hand_off_the_cube`** (`script.hand_off_the_cube`) — Hand Off The Cube (grand entrance) — _line ~1186_
+- **`set_persona_quick`** (`script.set_persona_quick`) — Set Persona (quick) — _line ~1158_
+- **`hand_off_the_cube`** (`script.hand_off_the_cube`) — Hand Off The Cube (grand entrance) — _line ~1193_
   <details><summary>context (persona.yaml)</summary>
 
   > --- Persona switching -------------------------------------------------------

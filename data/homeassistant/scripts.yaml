@@ -1140,6 +1140,13 @@ awtrix_install_idle_apps:
     data:
       topic: marquee/settings
       payload: '{"ATRANS": true, "ATIME": 20}'
+  # Scrub any stray transient busyfx effect app (retain:true clears a lingering retained
+  # one too) so a reseed while idle always lands on a clean idle+wakehint loop.
+  - action: mqtt.publish
+    data:
+      topic: marquee/custom/busyfx
+      payload: ''
+      retain: true
   - action: script.set_marquee_idle
     data:
       effect: Matrix

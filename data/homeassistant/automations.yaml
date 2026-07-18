@@ -366,10 +366,13 @@
         data:
           topic: marquee/custom/wakehint
           payload: ''
+      # retain:FALSE — busyfx is transient (only during a busy state). If it were
+      # retained the broker would replay it on every reboot and the effect would linger
+      # while idle (false "something's wrong" tell) until the next conversation ended.
       - action: mqtt.publish
         data:
           topic: marquee/custom/busyfx
-          retain: true
+          retain: false
           payload: "{{ {'effect': (['Plasma', 'ColorWaves'] | random)} | to_json }}"
     - conditions:
       - "{{ trigger.id == 'free' }}"
@@ -377,10 +380,13 @@
       - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
       sequence:
       # Drop the busy effect app and bring the clean text-only wake hint back.
+      # retain:true on the empty payload deletes the app AND clears any stray retained
+      # busyfx from the broker, so nothing replays it on the next reboot.
       - action: mqtt.publish
         data:
           topic: marquee/custom/busyfx
           payload: ''
+          retain: true
       - action: script.set_marquee_wakehint
         data: {}
   mode: queued
