@@ -75,20 +75,47 @@ RSpec.describe Shows::GrandEntrance do
     expect(cube_mode_calls.map { |c| c[:data][:option] }).to eq(%w[performance conversation])
   end
 
-  it 'announces the anomaly on the host speaker, marquee, and lights' do
+  it 'announces the anomaly on the host speaker, a held marquee, and lights' do
     show.call
 
     expect(HostAudio).to have_received(:say) do |line|
       expect(described_class::ANOMALY_LINES).to include(line)
     end
 
-    marquee_messages = marquee_calls.map { |c| c[:data].dig(:variables, :message) }
-    expect(marquee_messages).to include("PERSONA SWITCHING")
-    expect(marquee_messages).to include(described_class::UNAVAILABLE_MESSAGE)
+    # The switch notice is a HELD AWTRIX notification (hold:true) published straight to MQTT,
+    # so it stays up the whole (mic-muted) switch instead of reverting to the wakehint app.
+    hold = mqtt_calls.find { |c| c[:data][:topic] == "marquee/notify" }
+    expect(hold).not_to be_nil
+    payload = JSON.parse(hold[:data][:payload])
+    expect(described_class::SWITCHING_HOLD_MESSAGES).to include(payload["text"])
+    expect(payload["hold"]).to be(true)
 
     light_call = fake_ha.service_calls_for("script")
       .find { |c| c[:data][:entity_id] == "script.set_top_light_effect" }
     expect(described_class::GLITCH_SCENES).to include(light_call[:data].dig(:variables, :effect))
+  end
+
+  it 'holds the marquee through the switch and dismisses it before the arrival' do
+    show.call
+
+    calls = fake_ha.service_calls
+    hold_at = calls.index { |c| c[:domain] == "mqtt" && c[:data][:topic] == "marquee/notify" }
+    dismiss_at = calls.index { |c| c[:domain] == "mqtt" && c[:data][:topic] == "marquee/notify/dismiss" }
+    arrival_at = calls.index { |c| c[:domain] == "assist_satellite" }
+
+    expect(hold_at).not_to be_nil
+    expect(dismiss_at).not_to be_nil
+    expect(hold_at).to be < dismiss_at
+    expect(dismiss_at).to be < arrival_at
+  end
+
+  it 'dismisses the held marquee even when the show crashes mid-song' do
+    allow(HostAudio).to receive(:play).and_raise("ffplay exploded")
+
+    expect { show.call }.to raise_error("ffplay exploded")
+
+    dismiss = mqtt_calls.find { |c| c[:data][:topic] == "marquee/notify/dismiss" }
+    expect(dismiss).not_to be_nil
   end
 
   # HASS script service calls BLOCK until the script finishes (the marquee script
@@ -164,6 +191,10 @@ RSpec.describe Shows::GrandEntrance do
   def marquee_calls
     fake_ha.service_calls_for("script")
       .select { |c| c[:data][:entity_id] == "script.awtrix_marquee_message" }
+  end
+
+  def mqtt_calls
+    fake_ha.service_calls_for("mqtt")
   end
 
   def cube_mode_calls

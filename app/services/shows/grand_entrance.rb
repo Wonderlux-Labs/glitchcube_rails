@@ -23,8 +23,18 @@ module Shows
       "CUBE INTEGRITY COMPROMISED. NEW ENTITY INBOUND."
     ].freeze
 
-    # Held across the (mic-muted) show so nobody thinks the cube is ignoring them.
-    UNAVAILABLE_MESSAGE = "GLITCHCUBE UNAVAILABLE MID TRANSITION"
+    # Held on the marquee for the WHOLE (mic-muted) switch so the sign never reverts to the
+    # idle "say Hey Glitchcube" app while the cube can't hear anyone. One of these goes up
+    # (hold: true) at the anomaly moment and stays until the show ends and dismiss_marquee
+    # clears it.
+    SWITCHING_HOLD_MESSAGES = [
+      "CUBE ANOMALY - REBOOTING PERSONA CORE",
+      "PERSONA CORE RELOADING - PLEASE STAND BY",
+      "CONSCIOUSNESS SUBSTRATE REBOOTING",
+      "NEW ENTITY INBOUND - RECALIBRATING",
+      "GLITCHCUBE UNAVAILABLE MID TRANSITION",
+      "PERSONALITY MATRIX SWAPPING - HOLD TIGHT"
+    ].freeze
 
     GLITCH_SCENES = [ "Cyberpunk", "Acid", "Lightning Bats", "Flash" ].freeze
 
@@ -41,9 +51,15 @@ module Shows
     def call
       performing do
         await_speech_end
-        switching do
-          anomaly_moment
-          play_theme_song
+        # The held anomaly marquee must come down no matter how the switch ends, so the sign
+        # never gets stuck on "REBOOTING" into the next persona's turn.
+        begin
+          switching do
+            anomaly_moment
+            play_theme_song
+          end
+        ensure
+          dismiss_marquee
         end
         announce_arrival
       end
@@ -66,12 +82,24 @@ module Shows
 
     def anomaly_moment
       HostAudio.say(ANOMALY_LINES.sample)
-      # Flash the switch notice, let it read for a beat, then hold the "unavailable"
-      # warning up for the whole (mic-muted) show.
-      marquee("PERSONA SWITCHING", rainbow: true, duration: 6)
-      sleep 4
-      marquee(UNAVAILABLE_MESSAGE, color: "#FF3B30", duration: MAX_PLAY_SECONDS)
+      hold_switch_marquee(SWITCHING_HOLD_MESSAGES.sample)
       top_light_effect(GLITCH_SCENES.sample)
+    end
+
+    # A HELD AWTRIX notification, published straight to MQTT (no custom script needed): it
+    # stays up until dismissed, unlike a duration/repeat notify that scrolls a couple times
+    # and reverts to the idle app loop — which would invite people to "say Hey Glitchcube"
+    # while the mic is muted mid-switch. Force full brightness first so it's readable.
+    def hold_switch_marquee(message)
+      hass.call_service("mqtt", "publish", topic: "marquee/settings", payload: '{"BRI": 255}')
+      hass.call_service("mqtt", "publish",
+        topic: "marquee/notify",
+        payload: { text: message, hold: true, rainbow: true }.to_json)
+    end
+
+    # Clear the held notification, returning the sign to its normal idle/wakehint app loop.
+    def dismiss_marquee
+      hass.call_service("mqtt", "publish", topic: "marquee/notify/dismiss", payload: "")
     end
 
     def play_theme_song
