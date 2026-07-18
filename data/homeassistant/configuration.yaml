@@ -8,7 +8,7 @@ frontend:
 homeassistant:
   packages: !include_dir_named packages
 
-automation: !include_dir_merge_list automations/
-script: !include_dir_merge_named scripts/
+automation: !include automations.yaml
+script: !include scripts.yaml
 scene: !include scenes.yaml
 template: !include_dir_merge_list templates/

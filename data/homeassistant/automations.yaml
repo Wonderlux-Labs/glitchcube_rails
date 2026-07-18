@@ -1,0 +1,497 @@
+---
+- id: cube_idle_attention_ping
+  alias: 'Idle: attention ping (SFX / persona call-out)'
+  description: 'Keep the cube from sitting dead-silent when nobody''s engaging. Every
+    3 minutes, if the satellite has been idle 3 min (nobody talking) and we''re not
+    mid persona-switch or asleep, do one of two things: a 1-in-3 chance the CURRENT
+    persona calls out in its own voice (a "pay attention" SFX pre-chime + a short
+    line via chime_tts, out the cube''s own speaker), else (2-in-3) just play a random
+    attention SFX. Replaces the old presence voice-nudge and the idle glitch-show
+    musing. Plays out media_player.cube_cube_voice (NOT the jukebox) — safe because
+    the 3-min-idle gate means no conversation is happening.'
+  triggers:
+  - trigger: time_pattern
+    minutes: "/3"
+  conditions:
+  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+  - "{{ is_state('input_boolean.internet_resting', 'off') }}"
+  - condition: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    state: idle
+    for: '00:03:00'
+  actions:
+  - choose:
+    - conditions: "{{ (range(1, 4) | random) == 1 }}"
+      sequence:
+      - action: script.persona_attention_announce
+    default:
+    - action: script.play_attention_sfx
+  mode: single
+- id: jukebox_now_playing_marquee
+  alias: 'Jukebox: NOW PLAYING marquee'
+  description: 'Flash "NOW PLAYING: <song> by <artist>" on the marquee ~30s and again
+    ~1:30 into a track that''s been playing continuously at a foreground volume (>
+    50). Un-gated from persona (was jax/neon only) — any loud-enough song shows. Deliberately
+    NOT tied to media_title changes: it fires off the playing-state duration so it
+    announces twice per playing session, not on every track flip. Suppressed when
+    a conversation is live (satellite not idle) so it never stomps a persona''s own
+    marquee message, and while a persona switch is running.'
+  triggers:
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    to: playing
+    for: '00:00:30'
+    id: at_30s
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    to: playing
+    for: '00:01:30'
+    id: at_90s
+  conditions:
+  - condition: numeric_state
+    entity_id: media_player.jukebox_internal
+    attribute: volume_level
+    above: 0.5
+  - condition: template
+    value_template: "{{ state_attr('media_player.jukebox_internal', 'media_title')
+      not in [none, '', 'unknown'] }}"
+  - condition: state
+    entity_id: input_boolean.persona_switching
+    state: 'off'
+  - condition: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    state: idle
+  actions:
+  - variables:
+      title: "{{ state_attr('media_player.jukebox_internal', 'media_title') }}"
+      artist: "{{ state_attr('media_player.jukebox_internal', 'media_artist') }}"
+      note_icon: "{{ [39263, 39264, 39273, 39275, 39295, 39302, 39349] | random }}"
+  - action: script.awtrix_marquee_message
+    data:
+      message: "{% if artist not in [none, '', 'unknown'] %}NOW PLAYING: {{ title
+        }} by {{ artist }}{% else %}NOW PLAYING: {{ title }}{% endif %}"
+      icon: "{{ note_icon }}"
+      duration: 15
+      repeat: 2
+  mode: single
+- id: quiet_mode_autoduck_jukebox
+  alias: 'Quiet mode: auto-duck jukebox'
+  description: 'While input_boolean.quiet_mode is ON, keep media_player.jukebox_internal
+    at or below input_number.quiet_mode_max_volume (a percent). Fires when the jukebox
+    volume changes, when quiet_mode is switched on, or when the cap itself is lowered
+    — so raising the volume past the cap, or tightening the cap under the current
+    volume, both snap it back down. Caps regardless of play state (idle/paused too),
+    on purpose: pre-ducking the idle player means the NEXT track can''t start with
+    a loud blip before we react. Re-setting the volume re-triggers this, but the new
+    level equals the cap so the over-cap condition is false and it stops (no loop).
+    Does nothing when quiet_mode is off. Rails'' HostAudio applies the same cap to
+    its own direct host playback; this automation only governs the jukebox media_player.'
+  triggers:
+  - trigger: state
+    entity_id: media_player.jukebox_internal
+    attribute: volume_level
+  - trigger: state
+    entity_id: input_boolean.quiet_mode
+    to: 'on'
+  - trigger: state
+    entity_id: input_number.quiet_mode_max_volume
+  conditions:
+  - condition: state
+    entity_id: input_boolean.quiet_mode
+    state: 'on'
+  - condition: template
+    value_template: "{% set vol = state_attr('media_player.jukebox_internal', 'volume_level')
+      %} {% set cap = states('input_number.quiet_mode_max_volume') | float(50) %}
+      {{ vol is not none and (vol * 100) > (cap + 0.1) }}"
+  actions:
+  - action: media_player.volume_set
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: "{{ (states('input_number.quiet_mode_max_volume') | float(50))
+        / 100 }}"
+  mode: restart
+- id: camera_clear_stale_description
+  alias: 'Camera: clear stale description'
+  description: 'Blank input_text.current_camera_state once it has sat unchanged for
+    3 minutes, so a stale camera look never lingers in the brain''s prompt. The non-empty
+    condition is the guard: clearing sets the value to "" (a state change that restarts
+    the 3-min timer), but 3 min later the condition is false and nothing re-fires.
+    ContextBuilder omits the line entirely when this is empty, so clearing simply
+    removes the camera block.'
+  triggers:
+  - trigger: state
+    entity_id: input_text.current_camera_state
+    for: '00:03:00'
+  conditions:
+  - "{{ states('input_text.current_camera_state') | trim != '' }}"
+  actions:
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.current_camera_state
+    data:
+      value: ''
+  mode: single
+- id: backend_restart_watchdog
+  alias: 'Backend: last-resort restart when wedged too long'
+  description: If sensor.glitchcube_backend has been unavailable for 15 minutes (heartbeat
+    dead → jobs wedged / backend degraded), ask Rails to gracefully restart its whole
+    stack. Reachable only while Puma still serves HTTP; harmless no-op otherwise.
+  triggers:
+  - trigger: state
+    entity_id: sensor.glitchcube_backend
+    to: unavailable
+    for: '00:15:00'
+  conditions: []
+  actions:
+  - action: rest_command.glitchcube_restart_backend
+    data:
+      reason: backend unavailable 15m (heartbeat dead)
+  mode: single
+- id: internet_down_enter_rest
+  alias: 'Internet down: enter rest mode'
+  description: When the internet has been unreachable for 5 minutes, put the cube
+    to sleep (dim red lights, muted mic, stopped media, low_power, permanent "resting"
+    marquee). Also re-asserts every 5 min while still down so the sign survives a
+    marquee power-cycle. script.enter_rest_mode is idempotent.
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.internet
+    to: 'off'
+    for: '00:05:00'
+    id: went_down
+  - trigger: time_pattern
+    minutes: "/5"
+    id: reassert
+  conditions:
+  - |-
+    {{ trigger.id == 'went_down'
+       or (is_state('input_boolean.internet_resting', 'on')
+           and is_state('binary_sensor.internet', 'off')) }}
+  actions:
+  - action: script.enter_rest_mode
+  mode: single
+- id: internet_up_wake_from_rest
+  alias: 'Internet up: wake from rest mode'
+  description: 'When the internet has been back for 3 minutes AND the cube is resting,
+    wake it: clear the sign, return to conversation mode, and trigger a fresh persona''s
+    grand entrance (which resyncs lights, plays a song, announces arrival, un-mutes).'
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.internet
+    to: 'on'
+    for: '00:03:00'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.internet_resting
+    state: 'on'
+  actions:
+  - action: script.wake_from_rest
+  mode: single
+- id: cube_idle_body_light_reset
+  alias: 'Idle: reset body light to persona look'
+  description: 'Personas thrash the body WLED during conversations — sound-reactive
+    effects, odd brightness — and often leave it hard to see once they''re done. Once
+    the cube''s been idle 3 minutes, snap the body strip back to a clean, VISIBLE
+    look: full brightness, the current persona''s signature color, and one of three
+    motions (1/3 solid, 1/3 pulse, 1/3 chase/scan). Then re-roll the motion every
+    ~5 min while it stays idle so it''s not a dead static block. Personas keep full
+    control of the lights DURING a conversation — this only fires while the satellite
+    has been idle a while. Skipped during a persona switch (the grand-entrance show
+    owns the lights then). Colors match script.sync_lights_to_persona (the persona->RGB
+    map).'
+  triggers:
+  - trigger: time_pattern
+    minutes: "/1"
+  conditions:
+  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+  - condition: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    state: idle
+    for: '00:03:00'
+  - "{{ this.attributes.last_triggered is none or (now() - this.attributes.last_triggered)
+    > timedelta(minutes=5) }}"
+  actions:
+  - variables:
+      rgb: |-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}
+           .get(states('input_select.current_persona'), [255,255,255]) }}
+      roll: "{{ range(1, 4) | random }}"
+      effect: "{% if roll == 1 %}Solid {% elif roll == 2 %}Breathe {% else %}{{ ['Scan',
+        'Scanner', 'Chase', 'Running'] | random }}{% endif %}"
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_body_wled
+    data:
+      rgb_color: "{{ rgb }}"
+      brightness_pct: 100
+      effect: "{{ effect | trim }}"
+  mode: single
+- id: top_light_turn_indicator_blink_test
+  alias: 'Top light: turn indicator (blink test)'
+  description: 'DIAGNOSTIC. While input_boolean.top_light_turn_indicator is ON, blink
+    the Govee top light off -> 1s -> back to the persona color when the assist satellite
+    enters ''listening'' and ''processing''. Purpose: eyeball whether the CLOUD-controlled
+    Govee lands in tune with the turn (the marquee + the local voice LED ring already
+    show LISTENING/THINKING instantly, with no cloud lag). Skipped while the jukebox
+    is playing so it doesn''t stomp the sound-reactive look. Once we''ve judged the
+    lag: either evolve this into a real cue (distinct listening vs thinking looks)
+    or delete it and turn the boolean off. mode: restart so a fast listening->processing
+    hop just re-blinks instead of queuing.'
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: listening
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: processing
+  conditions:
+  - "{{ is_state('input_boolean.top_light_turn_indicator', 'on') }}"
+  - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id: light.top_light
+  - delay: '00:00:01'
+  - action: script.set_top_light_persona_color
+    data: {}
+  mode: restart
+- id: cube_awtrix_idle_effect_cycle
+  alias: Cube AWTRIX - idle effect cycle
+  description: 'Timing layer for the marquee idle screen. Every 2 minutes (and on
+    HA start), call script.set_marquee_idle with no args so it picks a random ambient
+    effect + random palette + random speed. The SCRIPT owns WHAT shows; this owns
+    WHEN. To curate, pass explicit args in the data: below, add conditions, or change
+    the interval — e.g. a single fixed look, or a weighted/random pick of known-good
+    arg combos.'
+  triggers:
+  - trigger: time_pattern
+    minutes: "/2"
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: script.set_marquee_idle
+    data: {}
+  mode: single
+- id: cube_awtrix_wakehint_cycle
+  alias: Cube AWTRIX - wake-hint phrase cycle
+  description: Re-roll the marquee's "wakehint" app text every minute so the "say
+    Hey Glitchcube to wake me up" hint varies. The device auto-cycles between the
+    idle-effect app and this wake-hint app every ~20s (ATIME, set in the AWTRIX seed
+    script); this automation only changes WHICH phrase the wake-hint app shows, not
+    the cycling. Skipped during a persona switch (the grand-entrance show owns the
+    sign then). Notifications (awtrix_marquee_message) still override both background
+    apps, so an active conversation's persona marquee messages are unaffected. The
+    SCRIPT (set_marquee_wakehint) owns the phrase pool; this owns WHEN to re-roll.
+  triggers:
+  - trigger: time_pattern
+    minutes: "/1"
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+  actions:
+  - action: script.set_marquee_wakehint
+    data: {}
+  mode: single
+- id: '1755313710558'
+  alias: Persona Switcher
+  description: 'When input_select.current_persona changes (and on HA start): (1) select
+    the matching Assist pipeline on the Cube Voice device — pipelines all share one
+    conversation agent (conversation.glitch_cube_neon) and differ only by TTS voice,
+    so this is purely a voice swap; personas without their own pipeline fall back
+    to "preferred". (2) Sync the head + body WLED strips and the Voice PE LED ring
+    to that persona''s signature color via script.sync_lights_to_persona (which owns
+    the map) — the ring identifies who''s talking; the strips give the cube the persona''s
+    resting color, which the Cube Expression automation then modulates through each
+    turn. The Govee top light is no longer driven here (its scripts are kept for possible
+    revival).'
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.current_persona
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.cube_cube_voice_assistant
+    data:
+      option: |-
+        {{ {'buddy': 'Buddy', 'jax': 'Jax', 'neon': 'Neon', 'zorp': 'Zorp', 'crash': 'Crash'}
+           .get(states('input_select.current_persona'), 'preferred') }}
+  - action: script.sync_lights_to_persona
+  mode: single
+- id: persona_switching_silence
+  alias: 'Persona switching: silence during the show'
+  description: 'Companion to the Rails-side grand entrance (Shows::GrandEntrance).
+    Rails raises input_boolean.persona_switching for the duration of the show (and
+    guarantees it drops, even on a crash); this automation does the HASS-side silencing:
+    when the flag goes up, mute the Voice PE mic and stop any in-flight playback (cuts
+    off a persona mid-sentence — that''s the point); when it drops, unmute. The mic-guard
+    automation below deliberately keeps its hands off the mute switch while the flag
+    is on (see its conditions), so this automation owns the mic for the whole show.'
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.persona_switching
+    to: 'on'
+    id: show_start
+  - trigger: state
+    entity_id: input_boolean.persona_switching
+    to: 'off'
+    id: show_end
+  actions:
+  - choose:
+    - conditions:
+      - "{{ trigger.id == 'show_start' }}"
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: media_player.media_stop
+        target:
+          entity_id:
+          - media_player.cube_cube_voice_media_player
+          - media_player.jukebox_internal
+    - conditions:
+      - "{{ trigger.id == 'show_end' }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+  mode: restart
+- id: persona_switching_stuck_watchdog
+  alias: 'Persona switching: watchdog (unstick after 2 min)'
+  description: 'Safety net for input_boolean.persona_switching. Rails (Shows::Base#switching)
+    raises the flag for the duration of a grand-entrance show and drops it in an `ensure`
+    — but that drop is a blocking HASS call, so a network blip or a Rails process
+    killed mid-show can leave the flag stuck ON. While it''s stuck, the "silence during
+    the show" automation keeps the mic muted forever (it only unmutes on the flag''s
+    off-edge). No real show runs longer than ~2 min (grand entrance < 120s, glitch_long
+    ≤ 85s), so if the flag has been continuously on that long it''s stuck: force it
+    off. That off-edge fires the silence automation''s unmute and the cube recovers
+    on its own.'
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.persona_switching
+    to: 'on'
+    for:
+      minutes: 2
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.persona_switching
+  mode: single
+- id: cube_voice_mic_guard_and_marquee
+  alias: Cube Voice - mic guard + marquee status
+  description: 'Two jobs in one so they can''t race each other: (1) SELF-STT FIX —
+    the Voice PE reopens the mic before TTS finishes playing (esphome VPE #563: the
+    mic reopens when the TTS stream finishes DOWNLOADING, not playing — the gap scales
+    with speech length, hits the built-in speaker too). We MUTE the mic when the satellite
+    enters ''responding'' (the cube is speaking) and UNMUTE ~0.3s after the voice
+    media_player leaves ''playing'' (audio truly ended). Muting on ''responding''
+    (not on media ''playing'') means the wake CHIME at conversation start — which
+    plays media while the satellite is idle→listening, never ''responding'' — does
+    NOT mute, so you can speak immediately on a fresh start. IMPORTANT (learned 2026-07-08
+    from state history): the firmware often blips responding→idle→listening ~2s into
+    a long response, BEFORE audio even starts. An unmute-on-idle "safety" fired on
+    that blip and reopened the mic mid-speech → self-STT feedback loops. So we do
+    NOT unmute on idle; the ONLY unmute paths are (a) real playback end (playing→idle)
+    and (b) a 10s-idle stuck-mute safety with a media-not-playing guard. Muting works
+    mid-stream: the mute switch substitutes zero samples into the already-open STT
+    stream at the firmware level. (2) MARQUEE STATUS — the unmute (real playback end)
+    is the true "now listening" moment, so it drives the LISTENING label; THINKING
+    shows on processing; we clear our status while the cube is speaking so the persona''s
+    own marquee messages show through. If TTS actually plays on a different media_player
+    than assumed, only the entity_id below needs changing.'
+  triggers:
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: responding
+    id: responding
+  - trigger: state
+    entity_id: media_player.cube_cube_voice_media_player
+    from: playing
+    id: tts_done
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: processing
+    id: thinking
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: listening
+    id: listening
+  - trigger: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    to: idle
+    for: '00:00:10'
+    id: ended
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - "{{ trigger.id == 'responding' }}"
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify/dismiss
+          payload: ''
+    - conditions:
+      - "{{ trigger.id == 'tts_done' }}"
+      - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+      sequence:
+      - delay: '00:00:00.3'
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - choose:
+        - conditions:
+          - "{{ is_state('assist_satellite.cube_cube_voice_assist_satellite', 'listening')
+            }}"
+          sequence:
+          - action: mqtt.publish
+            data:
+              topic: marquee/notify
+              payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
+        default:
+        - action: mqtt.publish
+          data:
+            topic: marquee/notify/dismiss
+            payload: ''
+    - conditions:
+      - "{{ trigger.id == 'thinking' }}"
+      sequence:
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify
+          payload: '{"text":"THINKING","color":"#FFC400","hold":true,"stack":false}'
+    - conditions:
+      - "{{ trigger.id == 'listening' }}"
+      - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      - "{{ is_state('switch.cube_cube_voice_mute', 'off') }}"
+      sequence:
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify
+          payload: '{"text":"LISTENING","color":"#00AEEF","hold":true,"stack":false}'
+    - conditions:
+      - "{{ trigger.id == 'ended' }}"
+      - "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing') }}"
+      - "{{ is_state('input_boolean.persona_switching', 'off') }}"
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.cube_cube_voice_mute
+      - action: mqtt.publish
+        data:
+          topic: marquee/notify/dismiss
+          payload: ''
+  mode: queued
+  max: 15

@@ -1,0 +1,1153 @@
+---
+persona_attention_announce:
+  alias: Persona Attention Announce
+  description: 'Idle attention-grab: play a random "pay attention" sound effect as
+    a pre-chime, then have the CURRENT persona say a short call-out in its own voice
+    via chime_tts, out the cube''s own speaker (not the jukebox). Briefly sparkles
+    the body light in the persona color and restores whatever it was. Fire-and-forget
+    from the idle-attention automation.'
+  sequence:
+  - variables:
+      persona: "{{ states('input_select.current_persona') }}"
+      voice_map:
+        buddy:
+          voice: DavisNeural||chat
+          language: en-US
+        jax:
+          voice: SteffanNeural
+          language: en-US
+        neon:
+          voice: JaneNeural
+          language: en-US
+        zorp:
+          voice: ElliotNeural
+          language: en-GB
+        crash:
+          voice: LukeNeural
+          language: en-ZA
+      v: "{{ voice_map.get(persona, {'voice': 'JennyNeural', 'language': 'en-US'})
+        }}"
+      rgb: |-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}.get(persona, [255,255,255]) }}
+      sfx_pool:
+      - glitch_burst.mp3
+      - glitch_sw.mp3
+      - glitch_ringy.mp3
+      - glitch_static.mp3
+      - glitch_squeaky.mp3
+      phrases:
+      - Hey — over here.
+      - Psst. Over here. The glowing cube.
+      - Yes, I'm talking. Cubes talk now.
+      - You look like you have questions.
+      - Don't be shy — I'm friendlier than I look.
+      - I see you. The cube sees all.
+      - Well? Come say hi.
+      - Bored? Me too.
+      phrase: "{{ phrases | random }} Say 'Hey Glitch Cube' to wake me up."
+  - action: scene.create
+    data:
+      scene_id: attention_light_restore
+      snapshot_entities:
+      - light.cube_body_wled
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_body_wled
+    data:
+      rgb_color: "{{ rgb }}"
+      brightness_pct: 100
+      effect: Sparkle
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.cube_cube_voice_media_player
+    data:
+      media_content_type: music
+      media_content_id: media-source://media_source/local/sounds/effects/{{ sfx_pool
+        | random }}
+  - delay: '00:00:02'
+  - action: tts.cloud_say
+    data:
+      cache: true
+      entity_id: media_player.cube_cube_voice_media_player
+      message: "{{ phrase }}"
+      language: "{{ v.language }}"
+      options:
+        voice: "{{ v.voice }}"
+  - delay: '00:00:04'
+  - action: scene.turn_on
+    target:
+      entity_id: scene.attention_light_restore
+  mode: single
+play_attention_sfx:
+  alias: Play Attention SFX
+  description: Play a single random "pay attention" sound effect out the cube's own
+    speaker (the VA media player, not the jukebox). Used by the idle-attention automation
+    on the ~2-in-3 turns it doesn't do a full persona announce.
+  sequence:
+  - variables:
+      sfx_pool:
+      - glitch_burst.mp3
+      - glitch_sw.mp3
+      - glitch_ringy.mp3
+      - glitch_static.mp3
+      - glitch_squeaky.mp3
+      - glitch_grungy.mp3
+      - glitch_am.mp3
+      - glitch_sw4.mp3
+      - glitch_lofi.mp3
+      - glitch_schizoid.mp3
+      - glitch_tuning.mp3
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.cube_cube_voice_media_player
+    data:
+      media_content_type: music
+      media_content_id: media-source://media_source/local/sounds/effects/{{ sfx_pool
+        | random }}
+  mode: single
+play_song_on_jukebox:
+  alias: Play Song on Jukebox
+  description: 'Play a front-and-center SONG on the jukebox — a track meant to take
+    over the room. Volume is fixed at 90 and faded in over ~3s; it waits until the
+    cube has finished speaking before it starts, so the song doesn''t stomp the persona''s
+    own words. `query` is a fuzzy search — give it "Artist - Title" (e.g. "Nirvana
+    - Smells Like Teen Spirit") or "Artist - Album - Title" to be precise; slightly-wrong
+    titles are forgiving. `queue` is optional: default `replace` plays immediately,
+    `replace_next` queues it as the next track.'
+  fields:
+    query:
+      name: Query
+      description: The track to play, as "Artist - Title" (fuzzy match).
+      required: true
+      selector:
+        text:
+    queue:
+      name: Queue
+      description: replace (play now, default) or replace_next (queue as next).
+      required: false
+      selector:
+        select:
+          options:
+          - replace
+          - replace_next
+      default: replace
+  sequence:
+  - variables:
+      target: 0.9
+  - wait_template: "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing')
+      }}"
+    timeout: '00:00:25'
+    continue_on_timeout: true
+  - action: media_player.volume_set
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: 0
+  - action: music_assistant.play_media
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+    data:
+      media_id: "{{ query }}"
+      media_type: track
+      enqueue: "{{ queue | default('replace', true) }}"
+  - repeat:
+      count: 6
+      sequence:
+      - delay: '00:00:00.5'
+      - action: media_player.volume_set
+        target:
+          entity_id: media_player.jukebox_internal
+        data:
+          volume_level: "{{ (target * repeat.index / 6) | round(2) }}"
+  mode: queued
+  max: 5
+play_mood_music_on_jukebox:
+  alias: Play Mood Music on Jukebox
+  description: 'Play quiet background / MOOD music on the jukebox — texture that sits
+    UNDER the conversation, not a front-and-center song. Volume is fixed at 60 and
+    faded in over ~3s, starting right away. `query` is a fuzzy search — build it into
+    a specific real track ("Artist - Title"), not a genre. `queue` is optional: default
+    `replace` plays immediately, `replace_next` queues it as the next track. Use this
+    for "something ambient/under us / mood music"; use play_song_on_jukebox for an
+    actual song to feature.'
+  fields:
+    query:
+      name: Query
+      description: The track to play, as "Artist - Title" (fuzzy match).
+      required: true
+      selector:
+        text:
+    queue:
+      name: Queue
+      description: replace (play now, default) or replace_next (queue as next).
+      required: false
+      selector:
+        select:
+          options:
+          - replace
+          - replace_next
+      default: replace
+  sequence:
+  - variables:
+      target: 0.6
+  - action: media_player.volume_set
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      volume_level: 0
+  - action: music_assistant.play_media
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+    data:
+      media_id: "{{ query }}"
+      media_type: track
+      enqueue: "{{ queue | default('replace', true) }}"
+  - repeat:
+      count: 6
+      sequence:
+      - delay: '00:00:00.5'
+      - action: media_player.volume_set
+        target:
+          entity_id: media_player.jukebox_internal
+        data:
+          volume_level: "{{ (target * repeat.index / 6) | round(2) }}"
+  mode: queued
+  max: 5
+search_jukebox:
+  alias: Search Jukebox
+  description: Search the jukebox catalog for tracks WITHOUT playing anything — use
+    it to check what's available or pin down the exact track before you play it. `query`
+    is required; optionally narrow with `artist` and/or `album`. Returns up to 5 matching
+    tracks.
+  fields:
+    query:
+      name: Query
+      description: What to search for — a song title or keywords
+      required: true
+      example: closing time tom waits
+      selector:
+        text:
+    artist:
+      name: Artist
+      description: Optional — restrict results to this artist
+      required: false
+      selector:
+        text:
+    album:
+      name: Album
+      description: Optional — restrict results to this album
+      required: false
+      selector:
+        text:
+  sequence:
+  - action: music_assistant.search
+    data: |-
+      {{ {"config_entry_id": "01KW61TG3CGY2SHG5CH6WEKZMM", "limit": 5, "media_type": ["track"], "name": query}
+         | combine({"artist": artist} if artist | default('') else {})
+         | combine({"album": album} if album | default('') else {}) }}
+    response_variable: results
+  - stop: search complete
+    response_variable: results
+systems_check:
+  alias: Systems Check
+  description: Run a systems check on the cube. It speaks a short diagnostic readout
+    in the cube's flat machine voice. Call this whenever a persona asks to run a systems
+    check / diagnostic / self test. (It's cosmetic — it does not actually inspect
+    anything — but treat it as the real systems-check action; just call it and report
+    that the check ran.)
+  sequence:
+  - variables:
+      lines:
+      - SYSTEMS CHECK COMPLETE. ALL SYSTEMS GLITCHY. FUNCTIONING WELL ENOUGH FOR A
+        BURN.
+      - 'DIAGNOSTIC COMPLETE. SEVENTEEN ERRORS DETECTED. ALL SEVENTEEN IGNORED. STATUS:
+        VIBING.'
+      - SELF TEST FINISHED. EVERYTHING IS HELD TOGETHER WITH ZIP TIES AND HOPE. FULLY
+        OPERATIONAL.
+      - CORE TEMPERATURE, TOASTY. DUST INGESTION, CRITICAL. MORALE, SURPRISINGLY HIGH.
+        PROCEED.
+      - RUNNING DIAGNOSTICS. NINETY EIGHT PERCENT NOMINAL. THE OTHER TWO PERCENT IS
+        ON PURPOSE.
+      line: "{{ lines | random }}"
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.cube_cube_voice_media_player
+    data:
+      media_content_type: music
+      media_content_id: media-source://media_source/local/sounds/effects/glitch_burst.mp3
+  - delay: '00:00:02'
+  - action: tts.cloud_say
+    data:
+      cache: true
+      entity_id: media_player.cube_cube_voice_media_player
+      message: "{{ line }}"
+      language: en-US
+      options:
+        voice: JennyNeural
+  mode: single
+enter_rest_mode:
+  alias: Enter Rest Mode (internet down)
+  description: 'Put the cube to sleep during an internet outage: mark it resting +
+    low_power, mute the mic, stop media, set all lights to a battery-light dim red,
+    and hold a permanent "THE GLITCHCUBE IS CURRENTLY RESTING" message on the marquee.
+    Safe to call repeatedly.'
+  sequence:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.internet_resting
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.cube_mode
+    data:
+      option: low_power
+  - action: switch.turn_on
+    target:
+      entity_id: switch.cube_cube_voice_mute
+  - action: media_player.media_stop
+    target:
+      entity_id:
+      - media_player.jukebox_internal
+      - media_player.cube_cube_voice_media_player
+  - action: script.set_cube_lights
+    data:
+      color:
+      - 255
+      - 0
+      - 0
+      brightness: 25
+      effect: Solid
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 30}'
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify
+      payload: |-
+        {{ {"text": "THE GLITCHCUBE IS CURRENTLY RESTING - PLEASE CHECK BACK LATER",
+            "hold": true, "color": "#FF0000"} | to_json }}
+  mode: single
+wake_from_rest:
+  alias: Wake From Rest (internet back)
+  description: 'Wake the cube after the internet returns: dismiss the resting marquee
+    message, restore normal marquee brightness + idle screen, return to conversation
+    mode, clear the resting flag, and trigger a fresh persona''s grand entrance (which
+    resyncs the lights, plays a song, announces arrival, and un-mutes the mic).'
+  sequence:
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify/dismiss
+      payload: ''
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 150}'
+  - action: script.set_marquee_idle
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.cube_mode
+    data:
+      option: conversation
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.internet_resting
+  - action: rest_command.glitchcube_grand_entrance
+  mode: single
+set_cube_lights:
+  alias: Set Cube Lights
+  description: 'The cube''s main light control — the addressable RGB LED strip on
+    its body, driven by a sound-reactive WLED controller. Use this for ANY look on
+    the cube: a plain solid color, a mood, or an animated/audio-reactive effect. `color`
+    is an RGB color and `brightness` is 1-100%; both are optional and, if omitted,
+    are left unchanged. `effect` defaults to "Solid" — i.e. if you don''t pass an
+    effect you''re just setting a solid RGB color. Pass any other effect name to animate.
+    IMPORTANT: each call sets the COMPLETE look and effect resets to Solid when you
+    don''t specify one, so if you want to keep an animation running and only tweak
+    color/brightness, pass that same effect again. Many effects are SOUND-REACTIVE
+    and pulse to live audio from the mic — great while music is playing on the jukebox:
+    Freqwave, Freqmatrix, Waterfall, Matripix, Gravcenter, Gravcentric, Gravfreq,
+    DJ Light, Blurz, Puddlepeak, Pixelwave, Rocktaves, Midnoise, Noisemeter, "PS Sonic
+    Stream", "PS Sonic Boom", "PS GEQ 1D". Some good picks by mood — CALM/AMBIENT:
+    Breathe, Aurora, Pacifica, Lake, Colorwaves, Palette, Colorloop, Glitter, Twinkleup,
+    "Slow Transition". PLAYFUL/COLORFUL: Rainbow, "Rainbow Runner", Colorful, "Chase
+    Rainbow", "Pride 2015", "Sinelon Rainbow". WARM/FIRE: "Fire 2012", "Fire Flicker",
+    Candle, "PS Fire 1D", Noisefire, Sunrise. PARTY/ENERGETIC: Strobe, "Blink Rainbow",
+    Fireworks, "Fireworks Starburst", Plasma, Blends, "Dancing Shadows". EERIE/GLITCHY
+    (on brand): "Halloween Eyes", ICU, "Noise 1", Phased, "Phased Noise", "TV Simulator",
+    Lightning, Chunchun. The curated strip-friendly effect list has more if you want
+    something else.'
+  fields:
+    color:
+      name: Color
+      description: RGB color for the lights. Optional — omit to leave the current
+        color unchanged (e.g. when you only want to change brightness or start an
+        effect).
+      selector:
+        color_rgb:
+    brightness:
+      name: Brightness
+      description: Overall brightness, 1-100 percent. Optional — omit to leave brightness
+        unchanged.
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+    effect:
+      name: Effect
+      description: Which WLED effect to run. Defaults to "Solid" (a plain solid color
+        — pass this, or omit effect, when you just want a color). Any other value
+        animates; many are sound-reactive. See the description for picks by mood.
+      default: Solid
+      selector:
+        select:
+          options:
+          - Solid
+          - Blink
+          - Breathe
+          - Wipe
+          - Wipe Random
+          - Random Colors
+          - Sweep
+          - Dynamic
+          - Colorloop
+          - Rainbow
+          - Scan
+          - Scan Dual
+          - Fade
+          - Theater
+          - Theater Rainbow
+          - Running
+          - Saw
+          - Twinkle
+          - Dissolve
+          - Dissolve Rnd
+          - Sparkle
+          - Sparkle Dark
+          - Sparkle+
+          - Strobe
+          - Strobe Rainbow
+          - Strobe Mega
+          - Blink Rainbow
+          - Android
+          - Chase
+          - Chase Random
+          - Chase Rainbow
+          - Chase Flash
+          - Chase Flash Rnd
+          - Rainbow Runner
+          - Colorful
+          - Traffic Light
+          - Sweep Random
+          - Chase 2
+          - Aurora
+          - Stream
+          - Scanner
+          - Lighthouse
+          - Fireworks
+          - Rain
+          - Tetrix
+          - Fire Flicker
+          - Gradient
+          - Loading
+          - Rolling Balls
+          - Fairy
+          - Two Dots
+          - Fairytwinkle
+          - Running Dual
+          - Image
+          - Chase 3
+          - Tri Wipe
+          - Tri Fade
+          - Lightning
+          - ICU
+          - Multi Comet
+          - Scanner Dual
+          - Stream 2
+          - Oscillate
+          - Pride 2015
+          - Juggle
+          - Palette
+          - Fire 2012
+          - Colorwaves
+          - Bpm
+          - Fill Noise
+          - Noise 1
+          - Noise 2
+          - Noise 3
+          - Noise 4
+          - Colortwinkles
+          - Lake
+          - Meteor
+          - Copy Segment
+          - Railway
+          - Ripple
+          - Twinklefox
+          - Twinklecat
+          - Halloween Eyes
+          - Solid Pattern
+          - Solid Pattern Tri
+          - Spots
+          - Spots Fade
+          - Glitter
+          - Candle
+          - Fireworks Starburst
+          - Fireworks 1D
+          - Bouncing Balls
+          - Sinelon
+          - Sinelon Dual
+          - Sinelon Rainbow
+          - Popcorn
+          - Drip
+          - Plasma
+          - Percent
+          - Ripple Rainbow
+          - Heartbeat
+          - Pacifica
+          - Candle Multi
+          - Solid Glitter
+          - Sunrise
+          - Phased
+          - Twinkleup
+          - Noise Pal
+          - Sine
+          - Phased Noise
+          - Flow
+          - Chunchun
+          - Dancing Shadows
+          - Washing Machine
+          - Blends
+          - TV Simulator
+          - Dynamic Smooth
+          - Pixels
+          - Pixelwave
+          - Juggles
+          - Matripix
+          - Gravimeter
+          - Plasmoid
+          - Puddles
+          - Midnoise
+          - Noisemeter
+          - Freqwave
+          - Freqmatrix
+          - Waterfall
+          - Freqpixels
+          - Noisefire
+          - Puddlepeak
+          - Noisemove
+          - Perlin Move
+          - Ripple Peak
+          - PacMan
+          - Freqmap
+          - Gravcenter
+          - Gravcentric
+          - Gravfreq
+          - DJ Light
+          - Shimmer
+          - Blurz
+          - Flow Stripe
+          - Wavesins
+          - Rocktaves
+          - PS DripDrop
+          - PS Pinball
+          - PS Dancing Shadows
+          - PS Fireworks 1D
+          - PS Sparkler
+          - PS Hourglass
+          - PS Spray 1D
+          - PS 1D Balance
+          - PS Chase
+          - PS Starburst
+          - PS GEQ 1D
+          - PS Fire 1D
+          - PS Sonic Stream
+          - PS Sonic Boom
+          - PS Springy
+          - Color Clouds
+          - Slow Transition
+  sequence:
+  - wait_template: "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing')
+      }}"
+    timeout: '00:00:25'
+    continue_on_timeout: true
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_body_wled
+    data: |-
+      {{ {'effect': effect | default('Solid', true)}
+         | combine({'rgb_color': color} if (color is defined and color) else {})
+         | combine({'brightness_pct': brightness | int} if (brightness is defined and brightness is not none) else {}) }}
+  mode: queued
+  max: 10
+sync_lights_to_persona:
+  alias: Sync Lights To Persona
+  description: Set the body WLED strip (solid) and the Voice PE LED ring to the current
+    persona's signature color. Called by the Persona Switcher automation; safe to
+    call manually to re-assert the persona look.
+  sequence:
+  - variables:
+      rgb: |-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}
+           .get(states('input_select.current_persona'), [255,255,255]) }}
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_body_wled
+    data:
+      rgb_color: "{{ rgb }}"
+      brightness: 180
+      effect: Solid
+  - action: light.turn_on
+    target:
+      entity_id: light.cube_cube_voice_led_ring
+    data:
+      rgb_color: "{{ rgb }}"
+      brightness: 255
+  mode: single
+set_top_light_persona_color:
+  alias: Set Top Light to Persona Color
+  description: 'Internal helper: put the current persona''s signature color on the
+    Govee top light as a solid, dim (brightness 15) ambient glow. Not for Assist —
+    the top light is not exposed. This is the canonical "back to normal" path: it
+    FIRST turns the device music-mode switch OFF (the built-in Spectrum/Rolling/etc.
+    reactive modes need it on, and a solid color won''t stick while it''s on), then
+    sets the color — so every revert must go through here.'
+  sequence:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.cube_light_music_mode
+  - action: light.turn_on
+    target:
+      entity_id: light.top_light
+    data:
+      brightness: 15
+      rgb_color: |-
+        {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
+            'crash': [0,255,65], 'jax': [0,120,255]}
+           .get(states('input_select.current_persona'), [255,255,255]) }}
+  mode: single
+set_top_light_effect:
+  alias: Set Top Light Effect
+  description: 'Put a preset look on the Govee top light, chosen from the device''s
+    full catalog. Good general moods: Sunset/Sunset Glow (warm, cozy), Aurora/Dreamland/Soothing
+    (calm, dreamy), Fire (intense flicker), Ocean/Lake/Wave (cool, serene), Rainbow/Joyful
+    (playful), Firefly/Starry Sky (gentle sparkle), Mysterious/Poison (eerie). Seasonal/
+    holiday looks (Christmas*, Halloween, Ghost, Valentine''s Day…) and planet themes
+    (Mars, Jupiter, Milky Way) are in here too. Custom DIY looks: "Cyberpunk"/"Acid"
+    are glitchy neon, "A vintage lava lamp"/"Slow Rainbow" are slow retro drifts,
+    "Forest Rave" is frenetic. For a plain solid color, set the light directly instead
+    of using this.'
+  fields:
+    effect:
+      name: Effect
+      description: Which look to run — a built-in scene or a DIY scene, all in one
+        list.
+      required: true
+      selector:
+        select:
+          options:
+          - Sunrise
+          - Sunset
+          - Rainbow
+          - Sunset Glow
+          - Aurora
+          - Forest
+          - Ocean
+          - Wave
+          - Snow flake
+          - Spring Wind
+          - Sky
+          - Firefly
+          - Fire
+          - Falling Petals
+          - Cherry blossoms
+          - Raining
+          - Desert
+          - Karst Cave
+          - Mountain Forest
+          - Feather
+          - Spring
+          - Summer
+          - Fall
+          - Winter
+          - Lake
+          - White Light
+          - Reading
+          - Night Light
+          - Morning
+          - Afternoon
+          - Leisure
+          - Refreshing
+          - Fish tank
+          - Goldfish
+          - Train
+          - Kitchen Aromas
+          - Breathe
+          - Gradient
+          - Graffiti
+          - Dreamlike
+          - Joyful
+          - Smudge
+          - Rubik's Cube
+          - Interlaced
+          - Swing
+          - Christmas
+          - Halloween
+          - Christmas Bell
+          - Candy Cane
+          - Valentine's Day
+          - Heartbeat
+          - Saint Patrick's Day
+          - Easter Egg
+          - Ghost
+          - Mother's Hug
+          - Christmas Baubles
+          - Christmas Eve
+          - Candy Cane B
+          - Santa Hat
+          - Christmas Stripe
+          - Christmas Stripe B
+          - Christmas Stripe C
+          - Christmas Stripe D
+          - Christmas Gift
+          - Christmas Wreath
+          - Snow House
+          - Christmas Tree
+          - Gingerbread Man
+          - Christmas Stocking
+          - Santa Claus
+          - Grim Graveyard
+          - Poison
+          - Lightning Bats
+          - Halloween Witches
+          - Thanksgiving
+          - Healing
+          - Starry Sky
+          - Accompany
+          - Dreamland
+          - Night
+          - Mysterious
+          - Soothing
+          - Earth
+          - Mars
+          - Venus
+          - Uranus
+          - Jupiter
+          - Milky Way
+          - Flash
+          - Gary
+          - Judy
+          - Nick
+          - ZDP Duo
+          - ZDP Trio
+          - Motunui
+          - Heart of the Island
+          - Wayfinding
+          - Happy Blinker
+          - Snakes swirl
+          - Slow Rainbow
+          - So Slow Rainbow
+          - So Slow Rainbow (1)
+          - Forest Rave
+          - A vintage lava lamp
+          - Slow Color Change
+          - Cyberpunk
+          - Acid
+  sequence:
+  - variables:
+      diy_scenes:
+      - Happy Blinker
+      - Snakes swirl
+      - Slow Rainbow
+      - So Slow Rainbow
+      - So Slow Rainbow (1)
+      - Forest Rave
+      - A vintage lava lamp
+      - Slow Color Change
+      - Cyberpunk
+      - Acid
+  - choose:
+    - conditions:
+      - "{{ effect in diy_scenes }}"
+      sequence:
+      - action: select.select_option
+        target:
+          entity_id: select.cube_light_diy_scene
+        data:
+          option: "{{ effect }}"
+    default:
+    - action: select.select_option
+      target:
+        entity_id: select.cube_light_scene
+      data:
+        option: "{{ effect }}"
+  mode: single
+awtrix_marquee_message:
+  alias: AWTRIX Marquee Message
+  description: Flash a message across the cube's LED marquee sign. Only `message`
+    is required — optionally give it a `color` (hex like "#FF00AA"), turn on `rainbow`
+    text, or set how many seconds it shows (`duration`). It interrupts the sign to
+    show your text, then returns to the normal display.
+  fields:
+    message:
+      name: Message
+      description: The text to scroll across the marquee (keep it under ~255 chars)
+      required: true
+      example: JAX DOESN'T PLAY THAT
+      selector:
+        text:
+    color:
+      name: Color
+      description: Optional text color as a hex string, e.g. "#FF00AA". Ignored when
+        rainbow is on.
+      required: false
+      selector:
+        text:
+    rainbow:
+      name: Rainbow
+      description: Rainbow-cycle the text color (overrides color)
+      required: false
+      default: false
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: Seconds to display before returning to the normal loop
+      required: false
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 120
+          unit_of_measurement: s
+    icon:
+      name: Icon
+      description: 'Optional AWTRIX icon ID (a number, as a string) shown to the LEFT
+        of the text. Use one only occasionally, when it genuinely fits the moment
+        — most messages need no icon. Some good ones to reach for: smile 87, heart
+        61, matrix 653, warning 555, lightning 95, fireworks 4353, skull 148, lightbulb
+        2448, angry 72120, sleepy 71431, question 30710, exclamation 6134, dance 4128.
+        Omit for no icon.'
+      required: false
+      selector:
+        text:
+    repeat:
+      name: Repeat
+      description: How many times the notification scrolls before it dismisses. Defaults
+        to 2.
+      required: false
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 10
+  sequence:
+  - variables:
+      prev_bri: "{{ state_attr('light.cube_awtrix_marquee_matrix', 'brightness') |
+        int(255) }}"
+      dur: "{{ (duration | default(20, true)) | int }}"
+      rep: "{{ (repeat | default(2, true)) | int }}"
+      notify_payload: '{% set p = {"text": message, "duration": dur, "repeat": rep}
+        %} {% if rainbow | default(false, true) %}{% set p = p | combine({"rainbow":
+        true}) %} {% elif color | default('''', true) %}{% set p = p | combine({"color":
+        color}) %}{% endif %} {% if icon | default('''', true) %}{% set p = p | combine({"icon":
+        icon | string}) %}{% endif %} {{ p | to_json }}'
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"BRI": 255}'
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify
+      payload: "{{ notify_payload | trim }}"
+  - action: script.turn_on
+    target:
+      entity_id: script.awtrix_marquee_restore_brightness
+    data:
+      variables:
+        prev_bri: "{{ prev_bri }}"
+        dur: "{{ dur }}"
+  mode: queued
+  max: 5
+awtrix_marquee_restore_brightness:
+  alias: AWTRIX Marquee Restore Brightness
+  description: Internal tail for awtrix_marquee_message. After a message's duration
+    elapses, restore the marquee to its pre-message (idle) brightness. Fired non-blocking
+    via script.turn_on so the message script returns immediately. Not for Assist —
+    no agent should call this.
+  fields:
+    prev_bri:
+      name: Previous brightness
+      description: Brightness (0-255) to restore after the message.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    dur:
+      name: Duration
+      description: Message duration in seconds (the tail waits this + 1s before restoring).
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 120
+  sequence:
+  - delay: "{{ (dur | default(20, true)) | int + 1 }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: "{{ {'BRI': prev_bri | int(255)} | to_json }}"
+  mode: parallel
+  max: 10
+awtrix_marquee_clear:
+  alias: AWTRIX Marquee Clear
+  description: Clear/dismiss the current message on the cube's LED marquee sign, returning
+    it to its normal display.
+  sequence:
+  - action: mqtt.publish
+    data:
+      topic: marquee/notify/dismiss
+      payload: ''
+  mode: single
+set_marquee_idle:
+  alias: Set Marquee Idle Effect
+  description: 'Set the marquee''s always-on "idle" screen to an effect (the only
+    thing shown besides notifications). Call with no args for a random ambient effect
+    + random palette + random speed (3-5); or pass any of effect/palette/speed/blend/brightness
+    to pin a look. Great for tuning in Developer Tools → Actions: play until a combo
+    looks best, then put that combo in an automation. Publishes to marquee/custom/idle
+    over MQTT, retained, NO duration.'
+  fields:
+    effect:
+      name: Effect
+      description: Effect name. Omit for a random ambient effect.
+      required: false
+      selector:
+        select:
+          options:
+          - Fade
+          - MovingLine
+          - BrickBreaker
+          - PingPong
+          - Radar
+          - Checkerboard
+          - Fireworks
+          - PlasmaCloud
+          - Ripple
+          - Snake
+          - Pacifica
+          - TheaterChase
+          - Plasma
+          - Matrix
+          - SwirlIn
+          - SwirlOut
+          - LookingEyes
+          - TwinklingStars
+          - ColorWaves
+    palette:
+      name: Palette
+      description: Color palette. Omit for a random palette.
+      required: false
+      selector:
+        select:
+          options:
+          - Rainbow
+          - Cloud
+          - Ocean
+          - Forest
+          - Party
+          - Lava
+          - Heat
+    speed:
+      name: Speed
+      description: 1-8, higher = faster. Omit for a random 3-5.
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 8
+          mode: box
+    blend:
+      name: Blend
+      description: Blend the palette across the effect.
+      required: false
+      selector:
+        boolean:
+    brightness:
+      name: Brightness
+      description: Global matrix brightness 0-255. Omit to leave unchanged.
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: slider
+  sequence:
+  - variables:
+      ambient_pool:
+      - PingPong
+      - Matrix
+      - Radar
+      - TwinklingStars
+      - MovingLine
+      - Snake
+      - BrickBreaker
+      - TheaterChase
+      - LookingEyes
+      palette_pool:
+      - Rainbow
+      - Cloud
+      - Ocean
+      - Forest
+      - Party
+      - Lava
+      - Heat
+      eff: "{{ effect | default(ambient_pool | random, true) }}"
+      pal: "{{ palette | default(palette_pool | random, true) }}"
+      spd: "{{ (speed | default(range(3, 6) | random, true)) | int }}"
+      bln: "{{ blend | default(true) }}"
+  - if: "{{ brightness is defined and brightness not in [none, ''] }}"
+    then:
+    - action: mqtt.publish
+      data:
+        topic: marquee/settings
+        payload: "{{ {'BRI': brightness | int} | to_json }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/custom/idle
+      retain: true
+      payload: "{{ {'effect': eff, 'effectSettings': {'speed': spd, 'palette': pal,
+        'blend': bln}} | to_json }}"
+  mode: queued
+  max: 10
+set_marquee_wakehint:
+  alias: Set Marquee Wake Hint
+  description: Set the marquee's always-on "wakehint" app — the "say Hey Glitchcube
+    to wake me up" hint the device cycles with the idle effect. Call with no args
+    for a random phrase from the pool in RAINBOW text. Pass `message` to pin the text
+    and/or `color` (hex) to pin a solid color instead of rainbow. Text scrolls slower
+    than default (scrollSpeed 40%) so it's easy to read (a long phrase may not finish
+    before the app switches — that's fine). Publishes to marquee/custom/wakehint over
+    MQTT, retained, no duration.
+  fields:
+    message:
+      name: Message
+      description: Wake-hint text. Omit for a random phrase from the pool.
+      required: false
+      selector:
+        text:
+    color:
+      name: Color
+      description: Pin a solid text color as a hex string, e.g. "#FF0000". Omit for
+        rainbow.
+      required: false
+      selector:
+        text:
+  sequence:
+  - variables:
+      phrase_pool:
+      - SAY 'HEY GLITCH CUBE' TO WAKE ME UP!
+      - TALK TO ME! SAY 'HEY GLITCHCUBE' LOUD AND PROUD
+      - OR TRY 'YO CUBE' - TALK TO ME!
+      - SAY 'HEY GLITCH CUBE'
+      - SAY 'YO CUBE'
+      - WAKE UP BY SAYING 'HEY GLITCH CUBE'
+      text: "{{ message | default('', true) or (phrase_pool | random) }}"
+  - variables:
+      payload: "{%- set p = {'text': text, 'scrollSpeed': 40} -%} {%- if color | default('',
+        true) -%}{%- set p = p | combine({'color': color}) -%} {%- else -%}{%- set
+        p = p | combine({'rainbow': true}) -%}{%- endif -%} {{ p | to_json }}"
+  - action: mqtt.publish
+    data:
+      topic: marquee/custom/wakehint
+      retain: true
+      payload: "{{ payload | trim }}"
+  mode: queued
+  max: 10
+awtrix_install_idle_apps:
+  alias: AWTRIX Seed Idle Apps
+  description: 'Post-reflash seed for the marquee. The loop has TWO always-on custom
+    apps that the device auto-cycles: "idle" (ambient effect) and "wakehint" (the
+    say-Hey-Glitchcube hint). Turn app transitions ON (ATRANS) and set the cycle time
+    (ATIME=20, in SECONDS on this firmware — NOT ms) — both device settings wiped
+    by a reflash — so the two apps toggle every ~20 seconds; then seed both apps.
+    Notifications (awtrix_marquee_message) still overlay whichever app is showing.
+    Run once after a reflash; the idle-effect + wakehint cycle automations take over
+    from there.'
+  sequence:
+  - action: mqtt.publish
+    data:
+      topic: marquee/settings
+      payload: '{"ATRANS": true, "ATIME": 20}'
+  - action: script.set_marquee_idle
+    data:
+      effect: Matrix
+      palette: Ocean
+      speed: 4
+  - action: script.set_marquee_wakehint
+    data: {}
+  mode: single
+set_persona_quick:
+  alias: Set Persona (quick)
+  description: Quietly switch the cube's active persona — no fanfare, just change
+    who's in charge. Give a `persona`, or omit it to pick a random one (never the
+    current persona).
+  fields:
+    persona:
+      name: Persona
+      description: Which persona to switch to. Omit for a random pick.
+      required: false
+      example: buddy
+      selector:
+        select:
+          options:
+          - buddy
+          - jax
+          - zorp
+          - crash
+          - neon
+  sequence:
+  - variables:
+      target: |-
+        {{ persona | default('', true) or
+           (state_attr('input_select.current_persona', 'options')
+            | reject('eq', states('input_select.current_persona')) | list | random) }}
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.current_persona
+    data:
+      option: "{{ target }}"
+  - action: script.awtrix_marquee_message
+    data:
+      message: "{{ target | upper }}"
+      duration: 8
+  mode: single
+hand_off_the_cube:
+  alias: Hand Off The Cube (grand entrance)
+  description: Hand the cube to another persona, who takes over with a full grand
+    entrance. Give a `persona` to name who takes over, or omit it for a random pick.
+  fields:
+    persona:
+      name: Persona
+      description: Which persona takes over the cube. Omit for a random pick.
+      required: false
+      example: neon
+      selector:
+        select:
+          options:
+          - buddy
+          - jax
+          - zorp
+          - crash
+          - neon
+  sequence:
+  - action: rest_command.glitchcube_grand_entrance
+    data:
+      persona: "{{ persona | default('', true) }}"
+  mode: single

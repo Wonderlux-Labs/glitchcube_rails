@@ -12,18 +12,32 @@ Box-only files NOT tracked here (never overwrite/delete them): `secrets.yaml`,
 
 | Key | Include | Where |
 |---|---|---|
-| `automation:` | `!include_dir_merge_list automations/` | one automation per file, in `<domain>/` folders |
-| `script:` | `!include_dir_merge_named scripts/` | scripts grouped by topic per file (named dict — NOT a list) |
+| `automation:` | `!include automations.yaml` | **single flat file** — one list, UI-editable |
+| `script:` | `!include scripts.yaml` | **single flat file** — one named dict, UI-editable |
 | `template:` | `!include_dir_merge_list templates/` | template sensors |
 | `homeassistant.packages:` | `!include_dir_named packages/` | input helpers + rest_commands |
 | `scene:` | `!include scenes.yaml` | **box-only**, not in this repo |
 
-Automations keep an `id:` and their `alias:`, so entity_ids / unique_ids (and
-therefore Assist exposure, areas, and registry settings) are stable across the
-split. Automations call scripts by `script.<slug>` at runtime — file location is
-irrelevant to that.
+**Automations & scripts live in single files so the HA visual builder can edit them**
+(Settings → Automations / Scripts). The builder only edits items in the one file it owns
+and **rewrites that whole file, stripping every comment** on save — so per-item context
+(the old YAML comments: rationale, gotchas, design-doc links) now lives in
+[`AUTOMATIONS_AND_SCRIPTS.md`](AUTOMATIONS_AND_SCRIPTS.md), keyed by `id` / script slug.
 
-## Automations — `automations/<domain>/` (10)
+Every automation keeps its `id:` and every script keeps its slug **byte-for-byte**, so
+entity_ids / unique_ids (and therefore Assist exposure, areas, and registry settings in
+`.storage/`) are unchanged — no re-exposing anything. Automations call scripts by
+`script.<slug>` at runtime, so consolidating files changed nothing at runtime.
+
+**Editing loop:** tweak in the HA UI for quick live changes → `scp` `automations.yaml` /
+`scripts.yaml` back into this repo → `ruby bin/reindex_context.rb` to refresh the line
+markers in the context index (and flag any UI-created items that still need documenting).
+
+## Automations (15) — all in `automations.yaml`
+
+_Grouped below by logical domain for reading; the `<name>.yaml` labels are historical —
+every item now lives in the single `automations.yaml`, findable by its `id:` or in
+[`AUTOMATIONS_AND_SCRIPTS.md`](AUTOMATIONS_AND_SCRIPTS.md)._
 
 **persona/**
 - `persona_switcher.yaml` — on `input_select.current_persona` change: swap the Assist
@@ -69,7 +83,11 @@ call-out moved to `audio/idle_attention_ping.yaml`.
 - `internet_down_enter_rest.yaml` — `binary_sensor.internet` off 5 min → `script.enter_rest_mode` (+ a `/5` re-assert while still down).
 - `internet_up_wake_from_rest.yaml` — `binary_sensor.internet` on 3 min while resting → `script.wake_from_rest`.
 
-## Scripts — `scripts/<domain>/` (14)
+## Scripts (20) — all in `scripts.yaml`
+
+_Grouped below by logical domain for reading; every item now lives in the single
+`scripts.yaml`, callable as `script.<slug>` and findable in
+[`AUTOMATIONS_AND_SCRIPTS.md`](AUTOMATIONS_AND_SCRIPTS.md)._
 
 **audio/**
 - `jukebox.yaml` — `play_song_on_jukebox` (front-and-center song, fixed vol 90, waits for the
@@ -162,16 +180,22 @@ scp them to the box.
 ## Deploying to the box (repo is canonical)
 
 ```bash
-# from data/homeassistant/ — push the config the box loads:
-sshpass -p easytoremember scp -r configuration.yaml automations scripts packages templates \
+# from data/homeassistant/ — push the config the box loads (single flat files now):
+sshpass -p easytoremember scp -r configuration.yaml automations.yaml scripts.yaml packages templates \
   root@glitch.local:/config/
-# reorg gotcha: if the box still has old monolith automations.yaml/scripts.yaml, delete them:
-sshpass -p easytoremember ssh root@glitch.local 'rm -f /config/automations.yaml /config/scripts.yaml'
-# validate, then apply (a structural/include or new-helper change needs a restart):
-sshpass -p easytoremember ssh root@glitch.local 'ha core check && ha core restart'
+# validate FIRST — if this fails, STOP: the old automations/ + scripts/ dirs are still on
+# the box so you can revert configuration.yaml cleanly:
+sshpass -p easytoremember ssh root@glitch.local 'ha core check'
+# only once check passes: drop the OLD subfolder trees (now unincluded/dead weight) and
+# restart. A restart (not reload) is required because the include DIRECTIVE changed
+# (!include_dir_merge_* → !include):
+sshpass -p easytoremember ssh root@glitch.local 'rm -rf /config/automations/ /config/scripts/ && ha core restart'
 # media/sounds/* deploy to a DIFFERENT root:
 sshpass -p easytoremember scp media/sounds/<f> root@glitch.local:/media/sounds/
 ```
+
+`AUTOMATIONS_AND_SCRIPTS.md` and `bin/reindex_context.rb` are repo-only (context index +
+tooling) — never scp them to the box.
 
 Removing an automation/script from the repo leaves an orphaned `unavailable` entity in
 the box's registry (harmless; bulk-delete in the HA UI if you want it tidy).
