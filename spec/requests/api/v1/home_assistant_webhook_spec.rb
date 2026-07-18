@@ -76,6 +76,8 @@ RSpec.describe "Home Assistant webhook API", type: :request do
       post '/api/v1/hass/restart', as: :json
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["data"]).to include("restarted" => false, "reason" => "cooldown")
+    end
+  end
 
   describe "POST /api/v1/hass/idle_announce" do
     it "enqueues the idle musing and returns success" do
