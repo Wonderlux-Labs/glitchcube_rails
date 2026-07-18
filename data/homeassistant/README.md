@@ -76,12 +76,9 @@ call-out moved to `audio/idle_attention_ping.yaml`.
   cube to stop speaking, fades in), `play_mood_music_on_jukebox` (background/mood, fixed vol
   60, immediate, fades in), `search_jukebox` (search the library). Neither play tool takes a
   volume — it's baked per tool.
-- `attention.yaml` — `persona_attention_announce` (idle SFX-pre-chime + current-persona
-  voiced call-out via `chime_tts`, out the cube's own speaker) and `play_attention_sfx`
-  (a bare random attention SFX). Driven by `automations/audio/idle_attention_ping.yaml`.
-- `announcement.yaml` — `system_announcement` (chime + robotic non-persona TTS message over
-  the jukebox via `music_assistant.play_announcement`, volume-aware, default 75; ducks and
-  auto-resumes whatever was playing). Callable by any persona via the `other_actions` channel.
+- `attention.yaml` — `persona_attention_announce` (idle glitch-static blip pre-chime + the
+  current persona's own cloud voice via `tts.cloud_say`, out the cube's own speaker) and
+  `play_attention_sfx` (a bare random glitch SFX). Driven by `automations/audio/idle_attention_ping.yaml`.
 
 **marquee/** — `marquee.yaml`
 - `awtrix_marquee_message` — flash a message (color/rainbow/duration) on the LED sign.
@@ -124,10 +121,9 @@ Input helpers stay in packages (they're finicky when split into include-dirs).
   - `input_number`: `quiet_mode_max_volume`. `input_button`: `trigger_alarm`.
 
   (Dev-mock helpers `dev_jukebox_song` / `dev_mood_music` / `dev_sound_effect` /
-  `announcement` and the `loudspeaker_announcement` dev script were removed. Real
-  announcement functionality was reintroduced as `scripts/audio/announcement.yaml`'s
-  `system_announcement`, above — no dev-mock helper needed since it uses the real
-  `music_assistant.play_announcement` service directly.)
+  `announcement` and the `loudspeaker_announcement` dev script were removed. The
+  `system_announcement` script was also removed — it passed raw text to
+  `music_assistant.play_announcement`'s `url` field and never worked.)
 - `cube_screen.yaml` — M5Stack Core2 display helpers (`input_text.m5_screen_text` /
   `_emoji` / `_color`); entity_ids the ESPHome `cube-screen` firmware subscribes to.
 - `glitchcube_rails_triggers.yaml` — HASS→Rails `rest_command`s, all hitting the one
