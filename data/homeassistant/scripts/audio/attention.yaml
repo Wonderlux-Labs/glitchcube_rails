@@ -1,14 +1,14 @@
 # --- Idle attention (SFX + persona call-out) -------------------------------------
 # Fired by the "Idle: attention ping" automation when the cube's been idle a while, to
-# draw people over. Two scripts: a full persona voiced call-out (chime_tts, its own voice)
-# and a bare sound-effect. Both play out the cube's OWN speaker
+# draw people over. Two scripts: a full persona voiced call-out (glitch blip + the persona's
+# own cloud voice via tts.cloud_say) and a bare sound-effect. Both play out the cube's OWN speaker
 # (media_player.cube_cube_voice_media_player), NOT the jukebox — there's no conversation in
 # flight (the automation requires 3 min idle), so it can't step on a pipeline.
 #
-# SFX files live at /media/sounds/effects/*.mp3 on the box (the same set the retired
-# play_sound_effect script used). chime_tts uses one as a pre-announce chime; play_attention_sfx
-# plays one straight through media_source. Persona -> Nabu Casa cloud voice mirrors the
-# voice_id in each lib/prompts/personas/*.yml.
+# SFX files live at /media/sounds/effects/glitch_*.mp3 on the box — glitchy radio-static
+# "beep-bloops" (sourced from data/rails_media/glitch_efx/short, all <10s). persona_attention_announce
+# plays a short one as a pre-chime then speaks; play_attention_sfx plays one straight through
+# media_source. Persona -> Nabu Casa cloud voice mirrors the voice_id in each lib/prompts/personas/*.yml.
 
 persona_attention_announce:
   alias: Persona Attention Announce
@@ -20,28 +20,28 @@ persona_attention_announce:
   sequence:
   - variables:
       persona: "{{ states('input_select.current_persona') }}"
-      # Persona -> Nabu Casa cloud voice + locale (matches lib/prompts/personas/*.yml voice_id).
+      # Persona -> Nabu Casa cloud voice + locale. SOURCE OF TRUTH is the live Assist pipelines
+      # on the box (select.cube_cube_voice_assistant → Buddy/Jax/Neon/Zorp/Crash pipeline's
+      # tts_voice/tts_language), NOT the repo personas *.yml voice_id (those are stale). Keep
+      # these in sync with the pipelines if the pipeline voices change.
       voice_map:
-        buddy: { voice: GuyNeural, language: en-US }
-        jax: { voice: MitchellNeural, language: en-NZ }
-        neon: { voice: LibbyNeural, language: en-GB }
-        zorp: { voice: PrabhatNeural, language: en-IN }
-        crash: { voice: ConnorNeural, language: en-IE }
+        buddy: { voice: "DavisNeural||chat", language: en-US }
+        jax: { voice: SteffanNeural, language: en-US }
+        neon: { voice: JaneNeural, language: en-US }
+        zorp: { voice: ElliotNeural, language: en-GB }
+        crash: { voice: LukeNeural, language: en-ZA }
       v: "{{ voice_map.get(persona, {'voice': 'JennyNeural', 'language': 'en-US'}) }}"
       rgb: >-
         {{ {'buddy': [255,220,0], 'neon': [255,0,128], 'zorp': [160,0,255],
             'crash': [0,255,65], 'jax': [0,120,255]}.get(persona, [255,255,255]) }}
-      # "Pay attention" sound effects (a curated attention subset of /media/sounds/effects/).
+      # Glitchy radio-static "beep-bloop" pre-chime. Shorter subset (<6s) so it doesn't drag
+      # before the voice line. Files under /media/sounds/effects/ (from data/rails_media/glitch_efx).
       sfx_pool:
-      - bell_ding.mp3
-      - cowbell.mp3
-      - cymbal_crash.mp3
-      - rooster.mp3
-      - whistle.mp3
-      - wind_chime.mp3
-      - alarm_clock.mp3
-      - cash_register.mp3
-      chime_file: "/media/sounds/effects/{{ sfx_pool | random }}"
+      - glitch_burst.mp3
+      - glitch_sw.mp3
+      - glitch_ringy.mp3
+      - glitch_static.mp3
+      - glitch_squeaky.mp3
       # Same random openers the old presence voice-nudge used (always ended with the wake hint).
       phrases:
       - "Hey — over here."
@@ -66,15 +66,27 @@ persona_attention_announce:
       rgb_color: "{{ rgb }}"
       brightness_pct: 100
       effect: Sparkle
-  - action: chime_tts.say
-    data:
+  # Pre-chime: play a short glitch blip, let it ring a moment, then the persona speaks. Both
+  # go out the cube's own voice speaker; the cloud_say interrupts the tail of the blip (a
+  # deliberate glitchy cut-to-voice). tts.cloud_say (legacy Nabu Casa cloud) — chime_tts's TTS
+  # backend produced no audio on this box, but cloud_say works. cache:true caches each phrase.
+  - action: media_player.play_media
+    target:
       entity_id: media_player.cube_cube_voice_media_player
-      chime_path: "{{ chime_file }}"
+    data:
+      media_content_type: music
+      media_content_id: "media-source://media_source/local/sounds/effects/{{ sfx_pool | random }}"
+  - delay: "00:00:02"
+  - action: tts.cloud_say
+    data:
+      cache: true
+      entity_id: media_player.cube_cube_voice_media_player
       message: "{{ phrase }}"
-      tts_platform: cloud
       language: "{{ v.language }}"
       options:
         voice: "{{ v.voice }}"
+  # Hold the sparkle across the spoken line, then restore the body light to what it was.
+  - delay: "00:00:04"
   - action: scene.turn_on
     target:
       entity_id: scene.attention_light_restore
@@ -88,15 +100,19 @@ play_attention_sfx:
     doesn't do a full persona announce.
   sequence:
   - variables:
+      # Glitchy radio-static "beep-bloop" pool (all <10s), from data/rails_media/glitch_efx.
       sfx_pool:
-      - bell_ding.mp3
-      - cowbell.mp3
-      - cymbal_crash.mp3
-      - rooster.mp3
-      - whistle.mp3
-      - wind_chime.mp3
-      - alarm_clock.mp3
-      - cash_register.mp3
+      - glitch_burst.mp3
+      - glitch_sw.mp3
+      - glitch_ringy.mp3
+      - glitch_static.mp3
+      - glitch_squeaky.mp3
+      - glitch_grungy.mp3
+      - glitch_am.mp3
+      - glitch_sw4.mp3
+      - glitch_lofi.mp3
+      - glitch_schizoid.mp3
+      - glitch_tuning.mp3
   - action: media_player.play_media
     target:
       entity_id: media_player.cube_cube_voice_media_player
