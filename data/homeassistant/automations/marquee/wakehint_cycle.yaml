@@ -3,7 +3,7 @@
   description: >-
     Re-roll the marquee's "wakehint" app text every minute so the "say Hey Glitchcube to
     wake me up" hint varies. The device auto-cycles between the idle-effect app and this
-    wake-hint app every ~30s (ATIME, set in the AWTRIX seed script); this automation only
+    wake-hint app every ~20s (ATIME, set in the AWTRIX seed script); this automation only
     changes WHICH phrase the wake-hint app shows, not the cycling. Skipped during a persona
     switch (the grand-entrance show owns the sign then). Notifications
     (awtrix_marquee_message) still override both background apps, so an active

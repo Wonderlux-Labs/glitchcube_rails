@@ -147,8 +147,8 @@ awtrix_marquee_clear:
 # --- AWTRIX background apps (two always-on apps the device cycles) ----------------
 # The marquee runs TWO always-on custom apps that the device auto-cycles: "idle" (an
 # ambient effect) and "wakehint" (the "say Hey Glitchcube to wake me up" hint). App
-# transitions are ON (ATRANS=true) with a 30s cycle time (ATIME=30 — this firmware counts
-# ATIME in SECONDS, not ms; set in the seed below), so the two apps toggle every ~30 seconds. Transient notifications
+# transitions are ON (ATRANS=true) with a 20s cycle time (ATIME=20 — this firmware counts
+# ATIME in SECONDS, not ms; set in the seed below), so the two apps toggle every ~20 seconds. Transient notifications
 # (awtrix_marquee_message) overlay whichever app is showing and then dismiss back to the
 # loop. An effect/text published to marquee/custom/<app> with NO duration holds until the
 # next publish. Division of labor: AUTOMATIONS decide WHEN to change each app; the
@@ -233,8 +233,10 @@ set_marquee_wakehint:
   description: >-
     Set the marquee's always-on "wakehint" app — the "say Hey Glitchcube to wake me up" hint
     the device cycles with the idle effect. Call with no args for a random phrase from the
-    pool, or pass `message` to pin one (and optionally `color`). Publishes to
-    marquee/custom/wakehint over MQTT, retained, no duration.
+    pool AND a random text color (red / yellow / green / rainbow). Pass `message` to pin the
+    text and/or `color` (hex) to pin the color. Text scrolls slightly slower than default
+    (scrollSpeed 70%) so it's easy to read. Publishes to marquee/custom/wakehint over MQTT,
+    retained, no duration.
   fields:
     message:
       name: Message
@@ -244,7 +246,9 @@ set_marquee_wakehint:
         text:
     color:
       name: Color
-      description: Text color as a hex string. Defaults to cyan (#00AEEF).
+      description: >-
+        Pin the text color as a hex string, e.g. "#FF0000". Omit for a random pick of
+        red / yellow / green / rainbow.
       required: false
       selector:
         text:
@@ -257,12 +261,21 @@ set_marquee_wakehint:
       - "TALK TO ME - JUST SAY 'HEY GLITCHCUBE'"
       - "SAY IT LOUD: 'HEY GLITCHCUBE'"
       text: "{{ message | default('', true) or (phrase_pool | random) }}"
-      col: "{{ color | default('#00AEEF', true) }}"
+      # explicit color pins it; otherwise randomly pick red/yellow/green/rainbow
+      choice: "{{ 'explicit' if (color | default('', true)) else (['red', 'yellow', 'green', 'rainbow'] | random) }}"
+  - variables:
+      payload: >-
+        {%- set colors = {'red': '#FF0000', 'yellow': '#FFFF00', 'green': '#00FF00'} -%}
+        {%- set p = {'text': text, 'scrollSpeed': 70} -%}
+        {%- if choice == 'explicit' -%}{%- set p = p | combine({'color': color}) -%}
+        {%- elif choice == 'rainbow' -%}{%- set p = p | combine({'rainbow': true}) -%}
+        {%- else -%}{%- set p = p | combine({'color': colors[choice]}) -%}{%- endif -%}
+        {{ p | to_json }}
   - action: mqtt.publish
     data:
       topic: marquee/custom/wakehint
       retain: true
-      payload: "{{ {'text': text, 'color': col} | to_json }}"
+      payload: "{{ payload | trim }}"
   mode: queued
   max: 10
 
@@ -274,16 +287,16 @@ awtrix_install_idle_apps:
   description: >-
     Post-reflash seed for the marquee. The loop has TWO always-on custom apps that the device
     auto-cycles: "idle" (ambient effect) and "wakehint" (the say-Hey-Glitchcube hint). Turn
-    app transitions ON (ATRANS) and set the cycle time (ATIME=30, in SECONDS on this
+    app transitions ON (ATRANS) and set the cycle time (ATIME=20, in SECONDS on this
     firmware — NOT ms) — both device settings wiped by a reflash — so the two apps toggle
-    every ~30 seconds; then seed both apps.
+    every ~20 seconds; then seed both apps.
     Notifications (awtrix_marquee_message) still overlay whichever app is showing. Run once
     after a reflash; the idle-effect + wakehint cycle automations take over from there.
   sequence:
   - action: mqtt.publish
     data:
       topic: marquee/settings
-      payload: '{"ATRANS": true, "ATIME": 30}'
+      payload: '{"ATRANS": true, "ATIME": 20}'
   - action: script.set_marquee_idle
     data:
       effect: Matrix

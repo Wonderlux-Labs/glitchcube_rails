@@ -91,8 +91,9 @@ call-out moved to `audio/idle_attention_ping.yaml`.
   always-on apps the device cycles.
 - `set_marquee_wakehint` — set the "wakehint" app (random "say Hey Glitchcube" phrase) —
   the other always-on app in the cycle.
-- `awtrix_install_idle_apps` — post-reflash seed: ATRANS **on** + ATIME 30s + seed both the
-  idle-effect and wakehint apps so the device toggles them every ~30s.
+- `awtrix_install_idle_apps` — post-reflash seed: ATRANS **on** + ATIME 20s (SECONDS, not
+  ms, on fw 0.98) + seed both the idle-effect and wakehint apps so the device toggles them
+  every ~20s. Wake-hint scrolls slightly slower (scrollSpeed 70%) in a random red/yellow/green/rainbow.
 
 **lights/**
 - `cube_lights.yaml` — `set_cube_lights`: the Assist-facing control for the single body
