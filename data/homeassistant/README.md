@@ -57,10 +57,13 @@ irrelevant to that.
 - `internet_down_enter_rest.yaml` — `binary_sensor.internet` off 5 min → `script.enter_rest_mode` (+ a `/5` re-assert while still down).
 - `internet_up_wake_from_rest.yaml` — `binary_sensor.internet` on 3 min while resting → `script.wake_from_rest`.
 
-## Scripts — `scripts/<domain>/` (13)
+## Scripts — `scripts/<domain>/` (14)
 
 **audio/**
 - `jukebox.yaml` — `play_music_on_jukebox` (play a track/query, volume-aware), `search_jukebox` (search the library).
+- `announcement.yaml` — `system_announcement` (chime + robotic non-persona TTS message over
+  the jukebox via `music_assistant.play_announcement`, volume-aware, default 75; ducks and
+  auto-resumes whatever was playing). Callable by any persona via the `other_actions` channel.
 
 **marquee/** — `marquee.yaml`
 - `awtrix_marquee_message` — flash a message (color/rainbow/duration) on the LED sign.
@@ -97,7 +100,10 @@ Input helpers stay in packages (they're finicky when split into include-dirs).
   - `input_number`: `quiet_mode_max_volume`. `input_button`: `trigger_alarm`.
 
   (Dev-mock helpers `dev_jukebox_song` / `dev_mood_music` / `dev_sound_effect` /
-  `announcement` and the `loudspeaker_announcement` dev script were removed.)
+  `announcement` and the `loudspeaker_announcement` dev script were removed. Real
+  announcement functionality was reintroduced as `scripts/audio/announcement.yaml`'s
+  `system_announcement`, above — no dev-mock helper needed since it uses the real
+  `music_assistant.play_announcement` service directly.)
 - `cube_screen.yaml` — M5Stack Core2 display helpers (`input_text.m5_screen_text` /
   `_emoji` / `_color`); entity_ids the ESPHome `cube-screen` firmware subscribes to.
 - `glitchcube_rails_triggers.yaml` — HASS→Rails `rest_command`s, all hitting the one

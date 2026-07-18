@@ -35,13 +35,13 @@ class Schemas::NarrativeResponseSchema
              description: "OPTIONAL. Plain-English INTENT for your body LEDs (see YOUR TOOLS). Omit to leave your lights unchanged."
 
       string :sound, required: false,
-             description: "OPTIONAL. Plain-English INTENT for what to play — a song, background/mood music, or a short SFX (see YOUR TOOLS). Omit to leave current audio as-is."
+             description: "OPTIONAL. Plain-English INTENT for what to play — a song or background/mood music (see YOUR TOOLS). Omit to leave current audio as-is."
 
       string :marquee, required: false,
              description: "OPTIONAL. Plain-English text (and optional color) for the scrolling sign (see YOUR TOOLS). Omit to leave the sign alone."
 
       string :other_actions, required: false,
-             description: "OPTIONAL. Plain-English catch-all — right now only a systems check or a persona switch (see YOUR TOOLS). Omit if none apply."
+             description: "OPTIONAL. Plain-English catch-all — right now a systems check, a persona switch, or a system announcement (see YOUR TOOLS). Omit if none apply."
 
       boolean :continue_conversation, required: true,
               description: "Whether to keep listening without a wake word. Err toward true; false only when the conversation has clearly ended (a goodbye) or the input is environmental noise, not someone talking to you."
