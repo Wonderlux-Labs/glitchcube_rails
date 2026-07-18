@@ -1,5 +1,10 @@
 # app/services/conversation_orchestrator/llm_intention.rb
 class ConversationOrchestrator::LlmIntention
+  # The speech fallback_narrative hands back when the brain call fails. Exposed so
+  # callers that must NOT speak an apology into an empty room (e.g. IdleAnnounceJob)
+  # can detect the degraded case without duplicating the string.
+  FALLBACK_SPEECH = "I'm having trouble thinking right now — give me a moment.".freeze
+
   def self.call(prompt_data:, user_message:, model:)
     new(prompt_data: prompt_data, user_message: user_message, model: model).call
   end
@@ -110,7 +115,7 @@ class ConversationOrchestrator::LlmIntention
 
   def fallback_narrative
     {
-      "speech" => "I'm having trouble thinking right now — give me a moment.",
+      "speech" => FALLBACK_SPEECH,
       "continue_conversation" => false,
       "inner_monologue" => "Brain LLM call failed; spoke a graceful fallback so I'm not silent.",
       "actions" => []

@@ -73,3 +73,13 @@ rest_command:
     method: POST
     content_type: "application/json"
     payload: '{"reason": "{{ reason | default("", true) }}"}'
+
+  # The current persona muses out loud while idle — an unprompted announcement via
+  # assist_satellite.announce (speaks without opening the mic, so it's safe whether
+  # or not anyone's nearby). IdleAnnounceJob on the Rails side. Fire-and-forget.
+  glitchcube_idle_announce:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/idle_announce
+    method: POST
+    content_type: "application/json"
+    payload: "{}"

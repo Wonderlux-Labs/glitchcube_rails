@@ -55,6 +55,14 @@ class Api::V1::HomeAssistantWebhookController < Api::V1::BaseController
     render_api_success(enqueued: true)
   end
 
+  # POST /api/v1/hass/idle_announce
+  # The current persona muses out loud while idle -> assist_satellite.announce
+  # (speaks without opening the mic). Fire-and-forget.
+  def idle_announce
+    IdleAnnounceJob.perform_later
+    render_api_success(enqueued: true)
+  end
+
   # POST /api/v1/hass/restart
   # LAST-RESORT self-heal: gracefully restart the whole backend stack via the boot
   # supervisor (bin/glitchcube-ctl restart → TERM the launchd job → KeepAlive

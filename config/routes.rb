@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       post "hass/glitch_short", to: "home_assistant_webhook#glitch_short"
       post "hass/glitch_long", to: "home_assistant_webhook#glitch_long"
       post "hass/restart", to: "home_assistant_webhook#restart"
+      post "hass/idle_announce", to: "home_assistant_webhook#idle_announce"
 
       namespace :home_assistant do
         get "health", to: "home_assistant#health"
