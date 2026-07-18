@@ -35,8 +35,8 @@ The wake hint moved off a repeating notification and onto the sign as a **second
 
 - [x] After scp+reload, run **`script.awtrix_install_idle_apps`** ONCE (Developer Tools → Actions). It publishes `marquee/settings {"ATRANS": true, "ATIME": 30}` and seeds both `marquee/custom/idle` and `marquee/custom/wakehint`. **DONE 2026-07-18.**
 - [x] Watch the sign for ~2 min: confirm it **toggles** between the random ambient idle effect and the wake-hint text roughly every 30s. **FIXED 2026-07-18:** seed originally sent `ATIME: 30000` assuming ms — but fw 0.98 counts ATIME in **SECONDS**, so it was ~8.3 h/app and stayed frozen on idle. Corrected to `ATIME: 30` (live device + repo seed). Confirmed cycling idle↔wakehint every ~30s via `/api/stats`.
-- [ ] Confirm the wake-hint text **varies** over a few minutes (the `wakehint_cycle` automation re-rolls the phrase every 1 min).
-- [ ] Confirm a persona marquee message (talk to the cube) and the THINKING/LISTENING status still **override** both apps and then return to the loop.
+- [x] Confirm the wake-hint text **varies** over a few minutes (the `wakehint_cycle` automation re-rolls the phrase every 1 min). **DONE 2026-07-18** — observed phrase change TALK TO ME… → SAY IT LOUD… via retained payload.
+- [x] Confirm a persona marquee message and the THINKING/LISTENING status still **override** both apps and then return to the loop. **DONE 2026-07-18** — fired `awtrix_marquee_message` test, overrode + returned. (Live persona/THINKING/LISTENING path unchanged, will confirm on the night.)
 - [ ] **Tune if needed** (device-specific, can't verify off-box):
   - If the 30s toggle feels wrong, adjust `ATIME` in the seed, or set a per-app `duration` in `set_marquee_idle` / `set_marquee_wakehint` payloads.
   - If the wake-hint text is hard to read (dim), the idle BRI may be low — bump brightness in `set_marquee_idle`/settings, or add a `BRI` to the wakehint publish.
