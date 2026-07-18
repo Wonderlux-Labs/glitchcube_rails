@@ -81,9 +81,10 @@ persona_attention_announce:
   mode: single
 play_attention_sfx:
   alias: Play Attention SFX
-  description: Play a single random "pay attention" sound effect out the cube's own
-    speaker (the VA media player, not the jukebox). Used by the idle-attention automation
-    on the ~2-in-3 turns it doesn't do a full persona announce.
+  description: Play a single random "pay attention" glitch sound effect out the jukebox
+    (media_player.jukebox_internal) so it sounds like it's coming from INSIDE the cube.
+    Used by the idle-attention automation on the 10% glitch-SFX branch. (Persona voice
+    call-outs still go out the cube's own voice box, not here.)
   sequence:
   - variables:
       sfx_pool:
@@ -100,11 +101,60 @@ play_attention_sfx:
       - glitch_tuning.mp3
   - action: media_player.play_media
     target:
-      entity_id: media_player.cube_cube_voice_media_player
+      entity_id: media_player.jukebox_internal
     data:
       media_content_type: music
       media_content_id: media-source://media_source/local/sounds/effects/{{ sfx_pool
         | random }}
+  mode: single
+play_bleepboop_sequence:
+  alias: Play Bleeps and Boops
+  description: 'A burst of random short "bleep/boop" UI sounds out the jukebox (media_player.jukebox_internal)
+    so it sounds like it''s coming from INSIDE the cube. Picks 5 distinct random clips;
+    each is stuttered 1-3 times, and EVERY hit is separated by a random 300-600ms gap
+    (e.g. bleep bleep - boop - blip blip blip - ...). Files live at /media/sounds/effects/bleepsboops/1.mp3
+    .. 104.mp3 on the box. Main "make a noise" branch of the idle-attention automation,
+    replacing the old glitch-only SFX — glitch SFX is now just a 10% flavor. Tune the
+    5 (distinct sounds), the 1-3 (stutter), and 300-600 (gap ms) below to change feel.'
+  sequence:
+  - variables:
+      shots: >-
+        {% set ns = namespace(items=[]) %}
+        {%- set chosen = (range(1, 105) | list | shuffle)[:5] %}
+        {%- for fn in chosen %}
+          {%- for r in range(range(1, 4) | random) %}
+            {%- set ns.items = ns.items + [fn] %}
+          {%- endfor %}
+        {%- endfor %}
+        {{- ns.items }}
+  - repeat:
+      for_each: "{{ shots }}"
+      sequence:
+      - action: media_player.play_media
+        target:
+          entity_id: media_player.jukebox_internal
+        data:
+          media_content_type: music
+          media_content_id: media-source://media_source/local/sounds/effects/bleepsboops/{{
+            repeat.item }}.mp3
+      - if: "{{ not repeat.last }}"            # random gap between every hit, not after the last
+        then:
+        - delay:
+            milliseconds: "{{ range(300, 601) | random }}"
+  mode: single
+play_theme_song:
+  alias: Play Theme Song
+  description: >-
+    Play a random GlitchCube theme song off the cube's HOST speaker (fire-and-forget,
+    full song). Theme songs live on the Rails host (data/rails_media/theme_songs/, NOT on
+    this box), so this can't use media_player — it pokes Rails
+    (rest_command.glitchcube_play_theme_song → /api/v1/hass/theme_song → ThemeSongJob),
+    which picks a random .mp3 and plays it straight off the host speaker. Standalone: NOT
+    wired to anything yet — expose it later if we want the action agent or an automation
+    to drop a theme song. (This is the same host-audio path the grand entrance uses, just
+    the song on its own — no anomaly VO, lights, or arrival.)
+  sequence:
+  - action: rest_command.glitchcube_play_theme_song
   mode: single
 play_song_on_jukebox:
   alias: Play Song on Jukebox
@@ -922,7 +972,9 @@ set_marquee_idle:
     + random palette + random speed (3-5); or pass any of effect/palette/speed/blend/brightness
     to pin a look. Great for tuning in Developer Tools → Actions: play until a combo
     looks best, then put that combo in an automation. Publishes to marquee/custom/idle
-    over MQTT, retained, NO duration.'
+    over MQTT, retained. Sets a per-app display time (duration:15s) — SHORTER than the
+    wakehint text (25s) so the loop favors the words (per-app duration overrides the global
+    ATIME cycle time).'
   fields:
     effect:
       name: Effect
@@ -1022,7 +1074,7 @@ set_marquee_idle:
     data:
       topic: marquee/custom/idle
       retain: true
-      payload: "{{ {'effect': eff, 'effectSettings': {'speed': spd, 'palette': pal,
+      payload: "{{ {'effect': eff, 'duration': 15, 'effectSettings': {'speed': spd, 'palette': pal,
         'blend': bln}} | to_json }}"
   mode: queued
   max: 10
@@ -1031,10 +1083,13 @@ set_marquee_wakehint:
   description: Set the marquee's always-on "wakehint" app — the "say Hey Glitchcube
     to wake me up" hint the device cycles with the idle effect. Call with no args
     for a random phrase from the pool in RAINBOW text. Pass `message` to pin the text
-    and/or `color` (hex) to pin a solid color instead of rainbow. Text scrolls slower
-    than default (scrollSpeed 40%) so it's easy to read (a long phrase may not finish
-    before the app switches — that's fine). Publishes to marquee/custom/wakehint over
-    MQTT, retained, no duration.
+    and/or `color` (hex) to pin a solid color instead of rainbow. Text scrolls a bit
+    slower than default (scrollSpeed 50%) so it's easy to read (a long phrase may not
+    finish before the app switches — that's fine). Always publishes effect:'' so a stray
+    effect (e.g. a leaked busy-mode effect) is cleared and the words never render over an
+    effect. Sets a per-app display time (duration:25s) — LONGER than the idle effect's 15s
+    so the loop dwells on the words (per-app duration overrides the global ATIME cycle
+    time). Publishes to marquee/custom/wakehint over MQTT, retained.
   fields:
     message:
       name: Message
@@ -1060,7 +1115,7 @@ set_marquee_wakehint:
       - WAKE UP BY SAYING 'HEY GLITCH CUBE'
       text: "{{ message | default('', true) or (phrase_pool | random) }}"
   - variables:
-      payload: "{%- set p = {'text': text, 'scrollSpeed': 40} -%} {%- if color | default('',
+      payload: "{%- set p = {'text': text, 'scrollSpeed': 50, 'effect': '', 'duration': 25} -%} {%- if color | default('',
         true) -%}{%- set p = p | combine({'color': color}) -%} {%- else -%}{%- set
         p = p | combine({'rainbow': true}) -%}{%- endif -%} {{ p | to_json }}"
   - action: mqtt.publish

@@ -19,23 +19,24 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > 1-in-3 → full persona voiced call-out; otherwise just a sound effect.
 
   </details>
-- **`jukebox_now_playing_marquee`** — Jukebox: NOW PLAYING marquee — _line ~30_
+- **`jukebox_now_playing_marquee`** — Jukebox: NOW PLAYING marquee — _line ~36_
   <details><summary>context (now_playing_marquee.yaml)</summary>
 
-  > Foreground volume only (mood 60 / song 90 both qualify; anything <= 50 stays silent).
+  > Foreground volume only: above 0.6 → the song tool (90) announces, MOOD music (60) and
+  > anything quieter stays silent (no NOW PLAYING over background music).
   > Don't fight a persona: no announce during a switch or while a conversation is active.
   > Colored music-note icons on the AWTRIX device — one picked at random per announce.
 
   </details>
-- **`quiet_mode_autoduck_jukebox`** — Quiet mode: auto-duck jukebox — _line ~77_
+- **`quiet_mode_autoduck_jukebox`** — Quiet mode: auto-duck jukebox — _line ~85_
 
 ### camera
 
-- **`camera_clear_stale_description`** — Camera: clear stale description — _line ~114_
+- **`camera_clear_stale_description`** — Camera: clear stale description — _line ~122_
 
 ### connectivity
 
-- **`backend_restart_watchdog`** — Backend: last-resort restart when wedged too long — _line ~135_
+- **`backend_restart_watchdog`** — Backend: last-resort restart when wedged too long — _line ~143_
   <details><summary>context (backend_restart_watchdog.yaml)</summary>
 
   > --- Backend wedged: last-resort restart -----------------------------------------
@@ -53,7 +54,7 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > trusting this unattended — it was added without a running backend to test against.
 
   </details>
-- **`internet_down_enter_rest`** — Internet down: enter rest mode — _line ~151_
+- **`internet_down_enter_rest`** — Internet down: enter rest mode — _line ~159_
   <details><summary>context (internet_down_enter_rest.yaml)</summary>
 
   > --- Internet outage: rest + wake ------------------------------------------------
@@ -68,27 +69,46 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > never short-circuits the 5-min debounce. enter_rest_mode is idempotent.
 
   </details>
-- **`internet_up_wake_from_rest`** — Internet up: wake from rest mode — _line ~174_
+- **`internet_up_wake_from_rest`** — Internet up: wake from rest mode — _line ~182_
 
 ### lights
 
-- **`cube_idle_body_light_reset`** — Idle: reset body light to persona look — _line ~191_
+- **`cube_idle_body_light_reset`** — Idle: reset body light to persona look — _line ~199_
   <details><summary>context (idle_body_light_reset.yaml)</summary>
 
   > First reset at 3 min idle, then a fresh look every 5 min while still idle.
   > 1 solid, 2 pulse, 3 chase/scan.
 
   </details>
-- **`top_light_turn_indicator_blink_test`** — Top light: turn indicator (blink test) — _line ~231_
+- **`top_light_turn_indicator_blink_test`** — Top light: turn indicator (blink test) — _line ~239_
 
 ### marquee
 
-- **`cube_awtrix_idle_effect_cycle`** — Cube AWTRIX - idle effect cycle — _line ~260_
-- **`cube_awtrix_wakehint_cycle`** — Cube AWTRIX - wake-hint phrase cycle — _line ~278_
+- **`cube_awtrix_idle_effect_cycle`** — Cube AWTRIX - idle effect cycle — _line ~268_
+- **`cube_awtrix_wakehint_cycle`** — Cube AWTRIX - wake-hint phrase cycle — _line ~286_
+  <details><summary>context (wakehint cycle + gate)</summary>
+
+  > The wake hint ("say Hey Glitchcube") shows ONLY when the cube is idle and can hear you.
+  > TEXT and EFFECTS live in SEPARATE apps because AWTRIX MERGES fields into a custom app
+  > (an effect put on the text app smears the words = rainbow text over a rainbow effect).
+  > cube_awtrix_wakehint_cycle re-rolls the phrase every minute AND self-heals it (gated to
+  > idle / not-switching / not-resting / jukebox-not-playing); set_marquee_wakehint always
+  > sends effect:'' so any stray effect is cleared — the words never render over an effect.
+  > cube_awtrix_wakehint_gate: on BUSY (satellite in a conversation, or a song playing) it
+  > deletes the wakehint TEXT app and shows a Plasma/ColorWaves effect on a SEPARATE busyfx
+  > app, so the sign shows motion (never "speak to me", never blank). Those two effects aren't
+  > in the idle pool → seeing one when nobody's around = the cube is wedged / hint not restored.
+  > On FREE (satellite idle 10s / song stopped) it drops busyfx and restores the clean text hint.
+  > cube_awtrix_reseed_idle: every 10 min while idle, reinstalls both apps + re-asserts
+  > ATRANS/ATIME (script.awtrix_install_idle_apps) — belt-and-suspenders self-repair.
+
+  </details>
+- **`cube_awtrix_wakehint_gate`** — Cube AWTRIX - wake-hint gate (busy vs idle) — _line ~316_
+- **`cube_awtrix_reseed_idle`** — Cube AWTRIX - reseed idle apps (safety net) — _line ~388_
 
 ### persona
 
-- **`1755313710558`** — Persona Switcher — _line ~299_
+- **`1755313710558`** — Persona Switcher — _line ~410_
   <details><summary>context (persona_switcher.yaml)</summary>
 
   > (2) Head + body strips + Voice PE ring -> persona signature color. The script owns the
@@ -97,12 +117,12 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > stays in scripts/lights/top_light.yaml in case we revive the top light later.
 
   </details>
-- **`persona_switching_silence`** — Persona switching: silence during the show — _line ~328_
-- **`persona_switching_stuck_watchdog`** — Persona switching: watchdog (unstick after 2 min) — _line ~366_
+- **`persona_switching_silence`** — Persona switching: silence during the show — _line ~439_
+- **`persona_switching_stuck_watchdog`** — Persona switching: watchdog (unstick after 2 min) — _line ~477_
 
 ### voice
 
-- **`cube_voice_mic_guard_and_marquee`** — Cube Voice - mic guard + marquee status — _line ~389_
+- **`cube_voice_mic_guard_and_marquee`** — Cube Voice - mic guard + marquee status — _line ~500_
   <details><summary>context (mic_guard_and_marquee.yaml)</summary>
 
   > (inline) 563: the mic reopens when the TTS stream finishes DOWNLOADING, not
@@ -135,6 +155,21 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
 - **`persona_attention_announce`** (`script.persona_attention_announce`) — Persona Attention Announce — _line ~2_
 - **`play_attention_sfx`** (`script.play_attention_sfx`) — Play Attention SFX — _line ~82_
+- **`play_theme_song`** (`script.play_theme_song`) — Play Theme Song — _line ~145_
+  <details><summary>context</summary>
+
+  > Plays a random theme song off the RAILS HOST speaker (theme songs live on the host, not
+  > this box), by poking rest_command.glitchcube_play_theme_song → /api/v1/hass/theme_song →
+  > ThemeSongJob → HostAudio.play_random_theme_song. Standalone / not wired to anything yet.
+  </details>
+- **`play_bleepboop_sequence`** (`script.play_bleepboop_sequence`) — Play Bleeps and Boops — _line ~110_
+  <details><summary>context</summary>
+
+  > 4-shot burst of random short bleep/boop UI sounds out the cube's own speaker, each
+  > separated by a random 250-1000ms gap. Files at /media/sounds/effects/bleepsboops/1.mp3
+  > .. 104.mp3 (converted from the bleepsboops ogg pack). Main "make a noise" branch of the
+  > idle-attention automation (57%); glitch SFX dropped to a 10% flavor, persona speaks 33%.
+  </details>
   <details><summary>context (attention.yaml)</summary>
 
   > --- Idle attention (SFX + persona call-out) -------------------------------------
@@ -163,9 +198,9 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > Glitchy radio-static "beep-bloop" pool (all <10s), from data/rails_media/glitch_efx.
 
   </details>
-- **`play_song_on_jukebox`** (`script.play_song_on_jukebox`) — Play Song on Jukebox — _line ~109_
-- **`play_mood_music_on_jukebox`** (`script.play_mood_music_on_jukebox`) — Play Mood Music on Jukebox — _line ~166_
-- **`search_jukebox`** (`script.search_jukebox`) — Search Jukebox — _line ~219_
+- **`play_song_on_jukebox`** (`script.play_song_on_jukebox`) — Play Song on Jukebox — _line ~159_
+- **`play_mood_music_on_jukebox`** (`script.play_mood_music_on_jukebox`) — Play Mood Music on Jukebox — _line ~216_
+- **`search_jukebox`** (`script.search_jukebox`) — Search Jukebox — _line ~269_
   <details><summary>context (jukebox.yaml)</summary>
 
   > Two play scripts for the jukebox — one for front-and-center SONGS, one for background/MOOD
@@ -183,7 +218,7 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > Fade 0 -> 60 over ~3s.
 
   </details>
-- **`systems_check`** (`script.systems_check`) — Systems Check — _line ~254_
+- **`systems_check`** (`script.systems_check`) — Systems Check — _line ~304_
   <details><summary>context (systems_check.yaml)</summary>
 
   > --- Systems check (cosmetic) ------------------------------------------------------
@@ -199,8 +234,8 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
 ### connectivity
 
-- **`enter_rest_mode`** (`script.enter_rest_mode`) — Enter Rest Mode (internet down) — _line ~291_
-- **`wake_from_rest`** (`script.wake_from_rest`) — Wake From Rest (internet back) — _line ~333_
+- **`enter_rest_mode`** (`script.enter_rest_mode`) — Enter Rest Mode (internet down) — _line ~341_
+- **`wake_from_rest`** (`script.wake_from_rest`) — Wake From Rest (internet back) — _line ~383_
   <details><summary>context (rest_mode.yaml)</summary>
 
   > --- Internet "resting" mode -----------------------------------------------------
@@ -233,7 +268,7 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
 ### lights
 
-- **`set_cube_lights`** (`script.set_cube_lights`) — Set Cube Lights — _line ~359_
+- **`set_cube_lights`** (`script.set_cube_lights`) — Set Cube Lights — _line ~409_
   <details><summary>context (cube_lights.yaml)</summary>
 
   > --- Cube WLED lighting (Assist-facing) ------------------------------------------
@@ -252,7 +287,7 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > queued so back-to-back calls run in order instead of dropping one.
 
   </details>
-- **`sync_lights_to_persona`** (`script.sync_lights_to_persona`) — Sync Lights To Persona — _line ~587_
+- **`sync_lights_to_persona`** (`script.sync_lights_to_persona`) — Sync Lights To Persona — _line ~637_
   <details><summary>context (sync_lights_to_persona.yaml)</summary>
 
   > --- Persona color sync ------------------------------------------------------
@@ -265,8 +300,8 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > on every persona change.
 
   </details>
-- **`set_top_light_persona_color`** (`script.set_top_light_persona_color`) — Set Top Light to Persona Color — _line ~612_
-- **`set_top_light_effect`** (`script.set_top_light_effect`) — Set Top Light Effect — _line ~634_
+- **`set_top_light_persona_color`** (`script.set_top_light_persona_color`) — Set Top Light to Persona Color — _line ~662_
+- **`set_top_light_effect`** (`script.set_top_light_effect`) — Set Top Light Effect — _line ~684_
   <details><summary>context (top_light.yaml)</summary>
 
   > --- Top light preset effects ----------------------------------------------------
@@ -301,12 +336,12 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
 ### marquee
 
-- **`awtrix_marquee_message`** (`script.awtrix_marquee_message`) — AWTRIX Marquee Message — _line ~790_
-- **`awtrix_marquee_restore_brightness`** (`script.awtrix_marquee_restore_brightness`) — AWTRIX Marquee Restore Brightness — _line ~877_
-- **`awtrix_marquee_clear`** (`script.awtrix_marquee_clear`) — AWTRIX Marquee Clear — _line ~908_
-- **`set_marquee_idle`** (`script.set_marquee_idle`) — Set Marquee Idle Effect — _line ~918_
-- **`set_marquee_wakehint`** (`script.set_marquee_wakehint`) — Set Marquee Wake Hint — _line ~1029_
-- **`awtrix_install_idle_apps`** (`script.awtrix_install_idle_apps`) — AWTRIX Seed Idle Apps — _line ~1073_
+- **`awtrix_marquee_message`** (`script.awtrix_marquee_message`) — AWTRIX Marquee Message — _line ~840_
+- **`awtrix_marquee_restore_brightness`** (`script.awtrix_marquee_restore_brightness`) — AWTRIX Marquee Restore Brightness — _line ~927_
+- **`awtrix_marquee_clear`** (`script.awtrix_marquee_clear`) — AWTRIX Marquee Clear — _line ~958_
+- **`set_marquee_idle`** (`script.set_marquee_idle`) — Set Marquee Idle Effect — _line ~968_
+- **`set_marquee_wakehint`** (`script.set_marquee_wakehint`) — Set Marquee Wake Hint — _line ~1081_
+- **`awtrix_install_idle_apps`** (`script.awtrix_install_idle_apps`) — AWTRIX Seed Idle Apps — _line ~1128_
   <details><summary>context (marquee.yaml)</summary>
 
   > --- AWTRIX marquee (real) -------------------------------------------------------
@@ -349,8 +384,8 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 
 ### persona
 
-- **`set_persona_quick`** (`script.set_persona_quick`) — Set Persona (quick) — _line ~1096_
-- **`hand_off_the_cube`** (`script.hand_off_the_cube`) — Hand Off The Cube (grand entrance) — _line ~1131_
+- **`set_persona_quick`** (`script.set_persona_quick`) — Set Persona (quick) — _line ~1151_
+- **`hand_off_the_cube`** (`script.hand_off_the_cube`) — Hand Off The Cube (grand entrance) — _line ~1186_
   <details><summary>context (persona.yaml)</summary>
 
   > --- Persona switching -------------------------------------------------------
