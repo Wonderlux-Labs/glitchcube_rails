@@ -233,10 +233,10 @@ set_marquee_wakehint:
   description: >-
     Set the marquee's always-on "wakehint" app — the "say Hey Glitchcube to wake me up" hint
     the device cycles with the idle effect. Call with no args for a random phrase from the
-    pool AND a random text color (red / yellow / green / rainbow). Pass `message` to pin the
-    text and/or `color` (hex) to pin the color. Text scrolls slightly slower than default
-    (scrollSpeed 70%) so it's easy to read. Publishes to marquee/custom/wakehint over MQTT,
-    retained, no duration.
+    pool in RAINBOW text. Pass `message` to pin the text and/or `color` (hex) to pin a solid
+    color instead of rainbow. Text scrolls slower than default (scrollSpeed 40%) so it's easy
+    to read (a long phrase may not finish before the app switches — that's fine). Publishes to
+    marquee/custom/wakehint over MQTT, retained, no duration.
   fields:
     message:
       name: Message
@@ -246,30 +246,26 @@ set_marquee_wakehint:
         text:
     color:
       name: Color
-      description: >-
-        Pin the text color as a hex string, e.g. "#FF0000". Omit for a random pick of
-        red / yellow / green / rainbow.
+      description: Pin a solid text color as a hex string, e.g. "#FF0000". Omit for rainbow.
       required: false
       selector:
         text:
   sequence:
   - variables:
       phrase_pool:
-      - "SAY 'HEY GLITCHCUBE' TO WAKE ME UP. LOUD AND CLEAR"
-      - "SAY 'HEY GLITCHCUBE' - LOUD AND CLEAR"
-      - "WAKE ME UP: SAY 'HEY GLITCHCUBE'"
-      - "TALK TO ME - JUST SAY 'HEY GLITCHCUBE'"
-      - "SAY IT LOUD: 'HEY GLITCHCUBE'"
+      - "SAY 'HEY GLITCH CUBE' TO WAKE ME UP!"
+      - "TALK TO ME! SAY 'HEY GLITCHCUBE' LOUD AND PROUD"
+      - "OR TRY 'YO CUBE' - TALK TO ME!"
+      - "SAY 'HEY GLITCH CUBE'"
+      - "SAY 'YO CUBE'"
+      - "WAKE UP BY SAYING 'HEY GLITCH CUBE'"
       text: "{{ message | default('', true) or (phrase_pool | random) }}"
-      # explicit color pins it; otherwise randomly pick red/yellow/green/rainbow
-      choice: "{{ 'explicit' if (color | default('', true)) else (['red', 'yellow', 'green', 'rainbow'] | random) }}"
   - variables:
+      # rainbow by default; an explicit `color` arg pins a solid color instead
       payload: >-
-        {%- set colors = {'red': '#FF0000', 'yellow': '#FFFF00', 'green': '#00FF00'} -%}
-        {%- set p = {'text': text, 'scrollSpeed': 70} -%}
-        {%- if choice == 'explicit' -%}{%- set p = p | combine({'color': color}) -%}
-        {%- elif choice == 'rainbow' -%}{%- set p = p | combine({'rainbow': true}) -%}
-        {%- else -%}{%- set p = p | combine({'color': colors[choice]}) -%}{%- endif -%}
+        {%- set p = {'text': text, 'scrollSpeed': 40} -%}
+        {%- if color | default('', true) -%}{%- set p = p | combine({'color': color}) -%}
+        {%- else -%}{%- set p = p | combine({'rainbow': true}) -%}{%- endif -%}
         {{ p | to_json }}
   - action: mqtt.publish
     data:

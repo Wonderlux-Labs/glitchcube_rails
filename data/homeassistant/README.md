@@ -93,7 +93,7 @@ call-out moved to `audio/idle_attention_ping.yaml`.
   the other always-on app in the cycle.
 - `awtrix_install_idle_apps` — post-reflash seed: ATRANS **on** + ATIME 20s (SECONDS, not
   ms, on fw 0.98) + seed both the idle-effect and wakehint apps so the device toggles them
-  every ~20s. Wake-hint scrolls slightly slower (scrollSpeed 70%) in a random red/yellow/green/rainbow.
+  every ~20s. Wake-hint scrolls slower (scrollSpeed 40%) in rainbow text.
 
 **lights/**
 - `cube_lights.yaml` — `set_cube_lights`: the Assist-facing control for the single body
