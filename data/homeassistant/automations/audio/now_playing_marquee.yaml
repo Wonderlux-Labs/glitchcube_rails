@@ -1,29 +1,44 @@
 - id: jukebox_now_playing_marquee
-  alias: "Jukebox: NOW PLAYING marquee (jax/neon only)"
+  alias: "Jukebox: NOW PLAYING marquee"
   description: >-
-    When jax or neon is the active persona and a new track starts on the jukebox, flash a
-    "NOW PLAYING: <song> by <artist>" notification across the marquee with a random colored
-    music-note icon. Triggers on the media_title attribute changing (which fires both when
-    playback first starts and on every subsequent track), gated to state == playing so a
-    pause/stop doesn't announce. Other personas stay silent on the sign.
+    Flash "NOW PLAYING: <song> by <artist>" on the marquee ~30s and again ~1:30 into a track
+    that's been playing continuously at a foreground volume (> 50). Un-gated from persona (was
+    jax/neon only) — any loud-enough song shows. Deliberately NOT tied to media_title changes:
+    it fires off the playing-state duration so it announces twice per playing session, not on
+    every track flip. Suppressed when a conversation is live (satellite not idle) so it never
+    stomps a persona's own marquee message, and while a persona switch is running.
   triggers:
   - trigger: state
     entity_id: media_player.jukebox_internal
-    attribute: media_title
-  conditions:
-  - condition: state
+    to: "playing"
+    for: "00:00:30"
+    id: at_30s
+  - trigger: state
     entity_id: media_player.jukebox_internal
-    state: "playing"
-  - condition: template
-    value_template: "{{ states('input_select.current_persona') in ['jax', 'neon'] }}"
+    to: "playing"
+    for: "00:01:30"
+    id: at_90s
+  conditions:
+  # Foreground volume only (mood 60 / song 90 both qualify; anything <= 50 stays silent).
+  - condition: numeric_state
+    entity_id: media_player.jukebox_internal
+    attribute: volume_level
+    above: 0.5
   - condition: template
     value_template: >-
       {{ state_attr('media_player.jukebox_internal', 'media_title') not in [none, '', 'unknown'] }}
+  # Don't fight a persona: no announce during a switch or while a conversation is active.
+  - condition: state
+    entity_id: input_boolean.persona_switching
+    state: "off"
+  - condition: state
+    entity_id: assist_satellite.cube_cube_voice_assist_satellite
+    state: "idle"
   actions:
   - variables:
       title: "{{ state_attr('media_player.jukebox_internal', 'media_title') }}"
       artist: "{{ state_attr('media_player.jukebox_internal', 'media_artist') }}"
-      # Colored music-note icons on the AWTRIX device — one picked at random per track.
+      # Colored music-note icons on the AWTRIX device — one picked at random per announce.
       note_icon: "{{ [39263, 39264, 39273, 39275, 39295, 39302, 39349] | random }}"
   - action: script.awtrix_marquee_message
     data:
@@ -32,4 +47,4 @@
       icon: "{{ note_icon }}"
       duration: 15
       repeat: 2
-  mode: restart
+  mode: single
