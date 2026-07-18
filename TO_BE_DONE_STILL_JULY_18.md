@@ -33,8 +33,8 @@ Repo is canonical: **scp `data/homeassistant/**` over the box and clobber**, the
 
 The wake hint moved off a repeating notification and onto the sign as a **second always-on app** the device cycles with the idle effect (idle effect ↔ wake hint, ~30s toggle). Notifications still override both.
 
-- [ ] After scp+reload, run **`script.awtrix_install_idle_apps`** ONCE (Developer Tools → Actions). It publishes `marquee/settings {"ATRANS": true, "ATIME": 30000}` and seeds both `marquee/custom/idle` and `marquee/custom/wakehint`.
-- [ ] Watch the sign for ~2 min: confirm it **toggles** between the random ambient idle effect and the wake-hint text roughly every 30s.
+- [x] After scp+reload, run **`script.awtrix_install_idle_apps`** ONCE (Developer Tools → Actions). It publishes `marquee/settings {"ATRANS": true, "ATIME": 30}` and seeds both `marquee/custom/idle` and `marquee/custom/wakehint`. **DONE 2026-07-18.**
+- [x] Watch the sign for ~2 min: confirm it **toggles** between the random ambient idle effect and the wake-hint text roughly every 30s. **FIXED 2026-07-18:** seed originally sent `ATIME: 30000` assuming ms — but fw 0.98 counts ATIME in **SECONDS**, so it was ~8.3 h/app and stayed frozen on idle. Corrected to `ATIME: 30` (live device + repo seed). Confirmed cycling idle↔wakehint every ~30s via `/api/stats`.
 - [ ] Confirm the wake-hint text **varies** over a few minutes (the `wakehint_cycle` automation re-rolls the phrase every 1 min).
 - [ ] Confirm a persona marquee message (talk to the cube) and the THINKING/LISTENING status still **override** both apps and then return to the loop.
 - [ ] **Tune if needed** (device-specific, can't verify off-box):

@@ -32,7 +32,7 @@ via pal → deepseek-v4-pro before landing. Forward-looking / device-dependent w
 - **Deleted:** `automations/idle/glitch_ambient.yaml` (T4), `automations/presence/{announce,marquee}_nudge.yaml` (T3).
 - **`packages/glitchcube_core.yaml`** — removed `presence_nudge_enabled`; `disable_camera` initial ON (T1).
 - **`scripts/marquee/marquee.yaml`** — T3: new `set_marquee_wakehint` app; seed now sets
-  `ATRANS:true`/`ATIME:30000` and seeds two always-on apps (idle effect + wake hint) the device cycles.
+  `ATRANS:true`/`ATIME:30` (ATIME is SECONDS on fw 0.98, not ms) and seeds two always-on apps (idle effect + wake hint) the device cycles.
 - **`automations/marquee/wakehint_cycle.yaml`** — T3: re-roll the wake-hint phrase every 1 min.
 - **`scripts/audio/attention.yaml`** + **`automations/audio/idle_attention_ping.yaml`** — T8.
 - **`automations/lights/idle_body_light_reset.yaml`** — T9.

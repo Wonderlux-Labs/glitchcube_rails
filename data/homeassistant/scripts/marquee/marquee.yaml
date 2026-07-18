@@ -147,8 +147,8 @@ awtrix_marquee_clear:
 # --- AWTRIX background apps (two always-on apps the device cycles) ----------------
 # The marquee runs TWO always-on custom apps that the device auto-cycles: "idle" (an
 # ambient effect) and "wakehint" (the "say Hey Glitchcube to wake me up" hint). App
-# transitions are ON (ATRANS=true) with a 30s cycle time (ATIME=30000, set in the seed
-# below), so the two apps toggle every ~30 seconds. Transient notifications
+# transitions are ON (ATRANS=true) with a 30s cycle time (ATIME=30 — this firmware counts
+# ATIME in SECONDS, not ms; set in the seed below), so the two apps toggle every ~30 seconds. Transient notifications
 # (awtrix_marquee_message) overlay whichever app is showing and then dismiss back to the
 # loop. An effect/text published to marquee/custom/<app> with NO duration holds until the
 # next publish. Division of labor: AUTOMATIONS decide WHEN to change each app; the
@@ -274,15 +274,16 @@ awtrix_install_idle_apps:
   description: >-
     Post-reflash seed for the marquee. The loop has TWO always-on custom apps that the device
     auto-cycles: "idle" (ambient effect) and "wakehint" (the say-Hey-Glitchcube hint). Turn
-    app transitions ON (ATRANS) and set the cycle time (ATIME=30s) — both device settings
-    wiped by a reflash — so the two apps toggle every ~30 seconds; then seed both apps.
+    app transitions ON (ATRANS) and set the cycle time (ATIME=30, in SECONDS on this
+    firmware — NOT ms) — both device settings wiped by a reflash — so the two apps toggle
+    every ~30 seconds; then seed both apps.
     Notifications (awtrix_marquee_message) still overlay whichever app is showing. Run once
     after a reflash; the idle-effect + wakehint cycle automations take over from there.
   sequence:
   - action: mqtt.publish
     data:
       topic: marquee/settings
-      payload: '{"ATRANS": true, "ATIME": 30000}'
+      payload: '{"ATRANS": true, "ATIME": 30}'
   - action: script.set_marquee_idle
     data:
       effect: Matrix
