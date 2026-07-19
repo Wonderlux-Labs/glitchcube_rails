@@ -216,7 +216,7 @@ play_song_on_jukebox:
 play_mood_music_on_jukebox:
   alias: Play Mood Music on Jukebox
   description: 'Play quiet background / MOOD music on the jukebox — texture that sits
-    UNDER the conversation, not a front-and-center song. Volume is fixed at 60 and
+    UNDER the conversation, not a front-and-center song. Volume is fixed at ~38 and
     faded in over ~3s, starting right away. `query` is a fuzzy search — build it into
     a specific real track ("Artist - Title"), not a genre. `queue` is optional: default
     `replace` plays immediately, `replace_next` queues it as the next track. Use this
@@ -241,7 +241,7 @@ play_mood_music_on_jukebox:
       default: replace
   sequence:
   - variables:
-      target: 0.6
+      target: 0.38
   - action: media_player.volume_set
     target:
       entity_id: media_player.jukebox_internal
@@ -973,7 +973,7 @@ set_marquee_idle:
     to pin a look. Great for tuning in Developer Tools → Actions: play until a combo
     looks best, then put that combo in an automation. Publishes to marquee/custom/idle
     over MQTT, retained. Sets a per-app display time (duration:15s) — SHORTER than the
-    wakehint text (25s) so the loop favors the words (per-app duration overrides the global
+    wakehint text (30s) so the loop favors the words (per-app duration overrides the global
     ATIME cycle time).'
   fields:
     effect:
@@ -1087,7 +1087,7 @@ set_marquee_wakehint:
     slower than default (scrollSpeed 50%) so it's easy to read (a long phrase may not
     finish before the app switches — that's fine). Always publishes effect:'' so a stray
     effect (e.g. a leaked busy-mode effect) is cleared and the words never render over an
-    effect. Sets a per-app display time (duration:25s) — LONGER than the idle effect's 15s
+    effect. Sets a per-app display time (duration:30s) — LONGER than the idle effect's 15s
     so the loop dwells on the words (per-app duration overrides the global ATIME cycle
     time). Publishes to marquee/custom/wakehint over MQTT, retained.
   fields:
@@ -1115,7 +1115,7 @@ set_marquee_wakehint:
       - WAKE UP BY SAYING 'HEY GLITCH CUBE'
       text: "{{ message | default('', true) or (phrase_pool | random) }}"
   - variables:
-      payload: "{%- set p = {'text': text, 'scrollSpeed': 50, 'effect': '', 'duration': 25} -%} {%- if color | default('',
+      payload: "{%- set p = {'text': text, 'scrollSpeed': 50, 'effect': '', 'duration': 30} -%} {%- if color | default('',
         true) -%}{%- set p = p | combine({'color': color}) -%} {%- else -%}{%- set
         p = p | combine({'rainbow': true}) -%}{%- endif -%} {{ p | to_json }}"
   - action: mqtt.publish

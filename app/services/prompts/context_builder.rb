@@ -60,6 +60,7 @@ module Prompts
         current_session_context,
         world_state_context,
         camera_context,
+        conversation_opening_context,
         conversation_pacing_context,
         glitch_premonition_context
       ].compact.join("\n\n")
@@ -154,6 +155,24 @@ module Prompts
       "Right now, your camera shows: #{desc.squish}"
     rescue => e
       warn_nil(CAMERA_STATE_ENTITY, e)
+    end
+
+    # 6b. On the very first turn of a fresh conversation (round 1), have the persona close
+    #     out its opening reply by teaching the visitor the wake word — so if the "connection
+    #     gets glitchy" and the cube drops them, they know how to come back. Round == 1 only,
+    #     so it never repeats within the same conversation.
+    def conversation_opening_context
+      return nil unless @conversation
+
+      round = @conversation.conversation_logs.count + 1
+      return nil unless round == 1
+
+      "This is the very FIRST thing you're saying to this visitor. End this opening reply, in " \
+      "your own voice and in character, by letting them know that if the connection gets glitchy " \
+      "and you drop out on them, they can always wake you back up by saying \"Hey Glitch Cube\". " \
+      "Work it in naturally as a sign-off — don't recite it like a disclaimer."
+    rescue => e
+      warn_nil("conversation opening", e)
     end
 
     # 7. From the 5th round of a conversation on, nudge the persona to work toward its

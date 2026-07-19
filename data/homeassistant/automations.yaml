@@ -38,7 +38,7 @@
   description: 'Flash "NOW PLAYING: <song> by <artist>" on the marquee ~30s and again
     ~1:30 into a track that''s been playing continuously at a FOREGROUND volume (>
     60, i.e. 61%+). Threshold is above 0.6 on purpose: the song tool plays at 90 (announces),
-    the MOOD-music tool at exactly 60 (stays silent) — we don''t say NOW PLAYING over
+    the MOOD-music tool at ~38 (stays silent) — we don''t say NOW PLAYING over
     background/mood music. Un-gated from persona (was jax/neon only) — any loud-enough
     song shows. Deliberately NOT tied to media_title changes: it fires off the playing-state
     duration so it announces twice per playing session, not on every track flip. Suppressed
@@ -289,16 +289,15 @@
     Re-roll the marquee's "wakehint" app text every minute so the "say Hey Glitchcube
     to wake me up" hint varies — AND double as the self-heal that keeps the hint on the
     sign: if anything ever botches the wakehint app, this rewrites it (same thing is
-    fine) within a minute of the cube being idle, so we never get stuck with no wake
-    hint (without it, nobody knows to talk to the cube). Only fires when the cube is
-    genuinely idle and available: skipped during a persona switch, while resting, while
-    a song is playing on the jukebox, and while the satellite is mid-conversation (not
-    idle) — the wakehint gate below shows a Plasma/ColorWaves effect in those states
-    instead, and this cycle must NOT resurrect the "speak to me" hint over it. The
-    device auto-cycles the idle-effect app and this wake-hint app every ~20s (ATIME).
-    Notifications (awtrix_marquee_message / NOW PLAYING) still overlay both background
-    apps, so persona marquee messages are unaffected. The SCRIPT (set_marquee_wakehint)
-    owns the phrase pool; this owns WHEN to re-roll.
+    fine) within a minute, so we never get stuck with no wake hint (without it, nobody
+    knows to talk to the cube). The hint deliberately stays up during conversations and
+    music (the cube can still hear you), so this keeps re-rolling then. Only skipped
+    during a persona switch (the wakehint gate swaps in a Plasma/ColorWaves effect and
+    this must NOT resurrect the "speak to me" hint over it) and while resting (rest mode
+    owns the sign). The device auto-cycles the idle-effect app and this wake-hint app
+    every ~20s (ATIME). Notifications (awtrix_marquee_message / NOW PLAYING) still overlay
+    both background apps, so persona marquee messages are unaffected. The SCRIPT
+    (set_marquee_wakehint) owns the phrase pool; this owns WHEN to re-roll.
   triggers:
   - trigger: time_pattern
     minutes: "/1"
@@ -307,68 +306,51 @@
   conditions:
   - "{{ is_state('input_boolean.persona_switching', 'off') }}"
   - "{{ is_state('input_boolean.internet_resting', 'off') }}"
-  - "{{ is_state('assist_satellite.cube_cube_voice_assist_satellite', 'idle') }}"
-  - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
   actions:
   - action: script.set_marquee_wakehint
     data: {}
   mode: single
 - id: cube_awtrix_wakehint_gate
-  alias: Cube AWTRIX - wake-hint gate (busy vs idle)
+  alias: Cube AWTRIX - wake-hint gate (persona switch)
   description: >-
-    The wake-hint app ("say Hey Glitchcube") must only be on the sign when the cube can
-    actually hear you. While the cube is BUSY — the satellite is in a conversation (not
-    idle) or a song is playing on the jukebox — overwrite the wakehint slot with a
-    distinct visual effect (random Plasma / ColorWaves) instead of the "speak to me"
-    text: the sign still shows motion (never blank), and the mic-guard's dismiss on
-    'responding' can no longer fall back to a "speak to me" prompt while the cube is
-    talking or the music is up. Bonus tell: Plasma/ColorWaves are NOT in the idle-effect
-    pool, so if you ever see one while nobody's around, the cube is wedged / the hint
-    didn't get restored. When the cube goes free again (satellite idle 10s, or the song
-    stopped, AND the other is also clear) put the wake hint back immediately; the
-    every-minute wakehint cycle above then keeps it fresh. Hands off during a persona
-    switch / rest mode (those own the sign). Both publish retained so the app persists.
+    The wake-hint app ("say Hey Glitchcube") must NOT sit on the sign during a persona
+    switch: the mic is muted for the whole grand-entrance show, so inviting people to
+    "say Hey Glitchcube" then is a lie. While input_boolean.persona_switching is ON,
+    delete the wakehint TEXT app and drop a distinct visual effect (random Plasma /
+    ColorWaves) on its OWN effect-only app (busyfx) as the marquee BACKGROUND — the
+    show's held "SWITCHING…" notification overlays on top, and if that ever drops for a
+    beat the sign still shows motion, never the wake hint. When the switch ends, clear
+    the effect and put the clean text hint back. Conversations and music no longer touch
+    this — the wake hint deliberately stays UP while the cube is talking or a song plays
+    (you can still say Hey Glitchcube then). Bonus tell: Plasma/ColorWaves are NOT in the
+    idle-effect pool, so if you ever see one while nobody's around, a switch got stuck /
+    the hint didn't get restored. AWTRIX MERGES fields into a custom app across publishes,
+    so text + effect can never share a slot (rainbow text over a rainbow effect smears the
+    words) — that's why the effect lives on the separate busyfx app, not the wakehint slot.
   triggers:
   - trigger: state
-    entity_id: assist_satellite.cube_cube_voice_assist_satellite
-    to:
-    - listening
-    - processing
-    - responding
+    entity_id: input_boolean.persona_switching
+    to: 'on'
     id: busy
   - trigger: state
-    entity_id: media_player.jukebox_internal
-    to: playing
-    id: busy
-  - trigger: state
-    entity_id: assist_satellite.cube_cube_voice_assist_satellite
-    to: idle
-    for: '00:00:10'
+    entity_id: input_boolean.persona_switching
+    to: 'off'
     id: free
-  - trigger: state
-    entity_id: media_player.jukebox_internal
-    from: playing
-    id: free
-  conditions:
-  - "{{ is_state('input_boolean.persona_switching', 'off') }}"
-  - "{{ is_state('input_boolean.internet_resting', 'off') }}"
+  conditions: []
   actions:
   - choose:
     - conditions:
       - "{{ trigger.id == 'busy' }}"
       sequence:
-      # AWTRIX MERGES fields into a custom app across publishes, so an effect put on the
-      # wakehint (text) app smears the words (rainbow text over a rainbow effect). Keep the
-      # two apps STRICTLY separate: delete the wakehint TEXT app (empty payload removes it),
-      # and show the busy tell on its OWN effect-only app (busyfx). Device then cycles the
-      # idle effect + busyfx — motion, no "speak to me" text, never blank.
+      # Delete the wakehint TEXT app (empty payload removes it) and show the switch tell on
+      # its OWN effect-only app (busyfx) — kept strictly separate so the words never smear.
       - action: mqtt.publish
         data:
           topic: marquee/custom/wakehint
           payload: ''
-      # retain:FALSE — busyfx is transient (only during a busy state). If it were
+      # retain:FALSE — busyfx is transient (only for the duration of a switch). If it were
       # retained the broker would replay it on every reboot and the effect would linger
-      # while idle (false "something's wrong" tell) until the next conversation ended.
+      # while idle (false "something's wrong" tell) until the next switch ended.
       - action: mqtt.publish
         data:
           topic: marquee/custom/busyfx
@@ -376,40 +358,41 @@
           payload: "{{ {'effect': (['Plasma', 'ColorWaves'] | random)} | to_json }}"
     - conditions:
       - "{{ trigger.id == 'free' }}"
-      - "{{ is_state('assist_satellite.cube_cube_voice_assist_satellite', 'idle') }}"
-      - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
       sequence:
-      # Drop the busy effect app and bring the clean text-only wake hint back.
-      # retain:true on the empty payload deletes the app AND clears any stray retained
-      # busyfx from the broker, so nothing replays it on the next reboot.
+      # Always drop the transient effect app. retain:true on the empty payload deletes the
+      # app AND clears any stray retained busyfx from the broker, so nothing replays it on
+      # the next reboot.
       - action: mqtt.publish
         data:
           topic: marquee/custom/busyfx
           payload: ''
           retain: true
-      - action: script.set_marquee_wakehint
-        data: {}
+      # Restore the clean text hint — unless we're resting, in which case rest mode owns
+      # the sign and will re-assert its own screen.
+      - if:
+        - "{{ is_state('input_boolean.internet_resting', 'off') }}"
+        then:
+        - action: script.set_marquee_wakehint
+          data: {}
   mode: queued
   max: 10
 - id: cube_awtrix_reseed_idle
   alias: Cube AWTRIX - reseed idle apps (safety net)
   description: >-
-    Belt-and-suspenders self-repair for the marquee. Every 10 minutes while the cube is
-    idle and available, reinstall the two always-on apps and re-assert the app-transition
-    settings (ATRANS/ATIME) + the wake-hint scroll speed via
-    script.awtrix_install_idle_apps — so if the sign ever gets stuck, blank, smeared, or
-    loses an app, it heals itself within 10 min with nobody touching it (without the wake
-    hint, nobody knows to talk to the cube). Gated to idle (not switching / resting /
-    mid-conversation / song playing) so it can't slap the "speak to me" hint back up while
-    the cube is busy — the wakehint gate owns the sign then.
+    Belt-and-suspenders self-repair for the marquee. Every 10 minutes, reinstall the two
+    always-on apps and re-assert the app-transition settings (ATRANS/ATIME) + the wake-hint
+    scroll speed via script.awtrix_install_idle_apps — so if the sign ever gets stuck,
+    blank, smeared, or loses an app, it heals itself within 10 min with nobody touching it
+    (without the wake hint, nobody knows to talk to the cube). Only skipped during a persona
+    switch and while resting — the wakehint gate / rest mode own the sign then. It's fine to
+    reinstall the idle apps mid-conversation or over music (the hint stays up in those
+    states now), since persona marquee messages ride as notifications on top.
   triggers:
   - trigger: time_pattern
     minutes: "/10"
   conditions:
   - "{{ is_state('input_boolean.persona_switching', 'off') }}"
   - "{{ is_state('input_boolean.internet_resting', 'off') }}"
-  - "{{ is_state('assist_satellite.cube_cube_voice_assist_satellite', 'idle') }}"
-  - "{{ not is_state('media_player.jukebox_internal', 'playing') }}"
   actions:
   - action: script.awtrix_install_idle_apps
   mode: single

@@ -22,7 +22,7 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 - **`jukebox_now_playing_marquee`** — Jukebox: NOW PLAYING marquee — _line ~36_
   <details><summary>context (now_playing_marquee.yaml)</summary>
 
-  > Foreground volume only: above 0.6 → the song tool (90) announces, MOOD music (60) and
+  > Foreground volume only: above 0.6 → the song tool (90) announces, MOOD music (~38) and
   > anything quieter stays silent (no NOW PLAYING over background music).
   > Don't fight a persona: no announce during a switch or while a conversation is active.
   > Colored music-note icons on the AWTRIX device — one picked at random per announce.
@@ -88,27 +88,28 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
 - **`cube_awtrix_wakehint_cycle`** — Cube AWTRIX - wake-hint phrase cycle — _line ~286_
   <details><summary>context (wakehint cycle + gate)</summary>
 
-  > The wake hint ("say Hey Glitchcube") shows ONLY when the cube is idle and can hear you.
-  > TEXT and EFFECTS live in SEPARATE apps because AWTRIX MERGES fields into a custom app
-  > (an effect put on the text app smears the words = rainbow text over a rainbow effect).
-  > cube_awtrix_wakehint_cycle re-rolls the phrase every minute AND self-heals it (gated to
-  > idle / not-switching / not-resting / jukebox-not-playing); set_marquee_wakehint always
-  > sends effect:'' so any stray effect is cleared — the words never render over an effect.
-  > cube_awtrix_wakehint_gate: on BUSY (satellite in a conversation, or a song playing) it
-  > deletes the wakehint TEXT app and shows a Plasma/ColorWaves effect on a SEPARATE busyfx
-  > app, so the sign shows motion (never "speak to me", never blank). Those two effects aren't
-  > in the idle pool → seeing one when nobody's around = the cube is wedged / hint not restored.
-  > On FREE (satellite idle 10s / song stopped) it drops busyfx and restores the clean text hint.
-  > cube_awtrix_reseed_idle: every 10 min while idle, reinstalls both apps + re-asserts
-  > ATRANS/ATIME (script.awtrix_install_idle_apps) — belt-and-suspenders self-repair.
+  > The wake hint ("say Hey Glitchcube") stays up whenever the cube can hear you — including
+  > mid-conversation and over music. TEXT and EFFECTS live in SEPARATE apps because AWTRIX
+  > MERGES fields into a custom app (an effect put on the text app smears the words = rainbow
+  > text over a rainbow effect). cube_awtrix_wakehint_cycle re-rolls the phrase every minute
+  > AND self-heals it (only skipped during a persona switch / while resting); set_marquee_wakehint
+  > always sends effect:'' so any stray effect is cleared — the words never render over an effect.
+  > cube_awtrix_wakehint_gate: ONLY during a persona switch (input_boolean.persona_switching on)
+  > it deletes the wakehint TEXT app and drops a Plasma/ColorWaves effect on a SEPARATE busyfx app
+  > as the background — the mic is muted the whole switch, so "say Hey Glitchcube" would be a lie;
+  > the show's held "SWITCHING…" notify overlays on top. Conversations + music no longer touch it.
+  > Those two effects aren't in the idle pool → seeing one when nobody's around = a switch got stuck.
+  > On switch end it drops busyfx and restores the clean text hint (unless resting).
+  > cube_awtrix_reseed_idle: every 10 min (except during a switch / rest), reinstalls both apps +
+  > re-asserts ATRANS/ATIME (script.awtrix_install_idle_apps) — belt-and-suspenders self-repair.
 
   </details>
-- **`cube_awtrix_wakehint_gate`** — Cube AWTRIX - wake-hint gate (busy vs idle) — _line ~316_
-- **`cube_awtrix_reseed_idle`** — Cube AWTRIX - reseed idle apps (safety net) — _line ~394_
+- **`cube_awtrix_wakehint_gate`** — Cube AWTRIX - wake-hint gate (persona switch) — _line ~313_
+- **`cube_awtrix_reseed_idle`** — Cube AWTRIX - reseed idle apps (safety net) — _line ~379_
 
 ### persona
 
-- **`1755313710558`** — Persona Switcher — _line ~416_
+- **`1755313710558`** — Persona Switcher — _line ~399_
   <details><summary>context (persona_switcher.yaml)</summary>
 
   > (2) Head + body strips + Voice PE ring -> persona signature color. The script owns the
@@ -117,12 +118,12 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > stays in scripts/lights/top_light.yaml in case we revive the top light later.
 
   </details>
-- **`persona_switching_silence`** — Persona switching: silence during the show — _line ~445_
-- **`persona_switching_stuck_watchdog`** — Persona switching: watchdog (unstick after 2 min) — _line ~483_
+- **`persona_switching_silence`** — Persona switching: silence during the show — _line ~428_
+- **`persona_switching_stuck_watchdog`** — Persona switching: watchdog (unstick after 2 min) — _line ~466_
 
 ### voice
 
-- **`cube_voice_mic_guard_and_marquee`** — Cube Voice - mic guard + marquee status — _line ~506_
+- **`cube_voice_mic_guard_and_marquee`** — Cube Voice - mic guard + marquee status — _line ~489_
   <details><summary>context (mic_guard_and_marquee.yaml)</summary>
 
   > (inline) 563: the mic reopens when the TTS stream finishes DOWNLOADING, not
@@ -210,7 +211,7 @@ back into the repo, run `bin/reindex_context.rb` to refresh them.
   > weird state. (The jukebox_internal media player is still exposed, so the agent CAN nudge
   > volume directly after the fact if it really wants to.)
   > play_song_on_jukebox       — vol 90, waits for the persona to stop speaking first, fades in.
-  > play_mood_music_on_jukebox — vol 60, starts right away, fades in.
+  > play_mood_music_on_jukebox — vol ~38, starts right away, fades in.
   > Fade: set volume to 0, start playback, then ramp to target over ~3s (6 steps × 0.5s).
   > Hold until the cube stops speaking so the song lands after the words, not over them.
   > Outside a conversation the VA media player isn't playing, so this passes through instantly.
