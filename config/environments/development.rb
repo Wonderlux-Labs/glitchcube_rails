@@ -9,6 +9,22 @@ Rails.application.configure do
   # Do not eager load code on boot.
   config.eager_load = false
 
+  # The SolidQueue worker (bin/jobs) is a long-lived, MULTI-THREADED process
+  # (Concurrent::ThreadPoolExecutor). Development-mode code reloading wraps every
+  # job in the app executor's reloader + load-interlock, which clears/reshuffles
+  # ActiveRecord connections across threads at execution-unit boundaries. That
+  # yanks the primary connection out from under an in-flight job running on a
+  # different thread, so app-model queries (Conversation.count, Persona.pluck, …)
+  # intermittently blow up with PG::UndefinedTable (query lands on the queue/cache
+  # DB) or ActiveRecord::ConnectionNotDefined mid-perform. The worker gains nothing
+  # from hot-reload (it reloads on restart), so turn reloading OFF for that process
+  # only — set DISABLE_CODE_RELOADING=true on the `jobs:` line in Procfile.dev.
+  # Puma keeps hot-reload; we stay fully in the development environment.
+  if ENV["DISABLE_CODE_RELOADING"] == "true"
+    config.enable_reloading = false
+    config.eager_load = true
+  end
+
   # Show full error reports.
   config.consider_all_requests_local = true
 

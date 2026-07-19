@@ -1,2 +1,2 @@
 web: bundle exec puma -C config/puma.rb -b tcp://0.0.0.0:4567 config.ru
-jobs: bin/jobs >> log/solid_queue.log 2>&1
+jobs: DISABLE_CODE_RELOADING=true bin/jobs >> log/solid_queue.log 2>&1
