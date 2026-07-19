@@ -21,7 +21,14 @@ class ApplicationJob < ActiveJob::Base
   # resolve to `primary`, immune to whatever the worker thread's ambient context
   # was. SolidQueue's own records live on their own connection class, so this
   # doesn't touch queue bookkeeping.
-  around_perform do |_job, block|
+  around_perform do |job, block|
+    # TEMP DIAGNOSTIC (revert): confirm the wrapper runs and log connection context.
+    if job.class.name == "Recurring::System::ConversationStatsJob"
+      Rails.logger.warn("🔎AJWRAP before: role=#{ActiveRecord::Base.current_role} " \
+        "shard=#{ActiveRecord::Base.current_shard} " \
+        "arbase-pool=#{ActiveRecord::Base.connection_pool.db_config.name}/#{ActiveRecord::Base.connection_pool.db_config.database} " \
+        "conv-spec=#{Conversation.connection_specification_name}")
+    end
     ActiveRecord::Base.connected_to(role: ActiveRecord.writing_role) { block.call }
   end
 end

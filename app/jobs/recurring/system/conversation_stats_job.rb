@@ -21,6 +21,19 @@ module Recurring
       }.freeze
 
       def perform
+        # TEMP DIAGNOSTIC (revert): capture the exact connection Conversation resolves to.
+        begin
+          pool = Conversation.connection_pool
+          conn = Conversation.connection
+          Rails.logger.warn("🔎STATS conv-pool=#{pool.db_config.name}/#{pool.db_config.database} " \
+            "conn-db=#{conn.pool.db_config.database} role=#{ActiveRecord::Base.current_role} " \
+            "shard=#{ActiveRecord::Base.current_shard} count=#{Conversation.count}")
+        rescue => e
+          bad = Conversation.connection.pool.db_config rescue nil
+          Rails.logger.error("🔎STATS FAIL #{e.class}: db=#{bad&.database} name=#{bad&.name} " \
+            "role=#{ActiveRecord::Base.current_role} shard=#{ActiveRecord::Base.current_shard}")
+        end
+
         hass = HomeAssistantService.new
 
         STATS.each do |entity_id, count_proc|
