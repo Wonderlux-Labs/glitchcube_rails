@@ -159,7 +159,7 @@ play_theme_song:
 play_song_on_jukebox:
   alias: Play Song on Jukebox
   description: 'Play a front-and-center SONG on the jukebox — a track meant to take
-    over the room. Volume is fixed at 90 and faded in over ~3s; it waits until the
+    over the room. Volume is fixed at 90; it waits until the
     cube has finished speaking before it starts, so the song doesn''t stomp the persona''s
     own words. `query` is a fuzzy search — give it "Artist - Title" (e.g. "Nirvana
     - Smells Like Teen Spirit") or "Artist - Album - Title" to be precise; slightly-wrong
@@ -183,8 +183,6 @@ play_song_on_jukebox:
           - replace_next
       default: replace
   sequence:
-  - variables:
-      target: 0.9
   - wait_template: "{{ not is_state('media_player.cube_cube_voice_media_player', 'playing')
       }}"
     timeout: '00:00:25'
@@ -193,7 +191,7 @@ play_song_on_jukebox:
     target:
       entity_id: media_player.jukebox_internal
     data:
-      volume_level: 0
+      volume_level: 0.9
   - action: music_assistant.play_media
     target:
       entity_id:
@@ -202,22 +200,12 @@ play_song_on_jukebox:
       media_id: "{{ query }}"
       media_type: track
       enqueue: "{{ queue | default('replace', true) }}"
-  - repeat:
-      count: 6
-      sequence:
-      - delay: '00:00:00.5'
-      - action: media_player.volume_set
-        target:
-          entity_id: media_player.jukebox_internal
-        data:
-          volume_level: "{{ (target * repeat.index / 6) | round(2) }}"
-  mode: queued
-  max: 5
+  mode: single
 play_mood_music_on_jukebox:
   alias: Play Mood Music on Jukebox
   description: 'Play quiet background / MOOD music on the jukebox — texture that sits
-    UNDER the conversation, not a front-and-center song. Volume is fixed at ~38 and
-    faded in over ~3s, starting right away. `query` is a fuzzy search — build it into
+    UNDER the conversation, not a front-and-center song. Volume is fixed at ~38,
+    starting right away. `query` is a fuzzy search — build it into
     a specific real track ("Artist - Title"), not a genre. `queue` is optional: default
     `replace` plays immediately, `replace_next` queues it as the next track. Use this
     for "something ambient/under us / mood music"; use play_song_on_jukebox for an
@@ -240,13 +228,11 @@ play_mood_music_on_jukebox:
           - replace_next
       default: replace
   sequence:
-  - variables:
-      target: 0.38
   - action: media_player.volume_set
     target:
       entity_id: media_player.jukebox_internal
     data:
-      volume_level: 0
+      volume_level: 0.38
   - action: music_assistant.play_media
     target:
       entity_id:
@@ -255,17 +241,7 @@ play_mood_music_on_jukebox:
       media_id: "{{ query }}"
       media_type: track
       enqueue: "{{ queue | default('replace', true) }}"
-  - repeat:
-      count: 6
-      sequence:
-      - delay: '00:00:00.5'
-      - action: media_player.volume_set
-        target:
-          entity_id: media_player.jukebox_internal
-        data:
-          volume_level: "{{ (target * repeat.index / 6) | round(2) }}"
-  mode: queued
-  max: 5
+  mode: single
 search_jukebox:
   alias: Search Jukebox
   description: Search the jukebox catalog for tracks WITHOUT playing anything — use
@@ -632,8 +608,7 @@ set_cube_lights:
       {{ {'effect': effect | default('Solid', true)}
          | combine({'rgb_color': color} if (color is defined and color) else {})
          | combine({'brightness_pct': brightness | int} if (brightness is defined and brightness is not none) else {}) }}
-  mode: queued
-  max: 10
+  mode: single
 sync_lights_to_persona:
   alias: Sync Lights To Persona
   description: Set the body WLED strip (solid) and the Voice PE LED ring to the current
@@ -922,8 +897,7 @@ awtrix_marquee_message:
       variables:
         prev_bri: "{{ prev_bri }}"
         dur: "{{ dur }}"
-  mode: queued
-  max: 5
+  mode: single
 awtrix_marquee_restore_brightness:
   alias: AWTRIX Marquee Restore Brightness
   description: Internal tail for awtrix_marquee_message. After a message's duration
@@ -1076,8 +1050,7 @@ set_marquee_idle:
       retain: true
       payload: "{{ {'effect': eff, 'duration': 15, 'effectSettings': {'speed': spd, 'palette': pal,
         'blend': bln}} | to_json }}"
-  mode: queued
-  max: 10
+  mode: single
 set_marquee_wakehint:
   alias: Set Marquee Wake Hint
   description: Set the marquee's always-on "wakehint" app — the "say Hey Glitchcube
@@ -1123,8 +1096,7 @@ set_marquee_wakehint:
       topic: marquee/custom/wakehint
       retain: true
       payload: "{{ payload | trim }}"
-  mode: queued
-  max: 10
+  mode: single
 awtrix_install_idle_apps:
   alias: AWTRIX Seed Idle Apps
   description: 'Post-reflash seed for the marquee. The loop has TWO always-on custom
