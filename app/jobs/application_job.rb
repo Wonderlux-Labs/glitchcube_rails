@@ -4,4 +4,24 @@ class ApplicationJob < ActiveJob::Base
 
   # Most jobs are safe to ignore if the underlying records are no longer available
   # discard_on ActiveJob::DeserializationError
+
+  # Pin every job's ActiveRecord queries to the PRIMARY writing connection.
+  #
+  # We run SolidQueue in its own process with the queue tables on a SEPARATE
+  # database (`config.solid_queue.connects_to = { database: { writing: :queue } }`).
+  # In that long-running worker, the thread-local connection role/context
+  # intermittently leaked, so plain `ApplicationRecord` models (Conversation,
+  # Persona, …) would resolve onto the queue pool — `PG::UndefinedTable:
+  # relation "conversations" does not exist` — or onto no pool at all —
+  # `ActiveRecord::ConnectionNotDefined: No database connection defined`. It hit
+  # the recurring jobs hardest (ConversationStatsJob, RandomPersonaJob), silently
+  # disabling stats pushes and cron persona rotation.
+  #
+  # Forcing the writing role for the whole perform makes app-model queries always
+  # resolve to `primary`, immune to whatever the worker thread's ambient context
+  # was. SolidQueue's own records live on their own connection class, so this
+  # doesn't touch queue bookkeeping.
+  around_perform do |_job, block|
+    ActiveRecord::Base.connected_to(role: ActiveRecord.writing_role) { block.call }
+  end
 end
