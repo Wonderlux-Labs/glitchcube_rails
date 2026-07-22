@@ -178,7 +178,11 @@ class HomeAssistantService
   def make_request(request)
     uri = URI(request.uri)
 
-    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", read_timeout: timeout) do |http|
+    # open_timeout caps the TCP connect: a powered-off / black-holed HASS box would
+    # otherwise stall on Ruby's ~60s default connect before read_timeout applies,
+    # injecting dead-air into every turn (CubePersona.current_persona reads HASS on
+    # the sync request path). Net::OpenTimeout is rescued below → ConnectionError, fast.
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 5, read_timeout: timeout) do |http|
       response = http.request(request)
 
       case response.code.to_i

@@ -60,3 +60,16 @@ rest_command:
     method: POST
     content_type: "application/json"
     payload: "{}"
+
+  # LAST-RESORT self-heal: ask Rails to gracefully restart its whole backend stack
+  # (bin/glitchcube-ctl restart → launchd KeepAlive respawns Puma + jobs). Only lands
+  # while Puma still answers HTTP, so it heals the "jobs wedged / degraded but web is
+  # up" case (if Rails is fully down this simply fails, harmlessly). Rails throttles
+  # honored restarts (10 min cooldown, survives the reboot) so this can't boot-loop.
+  # Caller: the backend_restart_watchdog automation. Optional `reason` is logged.
+  glitchcube_restart_backend:
+    url: >-
+      http://{{ states('input_text.glitchcube_host') | trim }}{{ '' if ':' in states('input_text.glitchcube_host') else ':4567' }}/api/v1/hass/restart
+    method: POST
+    content_type: "application/json"
+    payload: '{"reason": "{{ reason | default("", true) }}"}'

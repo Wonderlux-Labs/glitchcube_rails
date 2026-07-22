@@ -22,29 +22,25 @@ class ConversationOrchestrator
   end
 
   # The main entry point that executes the conversation flow step-by-step.
+  #
+  # Deliberately NOT wrapped in a DB transaction: the steps make a multi-minute
+  # brain-LLM call (and HASS reads), and holding an open transaction across those
+  # would pin a DB connection for the whole turn. There is no cross-row invariant
+  # that needs atomicity here — a partially-written turn (e.g. a Conversation with
+  # no ConversationLog) is tolerable and self-heals; we fail loudly instead.
   def call
     Rails.logger.info "🧠 Orchestration started for message: '#{@message}'"
 
-    # The entire flow is wrapped in a transaction to ensure data consistency
-    result = ActiveRecord::Base.transaction do
-      begin
-        run_setup
-        run_pre_llm_checks
-        run_llm_intention_call
-        run_action_execution
-        run_response_synthesis
-        run_finalization
-      rescue => e
-        # Catches exceptions from any step and formats a standard error response.
-        # Let the transaction rollback happen, then return error response
-        raise e
-      end
-    end
+    run_setup
+    run_pre_llm_checks
+    run_llm_intention_call
+    run_action_execution
+    run_response_synthesis
+    result = run_finalization
 
     Rails.logger.info "✅ Orchestration finished."
     result
   rescue => e
-    # Handle errors outside transaction to avoid rollback of error response
     log_and_handle_error(e)
   end
 
