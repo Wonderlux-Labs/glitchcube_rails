@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/estiens/qualspec.git
-  revision: 4af4442628070021dd33559e14be9663e0405da5
+  revision: 5cba6fa989b0ca9f9b12e625085f64fa7ad5c6d0
   specs:
-    qualspec (0.1.2)
+    qualspec (0.2.0)
       faraday (~> 2.0)
 
 GEM
