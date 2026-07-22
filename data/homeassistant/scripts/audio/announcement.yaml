@@ -1,0 +1,47 @@
+# --- System announcement -----------------------------------------------------------
+# An official, non-persona, robotic-voiced interruption over the jukebox speaker — for
+# genuine system notices or rare, sparing in-world trolling. Uses Music Assistant's own
+# announce feature (music_assistant.play_announcement), which plays a chime, ducks
+# whatever's currently playing, speaks the message via MA's configured default TTS
+# provider, and resumes playback afterward on its own — no extra fade/resume logic
+# needed here. For a "more robotic" voice, set Music Assistant's own default TTS
+# provider (in MA's own integration settings, not here) to something flat/synthetic
+# like eSpeak-NG, distinct from whatever the personas use for their Assist pipelines.
+
+system_announcement:
+  alias: System Announcement
+  description: >-
+    An official system announcement, spoken in a robotic, non-persona voice over the
+    jukebox speaker. Plays a chime first, then the message; if music is already playing
+    it ducks out and resumes automatically afterward. For genuine system notices or
+    rare, sparing in-world trolling (e.g. "the cube will shut down from boredom if this
+    conversation doesn't get more lively") — not for regular persona speech. Keep it to
+    a few sentences max, and use it sparingly.
+  fields:
+    message:
+      name: Message
+      description: The announcement text to speak. Keep it short — a few sentences max.
+      required: true
+      selector:
+        text:
+    volume:
+      name: Volume
+      description: Announcement volume, 0-100 percent. Defaults to 75.
+      required: false
+      default: 75
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+  sequence:
+  - action: music_assistant.play_announcement
+    target:
+      entity_id: media_player.jukebox_internal
+    data:
+      url: "{{ message }}"
+      use_pre_announcement: true
+      announce_volume: "{{ volume | default(75, true) | int }}"
+  mode: single
