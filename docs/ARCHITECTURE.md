@@ -45,20 +45,25 @@ a HASS conversation agent:
   (`{action_name, description}`). It never emits tool calls and carries no memory
   fields — continuity comes from the summaries injected into its prompt, not its
   output (see Continuity).
-- **Action agent (HASS-side, not an in-Rails role):** `ActionExecutor` flattens
-  `actions` into one instruction and `EnvironmentDirectorJob` hands it to the HASS
-  agent `Rails.configuration.hass_action_agent` via
-  `HomeAssistantService#conversation_process`. That agent owns all tool-calling
-  (Assist API + exposed entities) and replies in natural language.
+- **In-Rails translator (`ToolCallingService`, not visitor-facing):** `ActionExecutor`
+  flattens `actions` into one instruction per lane and `EnvironmentDirectorJob` runs it
+  through a tool-calling LLM (`Rails.configuration.hass_tool_calling_model`) that decodes
+  the instruction into concrete, validated Home Assistant tool calls (`Tools::Registry` →
+  `Tools::BaseTool` subclasses), which execute by hitting the HASS **REST API** directly
+  (`HomeAssistantService#call_service`, almost always `script.turn_on` + `variables:`).
+  Two lanes — `:action` and `:sound` — dispatched in parallel. It runs in Rails for full
+  visibility into what fired, easy parallelism, and dev/test with no live HASS
+  (`FakeHomeAssistant`).
 
 There are also **per-persona HASS voice agents** (visitor-facing, one TTS voice
-each) that do wake word / STT / TTS. The visitor talks to those; the action agent
+each) that do wake word / STT / TTS. The visitor talks to those; the translator
 never talks to a visitor.
 
 **Speak-first, act-async:** speech is returned immediately; the instruction is
-dispatched to `EnvironmentDirectorJob` in the background. The action agent's reply
-lands in `conversation.metadata_json["pending_ha_results"]` and is folded into the
-brain's context on the next turn. No per-domain fan-out, no in-Rails translator.
+dispatched to `EnvironmentDirectorJob` in the background. The translator's normalized
+result — a narrative plus the actual `tool_calls`/`service_calls` that fired — lands in
+`conversation.metadata_json["pending_ha_results"]` and is folded into the brain's context
+on the next turn.
 
 ## Continuity — the three-tier summarizer
 

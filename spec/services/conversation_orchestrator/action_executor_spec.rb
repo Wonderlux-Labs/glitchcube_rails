@@ -27,11 +27,10 @@ RSpec.describe ConversationOrchestrator::ActionExecutor do
         }
       end
 
-      it 'sends the sound channel to the sound agent on its own lane' do
+      it 'sends the sound channel to the sound lane' do
         expect(EnvironmentDirectorJob).to receive(:perform_later).with(
           hash_including(
             instruction: "play heavy metal and crank it",
-            agent_id: Rails.configuration.hass_sound_agent,
             convo_prefix: "cube_sound",
             session_id: session_id,
             conversation_id: conversation_id,
@@ -43,12 +42,11 @@ RSpec.describe ConversationOrchestrator::ActionExecutor do
         expect(call(llm_response).data[:dispatched_environment]).to be true
       end
 
-      it 'sends the remaining channels to the main action agent as one labeled instruction' do
+      it 'sends the remaining channels to the action lane as one labeled instruction' do
         allow(EnvironmentDirectorJob).to receive(:perform_later).with(hash_including(convo_prefix: "cube_sound"))
         expect(EnvironmentDirectorJob).to receive(:perform_later).with(
           hash_including(
             instruction: "lights: body deep purple, slow breathing\nmarquee: HELLO in pink",
-            agent_id: Rails.configuration.hass_action_agent,
             convo_prefix: "cube_env"
           )
         )

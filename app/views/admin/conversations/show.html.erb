@@ -81,6 +81,12 @@
       <% else %>
         <p><strong>Result:</strong> <%= result['ha_response'] %></p>
       <% end %>
+      <% if result['tool_calls'].present? || result['service_calls'].present? %>
+        <details style="background: #16242b; padding: 8px; margin: 6px 0;">
+          <summary style="cursor: pointer;"><strong>🔧 Tool &amp; service calls that fired</strong></summary>
+          <pre><%= JSON.pretty_generate("tool_calls" => result["tool_calls"] || [], "service_calls" => result["service_calls"] || []) %></pre>
+        </details>
+      <% end %>
     </div>
   <% end %>
 <% end %>

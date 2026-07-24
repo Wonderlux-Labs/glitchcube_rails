@@ -39,26 +39,19 @@ Rails.application.configure do
   config.home_assistant_url = ENV.fetch("HOME_ASSISTANT_URL", "http://glitch.local:8123")
   config.home_assistant_timeout = ENV.fetch("HOME_ASSISTANT_TIMEOUT", "30").to_i
 
-  # The cube offloads its plain-English action channels to HASS conversation agents
-  # (LLMs with the Assist API enabled) that own ALL the tool-calling — picking devices,
-  # resolving "romantic lights" to RGB, retrying — and reply in natural language, which
-  # we fold back into the next turn's history. There are two lanes, dispatched in
-  # parallel (see ConversationOrchestrator::ActionExecutor):
-  #   - hass_action_agent — lights, marquee, other_actions, and anything else.
-  #   - hass_sound_agent  — the `sound` channel only (the jukebox: searching the
-  #     library, deciding what to play), which is slower and more iterative.
-  # These are straight config, not env-overridden: each points at a dedicated HASS
-  # conversation agent. To change behavior, switch the MODEL on that agent in Home
-  # Assistant (config_entries subentry) — no Rails change needed.
-  config.hass_action_agent = "conversation.default_hass_tools_agent"
-  config.hass_sound_agent  = "conversation.glitchcube_jukebox_agent"
-
-  # === The one model knob ===
-  # We make LLM calls in exactly one place now (the conversation flow), so there
-  # is exactly one brain model. It has a sane default here, so no env var is
-  # required on any host; set `DEFAULT_AI_MODEL` only to override for a run.
-  # Swap it live without a restart: `Rails.configuration.ai_model = "stepfun/step-3.7-flash"`.
+  # === Model knobs ===
+  # The brain model. It has a sane default here, so no env var is required on any host;
+  # set `DEFAULT_AI_MODEL` only to override for a run. Swap it live without a restart:
+  # `Rails.configuration.ai_model = "stepfun/step-3.7-flash"`.
   config.ai_model = ENV.fetch("DEFAULT_AI_MODEL", "deepseek/deepseek-v4-flash:nitro")
+
+  # The translator/tool-calling model. The brain emits plain-English action channels;
+  # a separate translator LLM (ToolCallingService, per lane) decodes each into concrete
+  # Home Assistant tool calls. Kept as its own knob so it can be tuned independently of
+  # the brain — but for now it defaults to the same model, which makes the two easy to
+  # compare. Both lanes (action + sound) share this one model. Swap live:
+  # `Rails.configuration.hass_tool_calling_model = "..."`.
+  config.hass_tool_calling_model = ENV.fetch("HASS_TOOL_CALLING_MODEL") { config.ai_model }
 
   # The background summarizer tiers (interaction / persona+handoff / overall) all run on this
   # one model — separate from the conversation brain so we can trade it off independently.
