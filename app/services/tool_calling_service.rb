@@ -16,9 +16,7 @@
 #     error:         nil or a string
 #   }
 class ToolCallingService
-  def initialize(session_id: nil, conversation_id: nil)
-    @session_id = session_id
-    @conversation_id = conversation_id
+  def initialize
     @max_iterations = Rails.configuration.try(:tool_calling_max_iterations) || 5
   end
 

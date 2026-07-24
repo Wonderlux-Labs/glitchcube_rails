@@ -44,6 +44,23 @@ RSpec.describe "Marquee tools", :allow_ha_calls do
     it "is named show_marquee_message" do
       expect(Tools::Display::Marquee.definition.name).to eq("show_marquee_message")
     end
+
+    it "flags an out-of-range duration and a bad hex color at the definition layer (drives the retry loop)" do
+      errors = []
+      Tools::Display::Marquee.definition.validation_blocks.each do |b|
+        b.call({ "message" => "HI", "duration" => 500, "color" => "purple" }, errors)
+      end
+
+      expect(errors.join).to match(/duration/i)
+      expect(errors.join).to match(/color/i)
+    end
+
+    it "flags a missing message at the definition layer" do
+      errors = []
+      Tools::Display::Marquee.definition.validation_blocks.each { |b| b.call({}, errors) }
+
+      expect(errors.join).to match(/message/i)
+    end
   end
 
   describe Tools::Display::ClearMarquee do

@@ -6,13 +6,31 @@ class Tools::Modes::SetPersona < Tools::BaseTool
   PERSONAS = %w[buddy jax zorp crash neon].freeze
 
   def self.definition
-    @definition ||= OpenRouter::Tool.define do
-      name "set_persona"
-      description "Quietly switch the cube's active persona — no fanfare, just change who's " \
-                  "in charge. Give a persona, or omit it to pick a random one (never the current)."
-      parameters do
-        string :persona, description: "Which persona to switch to. Omit for a random pick.", enum: PERSONAS
+    @definition ||= begin
+      tool = OpenRouter::Tool.define do
+        name "set_persona"
+        description "Quietly switch the cube's active persona — no fanfare, just change who's " \
+                    "in charge. Give a persona, or omit it to pick a random one (never the current)."
+        parameters do
+          string :persona, description: "Which persona to switch to. Omit for a random pick.", enum: PERSONAS
+        end
       end
+
+      def tool.validation_blocks
+        @validation_blocks ||= [
+          proc do |params, errors|
+            persona = params.transform_keys(&:to_s)["persona"]
+
+            if persona.present? && !PERSONAS.include?(persona)
+              errors << "Unknown persona '#{persona}'. Available: #{PERSONAS.join(', ')}, or omit for a random pick."
+            end
+
+            nil # mutate `errors`; don't return an array (ValidatedToolCall would re-append it)
+          end
+        ]
+      end
+
+      tool
     end
   end
 

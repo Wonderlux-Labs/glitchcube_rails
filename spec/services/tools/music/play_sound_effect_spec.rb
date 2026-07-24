@@ -29,4 +29,13 @@ RSpec.describe Tools::Music::PlaySoundEffect, :allow_ha_calls do
   it "is named play_sound_effect" do
     expect(Tools::Music::PlaySoundEffect.definition.name).to eq("play_sound_effect")
   end
+
+  it "flags an off-enum effect at the definition layer (drives the retry loop)" do
+    errors = []
+    Tools::Music::PlaySoundEffect.definition.validation_blocks.each do |b|
+      b.call({ "effect" => "Airhorn" }, errors)
+    end
+
+    expect(errors.join).to match(/unknown sound effect/i)
+  end
 end

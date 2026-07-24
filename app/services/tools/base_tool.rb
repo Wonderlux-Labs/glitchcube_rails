@@ -34,6 +34,12 @@ class Tools::BaseTool
       parts.is_a?(Array) && parts.length == 3 &&
         parts.all? { |c| c.is_a?(Integer) && c.between?(0, 255) }
     end
+
+    # Validate a 6-digit hex color string like "#FF00AA" (leading # optional).
+    # Shared by tools and their validation blocks so the translator gets the same verdict.
+    def valid_hex_color?(color)
+      color.is_a?(String) && color.strip.match?(/\A#?[0-9a-fA-F]{6}\z/)
+    end
   end
 
   # Instance entry point.

@@ -39,4 +39,14 @@ RSpec.describe Tools::Communication::Announcement, :allow_ha_calls do
   it "is named make_announcement" do
     expect(Tools::Communication::Announcement.definition.name).to eq("make_announcement")
   end
+
+  it "flags a missing message and an out-of-range volume at the definition layer (drives the retry loop)" do
+    errors = []
+    Tools::Communication::Announcement.definition.validation_blocks.each do |b|
+      b.call({ "volume" => 150 }, errors)
+    end
+
+    expect(errors.join).to match(/message/i)
+    expect(errors.join).to match(/volume/i)
+  end
 end

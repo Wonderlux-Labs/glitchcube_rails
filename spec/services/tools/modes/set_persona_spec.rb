@@ -31,4 +31,20 @@ RSpec.describe Tools::Modes::SetPersona, :allow_ha_calls do
   it "is named set_persona" do
     expect(Tools::Modes::SetPersona.definition.name).to eq("set_persona")
   end
+
+  it "flags an off-enum persona at the definition layer (drives the retry loop)" do
+    errors = []
+    Tools::Modes::SetPersona.definition.validation_blocks.each do |b|
+      b.call({ "persona" => "gandalf" }, errors)
+    end
+
+    expect(errors.join).to match(/unknown persona/i)
+  end
+
+  it "accepts an omitted persona (random pick) at the definition layer" do
+    errors = []
+    Tools::Modes::SetPersona.definition.validation_blocks.each { |b| b.call({}, errors) }
+
+    expect(errors).to be_empty
+  end
 end

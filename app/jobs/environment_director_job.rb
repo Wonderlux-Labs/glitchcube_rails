@@ -21,7 +21,7 @@ class EnvironmentDirectorJob < ApplicationJob
     lane = convo_prefix.to_s == "cube_sound" ? :sound : :action
     Rails.logger.info "🎬 EnvironmentDirectorJob [#{convo_prefix}/#{lane}]: #{instruction}"
 
-    result = ToolCallingService.new(session_id: session_id, conversation_id: conversation_id)
+    result = ToolCallingService.new
                                .execute_intent(instruction, lane: lane, persona: persona,
                                                              session_id: session_id, conversation_id: conversation_id)
 
