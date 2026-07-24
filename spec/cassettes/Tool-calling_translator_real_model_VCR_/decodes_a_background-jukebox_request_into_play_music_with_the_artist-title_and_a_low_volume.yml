@@ -1,0 +1,148 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://openrouter.ai/api/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"messages":[{"role":"system","content":"You are the cube''s technical
+        tool-execution service. Translate the natural-language\ninstruction into precise
+        tool calls using ONLY the tools provided.\n\n- Use EXACT parameter names and
+        value formats from the tool definitions.\n- Make the tool call(s) needed to
+        fulfill the instruction — reason and make a sensible\n  choice when it isn''t
+        spelled out.\n- If a call fails validation you''ll be told why; fix it and
+        try again.\n- If the instruction needs no action, make no tool call.\n\nCONTEXT:
+        {}\n"},{"role":"user","content":"play Nina Simone''s song Feeling Good, quietly
+        in the background"}],"model":"google/gemini-2.5-flash","temperature":0.1,"tools":[{"type":"function","function":{"name":"play_music","description":"Play
+        music on the cube''s jukebox — for BOTH front-and-center songs and quiet background
+        music; the required volume decides which. query is a fuzzy search: give ''Artist
+        - Title'' (e.g. ''Nirvana - Smells Like Teen Spirit'') or ''Artist - Album
+        - Title''. volume is REQUIRED (25-35 = background under the conversation,
+        80-90 = front-and-center / dance party). queue is optional: replace (default)
+        plays now, replace_next queues it as the next track.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"Fuzzy
+        track search, e.g. ''Artist - Title''."},"volume":{"type":"number","description":"REQUIRED.
+        25-35 = quiet background, 80-90 = front-and-center.","minimum":0,"maximum":100},"queue":{"type":"string","description":"replace
+        (default, play now) or replace_next (queue as next track).","enum":["replace","replace_next"]}},"required":["query","volume"]}}},{"type":"function","function":{"name":"play_sound_effect","description":"Fire
+        a short sound-effect stinger through the cube''s jukebox speaker for comic
+        or dramatic punctuation. Use sparingly — an accent, not background. Pick one
+        of the available effects.","parameters":{"type":"object","properties":{"effect":{"type":"string","description":"Which
+        sound effect to play.","enum":["Applause","Laugh Track","Cymbal Crash","Explosion","Cha-Ching
+        (Cash Register)","Typewriter Ding","Bell Ding","Referee Whistle","Wind Chime","Cowbell","Alarm
+        Clock","Cat Meow","Dog Bark","Rooster Crow","Sheep Bleat"]}},"required":["effect"]}}}],"tool_choice":"auto"}'
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 23 Jul 2026 03:59:07 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Generation-Id:
+      - gen-1784779146-u2D2AyMGw71fmLfdYpuG
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,X-Provider-Name,cf-ray
+      Set-Cookie:
+      - __cf_bm=QGpq9OJdbmV1eyO4cyPZuqtX6HDZ5UyLVRi9SR0l1kw-1784779146.5810907-1.0.1.1-QUCDH0XbAAgRWvWdYXGWzayPfoJhlAW7iU4._SDgoSC_AtwnWQbdTrL0utYwy3UdBfCZZY0ktZIXQRlDXvb7TAuOdAA3rVCl619g7l4GjhjpKfOqQiKBAubEET_bg8nA;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Thu,
+        23 Jul 2026 04:29:07 GMT
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1f7c5422c1ce6f3-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: "\n         \n{\"id\":\"gen-1784779146-u2D2AyMGw71fmLfdYpuG\",\"object\":\"chat.completion\",\"created\":1784779146,\"model\":\"google/gemini-2.5-flash\",\"provider\":\"Google\",\"system_fingerprint\":null,\"service_tier\":\"default\",\"choices\":[{\"index\":0,\"logprobs\":null,\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"STOP\",\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":null,\"tool_calls\":[{\"type\":\"function\",\"index\":0,\"id\":\"tool_play_music_3Edeabh4bjzQlXRk7UXi\",\"function\":{\"name\":\"play_music\",\"arguments\":\"{\\\"query\\\":\\\"Nina
+        Simone - Feeling Good\\\",\\\"volume\\\":30}\"}}]}}],\"usage\":{\"prompt_tokens\":410,\"completion_tokens\":11,\"total_tokens\":421,\"cost\":0.0001505,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0001505,\"upstream_inference_prompt_cost\":0.000123,\"upstream_inference_completions_cost\":0.0000275},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+  recorded_at: Thu, 23 Jul 2026 03:59:07 GMT
+- request:
+    method: get
+    uri: https://openrouter.ai/api/v1/generation?id=gen-1784779146-u2D2AyMGw71fmLfdYpuG
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer <OPENROUTER_API_KEY>
+      Content-Type:
+      - application/json
+      X-Title:
+      - GlitchCube
+      Http-Referer:
+      - https://glitchcube.com
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Date:
+      - Thu, 23 Jul 2026 03:59:07 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Cache-Status:
+      - BYPASS
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - private, no-store
+      Access-Control-Expose-Headers:
+      - X-Generation-Id,X-Provider-Name,cf-ray
+      Set-Cookie:
+      - __cf_bm=4udcH8hEd9Zpkpv91hIt.pngqhCJ8AxsbCHh_.V3M.w-1784779147.3413682-1.0.1.1-sjLi38o2GGuEfMh8rYKWloOgC0DFU49n5rf2Hh1EI1V34lmvAr8cGec4EZx0ZqikQU9blj9Z33nHwadArgsi1_f5UOo8rOvYm.1BOiWtNowWhNLctekeN88mmLZ4yjNB;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Thu,
+        23 Jul 2026 04:29:07 GMT
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a1f7c546eb5f5c14-CVG
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":{"message":"Generation gen-1784779146-u2D2AyMGw71fmLfdYpuG
+        not found","code":404}}'
+  recorded_at: Thu, 23 Jul 2026 03:59:07 GMT
+recorded_with: VCR 6.4.0

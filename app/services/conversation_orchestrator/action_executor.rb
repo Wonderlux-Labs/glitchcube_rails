@@ -29,12 +29,13 @@ class ConversationOrchestrator::ActionExecutor
 
   # The brain returns plain-English action channels as top-level keys, e.g.
   # { "lights" => "body deep purple", "sound" => "play some jazz", "marquee" => "HI" }.
-  # We split them into two lanes and dispatch both in parallel:
-  #   - the `sound` channel → the audio/jukebox agent (slower, more iterative);
+  # We split them into two lanes and dispatch both in parallel via EnvironmentDirectorJob,
+  # which runs each through the in-Rails translator (ToolCallingService):
+  #   - the `sound` channel → the jukebox lane (:sound), derived from the cube_sound prefix;
   #   - everything else (lights, marquee, other_actions, and ANY other non-narrative
-  #     key) → the main action agent, joined into one labeled instruction.
+  #     key) → the action lane (:action), joined into one labeled instruction.
   # If the output isn't a parseable hash of channels, we fall back to dumping whatever
-  # we got straight at the main agent. Returns true if anything was dispatched.
+  # we got at the action lane. Returns true if anything was dispatched.
   def dispatch_intents
     return dispatch_fallback unless @output.is_a?(Hash)
 
@@ -44,42 +45,38 @@ class ConversationOrchestrator::ActionExecutor
 
     dispatched = false
 
-    # Sound lane → audio agent.
+    # Sound lane (the jukebox).
     if (sound = channels["sound"]).present?
-      dispatch(instruction: sound.to_s,
-               agent_id: Rails.configuration.hass_sound_agent,
-               convo_prefix: "cube_sound")
+      dispatch(instruction: sound.to_s, convo_prefix: "cube_sound")
       dispatched = true
     end
 
-    # Everything else → main action agent, as one labeled, multi-line instruction so the
-    # agent can tell the channels apart (e.g. "lights: ...\nmarquee: ...").
+    # Everything else → action lane, as one labeled, multi-line instruction so the
+    # translator can tell the channels apart (e.g. "lights: ...\nmarquee: ...").
     rest = channels.except("sound")
     if rest.any?
       instruction = rest.map { |k, v| "#{k}: #{v}" }.join("\n")
-      dispatch(instruction: instruction,
-               agent_id: Rails.configuration.hass_action_agent,
-               convo_prefix: "cube_env")
+      dispatch(instruction: instruction, convo_prefix: "cube_env")
       dispatched = true
     end
 
     dispatched
   end
 
-  # Super-weird output (not a channel hash): hand the raw thing to the main agent so we
+  # Super-weird output (not a channel hash): hand the raw thing to the action lane so we
   # never silently drop an intent.
   def dispatch_fallback
     raw = @output.to_s.presence
     return false if raw.blank?
 
-    dispatch(instruction: raw, agent_id: Rails.configuration.hass_action_agent, convo_prefix: "cube_env")
+    dispatch(instruction: raw, convo_prefix: "cube_env")
     true
   end
 
-  # Hand one lane's instruction to a Home Assistant conversation agent via
-  # EnvironmentDirectorJob — speak first, act async.
-  def dispatch(instruction:, agent_id:, convo_prefix:)
-    Rails.logger.info "🎬 Dispatching [#{convo_prefix}] → #{agent_id}: #{instruction}"
+  # Hand one lane's instruction to EnvironmentDirectorJob — speak first, act async. The
+  # job derives the translator lane from convo_prefix.
+  def dispatch(instruction:, convo_prefix:)
+    Rails.logger.info "🎬 Dispatching [#{convo_prefix}]: #{instruction}"
 
     EnvironmentDirectorJob.perform_later(
       instruction: instruction,
@@ -87,7 +84,6 @@ class ConversationOrchestrator::ActionExecutor
       conversation_id: @conversation_id,
       user_message: @user_message,
       persona: @persona.to_s.presence,
-      agent_id: agent_id,
       convo_prefix: convo_prefix
     )
   end

@@ -36,11 +36,11 @@ host's `.env`. Most knobs can also be changed live from `rails c`
 
 | ENV var | `Rails.configuration` | Default | Description |
 |---|---|---|---|
-| `DEFAULT_AI_MODEL` | `ai_model` | `deepseek/deepseek-v4-flash:nitro` | The one brain model for the conversation flow. |
+| `DEFAULT_AI_MODEL` | `ai_model` | `deepseek/deepseek-v4-flash:nitro` | The brain model for the conversation flow. |
+| `HASS_TOOL_CALLING_MODEL` | `hass_tool_calling_model` | (falls back to `ai_model`) | Translator model: decodes each plain-English action channel into concrete HASS tool calls (`ToolCallingService`, both the action + sound lanes). Its own knob so it can be tuned separately from the brain; defaults to the same model for easy comparison. |
 | `SUMMARIZER_MODEL` | `summarizer_model` | `google/gemini-3.5-flash` | Model for the background summarizer tiers (interaction / persona+handoff / overall). |
 | `CAMERA_VISION_MODEL` | `camera_vision_model` | `google/gemini-3.5-flash` | Primary vision model for camera-snapshot descriptions (OpenRouter path). |
 | `VISION_FALLBACK_MODEL` | `vision_fallback_model` | `qwen/qwen3.7-max` | Retried once if the primary vision model raises or returns empty. |
-| `HASS_ACTION_AGENT` | `hass_action_agent` | `conversation.anthropic_claude_sonnet_4_6` | HASS conversation agent the cube offloads plain-English `actions` to. |
 
 ## Home Assistant
 

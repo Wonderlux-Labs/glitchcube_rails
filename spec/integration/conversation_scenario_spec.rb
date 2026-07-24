@@ -61,15 +61,13 @@ RSpec.describe "Conversation scenario (harness)", type: :integration do
     # The cube said what the brain decided (HASS-formatted response).
     expect(response.to_s).to include("spooky")
 
-    # The `sound` channel goes to the audio agent on its own lane...
+    # The `sound` channel goes to the jukebox (sound) lane...
     expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-      hash_including(instruction: "play spooky music", convo_prefix: "cube_sound",
-                     agent_id: Rails.configuration.hass_sound_agent)
+      hash_including(instruction: "play spooky music", convo_prefix: "cube_sound")
     )
-    # ...and everything else goes to the main action agent.
+    # ...and everything else goes to the action lane.
     expect(EnvironmentDirectorJob).to have_received(:perform_later).with(
-      hash_including(instruction: "lights: turn the lights deep orange", convo_prefix: "cube_env",
-                     agent_id: Rails.configuration.hass_action_agent)
+      hash_including(instruction: "lights: turn the lights deep orange", convo_prefix: "cube_env")
     )
 
     # The turn was persisted.
